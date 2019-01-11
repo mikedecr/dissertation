@@ -16,7 +16,7 @@ data {
 
   // geo-level covariates
   int k;              // n covariates
-  matrix[G k] X;        // geo covariate
+  matrix[G, k] X;        // geo covariate
 
 }
 
