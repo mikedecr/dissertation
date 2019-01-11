@@ -16,7 +16,7 @@ data {
 
   // geo-level covariates
   int k;              // n covariates
-  matrix[S, k] X;        // geo covariate
+  matrix[G k] X;        // geo covariate
 
 }
 
@@ -34,8 +34,8 @@ parameters {
   // hierarchical parameters
   vector[G] z_theta;
   real<lower = 0> scale_theta;
-  vector[P] party_intercept;
-  matrix[k, P] party_beta;
+  vector[P] party_int;
+  matrix[k, P] party_coefs;
 
   // eventual: 
   // time dimensions
@@ -68,8 +68,8 @@ transformed parameters {
   
   // matrix form but looping over groups(?? stupid ??)
   for (g in 1:G) {
-    theta_hypermean[g] = party_intercept[party[g]] + 
-                    (X[geo[g], ] * party_beta[ , party[g]]);
+    theta_hypermean[g] = party_int[party[g]] + 
+                    (X[geo[g], ] * party_coefs[ , party[g]]);
   }
 
   theta = theta_hypermean + (scale_theta * z_theta);
@@ -126,20 +126,20 @@ model {
   
   for (gr in 1:G) {
     if (party[gr] == 1) {
-      party_intercept[party[gr]] ~ normal(-1, 1);
+      party_int[party[gr]] ~ normal(-1, 1);
     } else if (party[gr] == 2) {
-      party_intercept[party[gr]] ~ normal(1, 1);
+      party_int[party[gr]] ~ normal(1, 1);
     }
   }
 
   for (p in 1:P) {
     
     // change to mv normal by party 
-    party_beta[, p] ~ normal(0, 1);
+    party_coefs[, p] ~ normal(0, 1);
   
   }
   
-  // party_beta ~ normal(0, 1);
+  // party_coefs ~ normal(0, 1);
 
 }
 
