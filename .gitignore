@@ -1,0 +1,145 @@
+# ----------------------------- 
+#   Rapid workspace
+# ----------------------------- 
+
+
+# replications/
+# data/cces-cdf
+
+# start by hiding data to be save
+data/*
+
+# set up a script to get data folders
+# !data/sim-dgirt/
+# link to data folder (for Boxr?): 
+# https://uwmadison.box.com/s/4a33u8j5dnh1lq8o2bab4l7lo13jfdts
+
+# but we need to pass things to SSC
+
+# To-do:
+# Rmd cache?
+# - hide cache (don't need to write paper on multiple machines)
+# - lengthy stuff is mostly just Bayes scripts; samples can be git-pushed
+#   - Only run Bayes if there aren't already samples?
+
+# ----------------------------- 
+#   General repo rules        
+# ----------------------------- 
+.DS_Store
+
+# always ignore literature
+reading/
+
+
+
+
+
+
+# ----------------------------- #
+#          R things             #
+# ----------------------------- #
+# History files
+.Rapp.history
+.Rhistory
+
+# Example code in package build process
+*-Ex.R
+
+# R data files from past sessions
+.Rdata
+
+
+# ----------------------------- #
+#          TeX things           #
+# ----------------------------- #
+
+# --  Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+
+# -- Intermediate documents:
+*.dvi
+# these rules might exclude image files for figures etc.
+# *.ps
+# *.eps
+# *.pdf
+
+# -- Bibliography auxiliary files (bibtex/biblatex/biber):
+*.bbl
+*.bcf
+*.blg
+*-blx.aux
+*-blx.bib
+*.run.xml
+
+# -- Build tool auxiliary files:
+*.fdb_latexmk
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
+
+# -- Auxiliary and intermediate files from other packages:
+
+# algorithms
+*.alg
+*.loa
+
+# amsthm
+*.thm
+
+# beamer
+*.nav
+*.snm
+*.vrb
+
+# glossaries
+*.acn
+*.acr
+*.glg
+*.glo
+*.gls
+
+# hyperref
+*.brf
+
+# listings
+*.lol
+
+# makeidx
+*.idx
+*.ilg
+*.ind
+*.ist
+
+# minitoc
+*.maf
+*.mtc
+*.mtc0
+
+# minted
+*.pyg
+
+# nomencl
+*.nlo
+
+# sagetex
+*.sagetex.sage
+*.sagetex.py
+*.sagetex.scmd
+
+# sympy
+*.sout
+*.sympy
+sympy-plots-for-*.tex/
+
+# todonotes
+*.tdo
+
+# xindy
+*.xdy
+*.app
