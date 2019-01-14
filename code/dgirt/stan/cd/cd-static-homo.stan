@@ -3,8 +3,8 @@ data {
   // caps
   int<lower = 1> G;              // n groups
   int<lower = 1> J;              // n items
-  int< lower = 1> P;             // n parties
-  int< lower = 1> S;             // n geos
+  int<lower = 1> P;             // n parties
+  int<lower = 1> S;             // n geos
   
   // response data (grouped binomial)
   int<lower = 0> Y[G, J];     // binary response
@@ -17,6 +17,12 @@ data {
   // geo-level covariates
   int k;              // n covariates
   matrix[G, k] X;        // geo covariate
+
+  // ---- prior data ----
+
+  // theta means
+  real prior_mean_party_1;
+  real prior_mean_party_2;
 
 }
 
@@ -126,9 +132,9 @@ model {
   
   for (gr in 1:G) {
     if (party[gr] == 1) {
-      party_int[party[gr]] ~ normal(-1, 1);
+      party_int[party[gr]] ~ normal(prior_mean_party_1, 1);
     } else if (party[gr] == 2) {
-      party_int[party[gr]] ~ normal(1, 1);
+      party_int[party[gr]] ~ normal(prior_mean_party_2, 1);
     }
   }
 

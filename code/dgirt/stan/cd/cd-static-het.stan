@@ -20,6 +20,12 @@ data {
   int k;              // n covariates
   matrix[S, k] X;        // district covariate
 
+  // ---- prior data ----
+
+  // theta means
+  real prior_mean_party_1;
+  real prior_mean_party_2;
+
 }
 
 
@@ -143,10 +149,10 @@ model {
   
   for (gr in 1:G) {
     if (party[gr] == 1) {
-      party_int[party[gr]] ~ normal(-1, 1);
+      party_int[party[gr]] ~ normal(prior_mean_party_1, 1);
       party_int_sigma[party[gr]] ~ normal(-1, 1);
     } else if (party[gr] == 2) {
-      party_int[party[gr]] ~ normal(1, 1);
+      party_int[party[gr]] ~ normal(prior_mean_party_2, 1);
       party_int_sigma[party[gr]] ~ normal(1, 1);
     }
   }
