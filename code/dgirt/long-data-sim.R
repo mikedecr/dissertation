@@ -15,9 +15,11 @@ rstan_options(auto_write = TRUE)
 (options(mc.cores = parallel::detectCores()))
 library("tidybayes")
 
+library("boxr"); box_auth()
+
 theme_set(theme_minimal())
 
-
+# source(here::here("code", "dgirt", "long-data-sim.R"))
 # ----------------------------------------------------
 #   Create data
 # ----------------------------------------------------
@@ -148,10 +150,10 @@ i_level <- group_level %>%
 
 # normal cutpoint, positive (log-normal) slopes
 item_level <- 
-  data_frame(item = as.numeric(1:n_items),
-             cutpoint = rnorm(n_items, mean = 0, sd = 0.1),
-             discrimination = rlnorm(n_items, mean = -0.75, sd = 0.35),
-             dispersion = (1 / discrimination)) %>%
+  tibble(item = as.numeric(1:n_items), 
+         cutpoint = rnorm(n_items, mean = 0, sd = 0.1), 
+         discrimination = rlnorm(n_items, mean = -0.75, sd = 0.35), 
+         dispersion = (1 / discrimination)) %>%
   print()
 
 
@@ -221,18 +223,50 @@ n_iterations <- 1000
 n_warmup <- 500
 n_thin <- 1
 
+# black box all the sampling params
 dgirt <- function(model, data) {
   sampling(object = model, 
            data = data, 
            iter = n_iterations, 
            thin = n_thin, 
-           chains = n_chains)
+           chains = n_chains,
+           pars = c("theta", "cutpoint", "discrimination", "dispersion",
+                    "sigma_in_g"
+                    # "theta_hypermean", "scale_theta", "z_theta", 
+                    # "sigma_g_hypermean", "sigma_in_g", "scale_sigma", "z_sigma", 
+                    # "party_int", "party_int_sigma",
+                    # "party_coefs", "party_coefs_sigma"
+                    ),
+           verbose = TRUE)
 }
 
 
 # ---- compile model -----------------------
-long_homo <- stan_model(file = here("code", "dgirt", "stan", "long", "long-homoskedastic.stan"), verbose = TRUE)
 
+break()
+
+# stan file from Github
+long_url <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/stan/long/long-homoskedastic.stan?token=ALhmxf4v-AF5-Rd9RxcF0nPSasi-cywHks5cmB9wwA%3D%3D"
+
+long_homo <- 
+  stanc(file = long_url) %>%
+  stan_model(stanc_ret = ., verbose = TRUE)
+
+beepr::beep(2)
 
 test_homo <- dgirt(long_homo, stan_data)
 
+
+# data/sim-dgirt/mcmc
+boxr::box_write(test_homo, "long-irt.RDS", dir_id = 61768155536)
+
+# ----------------------------------------------------
+#   evaluate
+# ----------------------------------------------------
+
+test_homo <- 
+  # boxr::box_read(423695815953) %>%
+  readRDS(here("data", "sim-dgirt", "mcmc", "long-irt.RDS")) %>%
+  print()
+
+summary(test_homo)
