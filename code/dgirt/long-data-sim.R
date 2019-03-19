@@ -2,6 +2,7 @@
 #   2019-03-17
 #   Creating "long" data for long (non-matrix) model
 # ----------------------------------------------------
+# source(here::here("code", "dgirt", "long-data-sim.R"))
 
 library("here")
 library("magrittr")
@@ -13,13 +14,13 @@ library("latex2exp")
 library("rstan")
 rstan_options(auto_write = TRUE)
 (options(mc.cores = parallel::detectCores()))
+library("ggmcmc")
 library("tidybayes")
 
 library("boxr"); box_auth()
 
 theme_set(theme_minimal())
 
-# source(here::here("code", "dgirt", "long-data-sim.R"))
 # ----------------------------------------------------
 #   Create data
 # ----------------------------------------------------
@@ -204,13 +205,12 @@ model_data <- grouped_responses %>%
 # ----------------------------------------------------
 
 # compose data
+# - will eventually need to change this so that it doesn't "intelligently" determine n_group etc.
 stan_data <- model_data %>% 
   mutate_at(vars(state, district, party, group, item), as.factor) %>%
   select(-(pi_bar:sigma_g), -X1, -X2, -Z) %>%
-  compose_data() 
-
-stan_data <- 
-  c(stan_data, list(k_d = 2, X = select(model_data, X1, X2) %>% as.matrix(),
+  compose_data() %>%
+  c(list(k_d = 2, X = select(model_data, X1, X2) %>% as.matrix(),
     k_s = 1, Z = as.matrix(model_data$Z)))
 
 lapply(stan_data, head)
@@ -219,8 +219,8 @@ lapply(stan_data, head)
 # ---- sampler hyperparameters -----------------------
 # leave one core open
 n_chains <- min(c(parallel::detectCores() - 1, 10))
-n_iterations <- 1000
-n_warmup <- 500
+n_iterations <- 500
+# n_warmup <- 500
 n_thin <- 1
 
 # black box all the sampling params
@@ -248,14 +248,46 @@ break()
 # stan file from Github
 long_url <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/stan/long/long-homoskedastic.stan?token=ALhmxf4v-AF5-Rd9RxcF0nPSasi-cywHks5cmB9wwA%3D%3D"
 
+
 long_homo <- 
   stanc(file = long_url) %>%
   stan_model(stanc_ret = ., verbose = TRUE)
 
+
+# boxr::box_write(test_homo, "model-long-homo.RDS", dir_id = 66357678611)
+
+
 beepr::beep(2)
+
+
+# ---- run model -----------------------
 
 test_homo <- dgirt(long_homo, stan_data)
 
+test_homo
+
+check_hmc_diagnostics(test_homo)
+
+theta_draws <- test_homo %>%
+  recover_types() %>%
+  spread_draws(theta[group], sigma_in_g[group]) %>%
+  left_join(model_data %>% select(group, theta_g, sigma_g, party)) %>%
+  print()
+
+tidy(test_homo, conf.int = TRUE) %>%
+  filter(str_detect(term, "theta")) %>%
+  mutate(group = parse_number(term)) %>%
+  left_join(model_data %>% select(group, theta_g, sigma_g, party)) %>% 
+  ggplot(aes(x = theta_g, y = estimate)) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high, 
+                      color = as.factor(party))) +
+  geom_abline()
+
+
+# ---- save fit -----------------------
+
+# wipe the dynamic shared object?
+# test_homo@stanmodel@dso <- new("cxxdso")
 
 # data/sim-dgirt/mcmc
 boxr::box_write(test_homo, "long-irt.RDS", dir_id = 61768155536)
@@ -264,9 +296,11 @@ boxr::box_write(test_homo, "long-irt.RDS", dir_id = 61768155536)
 #   evaluate
 # ----------------------------------------------------
 
-test_homo <- 
-  # boxr::box_read(423695815953) %>%
-  readRDS(here("data", "sim-dgirt", "mcmc", "long-irt.RDS")) %>%
-  print()
+# don't print() when reading
+test_homo <- boxr::box_read(423695815953)
 
-summary(test_homo)
+test_homo
+
+tidy(test_homo, conf.int = TRUE)
+
+summary(test_homo) 
