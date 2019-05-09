@@ -1,10 +1,20 @@
 // WHY?
 // we don't assume that we have groups x parties x items data
-// could be missing a party in a group, items w/in group, etc.
+// could be missing a party in a group?, items w/in group, etc.
 // data are _ITEM-GROUP LEVEL_; responses, covariates, etc
 
 // data: create a long table of everything
 // then: grouped response data & matrix of covariates
+
+// to do:
+// - identification in GenQ block?
+// - dispersion vs discrimination?
+// - hyper theta (noncentered)
+// - hyper sigma (noncentered)
+// - flexi priors
+// - missing data?
+// - dynamics
+
 
 data {
    
@@ -70,6 +80,7 @@ transformed parameters {
   // logit scale index
   vector[n] eta;
 
+  // future: theta and sigma hypermean regressions
   dispersion = inv(discrimination);
 
   for (i in 1:n) {
@@ -77,9 +88,6 @@ transformed parameters {
       (theta[group[i]] - cutpoint[item[i]]) ./ 
       sqrt( square(sigma_in_g[group[i]]) + square(dispersion[item[i]]) );
   }
-
-  // future: theta and sigma hypermean regressions
-
 
 }
 
