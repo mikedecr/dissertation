@@ -2,11 +2,27 @@
 #   2019-03-17
 #   Creating "long" data for long (non-matrix) model
 # ----------------------------------------------------
+
+# source this file from GH
+gh_source <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/long-data-sim.R?token=ALhmxRpBKHRagxno0kHq7_AMLzBd6octks5cmoO6wA%3D%3D"
+# source(gh_source)
+
+# or locally:
 # source(here::here("code", "dgirt", "long-data-sim.R"))
+
+
+
 
 library("here")
 library("magrittr")
 library("tidyverse")
+
+# prevent ggplot from running on linstat
+whoami <- system("whoami", intern = TRUE)
+if (whoami == "decrescenzo") {
+  pacman::p_unload(ggplot2) 
+}
+
 library("scales")
 library("broom")
 library("latex2exp")
@@ -206,9 +222,16 @@ model_data <- grouped_responses %>%
 
 # compose data
 # - will eventually need to change this so that it doesn't "intelligently" determine n_group etc.
+# - zero out one of the items
 stan_data <- model_data %>% 
   mutate_at(vars(state, district, party, group, item), as.factor) %>%
   select(-(pi_bar:sigma_g), -X1, -X2, -Z) %>%
+  mutate(
+    y = case_when(group == 1 & item == 1 ~ as.numeric(0), 
+                  TRUE ~ as.numeric(y)),
+    trials = case_when(group == 1 & item == 1 ~ as.numeric(0), 
+                       TRUE ~ as.numeric(trials))
+  ) %>%
   compose_data() %>%
   c(list(k_d = 2, X = select(model_data, X1, X2) %>% as.matrix(),
     k_s = 1, Z = as.matrix(model_data$Z)))
@@ -231,7 +254,7 @@ dgirt <- function(model, data) {
            thin = n_thin, 
            chains = n_chains,
            pars = c("theta", "cutpoint", "discrimination", "dispersion",
-                    "sigma_in_g"
+                    "sigma_in_g", "eta"
                     # "theta_hypermean", "scale_theta", "z_theta", 
                     # "sigma_g_hypermean", "sigma_in_g", "scale_sigma", "z_sigma", 
                     # "party_int", "party_int_sigma",
@@ -245,28 +268,109 @@ dgirt <- function(model, data) {
 
 break()
 
-# stan file from Github
-long_url <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/stan/long/long-homoskedastic.stan?token=ALhmxf4v-AF5-Rd9RxcF0nPSasi-cywHks5cmB9wwA%3D%3D"
+if (whoami == "michaeldecrescenzo") {
+
+  # local stan file
+  long_homo <- 
+    stanc(
+      file = here("code", "dgirt", "stan", "long", "long-homo-mlm.stan")
+    ) %>%
+    stan_model(stanc_ret = ., verbose = TRUE) %>%
+    print()
+
+  beepr::beep(2)
+
+} else if (whoami == "decrescenzo") {
+
+  # stan file from Github
+  long_url <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/stan/long/long-homo-mlm.stan?token=AC4GNRKMQAP7P7HWCAO767243XQOU"
+
+  long_homo <- 
+    stanc(file = long_url) %>%
+    stan_model(stanc_ret = ., verbose = TRUE) %>%
+    print()
+
+} else {
+  print("no model found")
+}
+
+long_homo
 
 
-long_homo <- 
-  stanc(file = long_url) %>%
-  stan_model(stanc_ret = ., verbose = TRUE)
+# save compiled model to box
+# boxr::box_write(long_homo, "model-long-homo.RDS", dir_id = 66357678611)
+
+# read compiled model from Box
+# long_homo <- box_read(424368378759)
 
 
-# boxr::box_write(test_homo, "model-long-homo.RDS", dir_id = 66357678611)
-
-
-beepr::beep(2)
 
 
 # ---- run model -----------------------
+
+# --- test zero ct model: 0 ~ bin(0, p) ---
+# stan(file = here("code", "dgirt", "stan", "long", "zero-ct-test.stan"), 
+#      data = list(y = 0, n = 0),
+#      verbose = TRUE)
+# beepr::beep(2)
+
 
 test_homo <- dgirt(long_homo, stan_data)
 
 test_homo
 
+beepr::beep(2)
+
+tidy(test_homo) %>%
+  as_tibble() %>%
+  filter(str_detect(term, "pprob")) %>%
+  pull(estimate) %>%
+  summary()
+
+# ---- save fit -----------------------
+
+# wipe the dynamic shared object?
+# test_homo@stanmodel@dso <- new("cxxdso")
+
+# data/sim-dgirt/mcmc
+boxr::box_write(test_homo, "long-irt.RDS", dir_id = 61768155536)
+
+
+
+
+
+
+# ----------------------------------------------------
+#   evaluate
+# ----------------------------------------------------
+
+# don't print() when reading
+test_homo <- boxr::box_read(423695815953)
+# locally
+# test_homo <- readRDS(here("data", "sim-dgirt", "mcmc", "long-irt.RDS"))
+
+test_homo
+
 check_hmc_diagnostics(test_homo)
+check_divergences(test_homo)
+check_energy() # what are you
+check_treedepth() # what are you
+
+shinystan::launch_shinystan(test_homo)
+
+stan_rhat(test_homo)
+
+partition_div() 
+check_all_diagnostics
+
+
+
+tidy(test_homo, conf.int = TRUE)
+
+summary(test_homo) 
+
+
+
 
 theta_draws <- test_homo %>%
   recover_types() %>%
@@ -283,24 +387,4 @@ tidy(test_homo, conf.int = TRUE) %>%
                       color = as.factor(party))) +
   geom_abline()
 
-
-# ---- save fit -----------------------
-
-# wipe the dynamic shared object?
-# test_homo@stanmodel@dso <- new("cxxdso")
-
-# data/sim-dgirt/mcmc
-boxr::box_write(test_homo, "long-irt.RDS", dir_id = 61768155536)
-
-# ----------------------------------------------------
-#   evaluate
-# ----------------------------------------------------
-
-# don't print() when reading
-test_homo <- boxr::box_read(423695815953)
-
-test_homo
-
-tidy(test_homo, conf.int = TRUE)
-
-summary(test_homo) 
+  
