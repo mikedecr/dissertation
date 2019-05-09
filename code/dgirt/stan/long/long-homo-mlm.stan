@@ -1,19 +1,21 @@
 // WHY?
 // we don't assume that we have groups x parties x items data
 // could be missing a party in a group?, items w/in group, etc.
+// - but we should expand item x group and fill in zeroes
 // data are _ITEM-GROUP LEVEL_; responses, covariates, etc
 
 // data: create a long table of everything
 // then: grouped response data & matrix of covariates
 
 // to do:
-// - identification in GenQ block?
 // - dispersion vs discrimination?
 // - hyper theta (noncentered)
 // - hyper sigma (noncentered)
+// - identification in GenQ block?
 // - flexi priors
 // - missing data?
 // - dynamics
+// - expando model algebra
 
 
 data {
@@ -74,13 +76,15 @@ parameters {
 
 transformed parameters {
 
-  // item response re-paramaterization
+  // item response model
+  vector[n] eta;   // probit scale index
+  vector[n] pprob; // normal CDF
   vector<lower = 0>[n_item] dispersion;
 
-  // logit scale index
-  vector[n] eta;
-
   // future: theta and sigma hypermean regressions
+
+
+
   dispersion = inv(discrimination);
 
   for (i in 1:n) {
@@ -88,6 +92,8 @@ transformed parameters {
       (theta[group[i]] - cutpoint[item[i]]) ./ 
       sqrt( square(sigma_in_g[group[i]]) + square(dispersion[item[i]]) );
   }
+
+  pprob = Phi_approx(eta);
 
 }
 
@@ -97,7 +103,7 @@ model {
  
   // ----- data model -----
 
-  y ~ binomial_logit(trials, eta);
+  y ~ binomial(trials, pprob);
 
   // ----- IRT  -----
 
