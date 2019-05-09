@@ -78,7 +78,7 @@ transformed parameters {
 
   // item response model
   vector[n] eta;   // probit scale index
-  vector[n] pprob; // normal CDF
+  vector<lower = 0, upper = 1>[n] pprob; // normal CDF
   vector<lower = 0>[n_item] dispersion;
 
   // future: theta and sigma hypermean regressions
