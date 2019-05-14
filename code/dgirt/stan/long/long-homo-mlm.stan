@@ -63,7 +63,7 @@ parameters {
   // --- IRT ---
   vector[n_item] cutpoint;
   vector<lower = 0>[n_item] discrimination;
-  vector<lower = 0>[n_group] sigma_in_g; // heteroskedastic: next block
+  real<lower = 0> sigma_in_g; // only 1. If heteroskedastic: next block
 
   
   // --- HIERARCHY ---
@@ -126,7 +126,7 @@ transformed parameters {
   for (i in 1:n) {
     eta[i] = 
       (theta[group[i]] - cutpoint[item[i]]) ./ 
-      sqrt( square(sigma_in_g[group[i]]) + square(dispersion[item[i]]) );
+      sqrt( square(sigma_in_g) + square(dispersion[item[i]]) );
   }
 
 
