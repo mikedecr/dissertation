@@ -4,7 +4,7 @@
 # ----------------------------------------------------
 
 # source this file from GH
-gh_source <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/long-data-sim.R?token=ALhmxRpBKHRagxno0kHq7_AMLzBd6octks5cmoO6wA%3D%3D"
+gh_source <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/long-data-sim.R?token=AC4GNROCHNKDEQY3VCQJNNS43XQZQ"
 # source(gh_source)
 
 # or locally:
@@ -53,10 +53,10 @@ theme_set(theme_minimal())
 
 set.seed(7231946)
 
-n_states <- 50
+n_states <- 20
 n_districts <- 5
 n_parties <- 2
-n_cases <- 100
+n_cases <- 50
 n_items <- 40
 # will these do anything
 n_statecov <- 1
@@ -242,8 +242,8 @@ lapply(stan_data, head)
 # ---- sampler hyperparameters -----------------------
 # leave one core open
 n_chains <- min(c(parallel::detectCores() - 1, 10))
-n_iterations <- 500
-# n_warmup <- 500
+n_iterations <- 1000
+n_warmup <- 500
 n_thin <- 1
 
 # black box all the sampling params
@@ -253,13 +253,13 @@ dgirt <- function(model, data) {
            iter = n_iterations, 
            thin = n_thin, 
            chains = n_chains,
-           pars = c("theta", "cutpoint", "discrimination", "dispersion",
-                    "sigma_in_g", "eta"
+           # pars = c("theta", "cutpoint", "discrimination", "dispersion",
+                    # "sigma_in_g", "eta"
                     # "theta_hypermean", "scale_theta", "z_theta", 
                     # "sigma_g_hypermean", "sigma_in_g", "scale_sigma", "z_sigma", 
                     # "party_int", "party_int_sigma",
                     # "party_coefs", "party_coefs_sigma"
-                    ),
+                    # ),
            verbose = TRUE)
 }
 
@@ -283,7 +283,7 @@ if (whoami == "michaeldecrescenzo") {
 } else if (whoami == "decrescenzo") {
 
   # stan file from Github
-  long_url <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/stan/long/long-homo-mlm.stan?token=AC4GNRKMQAP7P7HWCAO767243XQOU"
+  long_url <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/stan/long/long-homo-mlm.stan?token=AC4GNRMQN53LVX3DGADDZWS43XQX2"
 
   long_homo <- 
     stanc(file = long_url) %>%
@@ -321,11 +321,7 @@ test_homo
 
 beepr::beep(2)
 
-tidy(test_homo) %>%
-  as_tibble() %>%
-  filter(str_detect(term, "pprob")) %>%
-  pull(estimate) %>%
-  summary()
+
 
 # ---- save fit -----------------------
 
@@ -333,7 +329,7 @@ tidy(test_homo) %>%
 # test_homo@stanmodel@dso <- new("cxxdso")
 
 # data/sim-dgirt/mcmc
-boxr::box_write(test_homo, "long-irt.RDS", dir_id = 61768155536)
+boxr::box_write(test_homo, "long-irt-homo-mlm.RDS", dir_id = 61768155536)
 
 
 
@@ -345,9 +341,10 @@ boxr::box_write(test_homo, "long-irt.RDS", dir_id = 61768155536)
 # ----------------------------------------------------
 
 # don't print() when reading
-test_homo <- boxr::box_read(423695815953)
+# test_homo <- boxr::box_read(455693312840)
 # locally
-# test_homo <- readRDS(here("data", "sim-dgirt", "mcmc", "long-irt.RDS"))
+test_homo <- 
+  readRDS(here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
 
 test_homo
 
@@ -379,12 +376,17 @@ theta_draws <- test_homo %>%
   print()
 
 tidy(test_homo, conf.int = TRUE) %>%
+  # filter(str_detect(term, "sigma_in_g")) %>%
   filter(str_detect(term, "theta")) %>%
   mutate(group = parse_number(term)) %>%
   left_join(model_data %>% select(group, theta_g, sigma_g, party)) %>% 
+  # ggplot(aes(x = sigma_g, y = estimate)) +
   ggplot(aes(x = theta_g, y = estimate)) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high, 
                       color = as.factor(party))) +
-  geom_abline()
+  geom_abline() +
+  # scale_x_log10() +
+  # scale_y_log10() +
+  NULL
 
   
