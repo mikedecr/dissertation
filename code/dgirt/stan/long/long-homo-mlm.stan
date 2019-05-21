@@ -8,15 +8,15 @@
 // then: grouped response data & matrix of covariates
 
 // to do:
-// - implement a to-do code (¿¿??) 
-// - dispersion vs discrimination?
-// - hyper theta (noncentered)
-// - hyper sigma (noncentered)
-// - identification in GenQ block?
-// - flexi priors (intercept, what else)
-// - missing data?
-// - dynamics
-// - expando model algebra
+// - [x] hyper theta (noncentered)
+// - [ ] implement a to-do code (¿¿??) 
+// - [ ] identification in GenQ block?
+// - [ ] expando model algebra (likelihood as a grid?)
+// - [ ] dispersion vs discrimination?
+// - [ ] hyper sigma (noncentered)
+// - [ ] flexi priors (intercept, what else?)
+// - [ ] missing data? is this needed?
+// - [ ] dynamics
 
 
 data {
@@ -107,8 +107,9 @@ transformed parameters {
   for (g in 1:n_group) {
 
     // offsets are f(hypermean + error)
+    // Z and X are still N long! 
     state_offset[state[g], party[g]] = 
-      ( Z[state[g]] * state_coefs[ , party[g]] ) + 
+      ( Z[g] * state_coefs[ , party[g]] ) + 
       ( u_state[state[g], party[g]] * scale_state[party[g]] );
 
     group_offset[g] = 
