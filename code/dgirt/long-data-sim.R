@@ -31,7 +31,7 @@ library("tidybayes")
 
 library("boxr"); box_auth()
 
-theme_set(theme_minimal())
+ggplot2::theme_set(ggplot2::theme_minimal())
 
 # prevent ggplot from running on linstat
 whoami <- system("whoami", intern = TRUE)
