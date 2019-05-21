@@ -26,7 +26,7 @@ data {
   int<lower = 1> n_state;    // n states
   int<lower = 1> n_district;    // n districts
   int<lower = 1> n_party;    // n parties? (assumed 2?)
-  int<lower = 1> n_group;    // n groups
+  int<lower = 1> n_group;    // n groups, ALL groups not just with data!
   int<lower = 1> n_item;    // n items
   
   // response data (grouped binomial)
@@ -109,11 +109,11 @@ transformed parameters {
     // offsets are f(hypermean + error)
     // Z and X are still N long! 
     state_offset[state[g], party[g]] = 
-      ( Z[g] * state_coefs[ , party[g]] ) + 
+      ( Z[g, ] * state_coefs[ , party[g]] ) + 
       ( u_state[state[g], party[g]] * scale_state[party[g]] );
 
     group_offset[g] = 
-      ( X[g] * group_coefs[ , party[g]] ) + 
+      ( X[g, ] * group_coefs[ , party[g]] ) + 
       ( e_group[g] * scale_group[party[g]] );
 
     // clean up
@@ -160,7 +160,7 @@ model {
   // insert coefs  (mvnorm, to be DLM)
 
   // hierarchical errors
-  e_group ~ normal(0, 1);           // group error
+  e_group ~ normal(0, 1);           // group error, should be party-indexed
   for (p in 1:n_party) {            // state-party error
     u_state[p, ] ~ normal(0, 1);
   }

@@ -4,7 +4,7 @@
 # ----------------------------------------------------
 
 # source this file from GH
-gh_source <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/long-data-sim.R?token=AC4GNROCHNKDEQY3VCQJNNS43XQZQ"
+gh_source <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/long-data-sim.R?token=AC4GNRNSSBTQL7XWC3PKMGS44Q6BI"
 # source(gh_source)
 
 # or locally:
@@ -17,11 +17,7 @@ library("here")
 library("magrittr")
 library("tidyverse")
 
-# prevent ggplot from running on linstat
-whoami <- system("whoami", intern = TRUE)
-if (whoami == "decrescenzo") {
-  pacman::p_unload(ggplot2) 
-}
+
 
 library("scales")
 library("broom")
@@ -36,6 +32,12 @@ library("tidybayes")
 library("boxr"); box_auth()
 
 theme_set(theme_minimal())
+
+# prevent ggplot from running on linstat
+whoami <- system("whoami", intern = TRUE)
+if (whoami == "decrescenzo") {
+  pacman::p_unload(ggplot2) 
+}
 
 # ----------------------------------------------------
 #   Create data
@@ -242,8 +244,8 @@ lapply(stan_data, head)
 # ---- sampler hyperparameters -----------------------
 # leave one core open
 n_chains <- min(c(parallel::detectCores() - 1, 10))
-n_iterations <- 1000
-n_warmup <- 500
+n_iterations <- 200
+n_warmup <- 100
 n_thin <- 1
 
 # black box all the sampling params
@@ -253,16 +255,17 @@ dgirt <- function(model, data) {
            iter = n_iterations, 
            thin = n_thin, 
            chains = n_chains,
-           # pars = c("theta", "cutpoint", "discrimination", "dispersion",
-                    # "sigma_in_g", "eta"
-                    # "theta_hypermean", "scale_theta", "z_theta", 
-                    # "sigma_g_hypermean", "sigma_in_g", "scale_sigma", "z_sigma", 
-                    # "party_int", "party_int_sigma",
-                    # "party_coefs", "party_coefs_sigma"
-                    # ),
+           # pars = c(),
            verbose = TRUE)
 }
 
+# "theta", "cutpoint", "discrimination", "dispersion",
+# "sigma_in_g", "eta"
+# "theta_hypermean", "scale_theta", "z_theta", 
+# "sigma_g_hypermean", "sigma_in_g", "scale_sigma", "z_sigma", 
+# "party_int", "party_int_sigma",
+# "party_coefs", "party_coefs_sigma"
+# 
 
 # ---- compile model -----------------------
 
@@ -283,12 +286,21 @@ if (whoami == "michaeldecrescenzo") {
 } else if (whoami == "decrescenzo") {
 
   # stan file from Github
-  long_url <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/stan/long/long-homo-mlm.stan?token=AC4GNRMQN53LVX3DGADDZWS43XQX2"
+  # long_url <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/stan/long/long-homo-mlm.stan?token=AC4GNRMX5BFRDMR45S7Z7OC45WGZM"
+  # long_homo <- 
+  #   stanc(file = long_url) %>%
+  #   stan_model(stanc_ret = ., verbose = TRUE) %>%
+  #   print()
 
+    # local git-pulled model
   long_homo <- 
-    stanc(file = long_url) %>%
+    stanc(
+      file = here("code", "dgirt", "stan", "long", "long-homo-mlm.stan")
+    ) %>%
     stan_model(stanc_ret = ., verbose = TRUE) %>%
     print()
+
+  
 
 } else {
   print("no model found")
@@ -315,9 +327,9 @@ long_homo
 # beepr::beep(2)
 
 
-test_homo <- dgirt(long_homo, stan_data)
+mcmc_homo <- dgirt(long_homo, stan_data)
 
-test_homo
+mcmc_homo
 
 beepr::beep(2)
 
@@ -329,8 +341,7 @@ beepr::beep(2)
 # test_homo@stanmodel@dso <- new("cxxdso")
 
 # data/sim-dgirt/mcmc
-boxr::box_write(test_homo, "long-irt-homo-mlm.RDS", dir_id = 61768155536)
-
+boxr::box_write(mcmc_homo, "long-irt-homo-mlm.RDS", dir_id = 61768155536)
 
 
 
