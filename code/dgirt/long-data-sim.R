@@ -130,25 +130,29 @@ group_level <-
 # hypermeans as f(covariates)
 group_level %>%
   gather(key = pred, value = xval, X1, X2, Z) %>%
-  ggplot(aes(x = xval, y = theta_hypermean)) +
+  try(
+    ggplot(aes(x = xval, y = theta_hypermean)) +
     geom_point(aes(color = as.factor(party))) +
     geom_smooth(aes(color = as.factor(party)), method = "lm") +
     facet_wrap(~ pred)
+  )
 
 group_level %>%
   gather(key = pred, value = xval, X1, X2, Z) %>%
-  ggplot(aes(x = xval, y = sigma_hypermean)) +
+  try(
+    ggplot(aes(x = xval, y = sigma_hypermean)) +
     geom_point(aes(color = as.factor(party))) +
     geom_smooth(aes(color = as.factor(party)), method = "lm") +
     facet_wrap(~ pred)
+  )
 
 
 # group params as f(hypermeans)
-ggplot(group_level, aes(x = theta_hypermean, y = theta_g)) +
-  geom_point()
+try(ggplot(group_level, aes(x = theta_hypermean, y = theta_g)) +
+  geom_point())
 
-ggplot(group_level, aes(x = sigma_hypermean, y = sigma_g)) +
-  geom_point()
+try(ggplot(group_level, aes(x = sigma_hypermean, y = sigma_g)) +
+  geom_point())
 
 
 # ---- i-level -----------------------
