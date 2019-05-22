@@ -15,8 +15,9 @@
 // - [ ] dispersion vs discrimination?
 // - [ ] hyper sigma (noncentered)
 // - [ ] flexi priors (intercept, what else?)
+// - [ ] mvnorm hierarchical coefs?
 // - [ ] missing data? is this needed?
-// - [ ] dynamics
+// - [ ] dynamics (REVERSE) random walk?
 
 
 data {
@@ -104,32 +105,59 @@ transformed parameters {
   // loop over groups to get theta
   // future: log(sigma) regressions
 
-  for (g in 1:n_group) {
+  // for (g in 1:n_group) {
 
-    // offsets are f(hypermean + error)
-    // Z and X are still N long! 
-    state_offset[state[g], party[g]] = 
-      ( Z[g, ] * state_coefs[ , party[g]] ) + 
-      ( z_state[state[g], party[g]] * scale_state[party[g]] );
+  //   // offsets are f(hypermean + error)
+  //   // Z and X are still N long! 
+  //   state_offset[state[g], party[g]] = 
+  //     state_hypermean[state[g], party[g]] + state_hypererror[state[g], party[g]];
+  //   state_hypermean[state[g], party[g]] = 
+  //     ( Z[g, ] * state_coefs[ , party[g]] );
+  //   state_hypererror[state[g], party[g]] = 
+  //     ( z_state[state[g], party[g]] * scale_state[party[g]] );
 
-    group_offset[g] = 
-      ( X[g, ] * group_coefs[ , party[g]] ) + 
-      ( z_group[g] * scale_group[party[g]] );
+  //   group_offset[g] = 
+  //     ( X[g, ] * group_coefs[ , party[g]] ) + 
+  //     ( z_group[g] * scale_group[party[g]] );
 
-    // clean up
-    theta[g] = 
-      intercept[party[g]] + 
-      group_offset[g] + state_offset[state[g], party[g]];
-  }
+  //   // clean up
+  //   theta[g] = 
+  //     intercept[party[g]] + 
+  //     group_offset[g] + state_offset[state[g], party[g]];
+  // }
 
   // IRT index (loop group-item)
   // later: expando
   for (i in 1:n) {
+
+    // offsets are f(hypermean + error)
+    // Z and X are still N long!
+    // hierarchical params assigned ONLY for missing data
+    // ¿¿?? we need to assign for EVERY group, not just where we have data?
+    //   -> should be handled by {y = 0, n = 0} cases?
+    if (is_nan(state_offset[state[i], party[i]])) {
+      state_offset[state[i], party[i]] = 
+        ( Z[i] * state_coefs[ , party[i]] ) + 
+        ( z_state[state[i], party[i]] * scale_state[party[i]] );
+    }
+
+    if (is_nan(group_offset[group[i]])) {
+      group_offset[group[i]] = 
+        ( X[i] * group_coefs[ , party[i]] ) + 
+        ( z_group[group[i]] * scale_group[party[i]] );
+    }
+
+    // clean up
+    if (is_nan(theta[group[i]])) {
+      theta[group[i]] = 
+        intercept[party[i]] + 
+        group_offset[group[i]] + state_offset[state[i], party[i]];
+    }
+
     eta[i] = 
       (theta[group[i]] - cutpoint[item[i]]) ./ 
       sqrt( square(sigma_in_g) + square(dispersion[item[i]]) );
   }
-
 
 }
 
@@ -138,33 +166,30 @@ transformed parameters {
 model {
  
   // ----- data model -----
-
   y ~ binomial_logit(trials, eta);  // logit link!!!!
   
 
-
   // ----- IRT params -----
-
   discrimination ~ lognormal(-0.75, 0.35); // item params: static for now?
-  cutpoint ~ normal(0, 0.1);         
-
+  cutpoint ~ normal(0, 0.1);
   sigma_in_g ~ lognormal(0, 1);    // will become regression
 
 
-
-
   // ---- district and state regressions ----
-  
-  // Hypermeans 
   intercept ~ normal([-1, 1], [1, 1]); // TK fix
-  // insert coefs  (mvnorm, to be DLM)
+  z_group ~ normal(0, 1);       // group zs, all independent and one-dim
+  
+  for (p in 1:n_party) {
+    
+    group_coefs[ , p] ~ normal(0, 1); // multivariate? soon DLM
+    state_coefs[ , p] ~ normal(0, 1);
 
-  // hierarchical errors
-  z_group ~ normal(0, 1);           // group error, should be party-indexed
-  for (p in 1:n_party) {            // state-party error
-    z_state[ , p] ~ normal(0, 1);
+    z_state[ , p] ~ normal(0, 1);     // two-d state Z scores
+
+    scale_group[p] ~ lognormal(0, 1); // two-vectors of error scales
+    scale_state[p] ~ lognormal(0, 1);
+
   }
-  // scale params?
 
 
 
@@ -173,8 +198,4 @@ model {
 
 }
 
-generated quantities {
- 
-
-
-}
+generated quantities {}

@@ -4,11 +4,11 @@
 # ----------------------------------------------------
 
 # source this file from GH
-gh_source <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/long-data-sim.R?token=AC4GNRNSSBTQL7XWC3PKMGS44Q6BI"
+# gh_source <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/long-data-sim.R?token=AC4GNRNSSBTQL7XWC3PKMGS44Q6BI"
 # source(gh_source)
 
 # or locally:
-# source(here::here("code", "dgirt", "long-data-sim.R"))
+source(here::here("code", "dgirt", "long-data-sim.R"))
 
 
 
@@ -239,17 +239,20 @@ stan_data <- model_data %>%
                        TRUE ~ as.numeric(trials))
   ) %>%
   compose_data() %>%
-  c(list(k_d = 2, X = select(model_data, X1, X2) %>% as.matrix(),
-    k_s = 1, Z = as.matrix(model_data$Z)))
+  c(list(k_d = n_distcov, 
+         X = select(model_data, X1, X2) %>% as.matrix(), 
+         k_s = n_statecov, 
+         Z = as.matrix(model_data$Z)))
 
 lapply(stan_data, head)
+lapply(stan_data, dim)
 
 
 # ---- sampler hyperparameters -----------------------
 # leave one core open
 n_chains <- min(c(parallel::detectCores() - 1, 10))
-n_iterations <- 200
-n_warmup <- 100
+n_iterations <- 2000
+n_warmup <- 1000
 n_thin <- 1
 
 # black box all the sampling params
@@ -278,7 +281,7 @@ break()
 if (whoami == "michaeldecrescenzo") {
 
   # local stan file
-  long_homo <- 
+  long_homsk <- 
     stanc(
       file = here("code", "dgirt", "stan", "long", "long-homo-mlm.stan")
     ) %>%
@@ -291,13 +294,13 @@ if (whoami == "michaeldecrescenzo") {
 
   # stan file from Github
   # long_url <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/stan/long/long-homo-mlm.stan?token=AC4GNRMX5BFRDMR45S7Z7OC45WGZM"
-  # long_homo <- 
+  # long_homsk <- 
   #   stanc(file = long_url) %>%
   #   stan_model(stanc_ret = ., verbose = TRUE) %>%
   #   print()
 
     # local git-pulled model
-  long_homo <- 
+  long_homsk <- 
     stanc(
       file = here("code", "dgirt", "stan", "long", "long-homo-mlm.stan")
     ) %>%
@@ -310,14 +313,14 @@ if (whoami == "michaeldecrescenzo") {
   print("no model found")
 }
 
-long_homo
+long_homsk
 
 
 # save compiled model to box
-# boxr::box_write(long_homo, "model-long-homo.RDS", dir_id = 66357678611)
+# boxr::box_write(long_homsk, "model-long-homo.RDS", dir_id = 66357678611)
 
 # read compiled model from Box
-# long_homo <- box_read(424368378759)
+# long_homsk <- box_read(424368378759)
 
 
 
@@ -331,21 +334,22 @@ long_homo
 # beepr::beep(2)
 
 
-mcmc_homo <- dgirt(long_homo, stan_data)
-
-mcmc_homo
-
+mcmc_homsk <- dgirt(long_homsk, stan_data)
 beepr::beep(2)
+
+mcmc_homsk
+
+
 
 
 
 # ---- save fit -----------------------
 
 # wipe the dynamic shared object?
-# test_homo@stanmodel@dso <- new("cxxdso")
+# test_homsk@stanmodel@dso <- new("cxxdso")
 
 # data/sim-dgirt/mcmc
-boxr::box_write(mcmc_homo, "long-irt-homo-mlm.RDS", dir_id = 61768155536)
+boxr::box_write(mcmc_homsk, "long-irt-homo-mlm.RDS", dir_id = 61768155536)
 
 
 
@@ -356,41 +360,41 @@ boxr::box_write(mcmc_homo, "long-irt-homo-mlm.RDS", dir_id = 61768155536)
 # ----------------------------------------------------
 
 # don't print() when reading
-# test_homo <- boxr::box_read(455693312840)
+# test_homsk <- boxr::box_read(455693312840)
 # locally
-test_homo <- 
+test_homsk <- 
   readRDS(here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
 
-test_homo
+test_homsk
 
-check_hmc_diagnostics(test_homo)
-check_divergences(test_homo)
+check_hmc_diagnostics(test_homsk)
+check_divergences(test_homsk)
 check_energy() # what are you
 check_treedepth() # what are you
 
-shinystan::launch_shinystan(test_homo)
+shinystan::launch_shinystan(test_homsk)
 
-stan_rhat(test_homo)
+stan_rhat(test_homsk)
 
 partition_div() 
 check_all_diagnostics
 
 
 
-tidy(test_homo, conf.int = TRUE)
+tidy(test_homsk, conf.int = TRUE)
 
-summary(test_homo) 
-
-
+summary(test_homsk) 
 
 
-theta_draws <- test_homo %>%
+
+
+theta_draws <- test_homsk %>%
   recover_types() %>%
   spread_draws(theta[group], sigma_in_g[group]) %>%
   left_join(model_data %>% select(group, theta_g, sigma_g, party)) %>%
   print()
 
-tidy(test_homo, conf.int = TRUE) %>%
+tidy(test_homsk, conf.int = TRUE) %>%
   # filter(str_detect(term, "sigma_in_g")) %>%
   filter(str_detect(term, "theta")) %>%
   mutate(group = parse_number(term)) %>%
