@@ -73,8 +73,8 @@ parameters {
   matrix[k_s, n_party] state_coefs;   // two-d state coefs
   
   // errors: 
-  vector[n_group] e_group;    // two-d group errors
-  matrix[n_state, n_party] u_state;    // two-d state errors
+  vector[n_group] z_group;    // one-d group errors (all independent)
+  matrix[n_state, n_party] z_state;    // two-d state errors
   vector<lower = 0>[n_party] scale_group;         // two-length group scale
   vector<lower = 0>[n_party] scale_state;         // two-length state scale
 
@@ -110,11 +110,11 @@ transformed parameters {
     // Z and X are still N long! 
     state_offset[state[g], party[g]] = 
       ( Z[g, ] * state_coefs[ , party[g]] ) + 
-      ( u_state[state[g], party[g]] * scale_state[party[g]] );
+      ( z_state[state[g], party[g]] * scale_state[party[g]] );
 
     group_offset[g] = 
       ( X[g, ] * group_coefs[ , party[g]] ) + 
-      ( e_group[g] * scale_group[party[g]] );
+      ( z_group[g] * scale_group[party[g]] );
 
     // clean up
     theta[g] = 
@@ -160,9 +160,9 @@ model {
   // insert coefs  (mvnorm, to be DLM)
 
   // hierarchical errors
-  e_group ~ normal(0, 1);           // group error, should be party-indexed
+  z_group ~ normal(0, 1);           // group error, should be party-indexed
   for (p in 1:n_party) {            // state-party error
-    u_state[p, ] ~ normal(0, 1);
+    z_state[ , p] ~ normal(0, 1);
   }
   // scale params?
 
