@@ -10,6 +10,8 @@
 # or locally:
 # source(here::here("code", "dgirt", "long-data-sim.R"))
 
+# have you added region effects?
+
 
 
 library("here")
@@ -54,6 +56,7 @@ if (whoami == "decrescenzo") {
 
 set.seed(7231946)
 
+n_regions <- 5
 n_states <- 20
 n_districts <- 5
 n_parties <- 2
@@ -87,6 +90,17 @@ params <-
   print()
 
 
+
+# ---- region offsets -----------------------
+
+region_level <- 
+  tibble(region = 1:n_regions) %>%
+  crossing(party = 1:n_parties) %>%
+  mutate(region_effect_mean = rnorm(n()),
+         region_effect_var = rnorm(n())) %>%
+  print()
+
+
 # ---- state data -----------------------
 
 # 50 states with Z covariate
@@ -104,6 +118,8 @@ group_level <-
   crossing(state = 1:n_states,
            district = 1:n_districts, 
            party = 1:n_parties) %>%
+  mutate(region = (state %% 5) + 1) %>%
+  left_join(region_level) %>%
   mutate(group = 1:n(),
          X1 = rnorm(n()),
          X2 = rnorm(n())) %>%
@@ -112,11 +128,13 @@ group_level <-
     theta_hypermean = 
       params$const[party] + 
         (X1 * params$beta_d1[party]) + (X2 * params$beta_d2[party]) +
-        (Z * params$beta_state[party]),
+        (Z * params$beta_state[party]) +
+        region_effect_mean,
       sigma_hypermean = 
         params$const_sig[party] + 
         (X1 * params$beta_sig_d1[party]) + (X2 * params$beta_sig_d2[party]) +
-        (Z * params$beta_sig_state[party]),
+        (Z * params$beta_sig_state[party]) + 
+        region_effect_var,
       theta_g = 
         rnorm(n = n(), mean = theta_hypermean, sd = params$sd_theta),
       sigma_g = 
@@ -160,11 +178,11 @@ try(ggplot(group_level, aes(x = sigma_hypermean, y = sigma_g)) +
 # we account for group variance at this point
 i_level <- group_level %>%
   expand(group, i_in_d = 1:n_cases) %>%
-  left_join(select(group_level, state, party, district, group, theta_g, sigma_g)) %>%
+  left_join(select(group_level, region, state, party, district, group, theta_g, sigma_g)) %>%
   mutate(id = 1:n(), 
          theta_i = rnorm(n(), mean = theta_g, sd = sigma_g)) %>%
   # left_join(group_level) %>%
-  select(id, i_in_d, district, state, party, group, theta_i) %>%
+  select(id, i_in_d, district, state, region, party, group, theta_i) %>%
   # select(state, party, district, group, X1, X2, Z, theta_hypermean, theta_g, sigma_g, i_in_d, theta_i, id) %>%
   print()
 
@@ -190,7 +208,7 @@ ij_level <-
          y_draw = as.numeric(rbernoulli(n = n(), p = pi_ij)),
          error = rnorm(n()),
          y_cut = as.numeric((mean + error) > 0)) %>%
-  select(id, item, i_in_d, district, state, party, group, pi_ij, y_cut) %>%
+  select(id, item, i_in_d, district, state, region, party, group, pi_ij, y_cut) %>%
   print()
 
 
@@ -199,7 +217,7 @@ ij_level <-
 # ---- grouped response data -----------------------
 
 grouped_responses <- ij_level %>%
-  group_by(state, district, party, group, item) %>%
+  group_by(region, state, district, party, group, item) %>%
   summarize(pi_bar = mean(pi_ij),
             y = sum(y_cut),
             trials = n()) %>%
@@ -214,7 +232,7 @@ grouped_responses <- ij_level %>%
 model_data <- grouped_responses %>%
   left_join(group_level) %>%
   left_join(state_level) %>%
-  select(state, district, party, group, item, y, trials, starts_with("X"), Z, everything()) %>%
+  select(region, state, district, party, group, item, y, trials, starts_with("X"), Z, everything()) %>%
   print()
 
 
@@ -229,7 +247,7 @@ model_data <- grouped_responses %>%
 # - will eventually need to change this so that it doesn't "intelligently" determine n_group etc.
 # - zero out one of the items
 stan_data <- model_data %>% 
-  mutate_at(vars(state, district, party, group, item), as.factor) %>%
+  mutate_at(vars(region, state, district, party, group, item), as.factor) %>%
   select(-(pi_bar:sigma_g), -X1, -X2, -Z) %>%
   mutate(
     y = case_when(group == 1 & item == 1 ~ as.numeric(0), 
