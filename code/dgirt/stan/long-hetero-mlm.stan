@@ -24,6 +24,7 @@ data {
    
   // caps
   int<lower = 1> n;    // all groups and items (not strictly product)
+  int<lower = 1> n_region;    // n regions
   int<lower = 1> n_state;    // n states
   int<lower = 1> n_district;    // n districts
   int<lower = 1> n_party;    // n parties? (assumed 2?)
@@ -35,6 +36,7 @@ data {
   int<lower = 0> trials[n];      // trials in grp-item
 
   // group index trackers
+  int<lower = 1, upper = n_region> region[n];   
   int<lower = 1, upper = n_state> state[n];   
   int<lower = 1, upper = n_district> district[n];
   int<lower = 1, upper = n_party> party[n];   
@@ -81,14 +83,19 @@ parameters {
   // errors, theta: 
   vector[n_group] z_grp_mean;    // one-d group errors (all independent)
   matrix[n_state, n_party] z_st_mean;    // two-d state errors
+  matrix[n_region, n_party] z_rg_mean;       // RxP two-d region errors
   vector<lower = 0>[n_party] scale_grp_mean;         // two-length group scale
   vector<lower = 0>[n_party] scale_st_mean;         // two-length state scale
+  vector<lower = 0>[n_party] scale_rg_mean;  // P-long region scale
+
 
   // HET: errors, sigma: 
   vector[n_group] z_grp_var;    // one-d group errors (all independent)
   matrix[n_state, n_party] z_st_var;    // two-d state errors
+  matrix[n_region, n_party] z_rg_var;    // two-d state errors
   vector<lower = 0>[n_party] scale_grp_var;         // two-length group scale
   vector<lower = 0>[n_party] scale_st_var;         // two-length state scale
+  vector<lower = 0>[n_party] scale_rg_var;         // two-length state scale
 
   // transpose z-scores for row-indexing below?
 
@@ -110,9 +117,12 @@ transformed parameters {
   // theta regression
   vector[n_group] grp_offset_mean;
   matrix[n_state, n_party] st_offset_mean;
+  matrix[n_region, n_party] rg_offset_mean;
   // HET: log sigma regression
   vector[n_group] grp_offset_var;
   matrix[n_state, n_party] st_offset_var;
+  matrix[n_region, n_party] rg_offset_var;
+
 
 
   dispersion = inv(discrimination);
@@ -131,6 +141,11 @@ transformed parameters {
     //   -> should be handled by {y = 0, n = 0} cases?
 
     // theta regression
+    if (is_nan(rg_offset_mean[region[i], party[i]])) {
+      rg_offset_mean[region[i], party[i]] = 
+        ( z_rg_mean[region[i], party[i]] * scale_rg_mean[party[i]] );
+    }
+
     if (is_nan(st_offset_mean[state[i], party[i]])) {
       st_offset_mean[state[i], party[i]] = 
         ( Z[i] * coef_st_mean[ , party[i]] ) + 
@@ -144,6 +159,11 @@ transformed parameters {
     }
     
     // sigma_g regression
+    if (is_nan(rg_offset_var[region[i], party[i]])) {
+      rg_offset_var[region[i], party[i]] = 
+        ( z_rg_var[region[i], party[i]] * scale_rg_var[party[i]] );
+    }
+
     if (is_nan(st_offset_var[state[i], party[i]])) {
       st_offset_var[state[i], party[i]] = 
         ( Z[i] * coef_st_var[ , party[i]] ) + 
@@ -161,14 +181,18 @@ transformed parameters {
     if (is_nan(theta[group[i]])) {
       theta[group[i]] = 
         const_mean[party[i]] + 
-        grp_offset_mean[group[i]] + st_offset_mean[state[i], party[i]];
+        grp_offset_mean[group[i]] + 
+        st_offset_mean[state[i], party[i]] +
+        rg_offset_mean[region[i], party[i]];
     }
     // within-grp sd
     if (is_nan(sigma_in_g[group[i]])) {
       sigma_in_g[group[i]] = 
         exp(
           const_var[party[i]] + 
-          grp_offset_var[group[i]] + st_offset_var[state[i], party[i]]
+          grp_offset_var[group[i]] + 
+          st_offset_var[state[i], party[i]] +
+          rg_offset_mean[region[i], party[i]]
         );
     }
 
@@ -194,9 +218,12 @@ model {
 
 
   // ---- district and state regressions ----
+  // constants
   const_mean ~ normal([-1, 1], [1, 1]); // TK fix
-  z_grp_mean ~ normal(0, 1);       // group zs, all independent and one-dim
   const_var ~ normal([-1, 1], [1, 1]); // TK fix
+  
+  // group z-scores
+  z_grp_mean ~ normal(0, 1);       // group zs, all independent and one-dim
   z_grp_var ~ normal(0, 1);       // group zs, all independent and one-dim
   
   for (p in 1:n_party) {
@@ -210,11 +237,16 @@ model {
     z_st_mean[ , p] ~ normal(0, 1);     // two-d state Z scores
     z_st_var[ , p] ~ normal(0, 1);     // two-d state Z scores
 
+    z_rg_mean[ , p] ~ normal(0, 1);     // two-d region Z scores
+    z_rg_var[ , p] ~ normal(0, 1);     // two-d region Z scores
+
     scale_grp_mean[p] ~ lognormal(0, 1); // two-vectors of error scales
     scale_st_mean[p] ~ lognormal(0, 1);
+    scale_rg_mean[p] ~ lognormal(0, 1);
 
     scale_grp_var[p] ~ lognormal(0, 1); // two-vectors of error scales
     scale_st_var[p] ~ lognormal(0, 1);
+    scale_rg_var[p] ~ lognormal(0, 1);
 
   }
 

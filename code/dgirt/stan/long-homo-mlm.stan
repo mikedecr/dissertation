@@ -95,8 +95,8 @@ parameters {
   // HET: errors, sigma: 
   // vector[n_group] z_grp_var;    // one-d group errors (all independent)
   // matrix[n_state, n_party] z_st_var;    // two-d state errors
-  // vector<lower = 0>[n_party] scale_grp_var;         // two-length group scale
-  // vector<lower = 0>[n_party] scale_st_var;         // two-length state scale
+  // vector<lower = 0>[n_party] scale_grp_var;       // two-length group scale
+  // vector<lower = 0>[n_party] scale_st_var;        // two-length state scale
 
   // transpose z-scores for row-indexing below?
 

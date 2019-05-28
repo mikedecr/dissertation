@@ -299,11 +299,11 @@ break()
 if (whoami == "michaeldecrescenzo") {
 
   # local stan file
-  long_homsk <-
-  # long_het <-  
+  # long_homsk <-
+  long_het <-  
     stanc(
-      file = here("code", "dgirt", "stan", "long-homo-mlm.stan")
-      # file = here("code", "dgirt", "stan", "long-hetero-mlm.stan")
+      # file = here("code", "dgirt", "stan", "long-homo-mlm.stan")
+      file = here("code", "dgirt", "stan", "long-hetero-mlm.stan")
     ) %>%
     stan_model(stanc_ret = ., verbose = TRUE) %>%
     print()
@@ -320,11 +320,11 @@ if (whoami == "michaeldecrescenzo") {
   #   print()
 
     # local git-pulled model
-  long_homsk <-
-  # long_het <-  
+  # long_homsk <-
+  long_het <-  
     stanc(
-      file = here("code", "dgirt", "stan", "long-homo-mlm.stan")
-      # file = here("code", "dgirt", "stan", "long-hetero-mlm.stan")
+      # file = here("code", "dgirt", "stan", "long-homo-mlm.stan")
+      file = here("code", "dgirt", "stan", "long-hetero-mlm.stan")
     ) %>%
     stan_model(stanc_ret = ., verbose = TRUE) %>%
     print()
@@ -335,8 +335,8 @@ if (whoami == "michaeldecrescenzo") {
   print("no model found")
 }
 
-long_homsk
-# long_het
+# long_homsk
+long_het
 
 
 # save compiled model to box
