@@ -323,11 +323,4 @@ Where $X_{g}$ and $Z_{sp}$ are the same group- and state-level covariates as the
 
 ##### Any other vector/matrix tricks?
 
-##### Read file into an appendix?
-
-
-<!-- 
-```{r stanfile, code = readLines(here::here("code", "dgirt", "stan", "long", "long-homo-mlm.stan")), include = TRUE, echo = TRUE, eval = FALSE}
-```
-
- -->
+##### Read stan files into an appendix?
