@@ -1,0 +1,86 @@
+# Primary Elections and Ideological Choice 
+\label{arg-chapter}
+
+<!-- In chapter \@ref(arg-chapter), we will... -->
+
+
+
+
+<!-- Intro: PARTICIPATION
+- most people don't write letters to members, agencies
+- campaign for office
+- donate money
+ -->
+
+Elections are the foremost venue for citizens to influence government actors and public policy. Classic theories of voting suggest that citizens weigh the policy positions of alternative candidates and vote for the candidate whose platform most closely aligns with their own preferences [@downs:1957:economic-theory]. Political parties simplify the voter's calculations by providing a powerful heuristic in the form of the party label, enabling voters to infer candidates' values and issue positions without expending the effort to thoroughly appraise each campaign [@campbell1960stokes; @green2002partisan; @rahn1993stereotypes]. 
+
+The rise of partisan polarization, however, has complicated the role of parties in U.S.\ politics. Although citizens, journalists, pundits, and even elected leaders frequently bemoan the bitter rhetoric and legislative gridlock that has accompanied the widening partisan divide, political scientists have identified a number of positive representational consequences to polarization. Compared to the parties of the early- and mid-1900s that political scientists believed were alarmingly undifferentiated [@apsa1950parties], in recent decades the Democratic and Republican Parties have taken increasingly divergent and oppositional stances across a wider variety of issues. Voters have "sorted" into partisan groups that occupy distinct ideological locations in American politics, leading to greater consistency in their issue beliefs, greater ideological abstraction in voter attitudes, and increased political participation [@abramowitz1998ideological; @layman_party_2002; @fiorina2005culture; @levendusky2009partisan].
+
+Even as polarization has strengthened many aspects of inter-party representation, it affects within-party representation in a number of troubling ways. Party labels provide starker informational and identity cues about candidates than in decades past, but for the typical voter, there is not much of a decision to be made. \todo{? Hate this} The typical voter is a partisan who intends to cast her ballot for her preferred party, whoever that candidate may be [@bartels2000partisanship; @petrocik_measuring_2009]. As party-line voting has increased, there is a sense in which polarization exacerbates the notion of partisan electoral "capture." 
+  \todo{"A sense in which" come on} 
+For most voters, their choices are locked in long before Election Day. Candidates from their preferred parties have been selected through a nomination process, and voters are more likely to abstain from voting when faced with an undesirable candidate than they are to vote against their parties [@hall-thompson:2018:who-punishes]. Recent research supports this notion of capture amid polarization---when voters must choose between polarized candidates, they become less responsive to candidates' actual platforms and instead are more influenced by motivated reasoning and partisan teamsmanship [@Rogowski:2016:polarized-choices]. Voters relax their ideological scrutiny of candidates to cast low-cost votes for their own party, weakening the influence of policy preferences in electoral representation overall.
+  \todo{More forgiving of bad traits?}
+
+This presents an important problem for our understanding of how elections contribute to the representation of voter preferences in government. Elections are intended to be a voter's choice over alternative political values to be expressed in government, but if the choice of candidates does not present the average partisan voter with realistic alternatives, how should we think about the "representation" of these voters' actual policy preferences? If general elections are relatively weak venue for democratic accountability, does the U.S.\ electoral system incorporate these preferences in other ways?
+
+When the choice before voters in the general election does not present realistic alternatives, political scientists naturally shift their focus to the nomination of partisan candidates. V.O.\ Key, for example, famously studied one-party rule in the American South, asking whether competition within the Southern Democratic Party could provide a quality of representation similar to two-party competition [@Key:1949:southern-politics]. Although scholars are right to examine within-party competition, focusing on single-party dominance is a serious limitation. Within-party representation presents interesting questions that apply to far wider contexts. Even in races between viable candidates from both major parties, within-party competition plays a crucial role simply due to the fact that partisan voters almost certainly cast a vote for their own party. Rank-and-file partisan constituents are all but captured---if they are to express their policy preferences through the act of voting, their voices may register as relatively weak because they present little electoral risk to their party in the general election. 
+  \todo{what am I saying here?}
+The nomination stage---the primary election in particular---remains an important venue for the representation of partisans' policy views, whether the general election is closely contested or not.
+
+This dissertation is chiefly concerned with the policy preferences of partisan voters and their role in electoral representation through primary politics. The study of American electoral politics has not ignored the representational function of primary elections [@geer:1988:primary-electorates; @norrander:1989:primary-voters; @cohen-et-al:2009:party-decides; @aldrich:2011:why-parties], but as I discuss below, the quantifiable impact of primary voters' policy preferences in government is a startlingly open question. 
+  \todo{punch up or just preview?}
+Several existing studies have examined other aspects of primary representation, such as the introduction of the direct primary [@ansolabehere-et-al:2010:direct-primary], how candidates position themselves in response to the presence or threat of primary challenges 
+[@burden:2004:candidate-positioning; @brady-han-pope:2007:out-of-step; @hirano-et-al:2010:primary-polarization], and how primary nomination rules affect elite polarization [@hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems; @rogowski-langella:2015:primary-systems]. Though these studies address interesting aspects of electoral representation and party competition, they cannot speak directly to the influence of voter preferences on (1) the positioning of candidates and (2) the outcomes of primary elections.
+
+The absence of voter preferences from the empirical study of primaries is troubling because they play a crucial role in the dominant theory that relates representation to primary politics. Although the Downsian model of candidate positioning explains the incentives for candidates to stake out moderate policy positions to cater to the ideological "median voter" [@downs:1957:economic-theory], candidates behave differently in the real world. Instead, candidates engage in highly partisan behavior and take divergent issue stances even on salient local issues and in closely competitive districts [@ansolabehere-et-al:2001:candidate-positioning; @fowler-hall:2016:convergence]. But why? Scholars and political observers have argued that because competing in the general election requires each candidate to clinch their party's nomination contest, these candidates face a combination of convergence-promoting and divergence-promoting incentives. Primary elections tend to be dominated by partisan voters who are attentive to politics and hold stronger, non-centrist issue preferences compared to the average general-election voter.^[
+  Primary elections are not *entirely* partisan affairs. States vary in their regulations that primaries be "closed" to partisan voters only, that voters must preregister with their preferred party to vote in the primary, and even whether primaries are partisan at all [see @mcghee-et-al:2014:nomination-systems for a thorough and contemporary review of these regulations]. Although many observers suspect that regulations on primary openness greatly influence the ideological extremity of the primary electorate, recent survey research finds that these regulations do little to moderate the strong partisan composition of primary voters [@hill:2015:nominating-institution].
+]
+As a result, competition in the primary stage may present a more acute electoral threat to partisan candidates than general elections do---a "strategic-positioning dilemma" that leads candidates to take ideological issue stances in favor of convergent stances that target the median voter [@aldrich:1983:downsian-activism; @burden:2004:candidate-positioning; @brady-han-pope:2007:out-of-step; @hill:2015:nominating-institution]. \todo{considered cites in comment}
+<!-- \citep{aldrich1983downsian,burden2004candidate,brady2007primary,aldrich2011parties,jacobson2015politics,hill2015institution}. -->
+ 
+I argue that if we were to construct ideal tests for this theory, the preferences of partisan primary voters play a key role. First, the theory predicts that candidates strategically position themselves to appeal to primary voters. That is, if we could construct an ideological summary of the partisan primary voters in a district, we ought to find that the level of voter conservatism affects the conservatism of the primary candidates' campaign stances. And second, if primary voters present a credible threat to primary candidates (specifically via their policy preferences), they should vote for the candidate who best represents their policy views. We should observe that as the degree of primary voter conservatism increases, the probability that a more conservative candidate is nominated increases as well. These two predictions are the core empirical implications of the "strategic positioning dilemma" theory of representation in primaries, and they each require researchers to know the preferences of partisan voters within an electoral district. Yet, the preferences of the partisan constituency are either absent or dangerously misconstrued in the existing literature, and we have been unable to answer these key questions as a result.
+
+
+
+<!-- 
+pro:
+
+- responsiveness evidence
+
+
+con: 
+
+- information constraints
+- party over policy
+- Warshaw spatial voting (US House) (but also...maybe primary electorates are better)
+
+-->
+
+
+## Limitations for estimating ideal points from votes
+
+This section shows the limitations of inferring voter preferences from vote shares, using notation similar to @kernell2009giving. 
+
+Georgia Kernell -@kernell2009giving demonstrates the difficulty of inferring district-level preferences (median voter locations) from observed votes. First, she shows that the ordering of district medians cannot be inferred from the vote shares of one election. Suppose we wish to place districts $1$ and $2$ on an ideological dimension. We observe that the Republican share of the two party vote in each district is $p_{1}$ and $p_{2}$. Assuming that voter preferences are normally distributed around the median voter (equivalent to the mean voter), then vote shares can be understood as the result of the normal CDF by comparing the candidate's ideal point to the distribution of voter preferences.
+\begin{align}
+  p_{i} &= \Phi\left(\frac{c - \mu_{i}}{\sigma_{i}}\right)
+\end{align}
+By inverting the normal CDF, she shows that the difference in medians $\mu_{1}$ and $\mu_{2}$ is not proportional to vote shares in each district, but to the $z$-score of the vote in each district.
+\begin{align}
+  \mu_{2} - \mu_{1} &\propto Z\left(p_{2}\right) - Z\left(p_{1}\right),
+\end{align}
+The nonlinear relationship between $\mu_{i}$ and $p_{i}$ suggests that district preferences are unidentifiable without using multiple elections resulting from the same fixed set of voter preferences $\mu_{i}$.
+
+Following a similar setup, I demonstrate that the task of inferring the positions of multiple parties is even more difficult. First, rather than assuming that voter preferences in a district are normally distributed with one mean and one dispersion term, we assume that voter preferences are mixture of two distributions (indexed $1$ and $2$). Each party votes for a Republican candidate akin to the normal CDF as before, but the vote share $p$ for the Republican reflects the size of each partisan constituency in the district as well. Suppose that the size and ideal point of party unaffiliated is represented by a normally distributed error term $\varepsilon$:
+\begin{align}
+  p &= \Phi\left(\frac{c - \mu_{1}}{\sigma_{1}}\right)\pi_{1} + \Phi\left(\frac{c - \mu_{2}}{\sigma_{2}}\right)\pi_{2} + \varepsilon,
+\end{align}
+where $p_{i}$ reflects the proportion of the electorate that identifies with party $i$. Isolating $\mu_{1}$ and $\mu_{2}$ in this setup is rather difficult, and the choice of simplifying assumptions is limited. We could assume that the variance of preferences in each party is equal, $\sigma_{1} = \sigma_{2} = \sigma$, and manipulate the equation somewhat...
+\begin{align}
+  Z\left(p\right)\sigma &= \left(c - \mu_{1}\right)\pi_{1} + \left(c - \mu_{2}\right)\pi_{2},
+\end{align}
+but the limitations are still significant. We could not make a simplifying assumption that $\pi_{1} = \pi_{2}$ for but a handful of districts. We might estimate $\pi_{i}$ from survey data \todo{but what}
+
+
+
+

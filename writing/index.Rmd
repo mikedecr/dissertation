@@ -1,0 +1,85 @@
+---
+title: "Do Primaries Work?"
+subtitle: "Candidate Positioning and Representation in Nominating Elections" 
+full-title: "Do Primaries Work? Nomination Politics and the Representation of Local Partisan Preferences"
+author: "Michael G. DeCrescenzo"
+grad-year: 2020
+site: bookdown::bookdown_site
+documentclass: memoir
+output:
+  bookdown::pdf_book:
+    number_sections: true # false?
+    dev: cairo_pdf
+    # template: assets/ogg-template.tex
+header-includes:
+  - \usepackage{todonotes}
+  - \usepackage[lf, mathtabular, minionint]{MinionPro}
+  - \usepackage{MyriadPro}
+  - \usepackage[varqu, scaled = 0.95]{zi4}
+  - \setsecnumdepth{subsubsection} 
+  - \setsecheadstyle{\raggedright \large \scshape}
+  - \setsubsecheadstyle{\raggedright \scshape} 
+  - \setsubsubsecheadstyle{\raggedright \itshape}
+  - \setsubsubsecheadstyle{\raggedright \itshape}
+  - \setparaheadstyle{\raggedright \itshape}
+  - \chapterstyle{dowding}
+  - \pagestyle{simple}
+    # change page nums on chapter title page 
+  - \copypagestyle{chapter}{simple}
+  - \makeoddhead{chapter}{}{}{\thepage}
+  - \makeevenhead{chapter}{}{}{\thepage}
+  - \makeoddfoot{chapter}{}{}{}
+  - \makeevenfoot{chapter}{}{}{}
+# output:
+#   buckydown::thesis_pdf: default
+# Data for the PDF version
+defense-date: May 1, 2020
+# affiliation: > 
+#   Department of Political Science, 
+#   University of Wisconsin--Madison"
+school: "University of Wisconsin--Madison"
+program: "Political Science"
+chair: "Barry C. Burden"
+signature: 
+  - "Barry C. Burden"
+  - "Kenneth R. Mayer"
+  - "Eleanor Neff Powell"
+  - "Alexander Tahk"
+  - "Michael W. Wagner"
+abstract-school: "The University of Wisconsin--Madison"
+abstract-year: 2020
+abstract-advisor: "Professor Barry C. Burden"
+# abstract: '`r readLines("abstract.rmd")`'
+dedication: |
+  I chose to be a worse political scientist 
+
+  because it made me a better person.
+# thanks: |
+#   Thanks to [insert people]:
+
+#   - My social environment (smh)
+#   - Family
+#   - Professors
+#   - Friends
+#   - The Haters
+copyright-license: Creative Commons Attribution-Noncommercial-ShareAlike 4.0 License.
+# these don't do anything?
+# lot: true
+# lof: true
+# lot-title: List of tables
+# lof-title: List of figures
+csl: assets/ajps.csl
+bibliography: assets/thesis.bib
+geometry: "left = 1.25in, right = 1.25in, top = 1.25in, bottom = 1.25in"
+fontsize: 12pt
+---
+
+```{r include = FALSE, eval = FALSE}
+# setwd(here::here("writing"))
+# bookdown::render_book('index.Rmd', 'bookdown::pdf_book')
+# setwd(here::here())
+
+# system('afplay /System/Library/Sounds/Pop.aiff; afplay /System/Library/Sounds/Pop.aiff')
+
+# system('open ./_book/*.pdf')
+```

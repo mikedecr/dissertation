@@ -1,0 +1,333 @@
+# Modeling the Constituency's Policy Preferences
+
+
+
+```{r setup-knitr, include = FALSE}
+# chunk options
+library("knitr")
+opts_chunk$set(cache = TRUE, include = FALSE, echo = FALSE, collapse = TRUE,
+               warning = FALSE, message = FALSE,
+               dev = "cairo_pdf",
+               fig.align = "center", fig.path = 'figs/')
+
+```
+
+```{r setup-chapter-2, cache = FALSE}
+library("here")
+library("magrittr")
+library("tidyverse")
+library("ggplot2")
+library("extrafont")
+library("latex2exp")
+
+# # custom ggtheme, import from Github
+# theme_url <- 
+#   "https://raw.githubusercontent.com/mikedecr/custom-R/master/theme-mgd/theme-mgd.R"
+# source(theme_url)
+# (source(here("code/_assets/theme-thesis.R")))
+# theme_set(theme_mgd_base())
+
+theme_set(
+  ggthemes::theme_base(base_size = 14, base_family = "Minion Pro") + 
+    theme(plot.background = element_blank(), 
+          axis.ticks = element_line(lineend = "square"), 
+          axis.ticks.length = unit(0.25, "lines"), 
+          axis.text = element_text(size = 10))
+)
+```
+
+
+
+## Ideal Points and Spatial Models in Political Science
+
+What is the formal model intuition? 
+
+
+```{r test-theme, include = TRUE, echo = FALSE, cache = FALSE, fig.height = 3, fig.width = 6, out.width = "100%"}
+ggplot(iris, aes(Sepal.Length)) +
+  geom_histogram() +
+  facet_wrap(~ Species) 
+```
+
+
+## Item Response Theory
+
+### Latent variable intuition
+
+Ideology itself is unobservable. It affects the way people feel about policy, but we don't directly observe it. Explicit measures of ideological self identification are not themselves reliable because people don't understand those items
+  \todo{TK}
+  <!-- cite -->
+and because they aren't great at predicting policy views either
+  \todo{TK}
+  <!-- cite -->
+
+### Ability-only model
+
+We begin with a simple model where an individual $i$ gives a conservative response to item $j$ if they derive more utility than they would from a liberal response. Their utility function is made up of their ideal point $\theta_{i}$ and idiosyncratic error $\varepsilon_{\mathit{ij}}$. We can assume that the threshold between liberal and conservative responses is at $0$; this is merely a scale and location restriction on what is otherwise an unstructured ideological space. 
+\begin{align}
+  y_{\mathit{ij}} &= I\left( \theta_{i} + \varepsilon_{\mathit{ij}} > 0 \right)
+\end{align}
+This means $y_{\mathit{ij}} = 1$ when the utility is positive, and $y_{\mathit{ij}} = 0$ otherwise.
+
+Assuming that the idiosyncratic utility is $\varepsilon_{\mathit{ij}} \sim \mathrm{Normal}(0, 1)$ gives us a probit model,
+\begin{align}
+  \mathrm{Pr}\left( y_{\mathit{ij}} = 1 \right) 
+    &= 
+  \Phi \left( \theta_{i} \right),
+\end{align}
+where $\Phi(\cdot)$ is the Gaussian cumulative distribution function. This assumption restricts $\theta$ such that the probability of a correct response is $50\%$ when $\theta = 0$. The scale of $\theta$ is also restricted by the assumption that $\mathrm{Var}\left[\varepsilon_{\mathit{ij}}\right] = 1$.
+
+```{r ability-model, include = TRUE, out.width = "80%", fig.width = 6, fig.height = 4, fig.cap = "Ability-only model of item response"}
+# No systematic item effects, only a normal CDF
+ability_bound <- 3
+
+tibble(theta = seq(-ability_bound, ability_bound, .01)) %>%
+  mutate(p = pnorm(q = theta, mean = 0, sd = 1)) %>%
+  ggplot(aes(x = theta, y = p)) +
+    coord_cartesian(xlim = c(-ability_bound, ability_bound),
+                    ylim = c(0, 1)) +
+    geom_segment(aes(x = -4, xend = 0, y = 0.5, yend = 0.5), 
+                 linetype = "dotted", size = 0.25, color = "steelblue") +
+    geom_segment(aes(x = 0, xend = 0, y = 0.5, yend = -1), 
+                 linetype = "dotted", size = 0.25, color = "steelblue") +
+    geom_line() +
+    annotate(geom = "text", x = 0, y = 0.5, 
+             label = TeX("$\\mathrm{Pr}(\\mathit{y}_{\\mathit{ij}} = 1) = 0.5$\n when $\\theta_{\\mathit{i}}$ is $0$"),
+             hjust = -0.2,
+             family = "Minion Pro") +
+    labs(x = TeX("Ideal Point $(\\theta_{\\mathit{i}})$"),
+         y = "Probability of Conservative Response") 
+```
+
+
+### One-parameter Rasch model
+
+Ability model assumes no "item effects"---there is no systematic variation at the item level that would lean to a correlated effect for one item across individuals.
+  \todo{e.g.}
+  <!-- such as ... difficulty of a test question -->
+
+This is the justification for the one-parameter Rasch model, developed in an educational testing framework. The model defines the probability that individual $i$ answers item $j$ "correctly" as a comparison between an individual $i$'s latent "ability" ($\theta_{i}$) and a test question $j$'s "difficulty" ($\kappa_{j}$). Assuming that other disturbances affecting item responses ($\varepsilon_{\mathit{ij}}$) are normally distributed, individual $i$'s response to item $j$ is
+\begin{align}
+  y_{\mathit{ij}} &= 
+    I\left( \left[\theta_{i} - \kappa_{j}\right] + \varepsilon_{\mathit{ij}} > 0 \right),
+\end{align}
+which yields a probit model for a discrete outcome.
+\begin{align} \label{eq:one-param}
+  \mathrm{Pr}\left( y_{\mathit{ij}} = 1 \right) 
+    &= 
+    \Phi \left( \theta_{i} - \kappa_{j} \right)
+\end{align}
+
+Adapting this model to the context of survey response, an individual respondent $i$ is asked to choose between two alternatives on policy item $j$. We let $\theta_{i}$ be $i$'s ideal point on a liberal-conservative dimension, where larger values of $\theta$ are more conservative, and $\kappa_{j}$ is the midpoint between the liberal and conservative policy alternatives. Respondent $i$ is more likely to give a conservative response on policy $j$ if their ideal point is to the "right" of the item midpoint (their ideal point is nearer to the conservative policy choice), but their response is affected by other normally distributed factors and is thus predicted only probabilistically.
+
+
+### Two-parameter Rasch Model
+
+The item-response model makes sense only under the assumption that policy issues are choices along a single underlying dimension. The one parameter model allows non-ideological factors to affect item responses but assumes that these extraneous factors are independent across items and individuals. Policy issues don't all have the same salience to partisan and ideological debate, however, so political scientists often model policy item responses using a two-parameter model. The two-parameter model includes the additional item parameter $\beta_{j}$, which relaxes the assumption that all items are equally related to latent ideology. This "discrimination" parameter captures how strongly the item divides the responses of liberals and conservatives. 
+\begin{align}
+  \mathrm{Pr}\left( y_{\mathit{ij}} = 1 \right)
+  &= 
+    \Phi \left( \beta_{j}\left[\theta_{i} - \kappa_{j}\right] \right),
+\end{align}
+
+
+
+
+```{r example-iccs, include = TRUE, echo = FALSE, fig.cap = str_glue("Examples of item characteristic curves for {ex_items} simulated items."), fig.width = 6, fig.height = 4, out.width = "80%"}
+# ---- create example ICCs -----------------------
+
+set.seed(2012)
+
+ex_items <- 5
+
+ex_item_params <- 
+  tibble(cutpoint = rnorm(ex_items, 0, 1.5), 
+         discrimination = rlnorm(ex_items, 0, 1)) %>%
+  mutate(item = 1:n()) 
+
+ex_iccs <- ex_item_params %>%
+crossing(theta = seq(-5, 5, .01)) %>%
+  mutate(eta = discrimination * (theta - cutpoint),
+         prob = pnorm(eta))
+
+
+# ---- plot them -----------------------
+
+ggplot(ex_iccs, aes(x = theta, y = prob)) +
+  geom_point(data = ex_item_params, aes(x = cutpoint, y = 0.5),
+             size = 1.5) +
+  geom_line(aes(group = as.factor(item)), show.legend = FALSE) +
+  scale_y_continuous(breaks = c(0, .5, 1)) +
+  scale_x_continuous(breaks = c(-3, 0, 3),
+                     labels = c("Liberal", "Moderate", "Conservative")) +
+  scale_color_brewer(palette = "Set2") +
+  labs(x = TeX("Ideal Point $(\\theta_{\\mathit{i}})$"), y = "Probability of Conservative Response") +
+  NULL
+```
+
+
+
+### Applications of the IRT Approach
+
+<!-- ### Estimating Citizen Ideology with Survey Data -->
+
+<!-- ### Statistical Estimation of Ideal Points -->
+
+
+
+
+## A Heteroskedastic Model of Party-Public Ideology
+
+This section outlines my ideal point model for local partisan groups. First, I lay out the intuition and notation of a basic individual-level IRT model and its connection to the group-level model. I then lay out my hierarchical model of party-public means and its dynamic form. Finally, I discuss model identification and prior distributions.
+
+
+<!-- ### Static Model -->
+
+### Group-Level IRT Setup
+
+<!-- Start this in a utility framework?
+
+- normal error
+- symmetric utility loss on either end of kappa
+
+-->
+
+To motivate the intuition of the group model, we begin the intuition of the individual and then reparameterize it.
+
+Assume that individuals answer policy items according to their own individual ideal points. We observe a binary response from individual $i$ to item $j$, which we model as a probabilistic outcome with probability $\pi_{\mathit{ij}}$.
+\begin{align}
+  y_{\mathit{ij}} &\sim \mathrm{Bernoulli}(\pi_{\mathit{ij}})
+\end{align}
+Our model for the response probability is given by a probit model, following the utility intuition described above.
+\begin{align}
+  \pi_{\mathit{ij}} &= \Phi\left( \beta_{j}\left[ \theta_{i} - \kappa_{j} \right] \right)
+\end{align}
+
+Let $\sigma_{j} = \beta^{-1}_{j}$, so item discrimination is instead expressed as a "dispersion" parameter [@fox:2010:bayesian-IRT; @caughey-warshaw:2015:DGIRT].
+\begin{align}
+  \pi_{\mathit{ij}} &= \Phi\left( \frac{\theta_{i} - \kappa_{j}}{\sigma_{j}} \right)
+\end{align}
+
+Assume that individuals are normal draws from the mean of their group, where a group is a party in a district.^[
+  Notation for Normal distributions will always describe the scale parameter in terms of standard deviation $\sigma$ instead of variance $\sigma^2$. This keeps the notation consistent with the way Normal distributions are expressed in Stan code.
+]
+\begin{align}
+  \theta_{i} &\sim \mathrm{Normal}\left( \theta_{g[i]}, \sigma_{g[i]} \right)
+\end{align}
+
+The outcome data at the group level, rather than individual Bernoulli outcomes, are expressed as grouped Binomial outcomes $Y_{gj}$: the number of conservative responses in group $g$ to item $j$ given the total number of responses per group per item, $n_{gj}$. The probability that a randomly selected individual gives a conservative response (the "true conservative probability" to item $j$ in group $g$) is $\bar{\pi}_{gj}$.
+\begin{align}
+  Y_{gj} &= \mathrm{Binomial}\left( \bar{\pi}_{gj}, n_{gj} \right)
+\end{align}
+
+The probability for each item-group is given a probit model from the spatial utility model.
+\begin{align}
+  \bar{\pi}_{gj} &= 
+    \Phi\left( 
+      \frac{
+        \theta_{g} - \kappa_{j}
+      }{
+        \sqrt{ \sigma_{g}^{2} + \sigma^{2}_{j} }
+      } 
+    \right),
+\end{align}
+where $\sigma_{g}$ is the standard deviation of ideal points within group $g$, which is introduced because we are now estimating the mean response within a group rather than an individual item response. Larger values of $\sigma_{g}$ indicate more uncertainty over the item response and attenuate $\bar{\pi}_{gj}$ toward $50\%$.^[
+  The binomial setup assumes that each of the $n_{gj}$ trials is independent conditional on the mean ideal point $\theta_{g}$ and the item parameters $\kappa_{j}$ and $\sigma_{j}$. This assumption is violated if individuals in a group answer multiple items---errors are not independent across items. I describe a design-weighting correction for this assumption in Section&nbsp;\@ref(stan-features).
+]
+
+
+### Hierarchical Model for Group Means and Scales
+
+Estimates for $\theta_{g}$ and scales $\sigma_{g}$ are improved using a hierarchical model.
+  \todo{scales}
+<!-- why "scales" -->
+
+
+- Using geographic data to improve estimation
+- Hierarchical model accounts for multiple sources of variation
+- Partial pooling estimates for groups without as much data
+- First, using traditional notation. Reparameterization in Section&nbsp;\@ref(stan-features) greatly improves the estimation in Stan.
+
+<!-- ##### Conventional hierarchical notation -->
+We consider it a draw a distribution with hypermean $\bar{\theta}_{g}$ and scalar standard deviation $\psi_{\theta}$
+\begin{align}
+  \theta_{g} &\sim \left(\bar{\theta}_{g}, \psi_{\theta}\right)
+\end{align}
+The hierarchical setup improves estimates by casting the hypermean as a conditional mean from a regression on group data. We specify this regression using geographic-level data from the districts and states where each group is located:
+\begin{align}
+  \bar{\theta}_{g} &= \beta_{0p[g]} + X_{d[g]}\beta_{p[g]} + \alpha_{s[g]p[g]},
+\end{align}
+where $\beta_{0}$ is a constant, $X_{d}$ represents district-level data with coefficients $\beta$, and $\alpha_{s}$ represents state effects. A key feature of the hierarchical model is that the parameters are indexed by $p$ and thus dependent on the party to which $g$ belongs. This means there are two constants $\beta_{0p}$  where $p \in \{1, 2\}$ indexes party. Group-level covariates $X_{g}$ have coefficient vectors $\beta_{p}$ that vary by party as well. We include this flexibility because geographic covariates (such as racial composition) may have different correlations with ideal points depending on the party. This is a departure from the model laid out by @caughey-warshaw:2015:DGIRT, which holds the geographic regression fixed for all groups in the data.
+
+We use a similar hierarchical regression for group scales (suppressing the $g$ subscript which is implied by the combination of $d$ and $p$).
+\begin{align}
+  \log \left( \sigma_{g} \right) 
+  &\sim 
+  \mathrm{Normal}\left( 
+    \delta_{0p} + X_{d}\delta_{p} + \eta_{sp}, 
+    \psi_{\sigma}
+  \right),
+\end{align}
+where $\delta_{0p}$ represents constants for each party, $\delta_{p}$ is a party-specific vector of coefficients on district features, and $\eta_{sp}$ are party-specific state effects.
+
+The state effects are in turn regressions on state features.
+\begin{align}
+  \alpha_{sp} &\sim
+    \mathrm{Normal}\left(Z_{s}\gamma_{p} + \rho_{r[s]p}, \psi_{\alpha}\right), \\
+  \eta_{sp} &\sim 
+    \mathrm{Normal}\left(Z_{s}\zeta_{p} + \xi_{r[s]p}, \psi_{\eta}\right),
+\end{align}
+where $Z_{s}$ contains state covariates which have party-specific coefficients $\gamma_{p}$ (for group means) or $\zeta_{p}$ (for group scales). Each state effect is a function of a party-specific region effect $\rho_{rp}$ (for group means) and $\xi_{rp}$ (for group scales) for Census regions indexed $r$.
+
+
+
+### Dynamic Model
+
+
+### Priors and Identification
+
+
+
+
+
+## Model Implementation in Stan {#stan-features}
+
+<!-- Non-Centered Parameterization -->
+Hierarchical models often have posterior distributions whose curvature presents difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations]. To improve the estimation in Stan,
+  \todo{early caveats about references to Stan}
+<!-- Flag early on that I'll be setting things up to make things easier in Stan -->
+I parameterize the hierarchical models in the "non-centered" rather than the "centered" form. Whereas the centered form considers $\theta_g$ as a random draw from a distribution, the non-centered parameterization considers $\theta_{g}$ as a function of the hypermean and a random error.
+\begin{align}
+  \theta_{g} &=
+    \beta_{0p} + X_{g}\beta_{p} + \alpha_{s[g]} + z_{g}\varepsilon
+\end{align}
+where $z_{g}\varepsilon$ represents a group-level error term. It is composed of a $z$-score that is $\mathrm{Normal}\left(0, 1\right)$ and a scale parameter $\varepsilon$. The non-centered paramaterization has the same algebraic behavior as the centered parameterization, but it has the practical effect of improving Monte Carlo sampling by de-correlating the parameters in the hierarchical model. We can also de-center the $\alpha_{s[g]}$ term
+\begin{align}
+  \alpha_{s[g]p} &= Z_{s[g]}\gamma_{p} + u_{sp}\tau
+\end{align}
+where $u_{sp}$ is a $z$-score distributed $\mathrm{Normal}\left(0, 1\right)$, and $\tau$ is a scale factor.
+
+<!-- Heteroskedastic model -->
+We also have a hierarchical model that predicts the ideal point standard deviation within each group, $\sigma_{g}$. This makes the model "heteroskedastic"---we are modeling the mean ideal point within each group and the variance, conditional on hierarchical covariates. The model for $\sigma_{g}$ in non-centered form is as follows:
+\begin{align}
+  \log(\sigma_{g}) &= X_{g}\delta_{p} + Z_{s[g]}\eta_{p} + m_{g}\nu + m_{sp}\lambda
+\end{align}
+Where $X_{g}$ and $Z_{sp}$ are the same group- and state-level covariates as the above regression, $\delta_{p}$ and $\eta_{p}$ are party-varying coefficients. The terms $m_{g}\nu$ and $m_{sp}\lambda$ are "factored" error terms for groups and states, where $m_{g}$ and $m_{sp}$ are each distributed $\mathrm{Normal\left(0, 1\right)}$, while $\nu$ and $\lambda$ are scale factors.
+  \todo{Factoring}
+<!-- Describe it as factoring the scale parameter out of an error term} -->
+
+
+##### IRT Model
+
+##### Noncentered Hierarchical Model
+
+##### Any other vector/matrix tricks?
+
+##### Read file into an appendix?
+
+
+<!-- 
+```{r stanfile, code = readLines(here::here("code", "dgirt", "stan", "long", "long-homo-mlm.stan")), include = TRUE, echo = TRUE, eval = FALSE}
+```
+
+ -->

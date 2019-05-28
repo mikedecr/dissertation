@@ -1,0 +1,9 @@
+<!-- black links -->
+  <!-- \hypersetup{linkcolor = black} -->
+
+<!-- content pages and names -->
+  \tableofcontents
+
+  \listoftables 
+
+  \listoffigures

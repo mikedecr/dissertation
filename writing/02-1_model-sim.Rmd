@@ -1,0 +1,27 @@
+```{r setup-knitr-model-sim, include = FALSE}
+# chunk options
+library("knitr")
+opts_chunk$set(eval = TRUE, echo = FALSE, include = FALSE,
+               cache = TRUE, collapse = TRUE,
+               warning = FALSE, message = FALSE,
+               dev = "cairo_pdf",
+               fig.align = "center", fig.path = 'figs/')
+
+```
+
+
+
+## Simulation and Model Validation
+
+Doing a non-centered parameterization
+
+<!-- Distill the simulation stuff here 
+
+- Static, homoskedastic
+- Static and heteroskedastic
+- Heteroskedastic and dynamic
+
+-->
+
+
+
