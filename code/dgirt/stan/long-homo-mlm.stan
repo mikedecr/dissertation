@@ -68,16 +68,27 @@ parameters {
 
   
   // --- HIERARCHY ---
-  // regression
-  vector[n_party] intercept;          // two-length intercept     
-  matrix[k_d, n_party] group_coefs;   // two-d group coefs
-  matrix[k_s, n_party] state_coefs;   // two-d state coefs
+  // theta hypermean regression
+  vector[n_party] const_mean;          // two-length intercept     
+  matrix[k_d, n_party] coef_grp_mean;   // two-d group coefs
+  matrix[k_s, n_party] coef_st_mean;   // two-d state coefs
+
+  // HET: sigma hypermean regression
+  // vector[n_party] const_var;          // two-length intercept     
+  // matrix[k_d, n_party] coef_grp_var;   // two-d group coefs
+  // matrix[k_s, n_party] coef_st_var;   // two-d state coefs
   
-  // errors: 
-  vector[n_group] z_group;    // one-d group errors (all independent)
-  matrix[n_state, n_party] z_state;    // two-d state errors
-  vector<lower = 0>[n_party] scale_group;         // two-length group scale
-  vector<lower = 0>[n_party] scale_state;         // two-length state scale
+  // errors, theta: 
+  vector[n_group] z_grp_mean;    // one-d group errors (all independent)
+  matrix[n_state, n_party] z_st_mean;    // two-d state errors
+  vector<lower = 0>[n_party] scale_grp_mean;         // two-length group scale
+  vector<lower = 0>[n_party] scale_st_mean;         // two-length state scale
+
+  // HET: errors, sigma: 
+  // vector[n_group] z_grp_var;    // one-d group errors (all independent)
+  // matrix[n_state, n_party] z_st_var;    // two-d state errors
+  // vector<lower = 0>[n_party] scale_grp_var;         // two-length group scale
+  // vector<lower = 0>[n_party] scale_st_var;         // two-length state scale
 
   // transpose z-scores for row-indexing below?
 
@@ -94,37 +105,19 @@ transformed parameters {
   // vector[n] eta2; // normal CDF
   // vector<lower = 0, upper = 1>[n] pprob; // normal CDF
 
-  // --- THETA HYPERMEAN ---
-  // simple hierarchical params
-  vector[n_group] group_offset;
-  matrix[n_state, n_party] state_offset;
+  // --- hierarchical regressions ---
+  // theta regression
+  vector[n_group] grp_offset_mean;
+  matrix[n_state, n_party] st_offset_mean;
+  // HET: log sigma regression
+  // vector[n_group] grp_offset_var;
+  // matrix[n_state, n_party] st_offset_var;
 
 
   dispersion = inv(discrimination);
 
   // loop over groups to get theta
   // future: log(sigma) regressions
-
-  // for (g in 1:n_group) {
-
-  //   // offsets are f(hypermean + error)
-  //   // Z and X are still N long! 
-  //   state_offset[state[g], party[g]] = 
-  //     state_hypermean[state[g], party[g]] + state_hypererror[state[g], party[g]];
-  //   state_hypermean[state[g], party[g]] = 
-  //     ( Z[g, ] * state_coefs[ , party[g]] );
-  //   state_hypererror[state[g], party[g]] = 
-  //     ( z_state[state[g], party[g]] * scale_state[party[g]] );
-
-  //   group_offset[g] = 
-  //     ( X[g, ] * group_coefs[ , party[g]] ) + 
-  //     ( z_group[g] * scale_group[party[g]] );
-
-  //   // clean up
-  //   theta[g] = 
-  //     intercept[party[g]] + 
-  //     group_offset[g] + state_offset[state[g], party[g]];
-  // }
 
   // IRT index (loop group-item)
   // later: expando
@@ -135,23 +128,23 @@ transformed parameters {
     // hierarchical params assigned ONLY for missing data
     // ¿¿?? we need to assign for EVERY group, not just where we have data?
     //   -> should be handled by {y = 0, n = 0} cases?
-    if (is_nan(state_offset[state[i], party[i]])) {
-      state_offset[state[i], party[i]] = 
-        ( Z[i] * state_coefs[ , party[i]] ) + 
-        ( z_state[state[i], party[i]] * scale_state[party[i]] );
+    if (is_nan(st_offset_mean[state[i], party[i]])) {
+      st_offset_mean[state[i], party[i]] = 
+        ( Z[i] * coef_st_mean[ , party[i]] ) + 
+        ( z_st_mean[state[i], party[i]] * scale_st_mean[party[i]] );
     }
 
-    if (is_nan(group_offset[group[i]])) {
-      group_offset[group[i]] = 
-        ( X[i] * group_coefs[ , party[i]] ) + 
-        ( z_group[group[i]] * scale_group[party[i]] );
+    if (is_nan(grp_offset_mean[group[i]])) {
+      grp_offset_mean[group[i]] = 
+        ( X[i] * coef_grp_mean[ , party[i]] ) + 
+        ( z_grp_mean[group[i]] * scale_grp_mean[party[i]] );
     }
 
     // clean up
     if (is_nan(theta[group[i]])) {
       theta[group[i]] = 
-        intercept[party[i]] + 
-        group_offset[group[i]] + state_offset[state[i], party[i]];
+        const_mean[party[i]] + 
+        grp_offset_mean[group[i]] + st_offset_mean[state[i], party[i]];
     }
 
     eta[i] = 
@@ -176,18 +169,18 @@ model {
 
 
   // ---- district and state regressions ----
-  intercept ~ normal([-1, 1], [1, 1]); // TK fix
-  z_group ~ normal(0, 1);       // group zs, all independent and one-dim
+  const_mean ~ normal([-1, 1], [1, 1]); // TK fix
+  z_grp_mean ~ normal(0, 1);       // group zs, all independent and one-dim
   
   for (p in 1:n_party) {
     
-    group_coefs[ , p] ~ normal(0, 1); // multivariate? soon DLM
-    state_coefs[ , p] ~ normal(0, 1);
+    coef_grp_mean[ , p] ~ normal(0, 1); // multivariate? soon DLM
+    coef_st_mean[ , p] ~ normal(0, 1);
 
-    z_state[ , p] ~ normal(0, 1);     // two-d state Z scores
+    z_st_mean[ , p] ~ normal(0, 1);     // two-d state Z scores
 
-    scale_group[p] ~ lognormal(0, 1); // two-vectors of error scales
-    scale_state[p] ~ lognormal(0, 1);
+    scale_grp_mean[p] ~ lognormal(0, 1); // two-vectors of error scales
+    scale_st_mean[p] ~ lognormal(0, 1);
 
   }
 
