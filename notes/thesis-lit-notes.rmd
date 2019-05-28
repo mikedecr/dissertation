@@ -1,0 +1,214 @@
+---
+title: thesis - literature notes
+---
+
+
+# Model chapter
+
+models: 
+
+- Park et al, lax and phillips, issue MRP for states
+- Warshaw and Rodden, issue MRP for congress and state senate
+- Tausanovitch and Warshaw, IRT MRP (ideal point for a "type")
+  + heterogeneity using the variance in the cell predictions within state?
+- Caughey and Warshaw, group MRP
+
+
+TW and CW both appear to have state party IRT estimates ready to go? 
+
+- validation?
+
+
+
+
+
+# Candidates Chapter
+
+Snyder & Ting 2002: informational party brands
+
+- party brands are an average of candidates ideologies (unobserved by voters)
+  + why candidates, not voters?
+- candidates join a party as f(district median) and p(win)
+- less candidate variance -> more informative signal
+- divergence when party can't control its membership (can't screen or low cost to entry)
+  + convergence when parties are able to control
+  + geographic variation is all correlated candidate information, not state-party offsets from national party
+- Why divergence?
+  + parties have to endogenously select a platform to convince candidates to run
+  + if the benefit of office is high, convergent positions attract too wide a distribution of candidates -> less information for voters -> less benefit for parties
+
+
+
+Snyder & Ting 2003 (formal): Roll calls 
+
+- motivating assumptions:
+  + extreme incumbents are vulnerable to centrist challengers (general)
+  + *challenger ideology less responsive to district ideology*
+    * elections are a selection on representativeness
+  + extremity is punished in general election vote share, controlling for district partisanship
+- find 
+
+
+
+Snyder and Ting 2008: Interest groups and control of legislators
+
+
+
+Hirano, Snyder, Ting 2009: Distributive politics w/ primaries
+
+- conditions for when candidates owe what to which groups in the electorate
+- without primaries, moderate voters are better off
+- with primaries, candidates must overcome primary hurdle (what does this look like?)
+- as core voters become more extreme on non-transfer (social) issues, the candidate can offer less transfer to the core because the core cares more about winning
+- Valence advantages (e.g. favorable midterms?) allow candidates to transfer more to core, less to swing
+
+
+Snyder and Ting 2011: Electoral Selection w/ Parties and Primaries
+
+
+
+Hirano and Ting 2014: Direct and Indirect representation
+
+- politicians direct transfers to interest groups when the marginal electoral benefit of the group's loyalty is high
+
+
+
+Ting, Snyder, Hirano 2018: Primaries and public goods
+
+- private vs public goods for moderate and extreme groups
+
+
+
+**Questions for Ting**
+
+- my thesis
+  + Primaries vs general elections as positioning incentives
+  + Strategic dilemma between primary and general voters
+  + Too much for the general voters, not enough for the primary, leads to threat of primary challenge
+- Explaining non-convergence
+  + lopsided districts should pull people off median but clearly there's more going on than median targeting
+  + Is there evidence that ideological positions are explained by party-public ideology?
+- Core empirical questions:
+  + given that party-public ideology ≠ presidential vote, are candidates positioning themselves relative to party-public ideology in an empirically demonstrable way?
+  + as a party-public becomes more extreme, are voters more likely to select the extreme candidate?
+  + non-direct tests in the literature, stuff that gets close can't really detect a signal
+  + seems like there's work going around that's supposing that these ideas are substantiated but I'm wondering if they really are
+- mapping onto your work
+  + non-ideological model of candidate selection
+  + what are the big lessons
+  + what are the exposed assumptions of implications of your work
+
+
+
+
+- About your own work:
+  + How is polarization *over time* dynamically justified by these models?
+    * we see divergence *and* more informative party labels? Or are the labels less informative?
+  + Are the parties different? 
+    * Are Democrats moderate and high sigma, while Republicans are extreme and low sigma?
+  + If we're interested in falsifying critical assumptions, where would we focus?
+- Publication of formal work
+  + I'm concerned about certain biases in what kind of thing people find "valuable"
+  + Formal papers are beneficial for laying out the assumptions of a theory and deriving predictions when you modify parameters
+  + but what happens if the intuition is simple or there is no "counter-intuitive" equilibrium. Do reviewers hate it? Does it create incentives for formal theory that is answering questions that people don't ask?
+- About my work:
+  + Brady, Han, Pope: extremity is rewarded in primaries, primary losers more moderate (DV = primary vote)
+  + Hirano, Snyder, Ansolabehere, Hansen: Primary "threat" not strongly related to more extremity (DV = Nominate)
+
+
+
+
+# Choice chapter
+
+
+
+# Redistricting chapter
+
+McCarty et al, geography, uncertainty, and polarization
+
+- "moderate" districts are internally polarized
+- formal model:
+  + less information about the location of the median voter
+  + weaker incentive to offer moderate policy
+- empirically:
+  + R and D legislators vote more differently in districts with similar medians but more inter-party differences
+  + heterogeneous preferences measured by ideal point variance within district?
+  + model: ideal points are more extreme when the variance around the median increases
+- interpretation:
+  + seems like a fancy way of saying that there is more legislative polarization in states where Republican and Democratic voters are more different
+  + but first looks at "heterogeneity" measure are still weighted by the distribution of partisanship (urban core and rural outlands are "most homogeneous," but we don't know the distance between D and R means)
+  + "moderate but heterogeneous" sounds like "leapfrog," but are there moderate legislators where the *parties* are moderate?.
+  + Homogeneous but extreme districts are somewhat proxies for the party mean
+  + still a story of general election, positioning
+
+Hill and Tausanovich, disconnect
+
+
+
+
+Hill and Tausanovich, primary electorates
+
+- mass polarization in primaries 
+- sorting of primary voters into the 'correct' party
+
+
+
+
+Mccarty et al. Gerrymandering
+
+- Difference in party thetas reflects sorting and polarization on fixed characteristics.
+  + fixed = AIDD, not gerrymandering
+  + over-time increase in sorting effects indicative of selection process facilitated by redistricting
+  + the difference attributable to district should increase over time
+- Identification
+  + they can only pull apart over-time trends because they compare congresses with and without reapportionment between them
+
+
+# Ideas
+
+Do primary challenges increase when the incumbent performed weakly in the previous cycle
+
+- Clinton Republicans in California
+
+Unified model of Congress
+
+- dv: vote in November
+- iv: district mean 
+- national environment plus district offsets
+- national environment is latent
+  + generic ballot
+  + special elections
+- district environment
+  + past elections
+
+
+# Marble and Tyler: trusting ideal points from surveys
+
+Model:
+
+- multinomial logit
+- $Pr(y_ij = k) = XB_{k} / sum_k(XB_k)$
+
+
+Cross-validation:
+
+- maybe not respecting the item parameters?
+
+
+
+Language:
+
+- "First, it is not ambitious to expect an estimate based on 20 to 30 policy questions to have some kind of correlation with an issue as polarizing as presidential vote choice."
+  + that covers me a little bit
+  + even if not good at predicting the very next issue, should still be related to voting, no?
+
+
+ 
+
+concerns with my own model:
+
+- groups mean way fewer parameters! We don't estimate individuals, we just assume that they're normal draws on the linear index
+- check: 
+  + extremism -> lower levels of presidential defection?
+  + lower levels of punishment for extreme candidates? (presuming that the Hall/Thompson effect is what's happening, depressing within-party turnout)
+  + outliers could be making relationships stronger even if most don't matter

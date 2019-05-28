@@ -1,0 +1,25 @@
+---
+title: Thesis writing notes
+---
+
+# copy stuff
+
+- argumentation from prospectus
+- model stuff
+
+# New stuff
+
+- argument
+- description of simulation
+ + set an evaluation using Rmd
+
+
+
+# style things
+
+- refashion using a smarter templating system?
+- chapter style?
+- heading style?
+- fix Colophon
+- check out references
+

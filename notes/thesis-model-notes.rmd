@@ -1,0 +1,162 @@
+---
+title: thesis - modeling notes
+---
+
+
+# 2019-03-19
+
+To do:
+
+- deal with perfect parameters vs missing data
+- deal with error terms in hierarchical model
+- is it even possible to have shared and unshared effects (without a lot of work on priors)?
+
+
+# 2019-02-18
+
+Threads
+
+- [ ] GJ data
+  - [ ] district threshold
+  - [ ] how to model gaining and losing districts? maybe some kind of modeling correction in stage 2
+  - [ ] see what other people have done about creating new districts
+    - Jacobson; Ansolabehere et al "Friends and Neighbors"; Crespin and Roberts geographic overlap; Jamie Carson
+- [ ] re-write model
+- [ ] Intro/chapter 1
+- [ ] Reading (Truel etc cites)
+
+
+Where to be
+
+- [ ] Made some kind of move on re-writing model
+- [/] District overlap data
+- [/] Jacobson meet covariates
+- [/] Primaries data (email S.T.)
+- [ ] writing fallback
+
+
+# 2019-02-07 w/ Barry 
+
+- Trying to set up covariate data as best I can
+  - holy shit this is a pain in the ass
+
+double-index in the IRT model
+
+- long items, long covariates, all one table
+
+
+4:30 on non-beasts, 5-5:30 on beasts
+
+Get Jacobson data on House candidates
+
+
+
+
+
+# meeting w/ Barry 8/15
+
+
+Estimates go into some model or regression
+
+- Herron, Burden, etc. WLS seems fine, King and Adolf, Jeff Lewis
+- find what cited this earlier debate (like 15 years ago?)
+- Marginal Likelihood (see Jackman)
+
+lots of polls or big polls?
+
+- avoid panels or focus on wave 1
+- media polls, 600 people
+- exit polls (voters only)
+- collect the date of the survey
+  + might be helpful for testing the model
+
+# questions for alex
+
+- concerns with heteroskedasticity
+  + make sure parameters are updating from data
+- is noncentered worth it
+  + sometimes
+- is VC matrix worth it
+  + maybe if you did it for over-time parameters, but we have so few time periods that anything we estimate from that would be unreliable anyway, so stick with independent normals
+- probit vs logit
+  + probit fits the intuition of the model
+- over-time items
+  + maybe you could fix some (economics) but not others (same sex marriage)
+    * Tausanovitch and Warshaw look at stable margins over time to identify bridging items
+  + carsey and layman
+  + use correlations from one dataset to affect these innovation variances
+  + Poole and Rosenthal individual members
+- predicting item parameters using roll call data or something?
+- consider relaxing priors in the model to see if the data are updating reasonable
+- can go from weak to strong, or strong to weak
+- prior predictive check
+- have different working versions of the stan model for increasing model complexity
+- be able to justify the decisions in the literature
+
+
+
+
+
+
+# DGIRT model
+
+Test to-do:
+
+- approximate binomial with rounded k, n
+- item parameters over time?
+  + time-fixed items: allow for thetas to be on the same space over time
+  + but what if they varied? non-constant mapping from ideology to issue space
+  + do we care about the mapping per se? We mostly just care about the thetas themselves?
+- Heteroskedastic in-group variance?
+  + which districts have more diverse partisans?
+
+
+Proof of concept:
+
+- create a CCES Ideal point model for individuals
+- check correlation of ideal point to state/district presidential vote among partisans
+  + it should be related to the individual vote
+  + but is it related to the aggregate vote?
+  + The argument for yes: if the context influences the individual, you may find some average shift. The question is whether other forces are more important
+
+
+Questions (See Alex?):
+
+- what to do about missing groups?
+- logit vs probit model
+  + are things just *not normal* on the log odds scale?
+- intercepts in state covariates?
+- House districts within states with state effects?
+ + party specific state effects?
+- what's up with the design effect?
+
+
+
+
+
+
+
+How the CW model works:
+
+- contains indicators that change the behavior of the model
+  + time-fixed vs time-varying item parameters
+
+
+# CF model
+
+Network model?
+
+
+Spillover model?
+
+- contribution decisions are affected by other contributions made by ideologically proximate individuals
+
+
+Two-dimensional model
+
+- access vs issue groups
+- donors who give to the same party should be used for within-party variation
+- and we should ignore the access parties?
+- *empirical question: do we get enough cross-donor variation in single-party donors?*
+
+

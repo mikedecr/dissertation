@@ -1,0 +1,153 @@
+---
+title: Overall thesis notes
+---
+
+# Barry 10/12
+
+- Data
+ + states
+  * [ ] primary type (Rogowski and Langella, Masket et al 2014)
+  * [ ] primary institution
+  * [ ] pre-nomination conventions
+   - Barry may have SOME stuff
+ + candidates
+  * [ ] num. house seats vs primary races
+  * [ ] districts w/ competitive race
+  * [ ] NOMINATE: party switches, death and retirements
+   - check double districts, lowest ICPSR number is the 
+   - if the member served previously, they would have an older ICPSR number
+   - who's missing from DIME
+   - Sara Treul's data on primaries
+ + secondary theta
+  * [x] email Caughey/Warshaw
+  * [ ] Seth Hill
+- Model
+ + setup
+  * [ ] weighted binomial (input?)
+  * [ ] dynamic
+  * [ ] issue priors
+ + testing
+  * [ ] relaxed priors (rank order?)
+  * [ ] real data
+  * [ ] prior predictive check
+  * [ ] posterior predictive check
+- Writing
+ + [ ] just start in on Chapter 1?
+ + [ ] Rmd the simulation
+   + static homoskedastic? heteroskedastic?
+   + dynamic heteroskedastic
+- Designs
+ + Redistricting
+  * depends on fineness of ideal pt data
+  * Crespin, Jamie Carson, GIS overlap/changing lines, where is variation coming from (e.g. within states)
+ + primaries vs caucuses
+
+
+If we meet in a week: 
+
+- read Sarah Treul
+ + still do more of that
+- Seth Hill
+ + *keep reading*
+- Investigate Boatright data
+ + *downloaded primary data*
+ + *reserved or requested three books on primaries*
+- Investigate conventions data
+ + *DO*
+- Coverage of PP data, DIME
+ + *DO?*
+- Poll data (investigate CW code, Lax and Phillips)
+ + *keep chugging*
+ + *clerically organizing their work*
+ + *looking at the code*
+- meet Kang
+ + *investigate him in advance of the 7th*
+ + *investigate which group is bringing him in, (Rob Yablon?)*
+
+
+Goals for next week:
+
+- Roper and Lax/Phillips, Caughey and Warshaw
+ + good to find out the scope
+- Boatright data reconciliation
+- think about multidimensionality
+- think about missing data across firm
+  + is Stimson a model for dealing with missing data across polls
+- vote smart or VoteView or Shor scores for linking giving patterns to policy content
+  + more survey cleaning (A.S.S. paper)
+
+
+What to do with the Hopkins/Sniderman theory
+
+- does party's issue emphasis mean parties should collapse, or that variation should track
+- Grossman-Hopkins; parties care about issues so they try to position themselves on it
+  + read their stuff to see how they quality this
+  + do they think districts collapse?
+- weighting issues: left groups see fine variation in left members, but republicans are all bunched at zero (Brunell? Linda Fowler?)
+- or Sniderman conflicted theory: Democrats are conflicted about appeasing groups, so variation matters. Republicans are conflicted
+- THINK about abortion as a toy case
+  + if weighting
+- falsify rather than support
+  + *make falsification*
+
+
+*don't forget about Vox*
+
+
+
+
+Threads
+
+- Data
+ + secondary Thetas
+  * nationalization
+  * Seth hill primaries
+  * Hill and Tausanovitch
+ + primary elections
+- lit
+ + brady han pope
+ + hirano qjps
+ + rogowski and langella
+
+
+Data problems:
+
+- districts
+  + figure out how to match districts across time? district IDs?
+  + is this handled by incumbency? Does voteview take care of it?
+
+
+
+# Meeting June 22, 2018 (Barry)
+
+Agenda:
+
+1. What I have
+2. Where to go
+    - Roper API
+      + workflow: 
+      + API to download the data
+      + write some code that accepts (1) dataset name (2) list of item responses (3) weight variable
+      + as long as I know the variable names, I hit the go button and it should pluck everything out 
+    - Design-focused reading
+      + (1) Candidate positioning as f(district)
+      + (2) Voter choice as f(district - candidate)
+      + (3) Candidate positioning and voter choice as f(delta(district))
+3. Bigger problems
+    - progress
+    - motivation
+    - use of skills and creativity
+      + do I have alternatives
+    - broader career concerns
+      + is publication stupid?
+
+
+1. mess with the priors
+2. CCES 
+3. Making it grow over time
+
+
+
+
+
+
