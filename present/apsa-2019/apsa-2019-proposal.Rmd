@@ -1,0 +1,41 @@
+<!-- Do Primaries Represent Local Opinion?  -->
+Do Primaries Work? Representing Local Partisan Preferences in U.S. Nominating Elections
+
+As general election competition in the U.S. becomes increasingly driven by partisanship, party nomination contests are perhaps more consequential than ever. Yet despite the rising importance of primary elections, research on U.S. elections knows relatively little about whether primaries serve their stated purpose: to represent the preferences of partisan voters.
+
+A conventional view in democratic theory states that primary elections present candidates with a "strategic positioning dilemma": to win both the nomination and the general election, candidates must position themselves as some spatial compromise between the preferences of their partisan base and the district median voter. I argue that this theory of primaries rests on shaky ground both theoretically and empirically. Theoretically, primary elections present voters with uniquely high informational demands, and voters may not meet them. Learning the policy positions of candidates is costly, especially when all candidates share the same party label. In legislative primaries where the information supply is low, very few voters may become informed about which candidate is more conservative or liberal. Moreover, informal party networks may overshadow voter preferences in shaping primary outcomes. Empirically, research on primary representation is hindered by a limited understanding of local partisan preferences. Most existing research measures local preferences using rough proxies that do not distinguish between Republican and Democratic preferences (such as vote shares) or do not operationalize citizen preferences at all. Together, these theoretical and empirical shortcomings cast doubt on the dominant view of primaries. 
+
+This paper, based on my ongoing dissertation work, puts two big questions of primary representation to the test using recent data on House and Senate primaries. First, do candidates position themselves in response to the ideological median in their partisan constituency? And second, do partisan constituencies nominate candidates that better match their ideological preferences? These questions are key to understanding primaries, but they are not confronted directly in existing research. To study these questions, I develop a unique set of ideal point estimates for local "party publics"---partisan groups within districts---by fitting a group-level IRT model to dozens of public opinion surveys in recent election cycles. The model estimates the ideological medians of Republican and Democratic identifiers within districts, as well as the degree of ideological heterogeneity within a partisan group.
+
+This study speaks to several ongoing debates in the study of parties and representation. First, scholars have debated the extent to which voters (as opposed to campaign activists or policy-demanding groups) shape nomination outcomes and party platforms more broadly. Second, because polarization has reduced swing voting and economic retrospective voting, it is pertinent to ask whether voters hold elected officials accountable through nominating elections in lieu of general elections. And finally, the different ideological foundations of the two U.S. parties suggest that parties should respond to voter preferences in different but predictable ways. By studying local preferences directly, this study offers unique insight into each of these areas of inquiry.
+
+hook:
+
+- primaries perhaps more consequential than ever
+  - less swing voting
+  - Congressional elections: less incumbency advantage
+  - weaker influence of traditional covariates (economics)
+  - increasing partisanship in general elections
+- We know very little about this
+  - importance has outpaced research
+- dominant theoretical idea: candidate positioning is a compromise between partisans and district
+
+
+Question:
+
+
+
+Why this is a question:
+
+- "I argue"
+- operationalize key constructs
+- parties are different from one another
+- parties may have internal variation
+
+
+Contribution:
+
+- U.S. House and Senate primaries
+- unique estimates of local partisan opinion over time, using a dynamic group-level IRT model
+
+Partisan voters are historically unlikely to cast votes for the opposing party, electoral competition for party nomination is perhaps more consequential than ever.
