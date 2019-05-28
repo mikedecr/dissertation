@@ -342,59 +342,75 @@ mcmc_homsk
 
 
 
-
 # ---- save fit -----------------------
 
 # wipe the dynamic shared object?
-# test_homsk@stanmodel@dso <- new("cxxdso")
+# mcmc_homsk@stanmodel@dso <- new("cxxdso")
 
 # data/sim-dgirt/mcmc
-boxr::box_write(mcmc_homsk, "long-irt-homo-mlm.RDS", dir_id = 61768155536)
-
-
-
-
-
-# ----------------------------------------------------
-#   evaluate
-# ----------------------------------------------------
+# boxr::box_write(mcmc_homsk, "long-irt-homo-mlm.RDS", dir_id = 61768155536)
+saveRDS(mcmc_homsk, here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
 
 # don't print() when reading
-# test_homsk <- boxr::box_read(455693312840)
+# mcmc_homsk <- boxr::box_read(455693312840)
 # locally
-test_homsk <- 
-  readRDS(here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
+# mcmc_homsk <- 
+#   readRDS(here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
 
-test_homsk
-
-check_hmc_diagnostics(test_homsk)
-check_divergences(test_homsk)
-check_energy() # what are you
-check_treedepth() # what are you
-
-shinystan::launch_shinystan(test_homsk)
-
-stan_rhat(test_homsk)
-
-partition_div() 
-check_all_diagnostics
+mcmc_homsk
 
 
+# ----------------------------------------------------
+#   diagnose
+# ----------------------------------------------------
+check_hmc_diagnostics(mcmc_homsk)
+# check_divergences(mcmc_homsk)
+# check_energy() # what are you
+# check_treedepth() # what are you
 
-tidy(test_homsk, conf.int = TRUE)
+shinystan::launch_shinystan(mcmc_homsk)
 
-summary(test_homsk) 
+stan_rhat(mcmc_homsk)
+
+stan_ac(mcmc_homsk, "theta")$data %>%
+  as_tibble() %>%
+  group_by(parameters, lag) %>%
+  summarize(ac = mean(ac)) %>%
+  group_by(parameters) %>%
+  nest() %>%
+  sample_n(30) %>%
+  unnest() %>%
+  ggplot(aes(x = lag, y = ac)) +
+    geom_col() +
+    facet_wrap(~ parameters)
+
+
+
+mcmc_homsk %>%
+  tidy(rhat = TRUE, ess = TRUE) %>%
+  gather(key = stat, value = value, rhat, ess) %>%
+  ggplot(aes(x = value)) +
+    geom_histogram() +
+    facet_wrap(~ stat, scales = "free")
+
+
+
+tidy(mcmc_homsk, conf.int = TRUE)
+
+summary(mcmc_homsk) 
 
 
 
 
-theta_draws <- test_homsk %>%
+theta_draws <- mcmc_homsk %>%
   recover_types() %>%
-  spread_draws(theta[group], sigma_in_g[group]) %>%
+  spread_draws(theta[group]
+               # , sigma_in_g[group]
+               ) %>%
   left_join(model_data %>% select(group, theta_g, sigma_g, party)) %>%
   print()
 
-tidy(test_homsk, conf.int = TRUE) %>%
+tidy(mcmc_homsk, conf.int = TRUE) %>%
   # filter(str_detect(term, "sigma_in_g")) %>%
   filter(str_detect(term, "theta")) %>%
   mutate(group = parse_number(term)) %>%
