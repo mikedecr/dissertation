@@ -24,6 +24,7 @@ data {
    
   // caps
   int<lower = 1> n;    // all groups and items (not strictly product)
+  int<lower = 1> n_region;    // n regions
   int<lower = 1> n_state;    // n states
   int<lower = 1> n_district;    // n districts
   int<lower = 1> n_party;    // n parties? (assumed 2?)
@@ -35,6 +36,7 @@ data {
   int<lower = 0> trials[n];      // trials in grp-item
 
   // group index trackers
+  int<lower = 1, upper = n_region> region[n];   
   int<lower = 1, upper = n_state> state[n];   
   int<lower = 1, upper = n_district> district[n];
   int<lower = 1, upper = n_party> party[n];   
@@ -47,6 +49,10 @@ data {
 
   int k_s;              // num of state covariates
   matrix[n, k_s] Z;     // state covariate matrix
+
+  // no region covariates?
+  // int k_r
+  // matrix W
 
   // ¿? n vs. n_* rows? How to deal with this in params
 
@@ -79,10 +85,12 @@ parameters {
   // matrix[k_s, n_party] coef_st_var;   // two-d state coefs
   
   // errors, theta: 
-  vector[n_group] z_grp_mean;    // one-d group errors (all independent)
-  matrix[n_state, n_party] z_st_mean;    // two-d state errors
-  vector<lower = 0>[n_party] scale_grp_mean;         // two-length group scale
-  vector<lower = 0>[n_party] scale_st_mean;         // two-length state scale
+  vector[n_group] z_grp_mean;                // G-long grp errors
+  matrix[n_state, n_party] z_st_mean;        // SxP state errors
+  matrix[n_region, n_party] z_rg_mean;       // RxP two-d region errors
+  vector<lower = 0>[n_party] scale_grp_mean; // P-long group scale
+  vector<lower = 0>[n_party] scale_st_mean;  // P-long state scale
+  vector<lower = 0>[n_party] scale_rg_mean;  // P-long region scale
 
   // HET: errors, sigma: 
   // vector[n_group] z_grp_var;    // one-d group errors (all independent)
@@ -109,9 +117,12 @@ transformed parameters {
   // theta regression
   vector[n_group] grp_offset_mean;
   matrix[n_state, n_party] st_offset_mean;
+  matrix[n_region, n_party] rg_offset_mean;
+
   // HET: log sigma regression
   // vector[n_group] grp_offset_var;
   // matrix[n_state, n_party] st_offset_var;
+  // matrix[n_region, n_party] rg_offset_var;
 
 
   dispersion = inv(discrimination);
@@ -128,6 +139,11 @@ transformed parameters {
     // hierarchical params assigned ONLY for missing data
     // ¿¿?? we need to assign for EVERY group, not just where we have data?
     //   -> should be handled by {y = 0, n = 0} cases?
+    if (is_nan(rg_offset_mean[region[i], party[i]])) {
+      rg_offset_mean[region[i], party[i]] = 
+        ( z_rg_mean[region[i], party[i]] * scale_rg_mean[party[i]] );
+    }
+
     if (is_nan(st_offset_mean[state[i], party[i]])) {
       st_offset_mean[state[i], party[i]] = 
         ( Z[i] * coef_st_mean[ , party[i]] ) + 
@@ -144,7 +160,9 @@ transformed parameters {
     if (is_nan(theta[group[i]])) {
       theta[group[i]] = 
         const_mean[party[i]] + 
-        grp_offset_mean[group[i]] + st_offset_mean[state[i], party[i]];
+        grp_offset_mean[group[i]] + 
+        st_offset_mean[state[i], party[i]] +
+        rg_offset_mean[region[i], party[i]];
     }
 
     eta[i] = 
@@ -177,10 +195,13 @@ model {
     coef_grp_mean[ , p] ~ normal(0, 1); // multivariate? soon DLM
     coef_st_mean[ , p] ~ normal(0, 1);
 
-    z_st_mean[ , p] ~ normal(0, 1);     // two-d state Z scores
+    z_st_mean[ , p] ~ normal(0, 1);     // SxP state Z scores
+    z_rg_mean[ , p] ~ normal(0, 1);     // RxP region Z scores
 
-    scale_grp_mean[p] ~ lognormal(0, 1); // two-vectors of error scales
-    scale_st_mean[p] ~ lognormal(0, 1);
+    // P-vectors of error scales
+    scale_grp_mean[p] ~ lognormal(0, 1); // group scale
+    scale_st_mean[p] ~ lognormal(0, 1);  // state scales
+    scale_rg_mean[p] ~ lognormal(0, 1);  // region scales
 
   }
 
