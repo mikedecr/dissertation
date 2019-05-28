@@ -144,3 +144,11 @@ sympy-plots-for-*.tex/
 *.xdy
 *.app
 .Rproj.user
+
+replications/
+
+writing/_bookdown_files/
+
+writing/02-model\.html
+
+writing/03-positioning\.html
