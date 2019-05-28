@@ -8,8 +8,7 @@
 # source(gh_source)
 
 # or locally:
-source(here::here("code", "dgirt", "long-data-sim.R"))
-
+# source(here::here("code", "dgirt", "long-data-sim.R"))
 
 
 
@@ -283,7 +282,7 @@ if (whoami == "michaeldecrescenzo") {
   # local stan file
   long_homsk <- 
     stanc(
-      file = here("code", "dgirt", "stan", "long", "long-homo-mlm.stan")
+      file = here("code", "dgirt", "stan", "long-homo-mlm.stan")
     ) %>%
     stan_model(stanc_ret = ., verbose = TRUE) %>%
     print()
@@ -302,7 +301,7 @@ if (whoami == "michaeldecrescenzo") {
     # local git-pulled model
   long_homsk <- 
     stanc(
-      file = here("code", "dgirt", "stan", "long", "long-homo-mlm.stan")
+      file = here("code", "dgirt", "stan", "long-homo-mlm.stan")
     ) %>%
     stan_model(stanc_ret = ., verbose = TRUE) %>%
     print()
