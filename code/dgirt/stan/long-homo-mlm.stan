@@ -212,4 +212,15 @@ model {
 
 }
 
-generated quantities {}
+generated quantities {
+
+  vector[n_group] idtheta;
+  real theta_iter_mean;
+  real theta_iter_sd;
+
+  theta_iter_mean = mean(theta);
+  theta_iter_sd = sd(theta);
+
+  idtheta = (theta - theta_iter_mean) / theta_iter_sd;
+
+}

@@ -257,4 +257,32 @@ model {
 
 }
 
-generated quantities {}
+generated quantities {
+
+  // standardize theta_g
+  vector[n_group] idtheta;
+  real theta_iter_mean;
+  real theta_iter_sd;
+
+  // identify sigma_g by stdizing log-sigma
+  vector[n_group] idsigma;
+  real log_sigma_iter_mean;
+  real log_sigma_iter_sd;
+
+  // theta mean and sd
+  theta_iter_mean = mean(theta);
+  theta_iter_sd = sd(theta);
+
+  // log-sigma mean and sd
+  log_sigma_iter_mean = mean(log(sigma_in_g));
+  log_sigma_iter_sd = sd(log(sigma_in_g));
+
+  // identify
+  idtheta = (theta - theta_iter_mean) / theta_iter_sd;
+  idsigma = exp((log(sigma_in_g) - log_sigma_iter_mean) / log_sigma_iter_sd);
+
+
+
+
+
+}
