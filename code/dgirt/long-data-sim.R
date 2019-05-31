@@ -75,9 +75,9 @@ params <-
                   beta_d2 = rnorm(.x, mean = 0, sd = 0.25),
                   # sigma hypermean
                   const_sig = rnorm(.x, mean = 0, sd = 0.125),
-                  beta_sig_state = rnorm(.x, mean = 0, sd = 0.1), 
-                  beta_sig_d1 = rnorm(.x, mean = 0, sd = 0.1),
-                  beta_sig_d2 = rnorm(.x, mean = 0, sd = 0.1),
+                  beta_sig_state = rnorm(.x, mean = 0, sd = 0.25), 
+                  beta_sig_d1 = rnorm(.x, mean = 0, sd = 0.25),
+                  beta_sig_d2 = rnorm(.x, mean = 0, sd = 0.25),
                   # residual variances after hypermeans
                   sd_theta = 1,
                   sd_sigma = 0.25)
@@ -382,8 +382,8 @@ mcmc_homsk %>%
   # saveRDS(here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
 
 mcmc_het %>%
-  # boxr::box_write("long-hetsk-region-stanfit.Rds", dir_id = 61768155536)
-  saveRDS(here("data", "sim-dgirt", "mcmc", "long-hetsk-region-stanfit.Rds"))
+  boxr::box_write("long-hetsk-region-stanfit.Rds", dir_id = 61768155536)
+  # saveRDS(here("data", "sim-dgirt", "mcmc", "long-hetsk-region-stanfit.Rds"))
   
 
 # don't print() when reading
@@ -454,12 +454,13 @@ tidy(mcmc_het, conf.int = TRUE) %>%
   mutate(group = parse_number(term)) %>%
   left_join(model_data %>% select(group, theta_g, sigma_g, party)) %>% 
   # ggplot(aes(x = scale(theta_g), y = estimate)) +
-  ggplot(aes(x = exp(scale(log(sigma_g))), y = estimate)) +
-  geom_pointrange(aes(ymin = conf.low, ymax = conf.high, 
+  ggplot(aes(x = exp(scale(log(sigma_g))), y = (estimate))) +
+  # geom_pointrange(aes(ymin = conf.low, ymax = conf.high, 
+  geom_pointrange(aes(ymin = (conf.low), ymax = (conf.high), 
                       color = as.factor(party))) +
   geom_abline() +
-  scale_x_log10() +
-  scale_y_log10() +
+  # scale_x_log10() +
+  # scale_y_log10() +
   NULL
 
   
