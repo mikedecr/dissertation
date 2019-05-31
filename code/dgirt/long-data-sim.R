@@ -10,9 +10,6 @@
 # or locally:
 # source(here::here("code", "dgirt", "long-data-sim.R"))
 
-# have you added region effects?
-
-
 
 library("here")
 library("magrittr")
@@ -78,9 +75,9 @@ params <-
                   beta_d2 = rnorm(.x, mean = 0, sd = 0.25),
                   # sigma hypermean
                   const_sig = rnorm(.x, mean = 0, sd = 0.125),
-                  beta_sig_state = rnorm(.x, mean = 0, sd = 0.25), 
-                  beta_sig_d1 = rnorm(.x, mean = 0, sd = 0.25),
-                  beta_sig_d2 = rnorm(.x, mean = 0, sd = 0.25),
+                  beta_sig_state = rnorm(.x, mean = 0, sd = 0.1), 
+                  beta_sig_d1 = rnorm(.x, mean = 0, sd = 0.1),
+                  beta_sig_d2 = rnorm(.x, mean = 0, sd = 0.1),
                   # residual variances after hypermeans
                   sd_theta = 1,
                   sd_sigma = 0.25)
@@ -96,8 +93,10 @@ params <-
 region_level <- 
   tibble(region = 1:n_regions) %>%
   crossing(party = 1:n_parties) %>%
-  mutate(region_effect_mean = rnorm(n()),
-         region_effect_var = rnorm(n())) %>%
+  mutate(
+    region_effect_mean = rnorm(n(), mean = 0, sd = 0.1), 
+    region_effect_var = rnorm(n(), mean = 0, sd = 0.1)
+  ) %>%
   print()
 
 
@@ -335,15 +334,14 @@ if (whoami == "michaeldecrescenzo") {
   print("no model found")
 }
 
-# long_homsk
+long_homsk
 long_het
 
 
 # save compiled model to box
-# boxr::box_write(long_homsk, "model-long-homo.RDS", dir_id = 66357678611)
+# boxr::box_write(whateverk, "model-long-homo.RDS", dir_id = 66357678611)
 
 # read compiled model from Box
-# long_homsk <- box_read(424368378759)
 
 
 
@@ -357,10 +355,18 @@ long_het
 # beepr::beep(2)
 
 
+mcmc_homsk <- dgirt(long_homsk, stan_data)
 mcmc_het <- dgirt(long_het, stan_data)
 beepr::beep(2)
 
-mcmc_het
+# mcmc_het
+
+# ---- things to think about -----------------------
+# When you eventually run this, maybe you should run it in stages
+# if it needs to run long, set it up with a bunch of separate runs
+# a few warmup tries, a few sampling tries
+# failure prevention and adaptive progress updating!
+# and then write a blog post about it
 
 
 
@@ -371,8 +377,14 @@ mcmc_het
 # mcmc_homsk@stanmodel@dso <- new("cxxdso")
 
 # data/sim-dgirt/mcmc
-# boxr::box_write(mcmc_homsk, "long-irt-homo-mlm.RDS", dir_id = 61768155536)
-saveRDS(mcmc_homsk, here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
+mcmc_homsk %>%
+  boxr::box_write("long-homsk-region-stanfit.RDS", dir_id = 61768155536)
+  # saveRDS(here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
+
+mcmc_het %>%
+  # boxr::box_write("long-hetsk-region-stanfit.Rds", dir_id = 61768155536)
+  saveRDS(here("data", "sim-dgirt", "mcmc", "long-hetsk-region-stanfit.Rds"))
+  
 
 # don't print() when reading
 # mcmc_homsk <- boxr::box_read(455693312840)
@@ -380,22 +392,24 @@ saveRDS(mcmc_homsk, here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
 # mcmc_homsk <- 
 #   readRDS(here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
 
-mcmc_homsk
+# mcmc_het <- boxr::box_read(466205197662)
+mcmc_het <- 
+  readRDS(here("data", "sim-dgirt", "mcmc", "long-hetsk-region-stanfit.Rds"))
 
 
 # ----------------------------------------------------
 #   diagnose
 # ----------------------------------------------------
-check_hmc_diagnostics(mcmc_homsk)
+check_hmc_diagnostics(mcmc_het)
 # check_divergences(mcmc_homsk)
 # check_energy() # what are you
 # check_treedepth() # what are you
 
 shinystan::launch_shinystan(mcmc_homsk)
 
-stan_rhat(mcmc_homsk)
+stan_rhat(mcmc_het)
 
-stan_ac(mcmc_homsk, "theta")$data %>%
+stan_ac(mcmc_het, "idtheta")$data %>%
   as_tibble() %>%
   group_by(parameters, lag) %>%
   summarize(ac = mean(ac)) %>%
@@ -425,26 +439,27 @@ summary(mcmc_homsk)
 
 
 
-theta_draws <- mcmc_homsk %>%
+theta_draws <- mcmc_het %>%
   recover_types() %>%
-  spread_draws(theta[group]
-               # , sigma_in_g[group]
+  spread_draws(
+               # theta[group]
+               sigma_in_g[group]
                ) %>%
   left_join(model_data %>% select(group, theta_g, sigma_g, party)) %>%
   print()
 
-tidy(mcmc_homsk, conf.int = TRUE) %>%
-  # filter(str_detect(term, "sigma_in_g")) %>%
-  filter(str_detect(term, "theta")) %>%
+tidy(mcmc_het, conf.int = TRUE) %>%
+  # filter(str_detect(term, "idtheta")) %>%
+  filter(str_detect(term, "idsigma")) %>%
   mutate(group = parse_number(term)) %>%
   left_join(model_data %>% select(group, theta_g, sigma_g, party)) %>% 
-  # ggplot(aes(x = sigma_g, y = estimate)) +
-  ggplot(aes(x = theta_g, y = estimate)) +
+  # ggplot(aes(x = scale(theta_g), y = estimate)) +
+  ggplot(aes(x = exp(scale(log(sigma_g))), y = estimate)) +
   geom_pointrange(aes(ymin = conf.low, ymax = conf.high, 
                       color = as.factor(party))) +
   geom_abline() +
-  # scale_x_log10() +
-  # scale_y_log10() +
+  scale_x_log10() +
+  scale_y_log10() +
   NULL
 
   
