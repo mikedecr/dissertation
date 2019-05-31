@@ -16,11 +16,11 @@ header-includes:
   - \usepackage[lf, mathtabular, minionint]{MinionPro}
   - \usepackage{MyriadPro}
   - \usepackage[varqu, scaled = 0.95]{zi4}
-  - \setsecnumdepth{subsubsection} 
-  - \setsecheadstyle{\raggedright \large \scshape}
-  - \setsubsecheadstyle{\raggedright \scshape} 
-  - \setsubsubsecheadstyle{\raggedright \itshape}
-  - \setsubsubsecheadstyle{\raggedright \itshape}
+  - \setsecnumdepth{subsubsection}
+  # Advice: only write into subsection?
+  - \setsecheadstyle{\raggedright \bfseries \itshape}
+  - \setsubsecheadstyle{\raggedright \itshape} 
+  - \setsubsubsecheadstyle{\raggedright}
   - \setparaheadstyle{\raggedright \itshape}
   - \chapterstyle{dowding}
   - \pagestyle{simple}
