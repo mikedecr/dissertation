@@ -3,6 +3,12 @@ title: thesis - modeling notes
 ---
 
 
+# 2019-05-29
+
+Static version with real data
+
+
+
 # 2019-03-19
 
 To do:
