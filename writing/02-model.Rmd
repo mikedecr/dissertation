@@ -38,21 +38,24 @@ theme_set(
 
 
 
-## Ideal Points and Spatial Models in Political Science
+## Ideology and Spatial Models in Political Science
+
+<!-- goal: spatial >> IRT >> Parameterizations -->
+
+Intuition of a formal model
+
+- a voter has a preferred policy location
+- they choose from the closer of two alternatives
+- The "ideal point" ≠ ideology
+  - It's an extra leap to talk about it as "ideology"
+  - ideal point is an "operationalization" of a nebulous concept
+  - so truly we are estimating the "ideal point" under an assumed model
 
 What is the formal model intuition? 
 
 
-```{r test-theme, include = TRUE, echo = FALSE, cache = FALSE, fig.height = 3, fig.width = 6, out.width = "100%"}
-ggplot(iris, aes(Sepal.Length)) +
-  geom_histogram() +
-  facet_wrap(~ Species) 
-```
 
-
-## Item Response Theory
-
-### Latent variable intuition
+### Latent Ideology and Item Response
 
 Ideology itself is unobservable. It affects the way people feel about policy, but we don't directly observe it. Explicit measures of ideological self identification are not themselves reliable because people don't understand those items
   \todo{TK}
@@ -60,6 +63,19 @@ Ideology itself is unobservable. It affects the way people feel about policy, bu
 and because they aren't great at predicting policy views either
   \todo{TK}
   <!-- cite -->
+
+Measurement model: 
+
+- We can't see the construct that we want, so we estimate it
+- by building a model that relates the unobserved construct to observed data
+
+<!-- Utility framework
+
+- normal error
+- symmetric utility loss on either end of kappa
+
+-->
+
 
 ### Ability-only model
 
@@ -173,24 +189,21 @@ ggplot(ex_iccs, aes(x = theta, y = prob)) +
 
 <!-- ### Statistical Estimation of Ideal Points -->
 
+<!-- Relation to additive indices (ability-only models) -->
 
 
 
-## A Heteroskedastic Model of Party-Public Ideology
+## Modeling Party-Public Ideology in Congressional Districts
 
-This section outlines my ideal point model for local partisan groups. First, I lay out the intuition and notation of a basic individual-level IRT model and its connection to the group-level model. I then lay out my hierarchical model of party-public means and its dynamic form. Finally, I discuss model identification and prior distributions.
+This section outlines my group-level ideal point model for party publics. It begins by describing the connection between the individual-level IRT model and the group-level model and its implication for the parameterization of the model (\S&nbsp;\@ref(sec:how-to-group)). I then lay out the hierarchical model for party-public ideal points in its static form (\S&nbsp;\@ref(sec:geographic-model)) and its dynamic form (\S&nbsp;\@ref(sec:dynamic-model)). Lastly, I discuss more technical features of model implementation, including prior distributions and model identification (\S&nbsp;\@ref(sec:priors-identification)) and parameterization in Stan (\S&nbsp;\@ref(sec:stan-setup)).
 
 
 <!-- ### Static Model -->
 
-### Group-Level IRT Setup
+### Group-Level IRT Setup {#sec:how-to-group}
 
-<!-- Start this in a utility framework?
+<!--  -->
 
-- normal error
-- symmetric utility loss on either end of kappa
-
--->
 
 To motivate the intuition of the group model, we begin the intuition of the individual and then reparameterize it.
 
@@ -232,11 +245,13 @@ The probability for each item-group is given a probit model from the spatial uti
     \right),
 \end{align}
 where $\sigma_{g}$ is the standard deviation of ideal points within group $g$, which is introduced because we are now estimating the mean response within a group rather than an individual item response. Larger values of $\sigma_{g}$ indicate more uncertainty over the item response and attenuate $\bar{\pi}_{gj}$ toward $50\%$.^[
-  The binomial setup assumes that each of the $n_{gj}$ trials is independent conditional on the mean ideal point $\theta_{g}$ and the item parameters $\kappa_{j}$ and $\sigma_{j}$. This assumption is violated if individuals in a group answer multiple items---errors are not independent across items. I describe a design-weighting correction for this assumption in Section&nbsp;\@ref(stan-features).
+  The binomial setup assumes that each of the $n_{gj}$ trials is independent conditional on the mean ideal point $\theta_{g}$ and the item parameters $\kappa_{j}$ and $\sigma_{j}$. This assumption is violated if individuals in a group answer multiple items---errors are not independent across items. I describe a design-weighting correction for this assumption in Section&nbsp;\@ref(sec:stan-setup).
 ]
+\todo{section}
+  <!-- That's not the right section? -->
 
 
-### Hierarchical Model for Group Means and Scales
+### Geographic Model for Group Means and Scales {#sec:geographic-model}
 
 Estimates for $\theta_{g}$ and scales $\sigma_{g}$ are improved using a hierarchical model.
   \todo{scales}
@@ -246,7 +261,7 @@ Estimates for $\theta_{g}$ and scales $\sigma_{g}$ are improved using a hierarch
 - Using geographic data to improve estimation
 - Hierarchical model accounts for multiple sources of variation
 - Partial pooling estimates for groups without as much data
-- First, using traditional notation. Reparameterization in Section&nbsp;\@ref(stan-features) greatly improves the estimation in Stan.
+- First, using traditional notation. Reparameterization in Section&nbsp;\@ref(sec:stan-setup) greatly improves the estimation in Stan.
 
 <!-- ##### Conventional hierarchical notation -->
 We consider it a draw a distribution with hypermean $\bar{\theta}_{g}$ and scalar standard deviation $\psi_{\theta}$
@@ -281,16 +296,17 @@ where $Z_{s}$ contains state covariates which have party-specific coefficients $
 
 
 
-### Dynamic Model
-
-
-### Priors and Identification
+### Dynamic Model {#sec:dynamic-model}
 
 
 
 
+### Priors and Identification {#sec:priors-identification}
 
-## Model Implementation in Stan {#stan-features}
+
+
+
+### Model Implementation in Stan {#sec:stan-setup}
 
 <!-- Non-Centered Parameterization -->
 Hierarchical models often have posterior distributions whose curvature presents difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations]. To improve the estimation in Stan,
