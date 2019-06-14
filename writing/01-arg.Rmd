@@ -1,6 +1,30 @@
 # Primary Elections and Ideological Choice 
 \label{arg-chapter}
 
+
+
+```{r knitr-01-arg, include = FALSE}
+source(here::here("writing", "_assets", "chunk-opts.R"))
+
+knitr::opts_chunk$set(
+  cache.path = 
+    stringr::str_glue('{knitr::opts_chunk$get("cache.path")}01-arg/'),
+  fig.path = 
+    stringr::str_glue('{knitr::opts_chunk$get("fig.path")}01-arg/')
+)
+```
+
+```{r r-01-arg, cache = FALSE}
+library("knitr")
+library("here")
+library("magrittr")
+library("tidyverse")
+library("extrafont")
+library("latex2exp")
+
+source(here("code", "_assets", "setup-graphics.R"))
+```
+
 <!-- In chapter \@ref(arg-chapter), we will... -->
 
 
@@ -57,7 +81,7 @@ con:
 -->
 
 
-## Limitations for estimating ideal points from votes
+## Limitations for inferring ideal points from votes
 
 This section shows the limitations of inferring voter preferences from vote shares, using notation similar to @kernell2009giving. 
 
@@ -81,6 +105,43 @@ where $p_{i}$ reflects the proportion of the electorate that identifies with par
 \end{align}
 but the limitations are still significant. We could not make a simplifying assumption that $\pi_{1} = \pi_{2}$ for but a handful of districts. We might estimate $\pi_{i}$ from survey data \todo{but what}
 
+
+
+```{r, include = TRUE}
+tibble(x = seq(-3, 3, .005)) %>%
+  mutate(
+    dem_moderate = dnorm(x, mean = -0.5, sd = 0.5),
+    rep_moderate = dnorm(x, mean = 0.5, sd = 0.5),
+    dem_extreme = dnorm(x, mean = -1, sd = 0.5),
+    rep_extreme = dnorm(x, mean = 1, sd = 0.5),
+  ) %>%
+  gather(key = group, value = density, -x) %>%
+  mutate(
+    party = ifelse(str_detect(group, "dem"), "Democrats", "Republicans"), 
+    extremity = ifelse(str_detect(group, "mod"), "Moderate Parisans", "Polarized Partisans")) %>%
+  ggplot() + 
+    aes(x = x, y = density, fill = party, color = party) +
+    geom_ribbon(
+      aes(ymin = 0, ymax = density), 
+      alpha = 0.5
+    ) +
+    geom_line() +
+    facet_wrap(~ extremity, scales = "free") +
+    scale_fill_manual(values = partisans_colors) +
+    scale_color_manual(values = partisans_colors)
+```
+
+
+
+
+## Outline for the dissertation
+
+### Proposed Model
+
+Value of directly modeling each party:
+
+- identify the actual quantities of interest
+- do parties "move together" or not? This is only possible to infer by modeling each party's hierarchy separately.
 
 
 

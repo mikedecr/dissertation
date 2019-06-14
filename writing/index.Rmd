@@ -10,7 +10,7 @@ output:
   bookdown::pdf_book:
     number_sections: true # false?
     dev: cairo_pdf
-    # template: assets/ogg-template.tex
+    # template: _assets/ogg-template.tex
 header-includes:
   - \usepackage{todonotes}
   - \usepackage[lf, mathtabular, minionint]{MinionPro}
@@ -68,11 +68,13 @@ copyright-license: Creative Commons Attribution-Noncommercial-ShareAlike 4.0 Lic
 # lof: true
 # lot-title: List of tables
 # lof-title: List of figures
-csl: assets/ajps.csl
-bibliography: assets/thesis.bib
+csl: _assets/ajps.csl
+bibliography: _assets/thesis.bib
 geometry: "left = 1.25in, right = 1.25in, top = 1.25in, bottom = 1.25in"
 fontsize: 12pt
 ---
+
+
 
 ```{r include = FALSE, eval = FALSE}
 # setwd(here::here("writing"))

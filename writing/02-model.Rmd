@@ -1,40 +1,30 @@
 # Modeling the Constituency's Policy Preferences
 
 
+```{r knitr-02-model, include = FALSE}
+source(here::here("writing", "_assets", "chunk-opts.R"))
 
-```{r setup-knitr, include = FALSE}
-# chunk options
-library("knitr")
-opts_chunk$set(cache = TRUE, include = FALSE, echo = FALSE, collapse = TRUE,
-               warning = FALSE, message = FALSE,
-               dev = "cairo_pdf",
-               fig.align = "center", fig.path = 'figs/')
-
+knitr::opts_chunk$set(
+  cache.path = 
+    stringr::str_glue('{knitr::opts_chunk$get("cache.path")}02-model/'),
+  fig.path = 
+    stringr::str_glue('{knitr::opts_chunk$get("fig.path")}02-model/')
+)
 ```
 
-```{r setup-chapter-2, cache = FALSE}
+```{r r-02-model, cache = FALSE}
+library("knitr")
 library("here")
 library("magrittr")
 library("tidyverse")
-library("ggplot2")
 library("extrafont")
 library("latex2exp")
 
-# # custom ggtheme, import from Github
-# theme_url <- 
-#   "https://raw.githubusercontent.com/mikedecr/custom-R/master/theme-mgd/theme-mgd.R"
-# source(theme_url)
-# (source(here("code/_assets/theme-thesis.R")))
-# theme_set(theme_mgd_base())
-
-theme_set(
-  ggthemes::theme_base(base_size = 14, base_family = "Minion Pro") + 
-    theme(plot.background = element_blank(), 
-          axis.ticks = element_line(lineend = "square"), 
-          axis.ticks.length = unit(0.25, "lines"), 
-          axis.text = element_text(size = 10))
-)
+source(here("code", "_assets", "setup-graphics.R"))
 ```
+
+
+
 
 
 
@@ -46,7 +36,7 @@ Intuition of a formal model
 
 - a voter has a preferred policy location
 - they choose from the closer of two alternatives
-- The "ideal point" ≠ ideology
+- The "ideal point" $\neq$ ideology
   - It's an extra leap to talk about it as "ideology"
   - ideal point is an "operationalization" of a nebulous concept
   - so truly we are estimating the "ideal point" under an assumed model
