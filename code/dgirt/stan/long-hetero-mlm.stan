@@ -9,11 +9,13 @@
 
 // to do:
 // - [x] hyper theta (noncentered)
+// - [x] hyper sigma (noncentered)
+// - [x] identification in GenQ block?
+// - [ ] substitute non-centered params
+// - [ ] save non-redundant params
 // - [ ] implement a to-do code (¿¿??) 
-// - [ ] identification in GenQ block?
 // - [ ] expando model algebra (likelihood as a grid?)
 // - [ ] dispersion vs discrimination?
-// - [ ] hyper sigma (noncentered)
 // - [ ] flexi priors (intercept, what else?)
 // - [ ] mvnorm hierarchical coefs?
 // - [ ] missing data? is this needed?
@@ -250,8 +252,6 @@ model {
 
   }
 
-
-
   // to do: DLM
 
 
@@ -279,7 +279,11 @@ generated quantities {
 
   // identify
   idtheta = (theta - theta_iter_mean) / theta_iter_sd;
-  idsigma = exp((log(sigma_in_g) - log_sigma_iter_mean) / log_sigma_iter_sd);
+  idsigma = 
+    exp(
+      ( log(sigma_in_g) - log_sigma_iter_mean ) / 
+      log_sigma_iter_sd
+    );
 
 
 

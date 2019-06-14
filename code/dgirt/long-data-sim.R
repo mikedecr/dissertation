@@ -292,7 +292,7 @@ dgirt <- function(model, data) {
 
 # ---- compile model -----------------------
 
-break()
+stop("STOP before compiling models")
 
 
 if (whoami == "michaeldecrescenzo") {
@@ -384,6 +384,9 @@ mcmc_homsk %>%
 mcmc_het %>%
   boxr::box_write("long-hetsk-region-stanfit.Rds", dir_id = 61768155536)
   # saveRDS(here("data", "sim-dgirt", "mcmc", "long-hetsk-region-stanfit.Rds"))
+
+
+# ---- read fit -----------------------
   
 
 # don't print() when reading
