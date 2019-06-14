@@ -3,13 +3,13 @@
 #   - district covariates from Foster-Molina
 #   - state covariates from Correlates of State Policy
 
-#   source(here::here("code", "dgirt", "test", "test-cces-static.R"), verbose = TRUE)
+#   source(here::here("code", "dgirt", "test", "test-CCES-static.R"), verbose = TRUE)
 # ----------------------------------------------------
 
 library("here")
 library("magrittr")
 library("tidyverse")
-library("extrafont")
+# library("extrafont")
 library("latex2exp")
 library("boxr"); box_auth()
 
