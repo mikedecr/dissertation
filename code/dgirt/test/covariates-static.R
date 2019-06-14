@@ -154,3 +154,5 @@ covs %>%
   pull(value) %>%
   is.na() %>%
   sum()
+
+saveRDS(covs, here("data", "dgirt", "model_data", "covariates-2010s.RDS"))
