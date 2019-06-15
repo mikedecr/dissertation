@@ -137,8 +137,8 @@ full_data %>%
 stop("STOP before compiling models")
 
 # local stan file
-long_homsk <- stanc(file = here("code", "dgirt", "stan", "long-homo-mlm.stan")) %>%
-# long_het <- stanc(here("code", "dgirt", "stan", "long-hetero-mlm.stan")) %>%
+# long_homsk <- stanc(file = here("code", "dgirt", "stan", "long-homo-mlm.stan")) %>%
+long_het <- stanc(here("code", "dgirt", "stan", "long-hetero-mlm.stan")) %>%
   stan_model(stanc_ret = ., verbose = TRUE) %>%
   print()
 
@@ -187,18 +187,26 @@ stan_data <- full_data %>%
 lapply(stan_data, head)
 
 
-test_homo <- 
+# test_homo <- 
+test_het <- 
   sampling(
-    object = long_homsk, 
+    # object = long_homsk, 
+    object = long_het, 
     data = stan_data, 
     iter = 2000, 
     thin = 1, 
     chains = min(c(parallel::detectCores() - 1, 10)), 
+    control = list(adapt_delta = 0.9)
     # pars = c(), 
     verbose = TRUE
   )
 
 
+# test_homo %>%
+  # boxr::box_write("test-static-cces-2010s.RDS", dir_id = 63723791862)
+
+test_het %>%
+  boxr::box_write("test-het-static-cces-2010s.RDS", dir_id = 63723791862)
 
 
 stop("all done!")
@@ -206,8 +214,25 @@ stop("all done!")
 
 # ---- evaluate here -----------------------
 
+thetas <- test_het %>%
+  broom::tidy(conf.int = TRUE) %>%
+  filter(str_detect(term, "idtheta") == TRUE) %>%
+  mutate(
+    group = parse_number(term)
+  ) %>%
+  left_join(
+    transmute(
+      full_data, group = as.numeric(as.factor(group)),
+      party = as.numeric(as.factor(party))
+    )
+  ) %>%
+  print()
 
+library("ggplot2")
 
+ggplot(data = thetas, aes(x = rank(estimate),  y = estimate)) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high, color = as.factor(party)))
+  
 
 
 
