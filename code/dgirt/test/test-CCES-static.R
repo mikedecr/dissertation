@@ -218,7 +218,7 @@ lapply(stan_data, head)
 test_homsk <- dgirt(object = long_homsk, data = stan_data)
 test_het <- dgirt(object = long_het, data = stan_data)
 
-boxr::box_write(test_homo, "static-homsk-cces-2010s.RDS", dir_id = 63723791862)
+boxr::box_write(test_homsk, "static-homsk-cces-2010s.RDS", dir_id = 63723791862)
 boxr::box_write(test_het, "static-het-cces-2010s.RDS", dir_id = 63723791862)
 
 
