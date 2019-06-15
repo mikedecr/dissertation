@@ -12,3 +12,5 @@ cd dissertation
 
 git pull
 
+R
+
