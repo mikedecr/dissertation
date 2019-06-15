@@ -141,15 +141,38 @@ long_homsk <-
   stanc(file = here("code", "dgirt", "stan", "long-homo-mlm.stan")) %>%
   stan_model(stanc_ret = ., verbose = TRUE) %>%
   print()
-# long_het <- 
-#   stanc(here("code", "dgirt", "stan", "long-hetero-mlm.stan")) %>%
-#   stan_model(stanc_ret = ., verbose = TRUE) %>%
-#   print()
+
+long_het <- 
+  stanc(here("code", "dgirt", "stan", "long-hetero-mlm.stan")) %>%
+  stan_model(stanc_ret = ., verbose = TRUE) %>%
+  print()
 
 beepr::beep(2)
 
 long_homsk
 long_het
+
+
+
+# leave one core open
+n_chains <- min(c(parallel::detectCores() - 1, 10))
+n_iterations <- 2000
+n_warmup <- 1000
+n_thin <- 1
+
+# black box all the sampling params
+dgirt <- function(object, data) {
+  sampling(
+    object = object, 
+    data = data, 
+    iter = n_iterations, 
+    thin = n_thin, 
+    chains = n_chains,
+    control = list(adapt_delta = 0.9),
+    # pars = c(),
+    verbose = TRUE
+  )
+}
 
 
 
@@ -192,31 +215,19 @@ lapply(stan_data, head)
 
 
 # test_homo <- 
-test_het <- 
-  sampling(
-    object = long_homsk, 
-    # object = long_het, 
-    data = stan_data, 
-    iter = 2000, 
-    thin = 1, 
-    chains = min(c(parallel::detectCores() - 1, 10)), 
-    control = list(adapt_delta = 0.9),
-    verbose = TRUE
-    #, pars = c()
-  )
+test_homsk <- dgirt(object = long_homsk, data = stan_data)
+test_het <- dgirt(object = long_het, data = stan_data)
 
-
-# test_homo %>%
-  # boxr::box_write("test-static-cces-2010s.RDS", dir_id = 63723791862)
-
-test_het %>%
-  boxr::box_write("test-het-static-cces-2010s.RDS", dir_id = 63723791862)
+boxr::box_write(test_homo, "static-homsk-cces-2010s.RDS", dir_id = 63723791862)
+boxr::box_write(test_het, "static-het-cces-2010s.RDS", dir_id = 63723791862)
 
 
 stop("all done!")
 
 
 # ---- evaluate here -----------------------
+
+# test_het <- 
 
 thetas <- test_het %>%
   broom::tidy(conf.int = TRUE) %>%
