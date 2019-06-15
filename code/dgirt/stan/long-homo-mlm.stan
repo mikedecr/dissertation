@@ -187,7 +187,7 @@ model {
 
 
   // ---- district and state regressions ----
-  const_mean ~ normal([-1, 1], [1, 1]); // TK fix
+  const_mean ~ normal([0, 0], [1, 1]); // TK fix
   z_grp_mean ~ normal(0, 1);       // group zs, all independent and one-dim
   
   for (p in 1:n_party) {

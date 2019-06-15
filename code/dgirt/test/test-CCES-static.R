@@ -3,7 +3,7 @@
 #   - district covariates from Foster-Molina
 #   - state covariates from Correlates of State Policy
 
-#   source(here::here("code", "dgirt", "test", "test-CCES-static.R"), verbose = TRUE)
+# source(here::here("code", "dgirt", "test", "test-CCES-static.R"), verbose = TRUE)
 # ----------------------------------------------------
 
 library("here")
@@ -137,8 +137,13 @@ full_data %>%
 stop("STOP before compiling models")
 
 # local stan file
-long_homsk <- stanc(file = here("code", "dgirt", "stan", "long-homo-mlm.stan")) %>%
-# long_het <- stanc(here("code", "dgirt", "stan", "long-hetero-mlm.stan")) %>%
+long_homsk <- 
+  stanc(file = here("code", "dgirt", "stan", "long-homo-mlm.stan")) %>%
+  stan_model(stanc_ret = ., verbose = TRUE) %>%
+  print()
+
+long_het <- 
+  stanc(here("code", "dgirt", "stan", "long-hetero-mlm.stan")) %>%
   stan_model(stanc_ret = ., verbose = TRUE) %>%
   print()
 
@@ -146,6 +151,28 @@ beepr::beep(2)
 
 long_homsk
 long_het
+
+
+
+# leave one core open
+n_chains <- min(c(parallel::detectCores() - 1, 10))
+n_iterations <- 2000
+n_warmup <- 1000
+n_thin <- 1
+
+# black box all the sampling params
+dgirt <- function(object, data) {
+  sampling(
+    object = object, 
+    data = data, 
+    iter = n_iterations, 
+    thin = n_thin, 
+    chains = n_chains,
+    control = list(adapt_delta = 0.9),
+    # pars = c(),
+    verbose = TRUE
+  )
+}
 
 
 
@@ -187,18 +214,12 @@ stan_data <- full_data %>%
 lapply(stan_data, head)
 
 
-test_homo <- 
-  sampling(
-    object = long_homsk, 
-    data = stan_data, 
-    iter = 2000, 
-    thin = 1, 
-    chains = min(c(parallel::detectCores() - 1, 10)), 
-    # pars = c(), 
-    verbose = TRUE
-  )
+# test_homo <- 
+test_homsk <- dgirt(object = long_homsk, data = stan_data)
+test_het <- dgirt(object = long_het, data = stan_data)
 
-
+boxr::box_write(test_homo, "static-homsk-cces-2010s.RDS", dir_id = 63723791862)
+boxr::box_write(test_het, "static-het-cces-2010s.RDS", dir_id = 63723791862)
 
 
 stop("all done!")
@@ -206,8 +227,27 @@ stop("all done!")
 
 # ---- evaluate here -----------------------
 
+# test_het <- 
 
+thetas <- test_het %>%
+  broom::tidy(conf.int = TRUE) %>%
+  filter(str_detect(term, "idtheta") == TRUE) %>%
+  mutate(
+    group = parse_number(term)
+  ) %>%
+  left_join(
+    transmute(
+      full_data, group = as.numeric(as.factor(group)),
+      party = as.numeric(as.factor(party))
+    )
+  ) %>%
+  print()
 
+library("ggplot2")
+
+ggplot(data = thetas, aes(x = rank(estimate),  y = estimate)) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high, color = as.factor(party)))
+  
 
 
 
