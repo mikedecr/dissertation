@@ -3,7 +3,7 @@
 #   - district covariates from Foster-Molina
 #   - state covariates from Correlates of State Policy
 
-#   source(here::here("code", "dgirt", "test", "test-CCES-static.R"), verbose = TRUE)
+# source(here::here("code", "dgirt", "test", "test-CCES-static.R"), verbose = TRUE)
 # ----------------------------------------------------
 
 library("here")
@@ -137,10 +137,14 @@ full_data %>%
 stop("STOP before compiling models")
 
 # local stan file
-# long_homsk <- stanc(file = here("code", "dgirt", "stan", "long-homo-mlm.stan")) %>%
-long_het <- stanc(here("code", "dgirt", "stan", "long-hetero-mlm.stan")) %>%
+long_homsk <- 
+  stanc(file = here("code", "dgirt", "stan", "long-homo-mlm.stan")) %>%
   stan_model(stanc_ret = ., verbose = TRUE) %>%
   print()
+# long_het <- 
+#   stanc(here("code", "dgirt", "stan", "long-hetero-mlm.stan")) %>%
+#   stan_model(stanc_ret = ., verbose = TRUE) %>%
+#   print()
 
 beepr::beep(2)
 
@@ -190,15 +194,15 @@ lapply(stan_data, head)
 # test_homo <- 
 test_het <- 
   sampling(
-    # object = long_homsk, 
-    object = long_het, 
+    object = long_homsk, 
+    # object = long_het, 
     data = stan_data, 
     iter = 2000, 
     thin = 1, 
     chains = min(c(parallel::detectCores() - 1, 10)), 
-    control = list(adapt_delta = 0.9)
-    # pars = c(), 
+    control = list(adapt_delta = 0.9),
     verbose = TRUE
+    #, pars = c()
   )
 
 
