@@ -20,5 +20,7 @@ theme_set(
 dblue <- "#0072B2"
 rred <- "#D55E00"
 
-partisans_colors <- c("Democrats" = dblue, "Republicans" = rred)
+party_factor_colors <- c("1" = dblue, "2" = rred)
+party_code_colors <- c("D" = dblue, "R" = rred)
+party_colors <- c("Democrats" = dblue, "Republicans" = rred)
 
