@@ -202,7 +202,7 @@ beepr::beep(2)
 # make stan data...
 
 stan_data <- full_data %>%
-  # TO DO: factorize before full_data, so can merge back
+  # TODO: factorize before full_data, so can merge back
   # This means also fixing naming conventions
   mutate_at(
     .vars = vars(region, state, district, party, group, item),
@@ -213,18 +213,17 @@ stan_data <- full_data %>%
     trials, y
     # (district) prcntWhite:prcntUnemp, (state) evangelical_pop:incomepcap
   ) %>%
-  # fix covariate selection
+  # TODO: review covariate selection
   compose_data(
     X = 
-      select(full_data, prcntWhite:prcntUnemp) %>% 
+      select(full_data, prcntWhite:prcntUnemp, -prcntWhiteAll) %>% 
       mutate_all(scale) %>%
       as.matrix(),
     Z = 
       select(full_data, evangelical_pop:incomepcap) %>% 
       mutate_all(scale) %>%
       as.matrix() 
-  ) 
-  stop("fix pct white")
+  ) %>%
   c(k_d = ncol(.$X),
     k_s = ncol(.$Z))
 
