@@ -160,7 +160,10 @@ n_iterations <- 2000
 n_warmup <- 1000
 n_thin <- 1
 
-# black box all the sampling params
+# don't keep params that: 
+#   - are redundant (noncentering/augmenting)
+#   - can be calculated post-hoc (eta, pi)
+#   - are calculated for convenience (identification means, SDs)
 dgirt <- function(object, data) {
   sampling(
     object = object, 
@@ -169,12 +172,23 @@ dgirt <- function(object, data) {
     thin = n_thin, 
     chains = n_chains,
     control = list(adapt_delta = 0.9),
-    # pars = c(),
+    # drop specified parameters
+    include = FALSE,
+    pars = c(
+      "discrimination", "eta", "eta2", "pprob",
+      "z_grp_mean", "z_st_mean", "z_rg_mean", 
+      "scale_grp_mean", "scale_st_mean", "scale_rg_mean",
+      "z_grp_var", "z_st_var", "z_rg_var", 
+      "scale_grp_var", "scale_st_var", "scale_rg_var",
+      "theta_iter_mean", "theta_iter_sd", 
+      "log_sigma_iter_mean", "log_sigma_iter_sd"
+    ),
     verbose = TRUE
   )
 }
 
 
+beepr::beep(2)
 
 # ---- stan data -----------------------
 
@@ -186,8 +200,10 @@ dgirt <- function(object, data) {
 # int<lower = 1> n_group;    // n groups, ALL groups not just with data!
 # int<lower = 1> n_item;    // n items
 # make stan data...
-# - probably should factorize before full_data, so can merge back
+
 stan_data <- full_data %>%
+  # TO DO: factorize before full_data, so can merge back
+  # This means also fixing naming conventions
   mutate_at(
     .vars = vars(region, state, district, party, group, item),
     .funs = as.factor
@@ -195,9 +211,9 @@ stan_data <- full_data %>%
   select(
     state, region, district, party, group, item,
     trials, y
-    # prcntWhite:prcntUnemp,
-    # evangelical_pop:incomepcap
+    # (district) prcntWhite:prcntUnemp, (state) evangelical_pop:incomepcap
   ) %>%
+  # fix covariate selection
   compose_data(
     X = 
       select(full_data, prcntWhite:prcntUnemp) %>% 
@@ -207,7 +223,8 @@ stan_data <- full_data %>%
       select(full_data, evangelical_pop:incomepcap) %>% 
       mutate_all(scale) %>%
       as.matrix() 
-  ) %>%
+  ) 
+  stop("fix pct white")
   c(k_d = ncol(.$X),
     k_s = ncol(.$Z))
 
