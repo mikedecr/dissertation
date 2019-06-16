@@ -160,7 +160,10 @@ n_iterations <- 2000
 n_warmup <- 1000
 n_thin <- 1
 
-# black box all the sampling params
+# don't keep params that: 
+#   - are redundant (noncentering/augmenting)
+#   - can be calculated post-hoc (eta, pi)
+#   - are calculated for convenience (identification means, SDs)
 dgirt <- function(object, data) {
   sampling(
     object = object, 
@@ -169,12 +172,23 @@ dgirt <- function(object, data) {
     thin = n_thin, 
     chains = n_chains,
     control = list(adapt_delta = 0.9),
-    # pars = c(),
+    # drop specified parameters
+    include = FALSE,
+    pars = c(
+      "discrimination", "eta", "eta2", "pprob",
+      "z_grp_mean", "z_st_mean", "z_rg_mean", 
+      "scale_grp_mean", "scale_st_mean", "scale_rg_mean",
+      "z_grp_var", "z_st_var", "z_rg_var", 
+      "scale_grp_var", "scale_st_var", "scale_rg_var",
+      "theta_iter_mean", "theta_iter_sd", 
+      "log_sigma_iter_mean", "log_sigma_iter_sd"
+    ),
     verbose = TRUE
   )
 }
 
 
+beepr::beep(2)
 
 # ---- stan data -----------------------
 
@@ -186,8 +200,10 @@ dgirt <- function(object, data) {
 # int<lower = 1> n_group;    // n groups, ALL groups not just with data!
 # int<lower = 1> n_item;    // n items
 # make stan data...
-# - probably should factorize before full_data, so can merge back
+
 stan_data <- full_data %>%
+  # TODO: factorize before full_data, so can merge back
+  # This means also fixing naming conventions
   mutate_at(
     .vars = vars(region, state, district, party, group, item),
     .funs = as.factor
@@ -195,12 +211,12 @@ stan_data <- full_data %>%
   select(
     state, region, district, party, group, item,
     trials, y
-    # prcntWhite:prcntUnemp,
-    # evangelical_pop:incomepcap
+    # (district) prcntWhite:prcntUnemp, (state) evangelical_pop:incomepcap
   ) %>%
+  # TODO: review covariate selection
   compose_data(
     X = 
-      select(full_data, prcntWhite:prcntUnemp) %>% 
+      select(full_data, prcntWhite:prcntUnemp, -prcntWhiteAll) %>% 
       mutate_all(scale) %>%
       as.matrix(),
     Z = 
@@ -225,123 +241,136 @@ boxr::box_write(test_het, "static-het-cces-2010s.RDS", dir_id = 63723791862)
 stop("all done!")
 
 
+
 # ---- evaluate here -----------------------
 
-# test_het <- 
+test_homsk <- readRDS(here("data", "dgirt", "test-static", "mcmc", "static-homsk-cces-2010s.RDS"))
+test_het <- readRDS(here("data", "dgirt", "test-static", "mcmc", "static-het-cces-2010s.RDS"))
 
-thetas <- test_het %>%
-  broom::tidy(conf.int = TRUE) %>%
+tidy_homsk <- test_homsk %>%
+  broom::tidy(conf.int = TRUE)
+tidy_het <- test_het %>%
+  broom::tidy(conf.int = TRUE)
+
+thetas <- tidy_homsk %>%  
   filter(str_detect(term, "idtheta") == TRUE) %>%
   mutate(
     group = parse_number(term)
   ) %>%
-  left_join(
-    transmute(
-      full_data, group = as.numeric(as.factor(group)),
-      party = as.numeric(as.factor(party))
-    )
+  print()
+
+
+thetas <- full_data %>%
+  select(
+    region, state, district_num, district, group, party,
+    prcntWhite:prcntUnemp,
+    evangelical_pop:incomepcap
+  ) %>%
+  mutate(
+    group = as.numeric(as.factor(group)),
+    party = as.numeric(as.factor(party))
+  ) %>%
+  distinct() %>%
+  full_join(thetas)
+
+# library("ggplot2")
+
+thetas %>%
+  ggplot() +
+  aes(x = rank(estimate),  y = estimate, color = as.factor(party)) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    show.legend = FALSE,
+    shape = 21, fill = "white"
+  ) +
+  scale_color_manual(values = party_factor_colors) +
+  coord_flip() +
+  scale_x_reverse() +
+  labs(x = NULL, y = TeX("Party Public Ideal Point ($\\theta_{g}$)")) +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank()
+  ) +
+  annotate("text", 
+    y = c(-1.5, 1.5), x = c(400, 400),
+    label = c("Democrats", "Republicans"),
+    family = "Minion Pro"
+  ) 
+
+# histogram of parties
+ggplot(thetas) +
+  aes(x = estimate) +
+  geom_histogram() +
+  facet_wrap(~ party)
+
+
+# look at the crazy GOP district, it's in NYC
+thetas %>%
+  group_by(party) %>%
+  filter(estimate == min(estimate)) %>%
+  ungroup() %>%
+  semi_join(thetas, ., by = c("state", "district_num")) %>%
+
+# for each district, where are the parties?
+ggplot(thetas) +
+  aes(x = district, y = estimate, color = as.factor(party)) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
+  scale_color_manual(values = party_factor_colors) +
+  NULL
+
+
+
+
+# look at relationship to each covariate?
+thetas %>%
+  gather(key = covariate, value = cov_value, prcntWhite:prcntUnemp, evangelical_pop:incomepcap) %>%
+  ggplot() +
+    aes(x = cov_value, y = estimate, color = as.factor(party)) +
+    geom_pointrange(
+      aes(ymin = conf.low, ymax = conf.high),
+      show.legend = FALSE,
+      fill = "white", shape = 21
+    ) +
+    geom_smooth(method = "lm", aes(color = as.factor(party))) +
+    scale_color_manual(values = party_factor_colors) +
+    facet_wrap(~ covariate, scales = "free")
+
+
+# look at slopes
+slopes <- tidy_homsk %>%
+  filter(str_detect(term, "coef")) %>%
+  mutate(
+    cov_level = ifelse(str_detect(term, "st"), "State", "District"),
+    cov_index = str_split(term, pattern = ",", simplify = TRUE)[,1] %>%
+      parse_number(),
+    party = str_split(term, pattern = ",", simplify = TRUE)[,2] %>%
+      parse_number()
   ) %>%
   print()
 
-library("ggplot2")
-
-ggplot(data = thetas, aes(x = rank(estimate),  y = estimate)) +
-  geom_pointrange(aes(ymin = conf.low, ymax = conf.high, color = as.factor(party)))
-  
-
+ggplot(slopes) +
+  aes(x = party, y = estimate) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
+  facet_grid(cov_level ~ cov_index) +
+  geom_hline(yintercept = 0) +
+  scale_x_continuous(limits = c(0, 3), breaks = 1:2)
 
 
 
 
 # ---- old  code -----------------------
 
-n_chains <- min(c(parallel::detectCores() - 1, 10))
-n_iterations <- 2000
-n_warmup <- 1000
-n_thin <- 1
-
-# black box all the sampling params
-dgirt <- function(model, data) {
-  sampling(object = model, 
-           data = data, 
-           iter = n_iterations, 
-           thin = n_thin, 
-           chains = n_chains,
-           # pars = c(),
-           verbose = TRUE)
-}
-
-
-
-stan_data <- model_data %>% 
-  mutate_at(vars(region, state, district, party, group, item), as.factor) %>%
-  select(-(pi_bar:sigma_g), -X1, -X2, -Z) %>%
-  mutate(
-    y = case_when(group == 1 & item == 1 ~ as.numeric(0), 
-                  TRUE ~ as.numeric(y)),
-    trials = case_when(group == 1 & item == 1 ~ as.numeric(0), 
-                       TRUE ~ as.numeric(trials))
-  ) %>%
-  compose_data() %>%
-  c(list(k_d = n_distcov, 
-         X = select(model_data, X1, X2) %>% as.matrix(), 
-         k_s = n_statecov, 
-         Z = as.matrix(model_data$Z)))
-
-
-
-  left_join(
-    x = ,
-    y = .,
-    by = 
-  ) %>%
-  print()
-
-
 # how do we know the IRT model is necessary? Let me show you how...
-ggplot(longo, aes(x = y_j / n_j)) +
+ggplot(long_cc, aes(x = y / trials)) +
   geom_histogram(
     aes(fill = party), position = "identity",
-    color = NA) +
-  facet_wrap(~ item_name)
-
-
-longo <- joiny %>%
-  gather(key = item_name, value = response, starts_with("q_")) %>%
-  filter(response %in% NA == FALSE) %>%
-  mutate(group_id = 
-           str_glue("{state_abb}-{district_code}-{party}") %>%
-           as.character(),
-         group_code = group_id %>% as.factor() %>% as.character(),
-         item_code = item_name %>% as.factor() %>% as.numeric(),
-         response_code = as.factor(response),
-         party_code = as.factor(party) %>% as.numeric()) %>%
-  print()
-
-
-# district data
-d_level <- longo %>%
-  select(cycle, state_abb, state_n, district_code,
-         median_inc:district_kernell, group_code, party_code) %>%
-  distinct() %>%
-  print()
-
-# binomial data, floor function style
-grouped_responses <- longo %>%
-  group_by(group_code, party_code, item_code) %>%
-  count(response, wt = weight) %>%
-  rename(y_j = n) %>%
-  group_by(group_code, item_code) %>%
-  mutate(n_j = sum(y_j),
-         n_j = case_when(n_j < 1 ~ 1,
-                         is.na(n_j) ~ 1, 
-                         TRUE ~ round(n_j)),
-         y_j = round(y_j),
-         y_j = case_when(y_j > n_j ~ n_j,
-                         is.na(y_j) ~ sample(c(0, 1), size = 1),
-                         TRUE ~ y_j)) %>% 
-  ungroup() %>%
-  filter(response == 1) %>%
-  print()
-
-
+    color = NA,
+    show.legend = FALSE
+  ) +
+  facet_wrap(~ item_name) +
+  scale_fill_manual(values = party_code_colors) +
+  labs(x = "Proportion of Conservative Responses",
+    y = "Count",
+    title = "CCES Item Responses",
+    subtitle = "Histograms of District-Party Averages",
+    fill = NULL)

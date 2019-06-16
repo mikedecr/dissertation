@@ -300,7 +300,7 @@ where $Z_{s}$ contains state covariates which have party-specific coefficients $
 
 <!-- Non-Centered Parameterization -->
 Hierarchical models often have posterior distributions whose curvature presents difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations]. To improve the estimation in Stan,
-  \todo{early caveats about references to Stan}
+  \todo{Stan}
 <!-- Flag early on that I'll be setting things up to make things easier in Stan -->
 I parameterize the hierarchical models in the "non-centered" rather than the "centered" form. Whereas the centered form considers $\theta_g$ as a random draw from a distribution, the non-centered parameterization considers $\theta_{g}$ as a function of the hypermean and a random error.
 \begin{align}
