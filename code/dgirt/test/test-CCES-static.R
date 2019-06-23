@@ -107,12 +107,11 @@ full_data <- covs %>%
   arrange(state_name, district_num, party) %>%
   mutate(
     group_name = str_glue("{stcd}-{party}") %>% as.character(),
-    group = group_name,
-    state = state_name
+    group = as.factor(group_name),
+    state = as.factor(state_name),
+    item = as.factor(item_name),
+    district = as.factor(district_index)
   ) %>%
-  rename(
-    item = item_name,
-    district = district_index) %>%
   print()
 
 
@@ -232,9 +231,9 @@ lapply(stan_data, head)
 
 # test_homo <- 
 test_homsk <- dgirt(object = long_homsk, data = stan_data)
-test_het <- dgirt(object = long_het, data = stan_data)
-
 boxr::box_write(test_homsk, "static-homsk-cces-2010s.RDS", dir_id = 63723791862)
+
+test_het <- dgirt(object = long_het, data = stan_data)
 boxr::box_write(test_het, "static-het-cces-2010s.RDS", dir_id = 63723791862)
 
 
@@ -247,10 +246,10 @@ stop("all done!")
 test_homsk <- readRDS(here("data", "dgirt", "test-static", "mcmc", "static-homsk-cces-2010s.RDS"))
 test_het <- readRDS(here("data", "dgirt", "test-static", "mcmc", "static-het-cces-2010s.RDS"))
 
-tidy_homsk <- test_homsk %>%
-  broom::tidy(conf.int = TRUE)
-tidy_het <- test_het %>%
-  broom::tidy(conf.int = TRUE)
+tidy_homsk <- test_homsk %>% broom::tidy(conf.int = TRUE)
+# tidy_het <- test_het %>% broom::tidy(conf.int = TRUE)
+
+beepr::beep(2)
 
 thetas <- tidy_homsk %>%  
   filter(str_detect(term, "idtheta") == TRUE) %>%
@@ -286,7 +285,7 @@ thetas %>%
   scale_color_manual(values = party_factor_colors) +
   coord_flip() +
   scale_x_reverse() +
-  labs(x = NULL, y = TeX("Party Public Ideal Point ($\\theta_{g}$)")) +
+  labs(x = NULL, y = TeX("District Partisan Ideal Point")) +
   theme(
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank()
@@ -297,6 +296,9 @@ thetas %>%
     family = "Minion Pro"
   ) 
 
+
+
+
 # histogram of parties
 ggplot(thetas) +
   aes(x = estimate) +
@@ -306,10 +308,51 @@ ggplot(thetas) +
 
 # look at the crazy GOP district, it's in NYC
 thetas %>%
-  group_by(party) %>%
-  filter(estimate == min(estimate)) %>%
-  ungroup() %>%
-  semi_join(thetas, ., by = c("state", "district_num")) %>%
+  filter(party == 2) %>%
+  filter(estimate == min(estimate))
+
+filter(full_data, district_num == 5 & state_name == "New York" & party == "R") %>%
+  select(item_name, trials, y)
+
+
+
+# why are some CIs so wide?
+thetas %>%
+  ggplot(aes(x = std.error, y = estimate)) +
+    geom_point() +
+    facet_wrap(~ state)
+
+filter(thetas, std.error > .25) %>%
+  mutate(big_error = 1) %>%
+  select(state, district_num, big_error) %>%
+  right_join(full_data) %>%
+  mutate(big_error = ifelse(is.na(big_error), 0, 1)) %>%
+  group_by(state, district_num, party) %>%
+  summarize(
+    n = n(),
+    trials = mean(trials, na.rm = TRUE),
+    big_error = unique(big_error)
+  ) %>%
+  filter(n > 12) %>%
+  print(n = nrow(.)) %>%
+  select(state:party) %>%
+  semi_join(full_data, .) %>%
+  select(state_abb, district_num, party, item_name) %>%
+  group_by(state_abb, district_num, party) %>%
+  count() 
+
+  ggplot() + 
+    aes(x = n, y = big_error) +
+    geom_point()
+
+
+full_data %>%
+  ggplot(aes(x = y / trials)) +
+    facet_wrap(~ item_name) +
+    geom_histogram(aes(fill = party)) +
+    geom_vline(data = filter(full_data, district_num == 5 & state_name == "New York" & party == "R"),
+      aes(xintercept = y / trials))
+
 
 # for each district, where are the parties?
 ggplot(thetas) +
