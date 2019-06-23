@@ -2,6 +2,38 @@
 title: Overall thesis notes
 ---
 
+
+- *Immediate agenda*
+  - [ ] weird Republican district
+  - [ ] big CIs
+  - [ ] Consolidate note documents into one
+- *Model*
+  - [ ] design weights
+  - [ ] Custom non-integer binomial likelihood
+  - [ ] generic item processing
+  - [ ] CCES & ANES data
+  - [ ] Roper data
+  - [ ] dynamics
+  - [ ] research covariates
+- *Primary/Elections Data*
+  - [ ] Boatright
+  - [ ] New Dime
+  - [ ] Thomsen/Treul
+  - [ ] Hassel
+  - [ ] Hernson
+  - [ ] Overlap
+  - [ ] State primary data (Rogowski and Langella, Masket et al 2014)
+    - [ ] Institution (caucus? election?)
+    - [ ] Convention screenings? (Barry?)
+    - [ ] openness
+- *Reading*
+  - [ ] Boatright
+  - [ ] Tons of papers on my laptop
+- *Writing*
+  - [ ] Secondary data analysis for theory-building (have to read)
+
+
+
 # Barry 10/12
 
 - Data
