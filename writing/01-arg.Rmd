@@ -127,8 +127,8 @@ tibble(x = seq(-3, 3, .005)) %>%
     ) +
     geom_line() +
     facet_wrap(~ extremity, scales = "free") +
-    scale_fill_manual(values = partisans_colors) +
-    scale_color_manual(values = partisans_colors)
+    scale_fill_manual(values = party_colors) +
+    scale_color_manual(values = party_colors)
 ```
 
 
