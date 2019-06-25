@@ -1,5 +1,5 @@
 # ----------------------------------------------------
-#   Test static model on real data
+#   Test static model on real data (fall 2018?)
 # ----------------------------------------------------
 
 library("here")
