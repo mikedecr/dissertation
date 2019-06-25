@@ -1,6 +1,9 @@
 # ----------------------------------------------------
 #   CCES cleaning
 #   run on 2012 data (112th congress from 2010-2012)
+#   (written fall or winter 2018/2019; CCES data used in June 2019)
+#   (CCES work will be generalized into 'survey-algo')
+#   (Hierarchical Covariates already redone a little bit)
 # ----------------------------------------------------
 
 library("here")

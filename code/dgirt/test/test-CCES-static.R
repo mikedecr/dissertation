@@ -1,5 +1,5 @@
 # ----------------------------------------------------
-#   Test model w/ CCES data
+#   Test model w/ CCES data (June 2019)
 #   - district covariates from Foster-Molina
 #   - state covariates from Correlates of State Policy
 
