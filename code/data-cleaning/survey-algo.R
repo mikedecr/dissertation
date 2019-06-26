@@ -101,7 +101,8 @@ clean_poll <- function(data, metadata) {
   # trim data:
   # - rename meta vars old to new
   # - keep new meta and new items
-  # - join item dimension
+  # - DROPS MISSING RESPONSES
+  # - join item issue domain
   data %>%
     rename_at(
       .vars = vars(one_of(old_meta_names)), 
@@ -109,6 +110,7 @@ clean_poll <- function(data, metadata) {
     ) %>%
     select(one_of(new_meta_names), one_of(new_item_codes)) %>%
     gather(key = item_code, value = item_response, one_of(new_item_codes)) %>%
+    filter(is.na(item_response) == FALSE) %>%
     left_join(
       reshape2::melt(item_list) %>%
         as_tibble() %>%
@@ -116,7 +118,6 @@ clean_poll <- function(data, metadata) {
         spread(key = L2, value = value),
       by = c("item_code" = "itemcode") 
     ) %>%
-    rename(dimension = domain) %>%
     select(-L1) %>%
     return()
 
@@ -124,6 +125,9 @@ clean_poll <- function(data, metadata) {
 
 
 # ---- arrange polls next to metadata for fast recoding ---------------
+
+# groups by poll IDs etc.
+# creates nested data frame of poll and metadata
 
 stack_data <- function(data, metadata) {
   metadata %>%

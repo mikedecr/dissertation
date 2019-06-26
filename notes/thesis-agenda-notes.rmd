@@ -8,8 +8,9 @@ title: Overall thesis notes
   - [x] big CIs
   - [ ] Consolidate note documents into one
 - *Model*
-  - [ ] survey algo
-  - [ ] algo snippets
+  - [x] survey algo
+  - [x] algo snippets
+  - [ ] responses w/ midpoint?
   - [ ] CCES Data
   - [ ] design weights
   - [ ] ANES data
