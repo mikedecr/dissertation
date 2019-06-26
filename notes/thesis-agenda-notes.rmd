@@ -4,17 +4,19 @@ title: Overall thesis notes
 
 
 - *Immediate agenda*
-  - [ ] weird Republican district
-  - [ ] big CIs
+  - [x] weird Republican district
+  - [x] big CIs
   - [ ] Consolidate note documents into one
 - *Model*
+  - [ ] survey algo
+  - [ ] algo snippets
+  - [ ] CCES Data
   - [ ] design weights
-  - [ ] Custom non-integer binomial likelihood
-  - [ ] generic item processing
-  - [ ] CCES & ANES data
+  - [ ] ANES data
   - [ ] Roper data
-  - [ ] dynamics
   - [ ] research covariates
+  - [ ] dynamics
+  - [ ] Custom non-integer binomial likelihood
 - *Primary/Elections Data*
   - [ ] Boatright
   - [ ] New Dime
