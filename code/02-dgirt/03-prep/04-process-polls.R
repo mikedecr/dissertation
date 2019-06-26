@@ -40,8 +40,13 @@ state_df <- here("data", "_identifiers", "census-state-fips.csv") %>%
 source(here::here("code", "data-cleaning", "survey-algo.R"))
 
 
+# ---- CCES 2018 -----------------------
 
-# ---- CCES 12 -----------------------
+# ---- CCES 2016 -----------------------
+
+# ---- CCES 2014 -----------------------
+
+# ---- CCES 2012 -----------------------
 
 cc12_raw <- 
   here("data", "polls", "cces-2012-cc", "commoncontent2012.dta") %>% 
@@ -111,15 +116,6 @@ cc12_stack <- stack_data(data = cc12, metadata = cc12_meta) %>%
 
 
 # ---- pretend second dataset -----------------------
-
-# imagine we had two polls, how would this work efficiently?
-poll2 <- cc12
-meta2 <- cc12_meta
-
-poll2_stack <- stack_data(data = poll2, metadata = meta2) %>%
-  mutate(poll_id = "poll2") %>%
-  print()
-
 
 
 
