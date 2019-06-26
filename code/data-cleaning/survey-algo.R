@@ -4,20 +4,17 @@
 #   began June 25, 2019
 # ----------------------------------------------------
 
-library("here")
-library("magrittr")
-library("tidyverse")
-library("boxr"); box_auth()
-
+# don't need packages just to write the functions
 
 # ----------------------------------------------------
 #   Custom functions
 # ----------------------------------------------------
 
+
+
 # ---- arrange metadata for a poll -----------------------
 
-# use this to create a dataframe next to the data in a nested DF
-# before binding all the DFs together for all polls
+# What do we need out of each poll?
 
 get_meta <- function(
     data,
@@ -104,17 +101,42 @@ clean_poll <- function(data, metadata) {
   # trim data:
   # - rename meta vars old to new
   # - keep new meta and new items
+  # - join item dimension
   data %>%
     rename_at(
       .vars = vars(one_of(old_meta_names)), 
       .funs = ~ new_meta_names
     ) %>%
-    select(one_of(new_meta_names), one_of(new_item_codes))
+    select(one_of(new_meta_names), one_of(new_item_codes)) %>%
+    gather(key = item_code, value = item_response, one_of(new_item_codes)) %>%
+    left_join(
+      reshape2::melt(item_list) %>%
+        as_tibble() %>%
+        filter(L2 %in% c("itemcode", "domain")) %>%
+        spread(key = L2, value = value),
+      by = c("item_code" = "itemcode") 
+    ) %>%
+    rename(dimension = domain) %>%
+    select(-L1) %>%
+    return()
 
 }
 
-# testo <- clean_poll(data = cc12, metadata = cc12_meta) %>%
-#   print()
+
+# ---- arrange polls next to metadata for fast recoding ---------------
+
+stack_data <- function(data, metadata) {
+  metadata %>%
+    group_by(poll_id, firm, date) %>%
+    nest(.key = "meta") %>%
+    mutate(original_data = list(data)) %>%
+    select(everything(), original_data, meta) %>%
+    print()
+}
+
+
+# testo <- clean_poll(data = cc12, metadata = cc12_meta) %>% print()
+
 
 
 
