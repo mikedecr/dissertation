@@ -1,5 +1,6 @@
 # ----------------------------------------------------
 #   download, investigate, recode Roper data
+#   (this is OLD as of June 2019; using it as ref to revamp)
 # ----------------------------------------------------
 
 library("here")
