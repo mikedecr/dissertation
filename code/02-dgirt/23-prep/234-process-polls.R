@@ -37,7 +37,7 @@ state_df <- here("data", "_identifiers", "census-state-fips.csv") %>%
 # at the bottom: bind_rows all stacks, then map(clean)
 
 # meta, clean, and stack functions
-source(here::here("code", "data-cleaning", "survey-algo.R"))
+source(here::here("code", "02-dgirt", "23-prep", "232-survey-algo.R"))
 
 
 # ---- CCES 2018 -----------------------
@@ -107,10 +107,16 @@ cc12_meta <-
   print()
 
 
+
+data <- cc12
+metadata <- cc12_meta
+
+metadata$partycodes
+
 cc12_stack <- stack_data(data = cc12, metadata = cc12_meta) %>%
   print()
 
-# clean_poll(data = cc12, meta = cc12_meta)
+# clean_poll(data = cc12, meta = cc12_meta) %>% count(party)
 
 
 
@@ -135,13 +141,15 @@ cc12_stack <- stack_data(data = cc12, metadata = cc12_meta) %>%
 
 stack_of_stacks <- 
   bind_rows(
-    cc12_stack,
-    poll2_stack
+    cc12_stack
+    # , ...
   ) %>%
   print()
 
-# saveRDS(stack_of_stacks, here("data", "polls-clean", "poll-stack.RDS"))
+saveRDS(stack_of_stacks, here("data", "polls-clean", "poll-stack.RDS"))
 
+
+# clean polls!
 cleaned_polls <- stack_of_stacks %>%
   group_by(poll_id, firm, date) %>%
   mutate(
@@ -149,4 +157,6 @@ cleaned_polls <- stack_of_stacks %>%
   ) %>%
   print()
 
-saveRDS(cleaned_polls, here("data", "polls-clean", "megapoll.RDS"))
+cleaned_polls %>%
+  select(-meta, -original_data) %>%
+  saveRDS(here("data", "polls-clean", "megapoll.RDS"))

@@ -56,7 +56,7 @@ get_meta <- function(
         zipcode = zipvar,
         party = partyvar
       )),
-      partycodes = list(list(dcode, rcode, icode)),
+      partycodes = list(list(dcode = dcode, rcode = rcode, icode = icode)),
       items = list(items)
     )
 }
@@ -84,6 +84,10 @@ clean_poll <- function(data, metadata) {
       )
   }
 
+  # --- RECODE PARTY ---
+  partycodes <- metadata$partycodes[[1]]
+  
+
   # --- TRIM DATA ---
 
   # store vectors of names for renaming and selecting
@@ -102,13 +106,23 @@ clean_poll <- function(data, metadata) {
   # - rename meta vars old to new
   # - keep new meta and new items
   # - DROPS MISSING RESPONSES
+  # - DROPS non-D, R, I
   # - join item issue domain
+  # - augment caseid with poll_id
   data %>%
     rename_at(
       .vars = vars(one_of(old_meta_names)), 
       .funs = ~ new_meta_names
     ) %>%
     select(one_of(new_meta_names), one_of(new_item_codes)) %>%
+    mutate(
+      party = case_when(
+        party == partycodes$dcode ~ 1,
+        party == partycodes$rcode ~ 2,
+        party == partycodes$icode ~ 3
+      )
+    ) %>%
+    filter(is.na(party) == FALSE) %>%
     gather(key = item_code, value = item_response, one_of(new_item_codes)) %>%
     filter(is.na(item_response) == FALSE) %>%
     left_join(
