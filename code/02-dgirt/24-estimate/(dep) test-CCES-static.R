@@ -42,8 +42,6 @@ covs <- box_read(475862351387) %>%
 
 names(cc)
 
-
-
 # keeping cases since 2012
 # trim down other variables
 slim_cc <- cc %>%
