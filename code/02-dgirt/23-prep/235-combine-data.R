@@ -84,8 +84,13 @@ build_y <- polls %>%
       sum( (weight * item_response) / r_i ) / 
       sum( weight / r_i ),
     s_wt = round(n_wt * ybar_wt),
+    design_effect = unique(design_effect)
   ) %>%
-  # select(one_of(group_ids), design_effect, r_i, n_wt, ybar_wt, s_wt, everything()) %>%
+  ungroup() %>%
+  select(
+    # r_i, 
+    one_of(group_ids), design_effect, 
+    n_wt, ybar_wt, s_wt, everything()) %>%
   print()
 
 # why do we have any more than 435 * 3 districts?
