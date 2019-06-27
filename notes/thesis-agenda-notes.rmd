@@ -16,6 +16,7 @@ title: Overall thesis notes
   - [ ] ANES data
   - [ ] Roper data
   - [ ] research covariates
+    - [ ] tag covariates as d_, s_, r_ ... etc.
   - [ ] dynamics
   - [ ] Custom non-integer binomial likelihood
 - *Primary/Elections Data*
