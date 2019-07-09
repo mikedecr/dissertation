@@ -14,6 +14,7 @@ source(here("code", "_assets", "setup-graphics.R"))
 
 library("rstan")
 rstan_options(auto_write = TRUE)
+
 (options(mc.cores = parallel::detectCores()))
 library("tidybayes")
 
@@ -24,16 +25,16 @@ library("tidybayes")
 # ----------------------------------------------------
 
 # covariates already contain all districts (from skeleton)
-# box_read(475862351387) %>% as_tibble() %>%
 covs <- 
-  here("data", "dgirt", "model-data", "covariates-2010s.RDS") %>%
-  readRDS() %>%
+  box_read(475862351387) %>%
+  # here("data", "dgirt", "model-data", "covariates-2010s.RDS") %>%
+  # readRDS() %>%
   print()
 
 # megapoll, nested
 poll_nest <- 
-  here("data", "polls-clean", "megapoll.RDS") %>%
-  readRDS() %>%
+  box_read(481724358906) %>% 
+  # here("data", "polls-clean", "megapoll.RDS") %>% readRDS() %>%
   ungroup() %>%
   print()
 
@@ -108,6 +109,7 @@ build_y <- polls %>%
     n_wt, ybar_wt, s_wt, everything()) %>%
   print()
 
+
 # why do we have any more than 435*(P) districts? 
 count(build_y, st_cd_p)
 # DC and this weird Maine district that looks like nonsense
@@ -115,7 +117,8 @@ anti_join(build_y, covs) %>% print(n = nrow(.))
 
 # drop non-matching districts w/ covariates data
 # keep only two parties?
-y_data <- semi_join(build_y, covs) %>%
+y_data <- 
+  semi_join(build_y, covs) %>%
   filter(party %in% c(1, 2)) %>%
   print()
 
@@ -161,8 +164,7 @@ all_data %>% filter(is.na(s_wt))
 
 # ---- compile model -----------------------
 
-# local stan files
-stop("STOP before compiling models")
+# using local files
 
 long_homsk <- 
   stanc(file = here("code", "02-dgirt", "21-stan", "long-homo-mlm.stan")) %>%
