@@ -97,6 +97,11 @@ csp_covs <- csp_raw %>%
 
 # ---- District data -----------------------
 
+
+# todo: get BOATRIGHT covariates!
+# district_dpres
+
+
 # highest congress is 113, elected in 2012
 efm_raw <- 
   read_csv(

@@ -133,6 +133,7 @@ clean_poll <- function(data, metadata) {
       by = c("item_code" = "itemcode") 
     ) %>%
     select(-L1) %>%
+    mutate(zipcode = as.character(zipcode)) %>%
     return()
 
 }
