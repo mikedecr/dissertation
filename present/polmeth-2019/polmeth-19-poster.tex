@@ -1,0 +1,196 @@
+% --------------------------------------
+% % a0poster Portrait Poster
+% LaTeX Template
+% Version 1.0 (22/06/13)
+%
+% The a0poster class was created by:
+% Gerlinde Kettl and Matthias Weiser (tex@kettl.de)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+% --------------------------------------
+
+
+
+
+
+\documentclass[a0]{a0poster}
+
+% This is so we can have multiple columns of text side-by-side
+\usepackage{multicol}
+% This is the amount of white space between the columns in the poster
+\columnsep=100pt
+% This is the thickness of the black line between the columns in the poster
+\columnseprule=2pt
+
+
+\usepackage{booktabs} % Top and bottom rules for table
+\usepackage[font=small,labelfont=bf]{caption} % Required for specifying captions to tables and figures
+\usepackage{amsmath} % For math fonts, symbols and environments
+\usepackage{wrapfig} % Allows wrapping text around tables and figures
+
+
+
+% --------------------------------------
+%  My packages
+% --------------------------------------
+
+
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{placeins}
+
+\usepackage{sectsty} % section styles
+  % \allsectionsfont{\Huge \sffamily \raggedright}
+  \sectionfont{\huge \sffamily \uppercase }
+  \paragraphfont{\LARGE \sffamily \bfseries}
+
+\usepackage[lf, mathtabular, minionint]{MinionPro}
+\usepackage[scaled = 0.9]{FiraSans}
+\usepackage[varqu, scaled = 0.95]{zi4}             % mono w/ straight quotes
+
+
+
+% \usepackage{natbib}
+%   \bibpunct[: ]{(}{)}{;}{a}{}{,}
+
+\usepackage[authordate, backend = biber]{biblatex-chicago}
+\addbibresource{/Users/michaeldecrescenzo/Dropbox/bib.bib}
+
+\usepackage[usenames,dvipsnames]{xcolor} % extra colors
+\usepackage{hyperref}
+  \hypersetup{
+    colorlinks = true, 
+    citecolor = NavyBlue, 
+    linkcolor = red, 
+    urlcolor = NavyBlue
+  }
+
+\usepackage{parskip}
+
+\usepackage{enumitem}
+
+\usepackage[margin = 1in]{geometry}
+
+
+\begin{document}
+
+
+% --------------------------------------
+%  HEADING - two sections
+% --------------------------------------
+
+% --- heading 1.1: metadata (title, author, etc) -----------------
+
+\begin{minipage}[b]{0.6\linewidth}
+
+{\VERYHuge \textsf{\textbf{Do Primaries Work?}}} \\[24pt]
+{\veryHuge \emph{Local Policy Liberalism and Primary Candidate Positioning}} \\[24pt]
+\Huge \textsf{\textbf{Michael G.\ DeCrescenzo}}
+$\,$ \Huge University of Wisconsin--Madison
+
+\end{minipage}
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% section 2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %
+\begin{minipage}[b]{0.33\linewidth}
+\centering \includegraphics[width=0.6\textwidth]{graphics/UWlogo.png}
+\vfill
+\end{minipage}
+
+
+
+\vspace{2cm} % A bit of extra whitespace between the header and poster content
+%
+% %----------------------------------------------------------------------------------------
+%
+%
+%
+%
+%
+%
+%
+% This is how many columns your poster will be broken into, a portrait poster is generally split into 2 columns
+\begin{multicols*}{3}
+
+\LARGE
+\raggedright
+% \section*{Overview}
+
+\raggedcolumns
+
+\section*{Background}
+
+\columnbreak
+
+
+
+\section*{IRT Model for District Party-Public Liberalism}
+
+\paragraph{Group-level model:}
+Estimate ideal points for \textbf{\emph{partisan groups in each district}}. Assume individual ideal points $\theta_{i}$ are Normal within district-party groups $g$.
+\begin{align}
+  \theta_{i} &\sim \mathrm{Normal}\left( \bar{\theta}_{g[i]} , \sigma_{g[i]} \right)
+\end{align}
+
+Estimate $\bar{\theta}_{g}$ with group-level item response model \parencite{caughey2015dynamic}.
+\begin{align}
+  \mathrm{Pr}\left( y_{\mathit{ij}} \right) &= 
+    \Phi\left( 
+      \frac{
+        \bar{\theta}_{g[i]} - \kappa_{j}
+      }{
+        \sqrt{ \sigma_{g[i]}^{2} + \sigma^{2}_{j} }
+      } 
+    \right)
+\end{align}
+
+Group means smoothed with hierarchical model. Data from districts ($d$), states ($s$), and regions ($r$) with \emph{\textbf{party-specific parameters}} ($p$):
+\begin{align}
+  \bar{\theta}_{g} &\sim \mathrm{Normal}\left(\zeta_{p} + X_{d}\beta_{p} + \alpha_{sp} + \psi_{rp}, \sigma^{\texttt{district}}_{p} \right) \\[12pt]
+  \alpha_{sp} &\sim \mathrm{Normal}\left( Z_{s}\gamma_{p}, \sigma_{p}^{\texttt{state}} \right) \\[12pt]
+  \psi_{rp} &\sim \mathrm{Normal}\left(0, \sigma_{p}^{\texttt{region}}\right)
+\end{align}
+
+
+\section*{Data}
+
+Survey data from CCES (2012, 2014, 2016), ANES (2012, 2014, 2016)
+
+\columnbreak
+
+
+
+
+\section*{Results}
+
+\begin{center}
+  \includegraphics[width = 0.7\linewidth]{graphics/histograms.pdf}
+\end{center}
+
+% \columnbreak
+
+
+%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% % References
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\vfill
+\footnotesize
+\printbibliography
+% %delete me?%\newpage
+% \bibliographystyle{/Users/michaeldecrescenzo/Dropbox/apsr2006.bst}
+% \bibliography{/Users/michaeldecrescenzo/Dropbox/bib.bib}
+
+\end{multicols*}
+
+
+
+\end{document}
