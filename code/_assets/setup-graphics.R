@@ -8,7 +8,7 @@
 
 # default theme
 theme_set(
-  ggthemes::theme_base(base_size = 14, base_family = "Minion Pro") + 
+  ggthemes::theme_base(base_size = 14, base_family = "Fira Sans") + 
     theme(plot.background = element_blank(), 
           axis.ticks = element_line(lineend = "square"), 
           axis.ticks.length = unit(0.25, "lines"), 
