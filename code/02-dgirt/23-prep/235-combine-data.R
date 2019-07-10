@@ -7,7 +7,7 @@ library("magrittr")
 library("tidyverse")
 library("boxr"); box_auth()
 # library("extrafont")
-# library("latex2exp")
+library("latex2exp")
 
 # decide if we want this here
 source(here("code", "_assets", "setup-graphics.R"))
@@ -236,6 +236,8 @@ master_data <- all_data %>%
   ) %>%
   print()
 
+box_write(master_data, "master-model-data.RDS", dir_id = 66271012903)
+
 
 # data are simple now!
 # index trackers, y data, covariates (w/ dims)
@@ -264,10 +266,19 @@ lapply(stan_data, head)
 
 
 mcmc_homsk <- dgirt(object = long_homsk, data = stan_data)
-boxr::box_write(mcmc_homsk, "mcmc-homsk-2010s.RDS", dir_id = 63723791862)
+boxr::box_write(
+  mcmc_homsk, 
+  as.character(str_glue("{Sys.Date()}-mcmc-homsk-2010s.RDS")), 
+  dir_id = 80451081157
+)
 
 mcmc_het <- dgirt(object = long_het, data = stan_data)
-boxr::box_write(mcmc_het, "mcmc-het-2010s.RDS", dir_id = 63723791862)
+boxr::box_write(
+  mcmc_het, 
+  as.character(str_glue("{Sys.Date()}-mcmc-ht-2010s.RDS")), 
+  dir_id = 80451081157
+)
 
 
 stop("all done!")
+
