@@ -560,10 +560,11 @@ cleaned_polls <- stack_of_stacks %>%
 # the important save: cleaned megapoll data
 cleaned_polls %>%
   select(-meta, -original_data) %>%
-  saveRDS(here("data", "polls-clean", "megapoll.RDS"))
+  box_write("megapoll.RDS", dir_id = 80428948975)
+  # saveRDS(here("data", "polls-clean", "megapoll.RDS"))
 # beepr::beep(2)
 
 # also save stack
-saveRDS(stack_of_stacks, here("data", "polls-clean", "poll-stack.RDS"))
+# box_write(stack_of_stacks, dir_id = 80428948975)
 
 system('say "all done"')

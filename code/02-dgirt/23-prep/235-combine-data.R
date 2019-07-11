@@ -38,7 +38,7 @@ poll_nest <-
   ungroup() %>%
   print()
 
-beepr::beep(2)
+# beepr::beep(2)
 
 # make caseid that knows the poll (todo: move to process-polls file?)
 # make state-cd identifier (todo: move to covs file?)
@@ -176,7 +176,7 @@ long_het <-
   stan_model(stanc_ret = ., verbose = TRUE) %>%
   print()
 
-beepr::beep(2)
+# beepr::beep(2)
 
 long_homsk
 long_het
