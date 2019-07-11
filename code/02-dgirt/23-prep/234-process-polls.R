@@ -484,7 +484,7 @@ anes16_meta <-
         itemcode = "econ_inequality", domain = "econ", 
         libs = 1, cons = 2
       ),
-      V162148 = list(
+      V162149 = list(
         itemcode = "gender_equal.pay", domain = "gender", 
         libs = 1, cons = 2
       ),
