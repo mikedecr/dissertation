@@ -26,8 +26,9 @@ library("boxr"); box_auth()
 # ---- pre-processing depends -----------------------
 
 # state fips (for fixing state)
-state_df <- here("data", "_identifiers", "census-state-fips.csv") %>%
-  read_csv() %>%
+state_df <- 
+  box_read(377757394379) %>%
+  # read_csv(here("data", "_identifiers", "census-state-fips.csv")) %>%
   print()
 
 # congressional district recoding?
@@ -52,10 +53,9 @@ source(here::here("code", "02-dgirt", "23-prep", "232-survey-algo.R"))
 # ---- CCES 2018 -----------------------
 
 cc18_raw <- 
-  here(
-    "data", "polls", "cces-2018-cc", "CCES2018_OUTPUT.dta"
-  ) %>% 
-  haven::read_dta() %>%
+  # here("data", "polls", "cces-2018-cc", "CCES2018_OUTPUT.dta") %>%
+  # haven::read_dta() %>%
+  box_read(488984362766) %>%
   print()
 
 cc18 <- cc18_raw %>%
@@ -122,10 +122,11 @@ cc18_stack <- stack_data(cc18, cc18_meta)
 # ---- CCES 2016 -----------------------
 
 cc16_raw <- 
-  here(
-    "data", "polls", "cces-2016-cc", "CCES16_Common_OUTPUT_Feb2018_VV.dta"
-  ) %>% 
-  haven::read_dta() %>%
+  # here(
+  #   "data", "polls", "cces-2016-cc", "CCES16_Common_OUTPUT_Feb2018_VV.dta"
+  # ) %>% 
+  # haven::read_dta() %>%
+  box_read(481752168814) %>%
   print()
 
 cc16 <- cc16_raw %>%
@@ -210,8 +211,11 @@ cc16_stack <- stack_data(cc16, cc16_meta)
 # ---- CCES 2014 -----------------------
 
 cc14_raw <- 
-  here("data", "polls", "cces-2014-cc", "CCES14_Common_Content_Validated.dta") %>%
-  haven::read_dta() %>%
+  # here(
+  #   "data", "polls", "cces-2014-cc", "CCES14_Common_Content_Validated.dta"
+  # ) %>%
+  # haven::read_dta() %>%
+  box_read(481306322467) %>%
   print()
 
 cc14_raw %>% select(contains("state"))
@@ -277,8 +281,9 @@ cc14_stack <- stack_data(data = cc14, metadata = cc14_meta) %>%
 # ---- CCES 2012 -----------------------
 
 cc12_raw <- 
-  here("data", "polls", "cces-2012-cc", "commoncontent2012.dta") %>% 
-  haven::read_dta() %>%
+  # here("data", "polls", "cces-2012-cc", "commoncontent2012.dta") %>% 
+  # haven::read_dta() %>%
+  box_read(481283984875) %>%
   print()
 
 cc12 <- cc12_raw %>% 
@@ -350,8 +355,9 @@ cc12_stack <- stack_data(data = cc12, metadata = cc12_meta) %>%
 # ---- ANES 2016 -----------------------
 
 anes16_raw <- 
-  here("data", "polls", "anes-2016", "anes_timeseries_2016.dta") %>% 
-  haven::read_dta() %>%
+  # here("data", "polls", "anes-2016", "anes_timeseries_2016.dta") %>% 
+  # haven::read_dta() %>%
+  box_read(488984381318) %>%
   print()
 
 anes16 <- anes16_raw %>%
