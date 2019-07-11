@@ -25,7 +25,7 @@ get_meta <- function(
     wtvar = character(), 
     statevar = character(), 
     districtvar = character(), 
-    zipvar = character(), 
+    # zipvar = character(), 
     partyvar = character(),
     dcode, rcode, icode,
     items = list()
@@ -36,7 +36,7 @@ get_meta <- function(
   stopifnot(wtvar %in% names(data)) 
   stopifnot(statevar %in% names(data)) 
   stopifnot(districtvar %in% names(data)) 
-  stopifnot(zipvar %in% names(data)) 
+  # stopifnot(zipvar %in% c(names(data), "NA")) 
   stopifnot(partyvar %in% names(data))
 
   # stop if partycodes aren't elements of partyvar
@@ -53,7 +53,7 @@ get_meta <- function(
         weight = wtvar,
         state_abb = statevar, 
         district_num = districtvar, 
-        zipcode = zipvar,
+        # zipcode = zipvar,
         party = partyvar
       )),
       partycodes = list(list(dcode = dcode, rcode = rcode, icode = icode)),
@@ -133,7 +133,7 @@ clean_poll <- function(data, metadata) {
       by = c("item_code" = "itemcode") 
     ) %>%
     select(-L1) %>%
-    mutate(zipcode = as.character(zipcode)) %>%
+    # mutate(zipcode = as.character(zipcode)) %>%
     return()
 
 }
