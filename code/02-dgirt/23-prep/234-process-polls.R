@@ -28,6 +28,7 @@ library("boxr"); box_auth()
 # state fips (for fixing state)
 state_df <- 
   box_read(377757394379) %>%
+  as_tibble() %>%
   # read_csv(here("data", "_identifiers", "census-state-fips.csv")) %>%
   print()
 
@@ -56,6 +57,7 @@ cc18_raw <-
   # here("data", "polls", "cces-2018-cc", "CCES2018_OUTPUT.dta") %>%
   # haven::read_dta() %>%
   box_read(488984362766) %>%
+  as_tibble() %>%
   print()
 
 cc18 <- cc18_raw %>%
@@ -127,6 +129,7 @@ cc16_raw <-
   # ) %>% 
   # haven::read_dta() %>%
   box_read(481752168814) %>%
+  as_tibble() %>%
   print()
 
 cc16 <- cc16_raw %>%
@@ -216,6 +219,7 @@ cc14_raw <-
   # ) %>%
   # haven::read_dta() %>%
   box_read(481306322467) %>%
+  as_tibble() %>%
   print()
 
 cc14_raw %>% select(contains("state"))
@@ -284,6 +288,7 @@ cc12_raw <-
   # here("data", "polls", "cces-2012-cc", "commoncontent2012.dta") %>% 
   # haven::read_dta() %>%
   box_read(481283984875) %>%
+  as_tibble() %>%
   print()
 
 cc12 <- cc12_raw %>% 
@@ -358,6 +363,7 @@ anes16_raw <-
   # here("data", "polls", "anes-2016", "anes_timeseries_2016.dta") %>% 
   # haven::read_dta() %>%
   box_read(488984381318) %>%
+  as_tibble() %>%
   print()
 
 anes16 <- anes16_raw %>%
