@@ -19,13 +19,15 @@ source(here("code", "_assets", "setup-graphics.R"))
 
 library("tidybayes")
 
-mcmc_homsk <- 
-  box_read(488411999605)
+# mcmc_homsk <- box_read(488411999605)
+mcmc_het <- box_read(488496770244)
 
 tidy_homsk <- mcmc_homsk %>% broom::tidy(conf.int = TRUE)
+# tidy_het <- mcmc_het %>% broom::tidy(conf.int = TRUE)
 
 
 thetas <- tidy_homsk %>%  
+# thetas <- tidy_het %>%  
   filter(str_detect(term, "idtheta") == TRUE) %>%
   mutate(
     group = parse_number(term)
@@ -69,6 +71,9 @@ thetas %>%
   #   family = "Minion Pro"
   # ) +
   NULL
+
+thetas %>% group_by(party) %>% summarize(mean(estimate))
+
 
 
 ggplot(thetas, aes(x = estimate)) +
@@ -142,6 +147,58 @@ thetas %>%
 
 
 
+thetas %>%
+  ggplot(aes(x = fct_reorder(district, estimate),  y = estimate)) +
+    geom_pointrange(
+      aes(ymin = conf.low, ymax = conf.high, color = as.factor(party))
+    ) +
+    coord_flip() +
+    scale_color_manual(values = party_factor_colors) +
+    NULL
+
+
+
+# ---- compare means and variances? -----------------------
+
+# for heterodskedastic only
+tidy_het %>%
+  filter(str_detect(term, "idtheta") | str_detect(term, "idsigma")) %>%
+  mutate(
+    group = parse_number(term)
+  ) %>%
+  full_join(
+    master_data %>%
+      select(
+        region, state, district_num, district, group, party,
+        prcntWhite:prcntUnemp,
+        evangelical_pop:incomepcap
+      ) %>%
+      mutate(
+        group = as.numeric(as.factor(group)),
+        party = as.numeric(as.factor(party))
+      ) %>%
+      distinct()
+  ) %>%
+  mutate(
+    term = str_split(term, pattern = "\\[", simplify = TRUE)[,1]
+  ) %>%
+  group_by(term) %>%
+  nest() %>%
+  spread(key = term, value = data) %>%
+  unnest(idtheta, idsigma) %>%
+  ggplot(aes(x = estimate,  y = log(estimate1))) +
+    geom_pointrange(
+      aes(ymin = log(conf.low1), ymax = log(conf.high1), color = as.factor(party))
+    ) +
+    scale_color_manual(values = party_factor_colors)
+    
+
+
+
+
+
+
+
 # ---- compare to self-placement -----------------------
 
 # using CCES? Average of all years?
@@ -157,6 +214,9 @@ thetas %>%
 
 
 # ---- compare to candidate ideal pts? -----------------------
+
+
+# ---- is theta related to candidates but NOT to presidential vote??? ----
 
 
 
