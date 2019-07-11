@@ -5,33 +5,58 @@ abort_always,always allow abortion,"CCES 2016, CCES 2014",2010
 abort_employer.insurance,allow employers to decline abortion coverage in insurance,"CCES 2016, CCES 2014",2010
 abort_hyde,prohibit federal funds for abortion,"CCES 2016, CCES 2014",2010
 abort_legal,spectrum of abortion legality (fix),CCES 2012,2010
+budget_aid.poor,more/less spending on aid to poor,ANES 2016,2010
+budget_child.care,more/less spending on child care,ANES 2016,2010
+budget_ed.spend,more federal spending on education,ANES 2016,2010
+budget_sci.tech,spending on science on science and tech,ANES 2016,2010
+budget_welfare,more/less spending on welfare,ANES 2016,2010
 budget_where.balance,priorities for where to balance the budget,CCES 2012,2010
-climate_action,which climate statement best represents your views,CCES 2012,2010
-climate_clean.acts,stronger clean air/water acts even if cost jobs,CCES 2016,2010
-climate_epa.carbon,EPA powers to regulate CO2,CCES 2016,2010
-climate_fuel.efficiency,raise fuel efficiency,CCES 2016,2010
-climate_require.renewables,require some minimum of renewables in electricity generation even if cost jobs,CCES 2016,2010
-env_jobs,protect environment or protect jobs (scale),CCES 2012,2010
+env_climate.action,should govt take action on climate/warming,"CCES 2012, ANES 2016",2010
+env_clean.acts,stronger clean air/water acts even if cost jobs,CCES 2016,2010
+env_epa.carbon,EPA powers to regulate CO2,CCES 2016,2010
+env_fuel.efficiency,raise fuel efficiency,CCES 2016,2010
+env_require.renewables,require some minimum of renewables in electricity generation even if cost jobs,CCES 2016,2010
+defense_spending,"increase or decrease social spending (7pt, 4 mid)",ANES 2016,2010
+econ_env.jobs,protect environment or protect jobs (scale),CCES 2012,2010
+econ_guar.jobs,guaranteed jobs/std of living,ANES 2016,2010
+econ_min.wage,raise min wage (to $12?),"CCES 2018, ANES 2016",2010
+econ_reg.banks,do more to regulate banks,ANES 2016,2010
+econ_services,"spend more or less on services? (7pt, 4mid)",ANES 2016,2010
+econ_tax.wealthy,"tax incomes > $1mil to pay for roads, schools","CCES 2018, ANES 2016",2010
+econ_inequality,govt action to reduce inequality,ANES 2016,2010
+env_spend.more,spend more/less on environment,ANES 2016,2010
+gender_equal.pay,require equal pay for men and women,ANES 2016,2010
 gun_assault.ban,ban assault weapons,"CCES 2016, CCES 2014",2010
-gun_back.check,background checks for gun sales,"CCES 2016, CCES 2014",2010
+gun_back.check,background checks for gun sales,"CCES 2016, CCES 2014, CCES 2018",2010
 gun_big.mags,ban high capacity magazines,CCES 2014,2010
 gun_easy.cc,make it easier to get a CCW permit,"CCES 2016, CCES 2014",2010
 gun_publish.registry,should governments be banned/allowed to publish registries,"CCES 2016, CCES 2014",2010
-gun_stricter,laws covering firearms sales should be stricter/less,CCES 2012,2010
-imm_birth.cit,end birthright citizenship for children of undocumented ,CCES 2012,2010
+gun_stricter,laws covering firearms sales should be stricter/less,"CCES 2012, ANES 2016",2010
+hc_govt.plan,healthcare: medicare for all/govt insurance,"CCES 2018, ANES 2016",2010
+hc_govt.spending,increase spending to pay for HC,ANES 2016,2010
+hc_repeal.aca,healthcare: repeal ACA,CCES 2018,2010
+imm_birth.cit,end birthright citizenship for children of undocumented ,"CCES 2012, ANES 2016",2010
 imm_border.patrol,increase border patrols,"CCES 2016, CCES 2012",2010
 imm_deport.undoc,ID and deport undocumented,"CCES 2016, CCES 2014",2010
 imm_dreamers,legal status to children brought here illegally who graduate high school,CCES 2016,2010
 imm_fine.businesses,fine firms that hire undocumented imms,"CCES 2016, CCES 2012, CCES 2014",2010
+imm_imprison.repeats,imprison anybody already once deported,CCES 2018,2010
 imm_legal.status,"legal status to job-holding, tax-paying (3+ years) no felonies","CCES 2016, CCES 2012, CCES 2014",2010
+imm_less.legal,reduce legal immigration,CCES 2018,2010
 imm_more.visas,increase overseas worker visas,CCES 2016,2010
 imm_police.question,allow police to question anyone suspected of being undocumented,CCES 2012,2010
 imm_public.services,bad undocumented from ER or public school services,CCES 2012,2010
+imm_withhold.funds,withhold money from local PDs that don’t report undocumented,CCES 2018,2010
 law_body.cams,require body cams always,CCES 2016,2010
 law_mand.min,eliminate mandatory minimums,CCES 2016,2010
+law_weed,should marijuana be legal,ANES 2016,2010
 law_more.cops,increase police on street by 10% even at expense of other services,CCES 2016,2010
 law_recid.sentences,increase sentences for recidivism,CCES 2016,2010
-lgbtq_marriage,favor/oppose same sex marriage,"CCES 2016, CCES 2012",2010
-race_aff.act,support/oppose Aff. act.,CCES 2012,2010
+law_death.pen,favor/oppose death penalty,ANES 2016,2010
+lgbtq_marriage,favor/oppose same sex marriage,"CCES 2016, CCES 2012, ANES 2016",2010
+lgbtq_disc.laws,job discrimination laws,ANES 2016,2010
+lgbtq_adoption,allow adoption,ANES 2016,2010
+race_aff.act,support/oppose Aff. act.,"CCES 2012, ANES 2016",2010
+race_aid.blacks,govt aid to blacks,ANES 2016,2010
 race_gen.disc,Racial resentment: generations of discrimination,CCES 2012,2010
 race_irish.italian,Racial resentment: Irish/Italian,CCES 2012,2010
