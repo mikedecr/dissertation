@@ -17,7 +17,7 @@ library("boxr"); box_auth()
 
 # ---- to do -----------------------
 
-beepr::beep(2)
+# beepr::beep(2)
 # todo: not done with 2016
 # todo: make a spreadsheet
 # todo: narrow to explicit policy choices only? Smaller set of items with more survey coverage? What do the CW(D) folks do?
@@ -136,7 +136,7 @@ cc16 <- cc16_raw %>%
   mutate(district_num = parse_number(cdid113)) %>%
   print()
 
-beepr::beep(2)
+# beepr::beep(2)
 # district num is a character?
 
 cc16_meta <- get_meta(
@@ -549,7 +549,7 @@ cleaned_polls <- stack_of_stacks %>%
 cleaned_polls %>%
   select(-meta, -original_data) %>%
   saveRDS(here("data", "polls-clean", "megapoll.RDS"))
-beepr::beep(2)
+# beepr::beep(2)
 
 # also save stack
 saveRDS(stack_of_stacks, here("data", "polls-clean", "poll-stack.RDS"))
