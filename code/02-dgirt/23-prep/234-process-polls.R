@@ -27,7 +27,7 @@ library("boxr"); box_auth()
 
 # state fips (for fixing state)
 state_df <- 
-  box_read(377757394379) %>%
+  box_read(377757394379, read_fun = readr::read_csv) %>%
   as_tibble() %>%
   # read_csv(here("data", "_identifiers", "census-state-fips.csv")) %>%
   print()
@@ -56,7 +56,7 @@ source(here::here("code", "02-dgirt", "23-prep", "232-survey-algo.R"))
 cc18_raw <- 
   # here("data", "polls", "cces-2018-cc", "CCES2018_OUTPUT.dta") %>%
   # haven::read_dta() %>%
-  box_read(488984362766) %>%
+  box_read(488984362766, read_fun = haven::read_dta) %>%
   as_tibble() %>%
   print()
 
@@ -128,7 +128,7 @@ cc16_raw <-
   #   "data", "polls", "cces-2016-cc", "CCES16_Common_OUTPUT_Feb2018_VV.dta"
   # ) %>% 
   # haven::read_dta() %>%
-  box_read(481752168814) %>%
+  box_read(481752168814, read_fun = haven::read_dta) %>%
   as_tibble() %>%
   print()
 
@@ -218,7 +218,7 @@ cc14_raw <-
   #   "data", "polls", "cces-2014-cc", "CCES14_Common_Content_Validated.dta"
   # ) %>%
   # haven::read_dta() %>%
-  box_read(481306322467) %>%
+  box_read(481306322467, read_fun = haven::read_dta) %>%
   as_tibble() %>%
   print()
 
@@ -287,7 +287,7 @@ cc14_stack <- stack_data(data = cc14, metadata = cc14_meta) %>%
 cc12_raw <- 
   # here("data", "polls", "cces-2012-cc", "commoncontent2012.dta") %>% 
   # haven::read_dta() %>%
-  box_read(481283984875) %>%
+  box_read(481283984875, read_fun = haven::read_dta) %>%
   as_tibble() %>%
   print()
 
@@ -362,7 +362,7 @@ cc12_stack <- stack_data(data = cc12, metadata = cc12_meta) %>%
 anes16_raw <- 
   # here("data", "polls", "anes-2016", "anes_timeseries_2016.dta") %>% 
   # haven::read_dta() %>%
-  box_read(488984381318) %>%
+  box_read(488984381318, read_fun = haven::read_dta) %>%
   as_tibble() %>%
   print()
 
