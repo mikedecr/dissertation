@@ -48,7 +48,7 @@
 \usepackage{sectsty} % section styles
   % \allsectionsfont{\Huge \sffamily \raggedright}
   \sectionfont{\huge \sffamily \uppercase }
-  \paragraphfont{\LARGE \sffamily \bfseries}
+  \paragraphfont{\Large \sffamily \bfseries}
 
 \usepackage[lf, mathtabular, minionint]{MinionPro}
 \usepackage[scaled = 0.9]{FiraSans}
@@ -60,7 +60,7 @@
 %   \bibpunct[: ]{(}{)}{;}{a}{}{,}
 
 \usepackage[authordate, backend = biber]{biblatex-chicago}
-\addbibresource{/Users/michaeldecrescenzo/Dropbox/bib.bib}
+\addbibresource{bib/poster-bib.bib}
 
 \usepackage[usenames,dvipsnames]{xcolor} % extra colors
 \usepackage{hyperref}
@@ -111,7 +111,7 @@ $\,$ \faTwitter \href{https://twitter.com/mikedecr}{\sffamily mikedecr}
 
 
 
-\vspace{2cm} % A bit of extra whitespace between the header and poster content
+\vspace{2em} % A bit of extra whitespace between the header and poster content
 %
 % %----------------------------------------------------------------------------------------
 %
@@ -124,19 +124,58 @@ $\,$ \faTwitter \href{https://twitter.com/mikedecr}{\sffamily mikedecr}
 % This is how many columns your poster will be broken into, a portrait poster is generally split into 2 columns
 \begin{multicols*}{3}
 
-\LARGE
+\Large
 \raggedright
 % \section*{Overview}
 
 \raggedcolumns
 
-\section*{Background}
+\section*{Mass Representation in Party Nominations}
+
+Political scientists believe that party nominations present candidates with a "strategic positioning dilemma'' \parencite{brady-han-pope:2007:out-of-step}: in order to win the nomination and the general election, candidates position themselves as a spatial compromise between their partisan base and the median voter. \textsf{\textbf{How do we know that voters' policy preferences matter in nominations?}}
+
+\paragraph{Theoretical problems:}
+\begin{itemize}
+  \item Nominating elections have high information costs; do voters meet them?
+  \item Interest groups/informal party networks may supersede voter's policy preferences.
+\end{itemize}
+
+\paragraph{Methodological problems:}
+\begin{itemize}
+  \item Lack direct measures of voter preferences in nominating constituencies.
+  \item Existing studies of primary representation operationalize voter preferences using insufficient proxies (eg.\ presidential vote shares can't distinguish R and D preferences) or don't operationalize constituency preferences at all \parencite{kernell2009giving}.
+\end{itemize}
+
+\vspace{1em}
+
+
+
+% As general election competition in the U.S. becomes increasingly driven by partisanship, party nomination contests are perhaps more consequential than ever. Yet research on U.S. elections knows little about whether primaries serve their stated purpose: to represent the preferences of local partisan voters.
+
+% theory
+% existing research
+% problems w/ readiily available measures
+
+\begin{center}
+  \includegraphics[width = \linewidth]{graphics/two-parties.pdf}
+\end{center}
+
+% \vfill 
+
+\section*{Questions}
+
+\begin{enumerate}
+  \item How to measure policy preferences of \textbf{\emph{distinct partisan groups}} in the \emph{\textbf{same district}}?
+  \item Do candidates position themselves to fit \emph{\textbf{party-public preferences}}?
+\end{enumerate}
+
+
 
 \columnbreak
 
 
 
-\section*{IRT Model for District Party-Public Liberalism}
+\section*{IRT Model for District Partisan Preferences}
 
 \paragraph{Group-level model:}
 Estimate ideal points for \textbf{\emph{partisan groups in each district}}. Assume individual ideal points $\theta_{i}$ are Normal within district-party groups $g$.
@@ -144,7 +183,7 @@ Estimate ideal points for \textbf{\emph{partisan groups in each district}}. Assu
   \theta_{i} &\sim \mathrm{Normal}\left( \bar{\theta}_{g[i]} , \sigma_{g[i]} \right)
 \end{align}
 
-Estimate $\bar{\theta}_{g}$ with group-level item response model \parencite{caughey2015dynamic}.
+Estimate $\bar{\theta}_{g}$ with group-level item response probit model \parencite{caughey-warshaw:2015:DGIRT}.
 \begin{align}
   \mathrm{Pr}\left( y_{\mathit{ij}} \right) &= 
     \Phi\left( 
@@ -156,7 +195,7 @@ Estimate $\bar{\theta}_{g}$ with group-level item response model \parencite{caug
     \right)
 \end{align}
 
-Group means smoothed with hierarchical model. Data from districts ($d$), states ($s$), and regions ($r$) with \emph{\textbf{party-specific parameters}} ($p$):
+Group means smoothed with hierarchical regression. Data from districts ($d$), states ($s$), and regions ($r$) with \emph{\textbf{party-specific parameters}} ($p$):
 \begin{align}
   \bar{\theta}_{g} &\sim \mathrm{Normal}\left(\zeta_{p} + X_{d}\beta_{p} + \alpha_{sp} + \psi_{rp}, \sigma^{\texttt{district}}_{p} \right) \\[12pt]
   \alpha_{sp} &\sim \mathrm{Normal}\left( Z_{s}\gamma_{p}, \sigma_{p}^{\texttt{state}} \right) \\[12pt]
@@ -164,11 +203,11 @@ Group means smoothed with hierarchical model. Data from districts ($d$), states 
 \end{align}
 
 
-\section*{Data}
+% \section*{Data}
 
-Survey data from CCES (2012, 2014, 2016), ANES (2012, 2014, 2016)
+Data: CCES ('12, '14, '16), ANES ('12, '16), Correlates of State Policy, \textcite{foster-molina:2016:data}
 
-\columnbreak
+% \columnbreak
 
 
 
@@ -176,7 +215,24 @@ Survey data from CCES (2012, 2014, 2016), ANES (2012, 2014, 2016)
 \section*{Results}
 
 \begin{center}
-  \includegraphics[width = 0.7\linewidth]{graphics/histograms.pdf}
+  \includegraphics[width = 0.8\linewidth]{graphics/pts.pdf}
+\end{center}
+
+\vspace{1em}
+
+\begin{center}
+  \includegraphics[width = 0.8\linewidth]{graphics/scatter.pdf}
+\end{center}
+
+
+\vspace{1em}
+
+\begin{center}
+  \includegraphics[width = 0.9\linewidth]{graphics/pos.pdf}
+\end{center}
+
+\begin{center}
+  \includegraphics[width = \linewidth]{graphics/coefs.pdf}
 \end{center}
 
 % \columnbreak
