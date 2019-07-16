@@ -89,7 +89,7 @@ thetas <- master_data %>%
   group_by(party) %>%
   mutate(
     party_rank = rank(estimate)
-  )
+  ) %>%
   print()
 
 
@@ -97,7 +97,7 @@ ggplot(thetas) +
   aes(x = party_rank,  y = estimate, color = as.factor(party)) +
   geom_linerange(
     aes(ymin = conf.low, ymax = conf.high),
-    show.legend = FALSE, size = 0.5, alpha = 0.25
+    show.legend = FALSE, size = 0.25, alpha = 0.25
   ) +
   geom_linerange(
     aes(ymin = conf.low.5, ymax = conf.high.5),
@@ -108,8 +108,10 @@ ggplot(thetas) +
   # coord_flip() +
   # scale_x_reverse() +
   labs(
-    x = "Ideal Points Ranked Within-Party\n(Most Liberal to Most Conservative)", 
-    y = TeX("District Partisan Ideal Point")
+    x = "Ideal Point Rank Within Party", 
+    y = "Estimated Policy Preferences",
+    title = "Party-Public Ideal Point Estimates",
+    subtitle = "Two Parties x 435 Districts"
   ) + 
   theme(
     axis.text.x = element_blank(),
@@ -420,11 +422,11 @@ lme4::lmer(recipient_cfscore ~ (theta | party), data = full_data)
 full_data %>%
   mutate(
     incumbency = case_when(
-      Incum_Chall == "I" ~ "Incumbent", 
-      Incum_Chall == "C" ~ "Challenger", 
-      Incum_Chall == "O" ~ "Open Seat"
+      Incum_Chall == "I" ~ "Incumbents", 
+      Incum_Chall == "C" ~ "Challengers", 
+      Incum_Chall == "O" ~ "Open Seats"
     ) %>%
-    fct_relevel("Incumbent")
+    fct_relevel("Incumbents")
   ) %>%
   filter(is.na(incumbency) == FALSE) %>%
   ggplot() +
@@ -445,10 +447,23 @@ full_data %>%
     x = "Party-Public Ideal Point",
     y = "Candidate CF Score"
   ) +
-  theme(panel.grid = element_line(color = "gray90"))
+  theme(panel.grid = element_line(color = "gray90")) +
+  geom_text(
+    data = tibble(
+      theta = c(-0.75, 0.5),
+      recipient_cfscore_dyn = c(-3, 3),
+      text = c("Democrats", "Republicans"),
+      cycle = 2012, 
+      incumbency = factor("Incumbents")
+    ),
+    aes(label = text),
+    size = 3
+  )
 
 ggsave(here("present", "polmeth-2019", "graphics", "pos.pdf"), 
        height = 4, width = 5, device = cairo_pdf)
+
+
 
 full_data %>%
   count(cycle, party, Incum_Chall)
@@ -461,13 +476,23 @@ model_coefs <- full_data %>%
   filter(Incum_Chall != "") %>%
   nest() %>%
   mutate(
-    model = map(data, 
+    full_model = map(data, 
       ~ lmer(
-          recipient_cfscore_dyn ~ theta + district_pres_vs + 
+          recipient_cfscore_dyn ~ scale(theta) + scale(district_pres_vs) + 
+            (1 | group) + as.factor(cycle),
+          data = .x
+        )
+      ),
+    pres_only = map(data, 
+      ~ lmer(
+          recipient_cfscore_dyn ~ scale(district_pres_vs) + 
             (1 | group) + as.factor(cycle),
           data = .x
       )
-    ),
+    )
+  ) %>%
+  gather(key = spec, value = model, full_model, pres_only) %>%
+  mutate(
     tidy = map(model, tidy, conf.int = TRUE, conf.level = 0.9)
   ) %>%
   unnest(tidy) %>%
@@ -484,33 +509,41 @@ model_coefs <- full_data %>%
     ) %>%
       fct_relevel("Incumbents"),
     term = case_when(
-      term == "theta" ~ "Partisan Base",
-      term == "district_pres_vs" ~ "District\nPresidential Vote"
+      str_detect(term, "theta") ~ "Partisan Base",
+      str_detect(term, "district_pres_vs") ~ "District\nPres. Vote"
     ) 
+  ) %>%
+  filter(spec == "full_model") %>%
+  mutate(
+    party = ifelse(party == 1, "Democrats", "Republicans")
   ) %>%
   print(n = nrow(.))
 
+
 ggplot(model_coefs) +
-  aes(x = term, y = estimate, color = as.factor(party)) +
+  aes(x = term, y = estimate) +
   facet_wrap(~ incumbency) +
   geom_hline(yintercept = 0) +
   geom_pointrange(
-    aes(ymin = conf.low, ymax = conf.high),
-    position = position_dodge(width = -0.25),
-    show.legend = FALSE
+    aes(ymin = conf.low, ymax = conf.high, 
+        shape = as.factor(party), color = as.factor(party)),
+    position = position_dodge(width = -0.5),
+    fill = "white"
   ) +
   coord_flip() +
-  scale_color_manual(values = party_factor_colors) +
+  scale_shape_manual(values = c("Democrats" = 21, "Republicans" = 16)) +
+  scale_color_manual(values = party_colors) +
   labs(
     title = "Local Partisan Preferences Outperform Presidential Vote",
-    subtitle = "As Predictors of Candidate CFscores",
+    subtitle = "As Predictors of Candidate CF Scores",
     x = NULL, 
-    y = "Coefficient Estimate"
+    y = "Coefficient Estimate (Standardized Predictors)",
+    color = NULL, shape = NULL
   )
 
 ggsave(
   here("present", "polmeth-2019", "graphics", "coefs.pdf"), 
-  height = 2.5, width = 8, device = cairo_pdf
+  height = 3, width = 8, device = cairo_pdf
 )
 
 # ---- is theta related to candidates but NOT to presidential vote??? ----
