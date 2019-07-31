@@ -35,9 +35,10 @@ title: Overall thesis notes
   - [ ] Tons of papers on my laptop
 - *Writing*
   - [ ] Secondary data analysis for theory-building (have to read)
+  - [ ] AFTER READING draw graphs! A chapter for graphs? Or graphs in each chapter?
 - *Poster*
   - [ ] whoever's primary outcome data
-  - [ ] DIME positioning data
+  - [x] DIME positioning data
   - [ ] graph the model
   - [ ] get estimates
 
