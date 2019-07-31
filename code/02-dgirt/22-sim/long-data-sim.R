@@ -15,8 +15,6 @@ library("here")
 library("magrittr")
 library("tidyverse")
 
-
-
 library("scales")
 library("broom")
 library("latex2exp")
@@ -295,44 +293,24 @@ dgirt <- function(model, data) {
 stop("STOP before compiling models")
 
 
-if (whoami == "michaeldecrescenzo") {
+# local stan file
+long_homsk <-
+  stanc(
+    file = here("code", "02-dgirt", "21-stan", "long-homo-mlm.stan")
+  ) %>%
+  stan_model(stanc_ret = ., verbose = TRUE) %>%
+  print()
 
-  # local stan file
-  # long_homsk <-
-  long_het <-  
-    stanc(
-      # file = here("code", "dgirt", "stan", "long-homo-mlm.stan")
-      file = here("code", "dgirt", "stan", "long-hetero-mlm.stan")
-    ) %>%
-    stan_model(stanc_ret = ., verbose = TRUE) %>%
-    print()
+long_het <-  
+  stanc(
+    file = here("code", "02-dgirt", "21-stan", "long-hetero-mlm.stan")
+  ) %>%
+  stan_model(stanc_ret = ., verbose = TRUE) %>%
+  print()
 
-  beepr::beep(2)
+try(beepr::beep(2))
 
-} else if (whoami == "decrescenzo") {
 
-  # stan file from Github
-  # long_url <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/stan/long/long-homo-mlm.stan?token=AC4GNRMX5BFRDMR45S7Z7OC45WGZM"
-  # long_homsk <- 
-  #   stanc(file = long_url) %>%
-  #   stan_model(stanc_ret = ., verbose = TRUE) %>%
-  #   print()
-
-    # local git-pulled model
-  # long_homsk <-
-  long_het <-  
-    stanc(
-      # file = here("code", "dgirt", "stan", "long-homo-mlm.stan")
-      file = here("code", "dgirt", "stan", "long-hetero-mlm.stan")
-    ) %>%
-    stan_model(stanc_ret = ., verbose = TRUE) %>%
-    print()
-
-  
-
-} else {
-  print("no model found")
-}
 
 long_homsk
 long_het
@@ -378,11 +356,11 @@ beepr::beep(2)
 
 # data/sim-dgirt/mcmc
 mcmc_homsk %>%
-  boxr::box_write("long-homsk-region-stanfit.RDS", dir_id = 61768155536)
+  boxr::box_write("test-homsk-stanfit.RDS", dir_id = 80447647711)
   # saveRDS(here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
 
 mcmc_het %>%
-  boxr::box_write("long-hetsk-region-stanfit.Rds", dir_id = 61768155536)
+  boxr::box_write("test-het-stanfit.Rds", dir_id = 80447647711)
   # saveRDS(here("data", "sim-dgirt", "mcmc", "long-hetsk-region-stanfit.Rds"))
 
 
