@@ -207,7 +207,7 @@ dgirt <- function(object, data) {
     # drop specified parameters
     include = FALSE,
     pars = c(
-      "discrimination", "eta", "eta2", "pprob",
+      "eta", "eta2", "pprob",
       "z_grp_mean", "z_st_mean", "z_rg_mean", 
       "scale_grp_mean", "scale_st_mean", "scale_rg_mean",
       "z_grp_var", "z_st_var", "z_rg_var", 
@@ -271,16 +271,16 @@ mcmc_homsk <- dgirt(object = long_homsk, data = stan_data)
 boxr::box_write(
   mcmc_homsk, 
   as.character(str_glue("{Sys.Date()}-mcmc-homsk-2010s.RDS")), 
-  dir_id = 80451081157
+  dir_id = 84484426292
 )
 
 mcmc_het <- dgirt(object = long_het, data = stan_data)
 boxr::box_write(
   mcmc_het, 
   as.character(str_glue("{Sys.Date()}-mcmc-ht-2010s.RDS")), 
-  dir_id = 80451081157
+  dir_id = 84484426292
 )
 
 
-stop("all done!")
+message("all done!")
 

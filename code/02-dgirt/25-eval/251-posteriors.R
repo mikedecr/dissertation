@@ -27,7 +27,10 @@ library("broom")
 
 mcmc_homsk <-
   # box_read(488411999605) %>%
-  here("data", "dgirt", "mcmc", "2019-07-11-mcmc-homsk-2010s.RDS") %>%
+  here(
+    "data", "mcmc", "dgirt", 
+    "run", "samples", "2019-08-13-mcmc-homsk-2010s.RDS"
+  ) %>%
   readRDS()
 
 # mcmc_het <- box_read(488496770244)
@@ -59,12 +62,15 @@ tidy_homsk <-
 
 master_data <- 
   # box_read() %>%
-  readRDS(here("data", "dgirt", "model-data", "master-model-data.RDS")) %>%
+  readRDS(
+    here("data", "mcmc", "dgirt", "run", "input", "master-model-data.RDS")
+  ) %>%
   print()
 
 tidy_thetas <- tidy_homsk %>%
 # thetas <- tidy_het %>%  
-  filter(str_detect(term, "idtheta") == TRUE) %>%
+  filter(str_detect(term, "idtheta") == FALSE) %>%
+  filter(str_detect(term, "theta") == TRUE) %>%
   mutate(
     group = parse_number(term)
   ) %>%
@@ -147,8 +153,8 @@ ggplot(thetas) +
   ) +
   NULL
 
-ggsave(here("present", "polmeth-2019", "graphics", "pts.pdf"), 
-       height = 4, width = 5, device = cairo_pdf)
+# ggsave(here("present", "polmeth-2019", "graphics", "pts.pdf"), 
+#        height = 4, width = 5, device = cairo_pdf)
 
 
 # todo: label intervals?
@@ -182,13 +188,15 @@ ggplot(thetas, aes(x = estimate)) +
   ) +
   NULL
 
-ggsave(here("present", "polmeth-2019", "graphics", "histograms.pdf"), 
-       height = 4, width = 5, device = cairo_pdf)
+# ggsave(here("present", "polmeth-2019", "graphics", "histograms.pdf"), 
+#        height = 4, width = 5, device = cairo_pdf)
 
 # ---- spread and plot D vs R -----------------------
 
+
+
 theta_draws <- 
-  spread_draws(mcmc_homsk, idtheta[group]) %>%
+  spread_draws(mcmc_homsk, theta[group]) %>%
   group_by(.draw) %>%
   nest() %>%
   sample_n(100) %>%
@@ -208,12 +216,12 @@ theta_scatter <- master_data %>%
   ) %>%
   distinct() %>%
   full_join(theta_draws) %>%
-  select(party, idtheta, .draw) %>%
+  select(party, theta, .draw) %>%
   group_by(party) %>%
   nest() %>%
   spread(key = party, value = data) %>%
   unnest() %>%
-  rename(dem_theta = idtheta, rep_theta = idtheta1) %>%
+  rename(dem_theta = theta, rep_theta = theta1) %>%
   print()
 
 
@@ -312,7 +320,7 @@ thetas %>%
 
 # for heterodskedastic only
 tidy_het %>%
-  filter(str_detect(term, "idtheta") | str_detect(term, "idsigma")) %>%
+  filter(str_detect(term, "theta") | str_detect(term, "idsigma")) %>%
   mutate(
     group = parse_number(term)
   ) %>%
@@ -335,7 +343,7 @@ tidy_het %>%
   group_by(term) %>%
   nest() %>%
   spread(key = term, value = data) %>%
-  unnest(idtheta, idsigma) %>%
+  unnest(theta, idsigma) %>%
   ggplot(aes(x = estimate,  y = log(estimate1))) +
     geom_pointrange(
       aes(ymin = log(conf.low1), ymax = log(conf.high1), color = as.factor(party))
