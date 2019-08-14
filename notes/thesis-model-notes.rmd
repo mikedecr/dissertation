@@ -3,6 +3,24 @@ title: thesis - modeling notes
 ---
 
 
+# 2019-08-05
+
+Literature distillation
+
+- 3 conflicts
+- empirical tests of normative problem
+  - conflicts among the normative problems; parties, publics, etc.
+
+Justin Levitt (Loyola) data on mid-decade redistricting?
+
+- TX mid 2000s
+- NC in 2010s?
+- what do Jackman et al. do?
+- Jamie Carson data on district overlap
+- Scott Adler
+
+
+
 # 2019-05-29
 
 Static version with real data
