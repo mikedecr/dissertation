@@ -3,12 +3,8 @@
 #   Creating "long" data for long (non-matrix) model
 # ----------------------------------------------------
 
-# source this file from GH
-# gh_source <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/long-data-sim.R?token=AC4GNRNSSBTQL7XWC3PKMGS44Q6BI"
-# source(gh_source)
-
-# or locally:
-# source(here::here("code", "dgirt", "long-data-sim.R"))
+# source locally:
+# source(here::here("code", "02-dgirt", "22-sim", "long-data-sim.R"))
 
 
 library("here")
@@ -290,7 +286,8 @@ dgirt <- function(model, data) {
 
 # ---- compile model -----------------------
 
-stop("STOP before compiling models")
+message("STOP before compiling models")
+stop()
 
 
 # local stan file
@@ -313,13 +310,13 @@ try(beepr::beep(2))
 
 
 long_homsk
+
 long_het
 
 
-# save compiled model to box
-# boxr::box_write(whateverk, "model-long-homo.RDS", dir_id = 66357678611)
-
-# read compiled model from Box
+# save compiled model to box?
+# boxr::box_write(whatever, "model-long-homo.RDS", dir_id = 66357678611)
+# read compiled model from Box?
 
 
 

@@ -10,6 +10,7 @@ zsh
 
 cd dissertation
 
+git status
 git pull
 
 R
