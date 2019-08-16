@@ -106,29 +106,63 @@ where $p_{i}$ reflects the proportion of the electorate that identifies with par
 but the limitations are still significant. We could not make a simplifying assumption that $\pi_{1} = \pi_{2}$ for but a handful of districts. We might estimate $\pi_{i}$ from survey data \todo{but what}
 
 
-
-```{r, include = TRUE}
-tibble(x = seq(-3, 3, .005)) %>%
-  mutate(
-    dem_moderate = dnorm(x, mean = -0.5, sd = 0.5),
-    rep_moderate = dnorm(x, mean = 0.5, sd = 0.5),
-    dem_extreme = dnorm(x, mean = -1, sd = 0.5),
-    rep_extreme = dnorm(x, mean = 1, sd = 0.5),
+```{r create-two-parties}
+f <- 
+  tibble(
+    x = seq(-10, 10, .01)
   ) %>%
-  gather(key = group, value = density, -x) %>%
   mutate(
-    party = ifelse(str_detect(group, "dem"), "Democrats", "Republicans"), 
-    extremity = ifelse(str_detect(group, "mod"), "Moderate Parisans", "Polarized Partisans")) %>%
-  ggplot() + 
-    aes(x = x, y = density, fill = party, color = party) +
-    geom_ribbon(
-      aes(ymin = 0, ymax = density), 
-      alpha = 0.5
+    dmod = dnorm(x, mean = -0.15, sd = 0.25),
+    rmod = dnorm(x, mean = 0.15, sd = 0.25),
+    dex = dnorm(x, mean = -0.5, sd = 0.25),
+    rex = dnorm(x, mean = 0.5, sd = 0.25)
+  ) %>%
+  gather(key = group, value = y, dmod, rmod, dex, rex) %>% 
+  mutate(
+    party = ifelse(group %in% c("dmod", "dex"), "Democrats", "Republicans"), 
+    ex = ifelse(group %in% c("dmod", "rmod"), "District A: Moderate Voters", "District B: Polarized Voters"), 
+    ex = fct_relevel(ex, "District A: Moderate Voters")) %>% 
+  print()
+
+
+means <-  f %>%
+  group_by(ex) %>% 
+  summarize(xintercept = sum(y * x)) %>% 
+  print
+```
+
+```{r plot-two-parties, include = TRUE, fig.height = 2, fig.width = 6, out.width = "100%", fig.cap = "Two districts with identically located median voters"}
+ggplot(data = f) +
+  aes(x = x, y = y, color = party, fill = party) +
+  facet_grid(. ~ ex) +
+  geom_line(
+    # fill = NA,
+    # color = NA,
+    alpha = 0.5,
+    show.legend = FALSE
     ) +
-    geom_line() +
-    facet_wrap(~ extremity, scales = "free") +
-    scale_fill_manual(values = party_colors) +
-    scale_color_manual(values = party_colors)
+  geom_ribbon(
+    aes(ymin = 0, ymax = y), 
+    show.legend = FALSE,
+    alpha = 0.2
+  ) +
+  scale_color_manual(values = party_colors) +
+  scale_fill_manual(values = party_colors) +
+  scale_y_continuous(breaks = NULL) +
+  # scale_x_continuous(breaks = NULL) +
+  # scale_x_continuous(breaks = c(-.65, 0, .65)) +
+  labs(
+    x = "Voter Ideal Points", 
+    y = NULL, 
+    fill = NULL
+  ) +
+  geom_vline(data = means, aes(xintercept = xintercept), color = "gray20") +
+  coord_cartesian(xlim = c(-1.25, 1.25)) +
+  theme(
+    # panel.grid.major.x = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_blank()
+  )
 ```
 
 
