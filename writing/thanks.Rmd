@@ -1,14 +1,25 @@
 # Acknowledgments {-}
 
-Thanks to [insert people]:
+I owe sincere thanks to those who supported this work. There are those who helped me professionally:
 
-  - My social environment (smh)
-  - Family
-  - Professors
-  - Friends
-  - The Haters
-  - Strauss
-  - Cohort of Strauss's class
-  - Committee
-  - Warshaw; Treul; Kernell
-  - Beasts
+- My committee: Barry Burden, Ken Mayer, Ellie Powell, Alex Tahk, and \todo{somebody}
+
+- Members of the department who provided institutional support: the "Beasts of Burden" roundtable group, Scott Straus, members of the Fall 2016 prospectus workshop course, including Micah Dillard, David Greenwood-Sanchez, Devin Judge-Lord, Dmitri Kofanov, Michael Masterson, Ben Power, Sujeong Shim,
+  \todo{others?}
+and the Election Research Center for financial support.
+
+- Faculty and students at other universities who shared data or provided advice at various stages in its development: Robert Boatright, Devin Caughey, David Doherty, Seth Hill, Gary Jacobson, Georgia Kernell, Brendan Nyhan, Andrew Reeves, Michael Ting, Sarah Treul, \todo{Others}
+
+- Software users and developers whose tools (and supporting community) brought the project to "operational" life and influenced my work going forward: Mara Averick, Jenny Bryan, Andrew Heiss, Mike Kearney, Thomas Lin Pederson, Kara Woo, \todo{Others/sp}
+
+- The staff at various cafes in town that fueled and powered me, especially Black Locust Cafe and Johnson Public House. 
+
+I also want to thank those who provided social support as this project came to a head:
+
+- My family, who would do anything in their power for me
+
+- My closest friends in the program: Micah Dillard, Jordan Hsu, Rachel Jacobs, Anna Meier, Anna Oltman, Rachel Schwartz
+
+- The Bike Gang: Josh Cruz and Erin Nelson
+
+- My friends in other cities who always cheered me on: Marissa Finazzo, Zach Gray, Spencer Melgren, Jake Moore, Daniel Putman, Ian Servantes, India Watts

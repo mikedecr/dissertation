@@ -13,6 +13,7 @@ output:
     # template: _assets/ogg-template.tex
 header-includes:
   - \usepackage{todonotes}
+  - \presetkeys{todonotes}{color = violet!30}{}
   - \usepackage[lf, mathtabular, minionint]{MinionPro}
   - \usepackage{MyriadPro}
   - \usepackage[varqu, scaled = 0.95]{zi4}
@@ -30,6 +31,7 @@ header-includes:
   - \makeevenhead{chapter}{}{}{\thepage}
   - \makeoddfoot{chapter}{}{}{}
   - \makeevenfoot{chapter}{}{}{}
+  # - \AtBeginDocument{\let\epsilon\varepsilon}
 # output:
 #   buckydown::thesis_pdf: default
 # Data for the PDF version
