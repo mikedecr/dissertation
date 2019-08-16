@@ -1,4 +1,4 @@
-# Modeling the Constituency's Policy Preferences
+# Modeling the Constituency's Policy Preferences {#ch:model}
 
 
 ```{r knitr-02-model, include = FALSE}

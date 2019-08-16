@@ -1,5 +1,4 @@
-# Primary Elections and Ideological Choice 
-\label{arg-chapter}
+# Primary Elections and Ideological Choice {#ch:arg}
 
 
 
