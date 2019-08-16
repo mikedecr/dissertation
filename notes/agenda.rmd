@@ -2,17 +2,33 @@
 title: Overall thesis notes
 ---
 
+# Today
+
+Model identification changes
+
+- [x] fix local toolchain for Stan
+- [x] run test (sim) models
+- [x] see if ideal points look sane without any post-processing
+  - *they look very left-shifted*
+- [x] git push to remote
+- [x] run real models on SSC
+- [x] evaluate item-ID posterior samples
+- [x] stash any non-model changes
+- [x] merge model-identification -> dev
+- [x] apply non-model stash on dev
+
+
+# Ongoing
 
 - *Immediate agenda*
-  - [x] weird Republican district
-  - [x] big CIs
-  - [ ] Consolidate note documents into one
 - *Model*
   - [x] survey algo
   - [x] algo snippets
-  - [ ] responses w/ midpoint?
+  - [x] design weights
+  - [x] model identification
+    - [ ] what abt left-bias?
+  - [ ] what abt items w/ a middle response? (currently NA? what's closer to SQ?)
   - [ ] CCES Data
-  - [ ] design weights
   - [ ] ANES data
   - [ ] Roper data
   - [ ] research covariates
@@ -32,15 +48,13 @@ title: Overall thesis notes
     - [ ] openness
 - *Reading*
   - [ ] Boatright
+  - [ ] Boatright edited volume
   - [ ] Tons of papers on my laptop
 - *Writing*
+  - [ ] write argument chapter
+  - [ ] write model chapter
   - [ ] Secondary data analysis for theory-building (have to read)
   - [ ] AFTER READING draw graphs! A chapter for graphs? Or graphs in each chapter?
-- *Poster*
-  - [ ] whoever's primary outcome data
-  - [x] DIME positioning data
-  - [ ] graph the model
-  - [ ] get estimates
 
 
 

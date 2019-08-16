@@ -2,17 +2,20 @@
 title: Thesis writing notes
 ---
 
-# copy stuff
 
-- argumentation from prospectus
-- model stuff
+# Near term
+
+- copy argumentation from prospectus
+- write the "pure" model
+- write the "implementation" model (Stan, parameterization)
+- Describe simulation
+
 
 # New stuff
 
 - argument
 - description of simulation
- + set an evaluation using Rmd
-
+  - set an evaluation using Rmd
 
 
 # style things
