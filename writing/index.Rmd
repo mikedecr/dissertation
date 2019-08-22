@@ -10,6 +10,7 @@ output:
   bookdown::pdf_book:
     number_sections: true # false?
     dev: cairo_pdf
+    toc: false
     # template: _assets/ogg-template.tex
 header-includes:
   - \usepackage{todonotes}

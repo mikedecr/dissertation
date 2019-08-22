@@ -6,7 +6,7 @@ rmd_files: [
   "mainmatter.Rmd", 
   "01-arg.Rmd", 
   "02-model.Rmd", 
-    "02-1_model-sim.Rmd",
+    "02-1_model-sim.Rmd", "02-2_data.Rmd", "02-1_eval.Rmd",
   "03-positioning.Rmd", "04-voting.Rmd", "05-redistricting.Rmd",
   "90-appendix-intro.Rmd", 
     "91-appendix-irt.Rmd", 

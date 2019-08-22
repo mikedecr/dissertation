@@ -31,7 +31,8 @@ source(here("code", "_assets", "setup-graphics.R"))
 - most people don't write letters to members, agencies
 - campaign for office
 - donate money
- -->
+-->
+
 
 Elections are the foremost venue for citizens to influence government actors and public policy. Classic theories of voting suggest that citizens weigh the policy positions of alternative candidates and vote for the candidate whose platform most closely aligns with their own preferences [@downs:1957:economic-theory]. Political parties simplify the voter's calculations by providing a powerful heuristic in the form of the party label, enabling voters to infer candidates' values and issue positions without expending the effort to thoroughly appraise each campaign [@campbell-et-al:1960:american-voter; @green-et-al:2002:partisan-hearts; @rahn:1993:stereotypes].
 
@@ -105,6 +106,8 @@ As scholars explore whose voices truly matter in shaping party platforms and pol
 I fill this gap in the representation literature by developing a new measurement model for local partisan preferences and applying these estimates to important questions of primary representation. The model builds on the work of @tausanovitch-warshaw:2013:constituent-prefs and @caughey-warshaw:2015:DGIRT, estimating a latent index of policy liberalism within partisan groups in Congressional districts. For each district, the model estimates the mean ideal point of Democratic and Republican constituents using survey data. With these new estimates, I directly test the hypotheses that other studies have fallen short of testing. Is it truly the case that the primary constituency is a standout cause of candidate positioning? Do primary voters nominate partisan candidates for their ideological "fit"? And do institutional configurations such as gerrymandering distort these relationships in ways commonly suggested by scholars and political observers alike?
 
 This remainder of this chapter reviews leading theoretical approaches to primary representation, highlights the importance of partisan constituent preferences, and uses formal models to demonstrate how existing approaches fail to measure the important theoretical constructs. The chapter ends by previewing the remaining chapters of the dissertation about the new measurement model (Chapter \@ref(ch:model)) and analyses that apply the new estimates to important areas of primary representation: the strategic positioning of primary candidates (\@ref(ch:positioning)), the vote choices of primary constituents (\@ref(ch:voting)), and how redistricting moderates these outcomes of interest (\@ref(ch:redistricting)).
+
+
 
 <!-- 
 pro:
