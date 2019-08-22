@@ -4,18 +4,11 @@ title: Overall thesis notes
 
 # Today
 
-Model identification changes
+- [] Standardize chunk opts for each .Rmd file
+  - source an .R file rather than duplicate chunk opts code per file
+- [ ] rename model subfiles
 
-- [x] fix local toolchain for Stan
-- [x] run test (sim) models
-- [x] see if ideal points look sane without any post-processing
-  - *they look very left-shifted*
-- [x] git push to remote
-- [x] run real models on SSC
-- [x] evaluate item-ID posterior samples
-- [x] stash any non-model changes
-- [x] merge model-identification -> dev
-- [x] apply non-model stash on dev
+
 
 
 # Ongoing
