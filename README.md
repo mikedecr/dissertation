@@ -4,3 +4,10 @@ As general election competition in the U.S. becomes increasingly driven by parti
 
 This dissertation puts the big questions of primary representation to the test using recent data on U.S. House primaries. Do candidates position themselves in response to the ideological median in their partisan constituency? Do partisan constituencies nominate candidates that better match their ideological preferences? These questions are key to understanding primaries, but they are not confronted directly in existing research. This project develops a unique set of ideal point estimates for local "party publics"---partisan groups within districts---by fitting a group-level IRT model to public opinion data in recent election cycles. The model estimates the ideological medians of Republican and Democratic identifiers within districts and the degree of ideological heterogeneity within each group. With direct measures of local partisan preferences, further research can examine the power of individuals vs. groups in shaping nomination contests, the quality of electoral accountability in "safe" districts, and the ideological dimensions along which the two parties compete in primaries.
 
+## Repository notes
+
+If you are viewing this repository on GitHub, know that you are splashing onto the `master` branch. The master branch will almost always lag behind my work on other branches. Furthermore, there is always a chance that the online repository lags the work on my local machine.
+
+
+
+
