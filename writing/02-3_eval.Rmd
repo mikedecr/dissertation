@@ -1,8 +1,23 @@
-<!-- chunk opts -->
-
-
+<!-- in chapter: Model -->
 
 ## Model evaluation
+
+
+<!-- chunk opts -->
+```{r knitr-02-3_model-eval, include = FALSE}
+source(here::here("writing", "_assets", "chunk-opts.R"))
+
+knitr::opts_chunk$set(
+  cache.path = 
+    stringr::str_glue('{knitr::opts_chunk$get("cache.path")}02-3_model-eval/'),
+  fig.path = 
+    stringr::str_glue('{knitr::opts_chunk$get("fig.path")}02-3_model-eval/')
+)
+```
+
+
+
+
 
 ### Prior specificity
 

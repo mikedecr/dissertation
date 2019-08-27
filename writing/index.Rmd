@@ -16,13 +16,14 @@ header-includes:
   - \usepackage{todonotes}
   - \presetkeys{todonotes}{color = violet!30}{}
   - \usepackage[lf, mathtabular, minionint]{MinionPro}
-  - \usepackage{MyriadPro}
+  # - \usepackage{MyriadPro}
+  # - \usepackage[scaled = 0.9]{FiraSans}
   - \usepackage[varqu, scaled = 0.95]{zi4}
   - \setsecnumdepth{subsubsection}
   # Advice: only write into subsection?
-  - \setsecheadstyle{\raggedright \bfseries \itshape}
-  - \setsubsecheadstyle{\raggedright \itshape} 
-  - \setsubsubsecheadstyle{\raggedright}
+  - \setsecheadstyle{\large \raggedright \bfseries}
+  - \setsubsecheadstyle{\raggedright \bfseries \itshape} 
+  - \setsubsubsecheadstyle{\raggedright \itshape}
   - \setparaheadstyle{\raggedright \itshape}
   - \chapterstyle{dowding}
   - \pagestyle{simple}

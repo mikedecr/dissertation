@@ -1,11 +1,28 @@
-<!-- chunk opts -->
+<!-- in chapter: model -->
+
+## Testing the Model with Simulated Data
+
+
+```{r knitr-02-1_model-sim, include = FALSE}
+source(here::here("writing", "_assets", "chunk-opts.R"))
+
+knitr::opts_chunk$set(
+  cache.path = 
+    stringr::str_glue('{knitr::opts_chunk$get("cache.path")}02-1_model-sim/'),
+  fig.path = 
+    stringr::str_glue('{knitr::opts_chunk$get("fig.path")}02-1_model-sim/')
+)
+```
+
+
+Because the model is custom-built with `Stan`, it comes with no off-the-shelf quality assurances. To test the model's ability to estimate unknown parameters, I subjected the model to a number of tests during its development. These tests proceed by simulating data from a data generating process with known parameters, estimating the parameters from the simulated data, and comparing the parameter estimates against their known values. This section describes these simulations and presents their results.
 
 
 
 
-## Simulation and Model Validation
 
-Doing a non-centered parameterization
+
+
 
 <!-- Distill the simulation stuff here 
 

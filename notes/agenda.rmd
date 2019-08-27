@@ -6,8 +6,8 @@ title: Overall thesis notes
 
 - [] Standardize chunk opts for each .Rmd file
   - source an .R file rather than duplicate chunk opts code per file
-- [ ] rename model subfiles
-
+- [ ] LICENSE
+- [ ] Aesthetic to-dos (some time...)
 
 
 
@@ -48,6 +48,13 @@ title: Overall thesis notes
   - [ ] write model chapter
   - [ ] Secondary data analysis for theory-building (have to read)
   - [ ] AFTER READING draw graphs! A chapter for graphs? Or graphs in each chapter?
+- *Aesthetics*
+  - [ ] fix title page
+  - [ ] unify section styles with chapter styles
+    - bold Fira?
+    - how to deal with bold section/regular chapter?
+    - what can you look at for inspiration?
+  - [ ] integrate w/ Buckydown
 
 
 

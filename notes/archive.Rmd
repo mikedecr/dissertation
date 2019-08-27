@@ -4,6 +4,9 @@ title: Archive of things done
 
 
 
+Aug 27, 2019:
+
+- [x] rename model subfiles
 
 
 Aug 10, 2019: Model identification changes
