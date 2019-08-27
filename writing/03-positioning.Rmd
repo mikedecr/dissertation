@@ -1,3 +1,13 @@
-# Candidate Positioning in Primary Elections
+# Candidate Positioning in Primary Elections {#ch:positioning}
 
 U.S. House primary data from @pettigrew-primary-data. 
+
+
+## Causality
+
+DAGs
+
+Controlled direct effect (ideology, holding fixed the vote in the district)
+
+
+

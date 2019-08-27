@@ -1,0 +1,76 @@
+
+# August 27, 2019 (Barry)
+
+Did:
+
+- basically nothing
+
+
+Do:
+
+- Have the model test writing done by the Friday meeting?
+- Gender gap:
+  - dig into Axelrod
+  - Stanley and Niemi invert the quantity
+  - these are great but they don't do something that we need
+    - campaigns...etc.
+  - How does our method address a different need/different intellectual project
+
+
+
+# August 21, 2019 (Barry)
+
+Do:
+
+- [ ] keep distilling prospectus
+- [ ] rethink intro organization
+- [ ] reorg model chapter lead-in
+- [ ] make the model dynamic before getting too far into the math
+- [ ] think about the dynamic simulation
+  - should be easy...only thing that changes is the hierarchical parameters
+  - [ ] (can simulate data in nested DF by time)
+- [ ] find Hirano and Snyder, "Primary Elections"
+- [ ] consider having a rhetorical section on the static model for gut-checking
+  - it's good to show that you can talk about something clearly and slowly
+  - keep the non-ac audience in mind!
+- [ ] organize readings
+- [x] plan your fill times (such as discarding useless readings, or getting one-sentence things out of them and then setting them aside)
+
+
+Did:
+
+- chapter 1 progress
+  - know I need to overhaul
+  - tension about how quickly to get past "intro" and into the meat
+- chapter 2 progress?
+  - some revisions to the flow of the intro
+  - some tweaks to model math notation
+- collected some more readings
+  - need to organize
+  - use during your fill time!
+- didn't really hit gender gap
+- made progress on APSA data / reading up on conjoint
+- talked to Bryan Wilcox, talking to his boss next
+  - SEA, NYC, DC
+  - is the mission aligned with what I want
+  - is is the kind of work I'm going to be good at (imposter syndrome about project management)
+
+
+
+# August 14, 2019 (Barry)
+
+My plans to write Ch 1 and 2
+
+- means data goes on the backburner slightly
+- but keep reading and getting ideas
+- think about the DAGs!
+
+
+Make plans to touch base w/ committee
+
+- [ ] Alex before Causal Inference
+- [ ] Ken anytime
+- [ ] Mike Wagner
+- [ ] Ellie (semester starts)
+
+

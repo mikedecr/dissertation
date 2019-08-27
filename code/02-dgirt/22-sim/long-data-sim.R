@@ -3,19 +3,13 @@
 #   Creating "long" data for long (non-matrix) model
 # ----------------------------------------------------
 
-# source this file from GH
-# gh_source <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/long-data-sim.R?token=AC4GNRNSSBTQL7XWC3PKMGS44Q6BI"
-# source(gh_source)
-
-# or locally:
-# source(here::here("code", "dgirt", "long-data-sim.R"))
+# source locally:
+# source(here::here("code", "02-dgirt", "22-sim", "long-data-sim.R"))
 
 
 library("here")
 library("magrittr")
 library("tidyverse")
-
-
 
 library("scales")
 library("broom")
@@ -292,56 +286,37 @@ dgirt <- function(model, data) {
 
 # ---- compile model -----------------------
 
-stop("STOP before compiling models")
+message("STOP before compiling models")
+stop()
 
 
-if (whoami == "michaeldecrescenzo") {
+# local stan file
+long_homsk <-
+  stanc(
+    file = here("code", "02-dgirt", "21-stan", "long-homo-mlm.stan")
+  ) %>%
+  stan_model(stanc_ret = ., verbose = TRUE) %>%
+  print()
 
-  # local stan file
-  # long_homsk <-
-  long_het <-  
-    stanc(
-      # file = here("code", "dgirt", "stan", "long-homo-mlm.stan")
-      file = here("code", "dgirt", "stan", "long-hetero-mlm.stan")
-    ) %>%
-    stan_model(stanc_ret = ., verbose = TRUE) %>%
-    print()
+long_het <-  
+  stanc(
+    file = here("code", "02-dgirt", "21-stan", "long-hetero-mlm.stan")
+  ) %>%
+  stan_model(stanc_ret = ., verbose = TRUE) %>%
+  print()
 
-  beepr::beep(2)
+try(beepr::beep(2))
 
-} else if (whoami == "decrescenzo") {
 
-  # stan file from Github
-  # long_url <- "https://raw.githubusercontent.com/mikedecr/dissertation/master/code/dgirt/stan/long/long-homo-mlm.stan?token=AC4GNRMX5BFRDMR45S7Z7OC45WGZM"
-  # long_homsk <- 
-  #   stanc(file = long_url) %>%
-  #   stan_model(stanc_ret = ., verbose = TRUE) %>%
-  #   print()
-
-    # local git-pulled model
-  # long_homsk <-
-  long_het <-  
-    stanc(
-      # file = here("code", "dgirt", "stan", "long-homo-mlm.stan")
-      file = here("code", "dgirt", "stan", "long-hetero-mlm.stan")
-    ) %>%
-    stan_model(stanc_ret = ., verbose = TRUE) %>%
-    print()
-
-  
-
-} else {
-  print("no model found")
-}
 
 long_homsk
+
 long_het
 
 
-# save compiled model to box
-# boxr::box_write(whateverk, "model-long-homo.RDS", dir_id = 66357678611)
-
-# read compiled model from Box
+# save compiled model to box?
+# boxr::box_write(whatever, "model-long-homo.RDS", dir_id = 66357678611)
+# read compiled model from Box?
 
 
 
@@ -378,11 +353,11 @@ beepr::beep(2)
 
 # data/sim-dgirt/mcmc
 mcmc_homsk %>%
-  boxr::box_write("long-homsk-region-stanfit.RDS", dir_id = 61768155536)
+  boxr::box_write("test-homsk-stanfit.RDS", dir_id = 80447647711)
   # saveRDS(here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
 
 mcmc_het %>%
-  boxr::box_write("long-hetsk-region-stanfit.Rds", dir_id = 61768155536)
+  boxr::box_write("test-het-stanfit.Rds", dir_id = 80447647711)
   # saveRDS(here("data", "sim-dgirt", "mcmc", "long-hetsk-region-stanfit.Rds"))
 
 
@@ -392,12 +367,18 @@ mcmc_het %>%
 # don't print() when reading
 # mcmc_homsk <- boxr::box_read(455693312840)
 # locally
-# mcmc_homsk <- 
-#   readRDS(here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
+mcmc_homsk <- 
+  readRDS(
+    here("data", "mcmc", "dgirt", "test", "samples", "test-homsk-stanfit.RDS")
+  ) %T>%
+  print()
 
 # mcmc_het <- boxr::box_read(466205197662)
 mcmc_het <- 
-  readRDS(here("data", "sim-dgirt", "mcmc", "long-hetsk-region-stanfit.Rds"))
+  readRDS(
+    here("data", "mcmc", "dgirt", "test", "samples", "test-het-stanfit.Rds")
+  ) %T>%
+  print()
 
 
 # ----------------------------------------------------
@@ -412,7 +393,7 @@ shinystan::launch_shinystan(mcmc_homsk)
 
 stan_rhat(mcmc_het)
 
-stan_ac(mcmc_het, "idtheta")$data %>%
+stan_ac(mcmc_het, "theta")$data %>%
   as_tibble() %>%
   group_by(parameters, lag) %>%
   summarize(ac = mean(ac)) %>%
@@ -442,22 +423,24 @@ summary(mcmc_homsk)
 
 
 
-theta_draws <- mcmc_het %>%
-  recover_types() %>%
+theta_draws <- mcmc_homsk %>%
   spread_draws(
-               # theta[group]
-               sigma_in_g[group]
-               ) %>%
+    theta[group]
+    # sigma_in_g[group] 
+  ) %>%
   left_join(model_data %>% select(group, theta_g, sigma_g, party)) %>%
   print()
 
-tidy(mcmc_het, conf.int = TRUE) %>%
+
+# move these comments into their own graph
+tidy(mcmc_homsk, conf.int = TRUE) %>%
   # filter(str_detect(term, "idtheta")) %>%
-  filter(str_detect(term, "idsigma")) %>%
+  # filter(str_detect(term, "idsigma")) %>%
+  filter(str_detect(term, "theta\\[")) %>%
   mutate(group = parse_number(term)) %>%
   left_join(model_data %>% select(group, theta_g, sigma_g, party)) %>% 
   # ggplot(aes(x = scale(theta_g), y = estimate)) +
-  ggplot(aes(x = exp(scale(log(sigma_g))), y = (estimate))) +
+  ggplot(aes(x = theta_g, y = estimate)) +
   # geom_pointrange(aes(ymin = conf.low, ymax = conf.high, 
   geom_pointrange(aes(ymin = (conf.low), ymax = (conf.high), 
                       color = as.factor(party))) +
@@ -466,4 +449,15 @@ tidy(mcmc_het, conf.int = TRUE) %>%
   # scale_y_log10() +
   NULL
 
+
+tidy(mcmc_homsk, conf.int = TRUE) %>%
+  filter(str_detect(term, "theta\\[")) %>%
+  mutate(group = parse_number(term)) %>%
+  left_join(model_data %>% select(group, theta_g, sigma_g, party)) %>% 
+  ggplot(aes(x = estimate)) +
+    geom_histogram(
+      aes(color = as.factor(party), fill = as.factor(party)), 
+      position = "identity",
+      alpha = 0.5
+    )
   

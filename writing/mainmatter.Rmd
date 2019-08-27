@@ -1,3 +1,8 @@
 \mainmatter
 
 \DoubleSpacing
+
+<!-- figures count within chapter w/ decimal points -->
+<!-- this doesn't work though? -->
+<!-- \counterwithin{figure}{chapter} -->
+

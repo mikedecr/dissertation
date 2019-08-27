@@ -1,0 +1,21 @@
+```{r setup-knitr-model-sim, include = FALSE}
+# chunk options
+library("knitr")
+opts_chunk$set(eval = TRUE, echo = FALSE, include = FALSE,
+               cache = TRUE, collapse = TRUE,
+               warning = FALSE, message = FALSE,
+               dev = "cairo_pdf",
+               fig.align = "center", fig.path = 'figs/')
+
+```
+
+
+
+## Model evaluation
+
+### Prior specificity
+
+Ratio of prior/posterior sd should exceed...what? 10 (Gelman)?
+
+
+

@@ -66,8 +66,8 @@ data {
 parameters {
  
   // --- IRT ---
-  vector[n_item] cutpoint;
-  vector<lower = 0>[n_item] discrimination;
+  vector[n_item] cut_raw; // raw item midpoint
+  vector<lower = 0>[n_item] disc_raw;  // raw item discrimination
   // real<lower = 0> sigma_in_g; // only 1. If heteroskedastic: next block
 
   
@@ -107,10 +107,12 @@ parameters {
 transformed parameters {
 
   // item response model
-  vector[n] eta;                         // link scale index
-  vector<lower = 0>[n_item] dispersion;
-  vector[n_group] theta;                 // group mean
-  vector<lower = 0>[n_group] sigma_in_g; // group sd
+  vector[n] eta;                               // link scale index
+  vector[n_group] theta;                       // group mean
+  vector<lower = 0>[n_group] sigma_in_g;       // group sd
+  vector[n_item] cutpoint;                     // identified cutpoint
+  vector<lower = 0>[n_item] discrimination;    // identified discrimination
+  vector<lower = 0>[n_item] dispersion;        // inv discrimination
 
   // vector[n] eta2; // normal CDF
   // vector<lower = 0, upper = 1>[n] pprob; // normal CDF
@@ -126,7 +128,12 @@ transformed parameters {
   matrix[n_region, n_party] rg_offset_var;
 
 
+  // cutpoints are mean 0 (dynamic: in year 1)
+  cutpoint = cut_raw - mean(cut_raw);
 
+  // discrimination are prod = 1
+  // dispersion = 1 / discrimination
+  discrimination = disc_raw * pow(exp(sum(log(disc_raw))), (-inv(n_item)));
   dispersion = inv(discrimination);
 
   // loop over groups to get theta
@@ -214,10 +221,8 @@ model {
   
 
   // ----- IRT params -----
-  discrimination ~ lognormal(-0.75, 0.35); // item params: static for now?
-  cutpoint ~ normal(0, 0.1);
-  // sigma_in_g ~ lognormal(0, 1);    // will become regression
-
+  disc_raw ~ lognormal(-0.75, 0.35); // item params: static for now?
+  cut_raw ~ normal(0, 0.1);
 
   // ---- district and state regressions ----
   // constants

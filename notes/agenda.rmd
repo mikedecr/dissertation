@@ -2,17 +2,26 @@
 title: Overall thesis notes
 ---
 
+# Today
+
+- [] Standardize chunk opts for each .Rmd file
+  - source an .R file rather than duplicate chunk opts code per file
+- [ ] rename model subfiles
+
+
+
+
+# Ongoing
 
 - *Immediate agenda*
-  - [x] weird Republican district
-  - [x] big CIs
-  - [ ] Consolidate note documents into one
 - *Model*
   - [x] survey algo
   - [x] algo snippets
-  - [ ] responses w/ midpoint?
+  - [x] design weights
+  - [x] model identification
+    - [ ] what abt left-bias?
+  - [ ] what abt items w/ a middle response? (currently NA? what's closer to SQ?)
   - [ ] CCES Data
-  - [ ] design weights
   - [ ] ANES data
   - [ ] Roper data
   - [ ] research covariates
@@ -32,15 +41,13 @@ title: Overall thesis notes
     - [ ] openness
 - *Reading*
   - [ ] Boatright
+  - [ ] Boatright edited volume
   - [ ] Tons of papers on my laptop
 - *Writing*
+  - [ ] write argument chapter
+  - [ ] write model chapter
   - [ ] Secondary data analysis for theory-building (have to read)
   - [ ] AFTER READING draw graphs! A chapter for graphs? Or graphs in each chapter?
-- *Poster*
-  - [ ] whoever's primary outcome data
-  - [x] DIME positioning data
-  - [ ] graph the model
-  - [ ] get estimates
 
 
 

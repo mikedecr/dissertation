@@ -68,8 +68,8 @@ data {
 parameters {
  
   // --- IRT ---
-  vector[n_item] cutpoint;
-  vector<lower = 0>[n_item] discrimination;
+  vector[n_item] cut_raw; // raw item midpoint
+  vector<lower = 0>[n_item] disc_raw;  // raw item discrimination
   real<lower = 0> sigma_in_g; // only 1. If heteroskedastic: next block
 
   
@@ -106,8 +106,10 @@ parameters {
 transformed parameters {
 
   // item response model
-  vector[n] eta;                         // link scale index
-  vector[n_group] theta;                 // group mean
+  vector[n] eta;                               // link scale index
+  vector[n_group] theta;                       // group mean
+  vector[n_item] cutpoint;                     // identified cutpoint
+  vector<lower = 0>[n_item] discrimination;    // identified discrimination
   vector<lower = 0>[n_item] dispersion;
 
   // vector[n] eta2; // normal CDF
@@ -119,19 +121,17 @@ transformed parameters {
   matrix[n_state, n_party] st_offset_mean;
   matrix[n_region, n_party] rg_offset_mean;
 
-  // HET: log sigma regression
-  // vector[n_group] grp_offset_var;
-  // matrix[n_state, n_party] st_offset_var;
-  // matrix[n_region, n_party] rg_offset_var;
+  // cutpoints are mean 0 (dynamic: in year 1)
+  cutpoint = cut_raw - mean(cut_raw);
 
-
+  // discrimination are prod = 1
+  // dispersion = 1 / discrimination
+  discrimination = disc_raw * pow(exp(sum(log(disc_raw))), (-inv(n_item)));
   dispersion = inv(discrimination);
 
   // loop over groups to get theta
-  // future: log(sigma) regressions
-
   // IRT index (loop group-item)
-  // later: expando
+  // later: expando algebra style
   for (i in 1:n) {
 
     // offsets are f(hypermean + error)
@@ -181,8 +181,8 @@ model {
   
 
   // ----- IRT params -----
-  discrimination ~ lognormal(-0.75, 0.35); // item params: static for now?
-  cutpoint ~ normal(0, 0.1);
+  disc_raw ~ lognormal(-0.75, 0.35); // item params: static for now?
+  cut_raw ~ normal(0, 0.1);
   sigma_in_g ~ lognormal(0, 1);    // will become regression
 
 
