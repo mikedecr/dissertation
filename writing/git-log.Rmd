@@ -1,0 +1,24 @@
+```{r knitr-00-gitlog, include = FALSE}
+source(here::here("writing", "_assets", "chunk-opts.R"))
+
+knitr::opts_chunk$set(
+  cache.path = 
+    stringr::str_glue('{knitr::opts_chunk$get("cache.path")}00-gitlog/'),
+  fig.path = 
+    stringr::str_glue('{knitr::opts_chunk$get("fig.path")}00-gitlog/')
+)
+```
+
+```{r, cache = FALSE}
+branch_name <- system("git symbolic-ref --short HEAD", intern = TRUE)
+commit_hash <- system("git log --pretty=%t", intern = TRUE)[1]
+commit_msg <- system("git log --pretty=%s", intern = TRUE)[1]
+```
+
+\cleardoublepage
+
+
+Commit \texttt{`r commit_hash`} on branch \texttt{`r branch_name`}:
+\begin{quote}
+  \texttt{`r commit_msg`}
+\end{quote}

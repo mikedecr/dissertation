@@ -2,11 +2,12 @@ book_filename: "ogg-thesis"
 chapter_name: "Chapter "
 rmd_files: [
   "index.Rmd", 
+  "git-log.Rmd",
   "abstract.Rmd", "contents.Rmd", "thanks.Rmd", 
   "mainmatter.Rmd", 
   "01-arg.Rmd", 
   "02-model.Rmd", 
-    "02-1_model-sim.Rmd", "02-2_data.Rmd", "02-1_eval.Rmd",
+    "02-1_model-sim.Rmd", "02-2_data.Rmd", "02-3_eval.Rmd",
   "03-positioning.Rmd", "04-voting.Rmd", "05-redistricting.Rmd",
   "90-appendix-intro.Rmd", 
     "91-appendix-irt.Rmd", 
