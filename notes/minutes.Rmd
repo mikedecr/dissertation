@@ -1,21 +1,40 @@
 
+# August 27, 2019 (Barry)
+
+Did:
+
+- basically nothing
+
+
+Do:
+
+- Have the model test writing done by the Friday meeting?
+- Gender gap:
+  - dig into Axelrod
+  - Stanley and Niemi invert the quantity
+  - these are great but they don't do something that we need
+    - campaigns...etc.
+  - How does our method address a different need/different intellectual project
+
+
+
 # August 21, 2019 (Barry)
 
 Do:
 
-- keep distilling prospectus
-- rethink intro organization
-- reorg model chapter lead-in
-- make the model dynamic before getting too far into the math
-- think about the dynamic simulation
+- [ ] keep distilling prospectus
+- [ ] rethink intro organization
+- [ ] reorg model chapter lead-in
+- [ ] make the model dynamic before getting too far into the math
+- [ ] think about the dynamic simulation
   - should be easy...only thing that changes is the hierarchical parameters
-  - (can simulate data in nested DF by time)
-- find Hirano and Snyder, "Primary Elections"
-- consider having a rhetorical section on the static model for gut-checking
+  - [ ] (can simulate data in nested DF by time)
+- [ ] find Hirano and Snyder, "Primary Elections"
+- [ ] consider having a rhetorical section on the static model for gut-checking
   - it's good to show that you can talk about something clearly and slowly
   - keep the non-ac audience in mind!
-- organize readings
-- plan your fill times (such as discarding useless readings, or getting one-sentence things out of them and then setting them aside)
+- [ ] organize readings
+- [x] plan your fill times (such as discarding useless readings, or getting one-sentence things out of them and then setting them aside)
 
 
 Did:
