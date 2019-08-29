@@ -1,6 +1,6 @@
 ---
 title: "Do Primaries Work?"
-subtitle: "Candidate Positioning and Representation in Nominating Elections" 
+subtitle: "Nomination Politics and the Representation of Local Partisan Preferences" 
 full-title: "Do Primaries Work? Nomination Politics and the Representation of Local Partisan Preferences"
 author: "Michael G. DeCrescenzo"
 grad-year: 2020
