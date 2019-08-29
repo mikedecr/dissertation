@@ -33,7 +33,7 @@ header-includes:
   - \makeevenhead{chapter}{}{}{\thepage}
   - \makeoddfoot{chapter}{}{}{}
   - \makeevenfoot{chapter}{}{}{}
-  # - \AtBeginDocument{\let\epsilon\varepsilon}
+  - \AtBeginDocument{\let\epsilon\varepsilon}
 # output:
 #   buckydown::thesis_pdf: default
 # Data for the PDF version

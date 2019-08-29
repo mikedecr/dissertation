@@ -4,6 +4,8 @@ title: Overall thesis notes
 
 # Today
 
+- [ ] more cites in model chapter
+  - don't forget Londregon??
 - [ ] hack to the end of the simulation exercise
 - [ ] export simulation .Rdata (for rmd)
 - [ ] simulation: within-district variance should be an afterthought after the distribution of averages...

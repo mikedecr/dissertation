@@ -20,7 +20,6 @@ library("latex2exp")
 library("rstan")
 rstan_options(auto_write = TRUE)
 (options(mc.cores = parallel::detectCores()))
-library("ggmcmc")
 library("tidybayes")
 
 library("boxr"); box_auth()

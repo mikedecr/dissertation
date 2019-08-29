@@ -1,14 +1,14 @@
 # Modeling the Constituency's Policy Preferences {#ch:model}
 
 
-```{r knitr-02-model, include = FALSE}
+```{r knitr-02-model, include = FALSE, cache = FALSE}
 source(here::here("writing", "_assets", "chunk-opts.R"))
 
 knitr::opts_chunk$set(
   cache.path = 
-    stringr::str_glue('{knitr::opts_chunk$get("cache.path")}02-model/'),
+    stringr::str_glue('{knitr::opts_chunk$get("cache.path")}02-0_model/'),
   fig.path = 
-    stringr::str_glue('{knitr::opts_chunk$get("fig.path")}02-model/')
+    stringr::str_glue('{knitr::opts_chunk$get("fig.path")}02-0_model/')
 )
 ```
 
@@ -23,16 +23,35 @@ library("latex2exp")
 source(here("code", "_assets", "setup-graphics.R"))
 ```
 
+Intro graph. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+In this chapter, I present the statistical model I use to estimate the policy ideal points of district-party publics. I proceed in the following major steps:
+
+1. Review the theoretical intuitions of ideal point models, starting with the underlying utility model and describing its variants as they relate to political choice. 
+2. Lay out the statistical model I employ in my analysis. 
+3. Test the model's performance at recovering latent parameters from simulated data. 
+4. Describe the data used to estimate the model
+5. Descriptive analysis of the estimated ideal points, with comparisons to conceptually similar measures
 
 
 
 
 
-## Ideology and Spatial Models in Political Science
+
+
+
+## Spatial Models of Policy Choice in Political Science
 
 <!-- goal: spatial >> IRT >> Parameterizations -->
 
-Intuition of a formal model
+What are we doing in this section:
+
+- describe the theory of choice modeling applied to ideology
+- theoretical basis in utility model of choice
+- inferences about latent preferences estimated with a statistical model 
+
+
+Intuition of a *spatial* model (graphically)
 
 - a voter has a preferred policy location
 - they choose from the closer of two alternatives
@@ -41,11 +60,166 @@ Intuition of a formal model
   - ideal point is an "operationalization" of a nebulous concept
   - so truly we are estimating the "ideal point" under an assumed model
 
+
+
+Actor has choices over Right and Left. They choose the closer alternative.
+
+
+```{r spatial-data}
+dd <- tibble(
+  Left = -1,
+  Right = 1,
+  Actor = 0.3
+) 
+
+long_dd <- dd %>%
+  gather(key = label, value = location) %>%
+  mutate(height = 0) %>%  
+  print()
+
+x_min <- -2
+x_max <- 2
+u_scale <- 2.5
+
+utility <- tibble(
+  x = seq(x_min, x_max, .01),
+  Right = u_scale * -(x - dd$Right)^2,
+  Left = u_scale * -(x - dd$Left)^2
+) %>%
+  print(n = nrow(.))
+
+```
+
+
+```{r plot-space-1, out.width = "100%", fig.height = 2, fig.width = 8, include = TRUE}
+utility_plot <- ggplot(long_dd) +
+  aes(x = location, y = height) +
+  geom_point() +
+  theme_void() +
+  annotate(geom = "line", x = c(-2, 2), y = 0) +
+  geom_text(aes(label = label), nudge_y = 1) +
+  coord_cartesian(ylim = c(-3, 3)) 
+
+utility_plot
+```
+
+More formally, choices Right and Left provide some utility to the Actor. Notationally, consider actors indexed $i \in \{1, \ldots, n\}$ who are faced with choice tasks (e.g.\ bills, survey items) indexed $j \in \{1, \ldots, J\}$. Let $\theta_{i}$ represent actor $i$'s ideal point, while $\psi_{j}$ and $\chi_j$ represent the Right and Left locations for choice $j$, respectively. The utility that an actor receives from a Right choice is a function of the distance between the Actor's ideal point and the Right location. The Actor maximizes their choice utility if either Right or Left falls exactly on the Actor's ideal point. The functional form of utility loss on either side of the choice location is an assumption made by the researcher---some scholars assume that utility loss follows a Gaussian curve, while others choose a quadratic utility loss [@clinton-jackman-rivers:2004:ideal]. For this analysis, we assume a quadratic utility loss. This choice implies a utility function over the squared distance between an Actor and a choice location. The utility Actor $i$ receives by choosing Right on choice $j$ is $U_{i}\left(\psi_{j}\right) = -\left( \theta_{i} - \psi_{j}\right)^{2} + \nu_{ij}$, while the utility of choosing Left on choice $j$ is $U_{i}\left(\chi_{j}\right) = -\left( \theta_{i} - \chi_{j}\right)^{2} + \eta_{ij}$, where $\nu_{ij}$ and $\eta_{ij}$ are idiosyncratic error terms.
+
+```{r plot-utility}
+nudgey <- 0.01
+ 
+utility_plot +
+  geom_line(
+    data = utility %>%
+      gather(key = choice, value = u, -x),
+    aes(x = x, y = u, color = choice)
+  ) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = c("Right" = "black", "Left" = purp)) +
+  annotate(geom = "linerange",
+    x = dd$Actor + nudgey, ymax = 0, ymin = -u_scale*(dd$Actor + nudgey - dd$Right)^2,
+    color = "black", linetype = "dashed"
+  ) +
+  annotate(geom = "linerange",
+    x = dd$Actor - nudgey, ymax = 0, ymin = -u_scale*(dd$Actor - nudgey - dd$Left)^2,
+    color = purp, linetype = "dashed"
+  ) +
+  geom_point() +
+  NULL
+```
+
+With these utility functions laid out, it is possible to calculate the probability of $i$'s choice. Let $y_{ij} = 1$ signify the outcome that $i$ chooses Right, while $y_{ij} = 0$ signifies that $i$ chooses Left. The model so far implies that $y_{ij} = 1$ if $i$'s utility is greater for Right than for Left.
+\begin{align}\label{eq:choice-iff}
+  y_{ij} = 1 &\iff U_{i}\left(\psi_{j}\right) > U_{i}\left(\chi_{j}\right)
+\end{align}
+The deterministic (non-error) component of Equation&nbsp;\@ref(eq:choice-iff) is represented in Figure&nbsp;\@ref(fig:plot-utility). The two parabolas represent the deterministic component of $i$'s utility loss, owed only to her distance from $\psi_{j}$ and $\chi_{j}$, respectively. The vertex of a parabola is located at its respective choice location, indicating that the Actor would maximize her choice utility if her ideal point were located exactly at a choice's location in policy space (setting aside the error terms). In the current example, the Actor is closer to Right than to Left, so she receives greater utility (or, less utility *loss*) by choosing Right instead of Left. 
+
+```{r plot-utility, include = TRUE, fig.height = 2, fig.width = 8, out.width = "100%", fig.cap = "A representation of quadratic utility loss over policy choices"}
+```
+
+It is important to remember that Equation&nbsp;\@ref(eq:choice-iff) shows only the deterministic component of choice task $j$; random error components $\nu_{ij}$ and $\eta_{ij}$ are suppressed. With idiosyncratic utility error incorporated, Equation&nbsp;\@ref(eq:choice-iff) implies that there is still a probability that Actor $i$ chooses Left, but the probability depends on the instantiated values of the error terms. We can restate the insight from Equation&nbsp;\@ref(eq:choice-iff) probabilistically:
+\begin{align}
+  \begin{split}\label{eq:choice-prob}
+  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
+    \mathrm{Pr}\left(U_{i}\left(\psi_{j}\right) > U_{i}\left(\chi_{j}\right) \right) \\
+  &=
+    \mathrm{Pr}\left( 
+      -\left( \theta_{i} - \psi_{j}\right)^{2} + \nu_{ij} > 
+      -\left( \theta_{i} - \chi_{j}\right)^{2} + \eta_{ij}
+    \right)
+  \end{split}
+\end{align}
+
+The structure of Equation&nbsp;\@ref(eq:choice-prob) is the basis for a statistical model of the choice between Right and Left. 
+\begin{align}
+\begin{split}\label{eq:choice-manip}
+  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
+    \mathrm{Pr}\left( 
+      -\left( \theta_{i} - \psi_{j}\right)^{2} + \nu_{ij} > 
+      -\left( \theta_{i} - \chi_{j}\right)^{2} + \eta_{ij}
+    \right) \\
+  &= 
+    \mathrm{Pr}\left(
+      \left( \theta_{i} - \chi_{j}\right)^{2} -
+        \left( \theta_{i} - \psi_{j}\right)^{2} 
+      > \eta_{ij} - \nu_{ij}
+    \right) \\
+  &= 
+    \mathrm{Pr}\left(
+      \theta_{i}^{2} - 2\theta_{i}\chi_{j} + \chi_{j}^{2} 
+      - \theta_{i}^{2} + 2\theta_{i}\psi_{j} - \psi_{j}^{2}
+      > \eta_{ij} - \nu_{ij} 
+    \right) \\
+  &= 
+    \mathrm{Pr}\left(
+      2\theta_{i}\psi_{j} - 2\theta_{i}\chi_{j} + 
+      \chi_{j}^{2} - \psi_{j}^{2}
+      > \eta_{ij} - \nu_{ij} 
+    \right) \\
+  &= 
+    \mathrm{Pr}\left(
+      2(\psi_{j} - \chi_{j})\theta_{i} +
+      \chi_{j}^{2} - \psi_{j}^{2}
+      > \eta_{ij} - \nu_{ij} 
+    \right) \\
+  &= \mathrm{Pr}\left(
+      \beta_{j}\theta_{i} +
+      \alpha_{j}
+      > \epsilon_{ij}
+    \right)
+\end{split}
+\end{align}  
+The final line of \@ref(eq:choice-manip) reparameterizes the utility comparison into a simpler and familiar linear form by defining a "discrimination" parameter $\beta_{j} = \dfrac{1}{\sigma_{ij}}2(\psi_{j} - \chi_{j})$, a "difficulty" parameter $\alpha_{j} = \dfrac{1}{\sigma_{ij}}\left(\chi_{j}^{2} - \psi_{j}^{2}\right)$, and difference in errors $\epsilon_{ij} = \eta_{ij} - \nu_{ij}$.^[
+  The names "difficulty" and "discrimination" come from models developed in an education testing, where some test questions may differ in their difficulty as well as how well the question discriminates between high- and low-ability test takers. See e.g.\ @fox:2010:bayesian-IRT.
+]
+\todo{var?}
+ <!-- such that $\mathrm{Var}\left(\epsilon_{ij}\right) = \sigma_{ij}^{2}$.  -->
+The discrimination parameter $\beta_{j}$ grows in magnitude as the difference between the Right and Left alternatives grows larger. Because it serves as a "slope" in the final line of Equation&nbsp;\@ref(eq:choice-manip), one intuition is that $i$'s choice places greater *weight* on ideological considerations if the policy alternatives are increasingly distant in ideological space. The difficulty parameter, meanwhile, increases as either $\chi_{j}$ or $\psi_{j}$ increase (that is, move to the right). An intuition for this parameter is that as the choices become more conservative on average,   
+
+
+ for the is that $i$'s choice places greater weight 
+
+
+If error components $\nu_{ij}$ and $\eta_{ij}$ are jointly normal, mean zero, and uncorrelated, it follows that $\epsilon_{ij}$ is also normal, so Equation&nbsp;\@ref(eq:choice-manip) yields a probit model,
+\begin{align}
+  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
+    \Phi\left( \beta_{j}\theta_{i} + \alpha_{j} \right),
+\end{align}
+where $\Phi\left(\cdot\right)$ represents the standard Normal cumulative distribution function. Equation&nbsp;\@ref(eq:choice-manip) results in a logistic model if $\epsilon_{ij}$ is a draw from standard logistic distribution, which is derived from an assumption that error components $\nu_{ij}$ and $\eta_{ij}$ are distributed type-1 extreme value [@clinton-jackman-rivers:2004:ideal].
+\todo{logit}
+<!-- two things. -->
+<!-- is the Var() statement true for logit? is scale ≠ variance? -->
+<!-- Does londregan prefer logit due to identifiability concern??? -->
+
+
+
+\todo{error}
+<!-- Assumptions about the error? Interpretation of the "random" vs "unsystematic" meaning of error? -->
+
+
 What is the formal model intuition? 
 
-
-
-### Latent Ideology and Item Response
+<!-- ### Unobserved Utility and Observed Choices -->
 
 Ideology itself is unobservable. It affects the way people feel about policy, but we don't directly observe it. Explicit measures of ideological self identification are not themselves reliable because people don't understand those items
   \todo{TK}
@@ -53,6 +227,10 @@ Ideology itself is unobservable. It affects the way people feel about policy, bu
 and because they aren't great at predicting policy views either
   \todo{TK}
   <!-- cite -->
+
+
+While we do not directly observe ideal points, the individuals make are observable functions of unobserved preferences. These problems are common in micro-economic modeling---what inferences can be made about unobserved utilities from observed choices? Ideal point models, as a result, typically have a theoretical basis in a utility model. 
+
 
 Measurement model: 
 
@@ -83,7 +261,7 @@ Assuming that the idiosyncratic utility is $\varepsilon_{\mathit{ij}} \sim \math
 \end{align}
 where $\Phi(\cdot)$ is the Gaussian cumulative distribution function. This assumption restricts $\theta$ such that the probability of a correct response is $50\%$ when $\theta = 0$. The scale of $\theta$ is also restricted by the assumption that $\mathrm{Var}\left[\varepsilon_{\mathit{ij}}\right] = 1$.
 
-```{r ability-model, include = TRUE, out.width = "80%", fig.width = 6, fig.height = 4, fig.cap = "Ability-only model of item response"}
+```{r plot-ability-model, include = TRUE, out.width = "80%", fig.width = 6, fig.height = 4, fig.cap = "Ability-only model of item response"}
 # No systematic item effects, only a normal CDF
 ability_bound <- 3
 
@@ -139,7 +317,7 @@ The item-response model makes sense only under the assumption that policy issues
 
 
 
-```{r example-iccs, include = TRUE, echo = FALSE, fig.cap = str_glue("Examples of item characteristic curves for {ex_items} simulated items."), fig.width = 6, fig.height = 4, out.width = "80%"}
+```{r plot-example-iccs, include = TRUE, echo = FALSE, fig.cap = str_glue("Examples of item characteristic curves for {ex_items} simulated items."), fig.width = 6, fig.height = 4, out.width = "80%"}
 # ---- create example ICCs -----------------------
 
 set.seed(2012)
@@ -280,9 +458,9 @@ The state effects are in turn regressions on state features.
   \alpha_{sp} &\sim
     \mathrm{Normal}\left(Z_{s}\gamma_{p} + \rho_{r[s]p}, \psi_{\alpha}\right), \\
   \eta_{sp} &\sim 
-    \mathrm{Normal}\left(Z_{s}\zeta_{p} + \xi_{r[s]p}, \psi_{\eta}\right),
+    \mathrm{Normal}\left(Z_{s}\zeta_{p} + \chi_{r[s]p}, \psi_{\eta}\right),
 \end{align}
-where $Z_{s}$ contains state covariates which have party-specific coefficients $\gamma_{p}$ (for group means) or $\zeta_{p}$ (for group scales). Each state effect is a function of a party-specific region effect $\rho_{rp}$ (for group means) and $\xi_{rp}$ (for group scales) for Census regions indexed $r$.
+where $Z_{s}$ contains state covariates which have party-specific coefficients $\gamma_{p}$ (for group means) or $\zeta_{p}$ (for group scales). Each state effect is a function of a party-specific region effect $\rho_{rp}$ (for group means) and $\chi_{rp}$ (for group scales) for Census regions indexed $r$.
 
 
 
