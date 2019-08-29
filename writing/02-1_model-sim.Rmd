@@ -14,9 +14,11 @@ knitr::opts_chunk$set(
 )
 ```
 
-
 Because the model is custom-built with `Stan`, it comes with no off-the-shelf quality assurances. To test the model's ability to estimate unknown parameters, I subjected the model to a number of tests during its development. These tests proceed by simulating data from a data generating process with known parameters, estimating the parameters from the simulated data, and comparing the parameter estimates against their known values. This section describes these simulations and presents their results.
 
+The data were simulated to stress-test the model in a few key ways.
+
+- Priors are simulated
 
 
 

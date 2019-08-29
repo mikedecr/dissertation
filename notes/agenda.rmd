@@ -4,10 +4,16 @@ title: Overall thesis notes
 
 # Today
 
-- [] Standardize chunk opts for each .Rmd file
+- [ ] hack to the end of the simulation exercise
+- [ ] export simulation .Rdata (for rmd)
+- [ ] simulation: within-district variance should be an afterthought after the distribution of averages...
+  - variance within group should be greater than between
+  - does this mean that the exercise is dumb?
+- [ ] simulation: should discrimination be "identified" exp(sum(log))
+- [ ] Standardize chunk opts for each .Rmd file
   - source an .R file rather than duplicate chunk opts code per file
 - [ ] LICENSE
-- [ ] Aesthetic to-dos (some time...)
+- [ ] Document-level aesthetic to-dos (some time...)
 
 
 
