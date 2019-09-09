@@ -400,8 +400,8 @@ dgirt <- function(model, data) {
 
 # ---- compile model -----------------------
 
-message("STOP before compiling models")
-stop()
+message("compiling models")
+# stop()
 
 
 # local stan file
@@ -428,15 +428,18 @@ long_homsk
 
 long_het
 
+message("models compiled")
 
-# save compiled model to box?
-# boxr::box_write(whatever, "model-long-homo.RDS", dir_id = 66357678611)
-# read compiled model from Box?
+# save compiled model to box? is this worth it?
+
+# boxr::box_write(whatever, "filename.RDS", dir_id = xxx)
 
 
 
 
 # ---- run model -----------------------
+
+# read compiled model from Box?
 
 # --- test zero ct model: 0 ~ bin(0, p) ---
 # stan(file = here("code", "dgirt", "stan", "long", "zero-ct-test.stan"), 
@@ -444,12 +447,18 @@ long_het
 #      verbose = TRUE)
 # beepr::beep(2)
 
-
+# same in data/sim-dgirt/mcmc
 mcmc_homsk <- dgirt(long_homsk, stan_data)
+boxr::box_write(mcmc_homsk, "test-homsk-stanfit.RDS", dir_id = 80447647711)
+
 mcmc_het <- dgirt(long_het, stan_data)
+boxr::box_write(mcmc_het, "test-het-stanfit.Rds", dir_id = 80447647711)
 beepr::beep(2)
 
 # mcmc_het
+
+
+stop()
 
 # ---- things to think about -----------------------
 # When you eventually run this, maybe you should run it in stages
@@ -466,14 +475,6 @@ beepr::beep(2)
 # wipe the dynamic shared object?
 # mcmc_homsk@stanmodel@dso <- new("cxxdso")
 
-# data/sim-dgirt/mcmc
-mcmc_homsk %>%
-  boxr::box_write("test-homsk-stanfit.RDS", dir_id = 80447647711)
-  # saveRDS(here("data", "sim-dgirt", "mcmc", "long-irt-homo-mlm.RDS"))
-
-mcmc_het %>%
-  boxr::box_write("test-het-stanfit.Rds", dir_id = 80447647711)
-  # saveRDS(here("data", "sim-dgirt", "mcmc", "long-hetsk-region-stanfit.Rds"))
 
 
 # ---- read fit -----------------------
