@@ -15,3 +15,5 @@ git pull
 
 R
 
+# if testing
+# Rscript code/02-dgirt/22-sim/long-data-sim.R

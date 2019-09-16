@@ -3,9 +3,7 @@
 #   Creating "long" data for long (non-matrix) model
 # ----------------------------------------------------
 
-
-
-# source locally:
+# exec from local file:
 # source(here::here("code", "02-dgirt", "22-sim", "long-data-sim.R"))
 
 
@@ -32,6 +30,9 @@ if (whoami == "decrescenzo") {
   pacman::p_unload(ggplot2) 
 }
 
+input_dir <- 61770486756
+mcmc_dir <- 80447647711
+
 # ----------------------------------------------------
 #   Create data
 # ----------------------------------------------------
@@ -51,6 +52,8 @@ set.seed(seed_val)
 
 # --- saved params for simulated data --- 
 
+excludes <- ls()
+
 # should this all just be consolidated into one thing?
 # arg for no: we need some party-specific things
 # maybe just split them up and then rm()?
@@ -67,8 +70,8 @@ n_statecov <- 1L
 n_distcov <- 2L
 
 # hierarchical model: mean
-const_r <- 1
 const_d <- -1
+const_r <- 1
 sd_beta_d <- 0.25
 sd_beta_s <- 0.25
 resid_theta_d <- 1
@@ -84,12 +87,11 @@ resid_sigma_s <- 0.1
 resid_sigma_r <- 0.1
 
 # item parameters
-difficulty_sd <- 0.1
+difficulty_sd <- 0.3
 discrimination_sd <- 0.35
 
 
-
-
+# 
 params <- 
   tibble(party = c(1, 2)) %>%
   group_by(party) %>%
@@ -117,6 +119,13 @@ params <-
   ) %>%
   unnest(params) %>%
   print()
+
+(params_to_save <- ls()[ls() %in% excludes == FALSE] )
+
+
+lapply(params_to_save, get) %>%
+  set_names(params_to_save) %>%
+  box_write(filename = "sim-params.RDS", dir_id = input_dir)
 
 
 
@@ -207,6 +216,8 @@ group_level <- district_level %>%
   print()
 
 
+box_write(group_level, "group-level-data.RDS", dir_id = input_dir)
+
 
 # hypermeans as f(covariates)
 if (whoami == "michaeldecrescenzo") {
@@ -272,19 +283,18 @@ item_level <-
   tibble(
     item = as.numeric(1:n_items), 
     cutpoint = rnorm(n_items, mean = 0, sd = difficulty_sd), 
-    disc_raw = rlnorm(n_items, meanlog = 0, sd = discrimination_sd),
+    disc_raw =  rlnorm(n_items, meanlog = 0, sd = discrimination_sd),
     discrimination = 
       log(disc_raw) %>%
       sum() %>%
       exp() %>%
       (function(x) disc_raw * x^(-1 / n_items)),
-    # disc_raw * exp(sum(log(disc_raw)))^(-1 / n_items),
     # rlnorm(n_items, mean = -0.75, sd = 0.35), 
     dispersion = (1 / discrimination)
   ) %>%
   print()
 
-item_level %$% prod(disc_raw)
+# item_level %$% prod(disc_raw)
 item_level %$% prod(discrimination)
 
 
@@ -303,6 +313,9 @@ ij_level <-
   ) %>%
   select(id, item, i_in_d, district, state, region, party, group, theta_i, pi_ij, y_cut) %>%
   print()
+
+
+box_write(ij_level, "ij-level-data.RDS", dir_id = input_dir)
 
 
 if (whoami == "michaeldecrescenzo") {
@@ -336,6 +349,8 @@ model_data <- grouped_responses %>%
   left_join(state_level) %>%
   select(region, state, district, party, group, item, y, trials, starts_with("X"), Z, everything()) %>%
   print()
+
+
 
 
 
@@ -378,17 +393,39 @@ n_chains <- min(c(parallel::detectCores() - 1, 10))
 n_iterations <- 2000
 n_warmup <- 1000
 n_thin <- 1
+adapt_delta <- 0.9
+max_treedepth <- 15
 
 # black box all the sampling params
-dgirt <- function(model, data) {
-  sampling(object = model, 
-           data = data, 
-           iter = n_iterations, 
-           thin = n_thin, 
-           chains = n_chains,
-           # pars = c(),
-           verbose = TRUE)
+dgirt <- function(model, data, ...) {
+  sampling(
+    object = model, 
+    data = data, 
+    iter = n_iterations, 
+    thin = n_thin, 
+    chains = n_chains,
+    control = list(
+      adapt_delta = adapt_delta, 
+      max_treedepth = max_treedepth
+    ),
+    ..., 
+    verbose = TRUE
+  )
 }
+
+# this needs to run from SSC?
+box_write(
+  x = list(
+    n_chains = n_chains, 
+    n_iterations = n_iterations, 
+    n_warmup = n_warmup, 
+    n_thin = n_thin,
+    adapt_delta = adapt_delta,
+    max_treedepth = max_treedepth
+  ), 
+  filename = "mcmc-params.RDS", 
+  dir_id = input_dir
+)
 
 # "theta", "cutpoint", "discrimination", "dispersion",
 # "sigma_in_g", "eta"
@@ -449,10 +486,10 @@ message("models compiled")
 
 # same in data/sim-dgirt/mcmc
 mcmc_homsk <- dgirt(long_homsk, stan_data)
-boxr::box_write(mcmc_homsk, "test-homsk-stanfit.RDS", dir_id = 80447647711)
+boxr::box_write(mcmc_homsk, "test-homsk-stanfit.RDS", dir_id = mcmc_dir)
 
 mcmc_het <- dgirt(long_het, stan_data)
-boxr::box_write(mcmc_het, "test-het-stanfit.Rds", dir_id = 80447647711)
+boxr::box_write(mcmc_het, "test-het-stanfit.Rds", dir_id = mcmc_dir)
 beepr::beep(2)
 
 # mcmc_het
@@ -496,20 +533,24 @@ mcmc_het <-
   ) %T>%
   print()
 
+fit <- mcmc_homsk
+# fit <- mcmc_het
+
+
+
 
 # ----------------------------------------------------
 #   diagnose
 # ----------------------------------------------------
-check_hmc_diagnostics(mcmc_het)
-# check_divergences(mcmc_homsk)
-# check_energy() # what are you
-# check_treedepth() # what are you
 
-shinystan::launch_shinystan(mcmc_homsk)
+check_hmc_diagnostics(fit)
 
-stan_rhat(mcmc_het)
+shinystan::launch_shinystan(fit)
 
-stan_ac(mcmc_het, "theta")$data %>%
+stan_rhat(fit)
+
+
+stan_ac(fit, "theta")$data %>%
   as_tibble() %>%
   group_by(parameters, lag) %>%
   summarize(ac = mean(ac)) %>%
