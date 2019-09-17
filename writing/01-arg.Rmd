@@ -213,6 +213,14 @@ ggplot(data = f) +
 
 ## Outline for the dissertation
 
+## Theoretical Orientation
+
+### "Spatial" Models of Policy Preferences
+
+### Representatives as Delegates vs.\ Trustees
+
+
+
 ### Proposed Model
 
 Value of directly modeling each party:

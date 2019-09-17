@@ -3,6 +3,7 @@ chapter_name: "Chapter "
 rmd_files: [
   "index.Rmd", 
   "git-log.Rmd",
+  "00-dedication.Rmd",
   "abstract.Rmd", "contents.Rmd", "thanks.Rmd", 
   "mainmatter.Rmd", 
   "01-arg.Rmd", 

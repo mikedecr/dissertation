@@ -15,10 +15,10 @@ output:
 header-includes:
   - \usepackage{todonotes}
   - \presetkeys{todonotes}{color = violet!30}{}
+  - \usepackage[varqu, scaled = 0.95]{zi4}
   - \usepackage[lf, mathtabular, minionint]{MinionPro}
   # - \usepackage{MyriadPro}
   # - \usepackage[scaled = 0.9]{FiraSans}
-  - \usepackage[varqu, scaled = 0.95]{zi4}
   - \setsecnumdepth{subsubsection}
   # Advice: only write into subsection?
   - \setsecheadstyle{\large \raggedright \bfseries}
@@ -80,10 +80,9 @@ fontsize: 12pt
 
 
 
-```{r include = FALSE, eval = FALSE}
-# setwd(here::here("writing"))
-# bookdown::render_book('index.Rmd', 'bookdown::pdf_book')
-# setwd(here::here())
+```{r builder, include = FALSE, eval = FALSE}
+# setwd(here::here("writing"));  bookdown::render_book("index.Rmd", "bookdown::gitbook"); setwd(here::here())
+# setwd(here::here("writing"));  bookdown::render_book("index.Rmd", "bookdown::pdf_book"); setwd(here::here())
 
 # system('afplay /System/Library/Sounds/Pop.aiff; afplay /System/Library/Sounds/Pop.aiff')
 

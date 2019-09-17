@@ -1,3 +1,14 @@
+---
+title: 
+author:  Michael G. DeCrescenzo
+date: "`r Sys.Date()`"
+output: 
+  cleanrmd::html_document_clean:
+    theme: sakura
+    mathjax: default
+    use_fontawesome: true
+---
+
 <!-- in chapter: model -->
 
 ## Testing the Model with Simulated Data
@@ -14,7 +25,199 @@ knitr::opts_chunk$set(
 )
 ```
 
-Because the model is custom-built with `Stan`, it comes with no off-the-shelf quality assurances. To test the model's ability to estimate unknown parameters, I subjected the model to a number of tests during its development. These tests proceed by simulating data from a data generating process with known parameters, estimating the parameters from the simulated data, and comparing the parameter estimates against their known values. This section describes these simulations and presents their results.
+```{r r-02-1_model-sim, cache = FALSE}
+library("here")
+library("magrittr")
+library("tidyverse")
+
+library("scales")
+library("english")
+library("latex2exp")
+
+library("broom")
+library("tidybayes")
+
+source(here("code", "_assets", "setup-graphics.R"))
+```
+
+Because the model is custom-built with `Stan`, it comes with no off-the-shelf quality assurances. To test the model's ability to estimate unknown parameters, I subjected the model to a number of tests during its development. These tests proceed by simulating data from a data generating process with known parameters, fitting the model to the simulated data, and comparing the posterior estimates against their known values. This section describes these simulations and presents their results.
+
+```{r read-simulation-data}
+# perhaps unload these things after?
+load(here("data", "mcmc", "dgirt", "test", "input", "sim-params.Rdata"))
+```
+
+
+
+```{r read-test-stanfit}
+stanfit <- 
+  readRDS(
+    here("data", "mcmc", "dgirt", "test", "samples", "test-homsk-stanfit.RDS")
+  ) 
+```
+
+```{r read-test-stanpars}
+load(here("data", "mcmc", "dgirt", "test", "input", "mcmc-params.Rdata"))
+
+# but don't trust local n of chains; obtain from stanfit obj
+n_chains <- stanfit %>% attributes() %$% stan_args %>% length()
+total_iterations <- n_chains * (n_iterations - n_warmup) / n_thin
+```
+
+The model is designed to estimate group-level parameters from an individual-level data generating process. As such, I begin by simulating individual-level item response data before aggregating the data to the group level for estimation. I simulate a universe containing `r n_states` states nested within `r english(n_regions)` regions, allocated so each region contains `r english(n_states / n_regions)` states. Each state contains `r english(n_districts)` districts containing voters belonging to `r english(n_parties)` parties, totaling `r n_states * n_districts * n_parties` groups across `r n_states * n_districts` districts in the whole "country." Data for each district-party group contain responses to `r n_items` items that are answered by `r n_cases` unique individuals apiece. For simplicity, the simulation assumes that each individual answers only one question. When the model is implemented on real data, this assumption is relaxed by the weighting scheme laid out in Section&nbsp;\@ref(sec:model-weights).
+  \todo{Fix}
+
+Individual partisans respond to each item probabilistically according to the individual-level item response model originally laid out in Equation&nbsp;\@ref(eq:individual-irt). The probability $\pi$ that individual $i$ gives a conservative answer to item $j$ is
+\begin{align*}
+  \pi_{\mathit{ij}} &= \Phi\left( \frac{\theta_{i} - \kappa_{j}}{\sigma_{j}} \right),
+\end{align*} 
+where $\Phi()$ is the cumulative normal distribution function of ideal point $\theta_{i}$, item midpoint $\kappa_{j}$, and item dispersion $\sigma_{j}$. Once individual responses are simulated, the number of conservative responses summed within each item-group and supplied to the group-level likelihood model.
+
+Simulating these individual level responses requires that we supply hyperparameter values to ideal points $\theta_{i}$, cutpoints $\kappa_{j}$, and dispersions $\sigma_{j}$. Beginning with the item parameters, every cutpoint value is drawn a Normal distribution with mean $0$ and standard deviation `r difficulty_sd`. Every dispersion parameter is defined as $\sigma_{j} = \beta_{j}^{-1}$, where $\beta_{j}$ is a LogNormal draw with mean $0$ and standard deviation `r discrimination_sd` on the log scale.
+
+Individual ideal point parameters are Normal draws within their respective district-party groups ($\theta_{i} \sim \mathrm{Normal}\left(\bar{\theta}_{g[i]}, \sigma_{g[i]}\right)$), where each group has a potentially unique mean and standard deviation. As described in Section&nbsp;\@ref(sec:geographic-model), group means and standard deviations are generated from hierarchical models with parameters that vary across parties. 
+\begin{align}
+  \theta_{g} &=
+    \beta_{0p} + 
+    \mathbf{x}^{T}_{d}\beta_{p} + 
+    \mathbf{z}^{T}_{s}\gamma_{p} +
+    \epsilon_{dp}^{\mathtt{district}} + 
+    \epsilon_{sp}^{\mathtt{state}} + 
+    \epsilon_{rp}^{\mathtt{region}} \\
+  \log\left(\sigma\right)_{g} &=
+    \delta_{0p} + 
+    \mathbf{x}^{T}_{d}\delta_{p} + 
+    \mathbf{z}^{T}_{s}\zeta_{p} +
+    \nu_{dp}^{\mathtt{district}} + 
+    \nu_{sp}^{\mathtt{state}} + 
+    \nu_{rp}^{\mathtt{region}}
+\end{align}
+The hierarchical regression contains district data $\mathbf{x}$, consisting of two standard normal covariates, and state data $\mathbf{z}$, containing just one standard normal covariate. Subscripts index groups $g$, districts $d$, states $s$, and regions $r$.^[
+  To simplify notation, hierarchical structure notation left implicit in these equations. In long-form, regions contain states, which contain districts, which contain groups (i.e. $r[s[d[g]]]$).
+]
+To generate group means $\theta_{g}$, the constants $\beta_{0p}$ are explicitly set for each party $p$: $\beta_{0, p=1} = `r const_d`$ and $\beta_{0, p=2} = `r const_r`$. This implies that, on average, party $1$ is liberal, and party $2$ is conservative. District coefficients $\beta_{p}$ and state coefficients $\gamma_{p}$ are all simulated as Normal draws with mean $0$ and standard deviation `r sd_beta_d`. The hierarchical model contains party-specific error terms for districts (mean $0$, std.\ dev.\ $`r resid_theta_d`$), states (mean $0$, std.\ dev.\ $`r resid_theta_s`$), and regions (mean $0$, std.\ dev.\ $`r resid_theta_r`$). The setup is similar for the generation of group-level ideal point dispersion terms $\sigma_{g}$. The constants $\delta_{0p}$ are set to `r const_sig` for both parties, coefficients for districts ($\delta_p$) and states ($\zeta_{p}$) are both Normal draws with mean $0$ and std.\ dev.\ $`r sd_beta_d_sig`$, and there are separate mean-$0$ error terms for districts (sd $`r resid_sigma_d`$), states (sd $`r resid_sigma_s`$), and regions (sd $`r resid_sigma_r`$).
+
+It is important to note that many of the parameters in this simulation are not hand-selected but simulated from probability distributions. This is done to obscure the true values of these parameters, ensuring that prior distributions are specified without knowledge of true values. To stress-test the model, I use weakly informative prior distributions for each parameter that are intentionally set to be wider variance than the distributions that generate each parameter's true value.
+  \todo{more specific}
+
+I estimate the model by storing `r comma(total_iterations)` samples for each parameter across `r comma(n_chains)` Markov chains, `r comma(n_iterations - n_warmup)` iterations per chain. I warm up each chain for an initial `r comma(n_warmup)` iterations before saving samples.
+
+```{r read-true-thetas}
+group_level <- readRDS(
+  here("data", "mcmc", "dgirt", "test", "input", "group-level-data.RDS")
+)
+```
+
+
+```{r tidy-stanfit}
+tidy_stanfit <- tidy(stanfit, conf.int = TRUE)
+```
+ 
+```{r save-thetas}
+thetas <- tidy_stanfit %>%
+  # filter(str_detect(term, "idtheta")) %>%
+  # filter(str_detect(term, "idsigma")) %>%
+  filter(
+    str_detect(term, "theta\\[") == TRUE, 
+    str_detect(term, "idtheta") == FALSE
+  ) %>%
+  mutate(group = parse_number(term)) %>%
+  left_join(group_level %>% select(group, theta_g, sigma_g, party)) %>% 
+  print()
+```
+
+```{r theta-scatters, include = TRUE, fig.height = 4, fig.width = 5, out.width = "70%", fig.cap = 'Testing the ideal point model on simulated data: estimated vs. "true" ideal points for district-party groups'}
+# make a square plot, save abs_value of "biggest" theta
+axis_limit <- thetas %$% max(max(theta_g), max(estimate)) %>% ceiling() %>% abs()
+
+ggplot(thetas) +
+  aes(x = theta_g, y = estimate, color = as.factor(party)) +
+  geom_pointrange(aes(ymin = (conf.low), ymax = conf.high)) +
+  geom_abline(color = "gray") +
+  labs(
+    y = "Model Estimate",
+    x = "True Ideal Point",
+    color = "Party"
+  ) +
+  scale_color_manual(values = c(yel, purp)) +
+  theme(legend.position = "none") +
+  coord_cartesian(
+    xlim = c(-axis_limit, axis_limit),
+    ylim = c(-axis_limit, axis_limit)
+  ) +
+  NULL
+```
+
+
+
+
+```{r}
+params
+```
+
+<!-- ICCs -->
+```{r, eval = FALSE}
+ij_level %>%
+  ggplot() +
+  aes(x = theta_i, y = pi_ij) +
+  geom_line() +
+  facet_wrap(~ as.factor(item))
+```
+
+```{r extract-icc-draws}
+draws <- stanfit %>%
+  spread_draws(cutpoint[item], dispersion[item]) %>%
+  print()
+
+# beepr::beep(2)
+icc_draws <- draws %>%
+  group_by(item) %>%
+  sample_n(20) %>%
+  crossing(theta = seq(-4, 4, .05)) %>%
+  mutate(
+    pp = plogis((theta - cutpoint) / dispersion)
+  ) %>%
+  print()
+```
+
+```{r read-ij-data}
+ij_level <- readRDS(
+  here("data", "mcmc", "dgirt", "test", "input", "ij-level-data.RDS")
+)
+```
+
+```{r plot-sim-iccs, include = TRUE, fig.height = 10, fig.width = 8, out.width = "100%", fig.cap = 'Testing the ideal point model on simulated data: item characteristic curves from estimated (yellow) and true (black) item parameters'}
+icc_draws %>%
+  ggplot() +
+  aes(x = theta, y = pp) +
+  geom_line(aes(group = .draw), color = yel, size = 0.1) +
+  facet_wrap(
+    ~ item,
+    labeller = as_labeller(function(x) str_glue("Item {x}")),
+    ncol = 5
+  ) +
+  geom_line(
+    data = ij_level, color = "black", size = 0.25,
+    aes(x = theta_i, y = pi_ij)
+  ) +
+  coord_cartesian(xlim = c(-4, 4), ylim = c(0, 1)) +
+  scale_y_continuous(breaks = seq(0, 1, .5)) +
+  labs(x = "Ideal Point", y = "Probability of Conservative Response")
+```
+
+
+
+```{r, eval = FALSE}
+# ggsave("~/desktop/test.pdf", height = 10, width = 8, device = cairo_pdf); beepr::beep(2)
+```
+
+
+
+<!-- item parameters
+covariate values
+residual values -->
+
+
 
 The data were simulated to stress-test the model in a few key ways.
 
