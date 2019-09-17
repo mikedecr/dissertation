@@ -390,7 +390,7 @@ lapply(stan_data, dim)
 # ---- sampler hyperparameters -----------------------
 # leave one core open
 n_chains <- min(c(parallel::detectCores() - 1, 10))
-n_iterations <- 2000
+n_iterations <- 1500
 n_warmup <- 1000
 n_thin <- 1
 adapt_delta <- 0.9
