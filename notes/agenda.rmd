@@ -4,16 +4,29 @@ title: Overall thesis notes
 
 # Today
 
+- [ ] ask Alex about identifiability in heteroskedastic model
+- [ ] hierarchical prior for items?
+    - pool items toward difficulty and discrimination distributions
+    - estimate the distribution!
+- [ ] move estimation from "combine data" into sampling file
+- [ ] vector form covariates in model math section
+- [ ] IRT model from formal assumptions
+- [ ] difference in errors should be scaled by inv(sigma) also? check CJR
 - [ ] more cites in model chapter
   - don't forget Londregon??
+- [ ] what's the deal with equal bill locations?
+  - alpha = 0
+  - beta also = 0?
+  - there are also other ways to get alpha = 0 that aren't equidistant 
 - [ ] hack to the end of the simulation exercise
-- [ ] export simulation .Rdata (for rmd)
 - [ ] simulation: within-district variance should be an afterthought after the distribution of averages...
   - variance within group should be greater than between
   - does this mean that the exercise is dumb?
 - [ ] simulation: should discrimination be "identified" exp(sum(log))
-- [ ] Standardize chunk opts for each .Rmd file
-  - source an .R file rather than duplicate chunk opts code per file
+    - For the "first-check dissertation version," YES
+        - we want the ICCs to look the same
+    - for intense stress-testing, we want NO...
+        - priors should be wide but the model will hone it in
 - [ ] LICENSE
 - [ ] Document-level aesthetic to-dos (some time...)
 

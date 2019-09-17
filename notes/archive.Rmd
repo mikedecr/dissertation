@@ -3,10 +3,22 @@ title: Archive of things done
 ---
 
 
+16 September: 
+
+- [x] export simulation .Rdata (for rmd)
+- [x] tweak MCMC tuning params (adapt_delta, max_treedepth)
+
+
+
+Aug 19:
+
+- [x] Standardize chunk opts for each .Rmd file
+  - source an .R file rather than duplicate chunk opts code per file
 
 Aug 27, 2019:
 
 - [x] rename model subfiles
+
 
 
 Aug 10, 2019: Model identification changes

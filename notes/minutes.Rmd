@@ -1,4 +1,45 @@
 
+
+# September 6, 2019 (Barry)
+
+Did: 
+
+- parents came to town
+- wrote some of the model chapter
+- test:
+    - I needed to change little things in the simulation
+    - I wanted to rerun it with those changes
+    - SSC has updated their R so I needed to set it back up
+    - It's still not done because I'm having trouble with one particular
+- writing the model:
+      - reading the Clinton, Jackman, Rivers piece because they derive it out of a utility model
+      - realized I had some of the intuition of the parameters technically incorrect
+      - so I was doing a little bit of learning about what to do here (follow the CJR lead, or find literature about my original intuition?)
+      - I found a paper by Londregan that describes how different ideal point models have different intuitions so I think I want to check that out to see if there is a way to make mine work
+- voter ID
+    - got accepted, so I did some work to fix what we need to fix in that so I can fire it away and be done
+- a little bit of law prof stuff
+
+Do: 
+
+- [x] fix SSC (I'm on campus so I should be able to figure it out)
+- [ ] follow through on the model test stuff
+    - run new sims
+    - write evaluation code
+    - (read emily Reiderer?)
+    - convert to Rmd
+- [ ] Londregan paper
+- [ ] Bonica utility model
+- [ ] Adams and Merrill books
+- [ ] writing
+- [ ] think about YouGov survey questions
+  - Dissertation:
+    - WI, MI, PA representative
+    - when are the primary dates for these states
+    - who are the candidates, do they have ideological reputations
+  - or other experiment questions?
+
+
 # August 27, 2019 (Barry)
 
 Did:
