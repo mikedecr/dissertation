@@ -13,6 +13,9 @@ cd dissertation
 git status
 git pull
 
+git log
+q
+
 R
 
 # if testing

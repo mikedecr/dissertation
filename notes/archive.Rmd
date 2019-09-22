@@ -2,6 +2,13 @@
 title: Archive of things done
 ---
 
+22 September
+
+- [x] simulation: should discrimination be "identified" exp(sum(log))
+    - For the "first-check dissertation version," YES
+        - we want the ICCs to look the same
+    - for intense stress-testing, we want NO...
+        - priors should be wide but the model will hone it in
 
 16 September: 
 
