@@ -83,10 +83,11 @@ long_dd <- dd %>%
 
 x_min <- -2
 x_max <- 2
-u_scale <- 2.5
+u_scale <- 2
 
 utility <- tibble(
   x = seq(x_min, x_max, .01),
+  utility_loss = u_scale * -(x - dd$Actor)^2,
   Right = u_scale * -(x - dd$Right)^2,
   Left = u_scale * -(x - dd$Left)^2
 ) %>%
@@ -107,36 +108,33 @@ utility_plot <- ggplot(long_dd) +
 utility_plot
 ```
 
-More formally, choices Right and Left provide some utility to the Actor. Notationally, consider actors indexed $i \in \{1, \ldots, n\}$ who are faced with choice tasks (e.g.\ bills, survey items) indexed $j \in \{1, \ldots, J\}$. Let $\theta_{i}$ represent actor $i$'s ideal point, while $\psi_{j}$ and $\chi_j$ represent the Right and Left locations for choice $j$, respectively. The utility that an actor receives from a Right choice is a function of the distance between the Actor's ideal point and the Right location. The Actor maximizes their choice utility if either Right or Left falls exactly on the Actor's ideal point. The functional form of utility loss on either side of the choice location is an assumption made by the researcher---some scholars assume that utility loss follows a Gaussian curve, while others choose a quadratic utility loss [@clinton-jackman-rivers:2004:ideal]. For this analysis, we assume a quadratic utility loss. This choice implies a utility function over the squared distance between an Actor and a choice location. The utility Actor $i$ receives by choosing Right on choice $j$ is $U_{i}\left(\psi_{j}\right) = -\left( \theta_{i} - \psi_{j}\right)^{2} + \nu_{ij}$, while the utility of choosing Left on choice $j$ is $U_{i}\left(\chi_{j}\right) = -\left( \theta_{i} - \chi_{j}\right)^{2} + \eta_{ij}$, where $\nu_{ij}$ and $\eta_{ij}$ are idiosyncratic error terms.
+More formally, choices Right and Left provide some utility to the Actor. Notationally, consider actors indexed $i \in \{1, \ldots, n\}$ who are faced with choice tasks (e.g.\ bills, survey items) indexed $j \in \{1, \ldots, J\}$. Let $\theta_{i}$ represent actor $i$'s ideal point, while $\psi_{j}$ and $\chi_j$ represent the Right and Left locations for choice $j$, respectively. The utility that an actor receives from a Right choice is a function of the distance between the Actor's ideal point and the Right location. The Actor maximizes their choice utility if either Right or Left falls exactly on the Actor's ideal point. The functional form of utility loss on either side of the choice location is an assumption made by the researcher---some scholars assume that utility loss follows a Gaussian curve, while others choose a quadratic utility loss [@clinton-jackman-rivers:2004:ideal]. For this analysis, we assume a quadratic utility loss. This choice implies a utility function over the squared distance between an Actor and a choice location---I refer to this utility loss as the "deterministic" component of $i$'s utility function---plus idiosyncratic sources of utility that can be thought of as error terms. The utility Actor $i$ receives from choosing Right for choice $j$ is $U_{i}\left(\psi_{j}\right) = -\left( \theta_{i} - \psi_{j}\right)^{2} + \nu_{ij}$, while the utility of choosing Left on choice $j$ is $U_{i}\left(\chi_{j}\right) = -\left( \theta_{i} - \chi_{j}\right)^{2} + \eta_{ij}$, where $\nu_{ij}$ and $\eta_{ij}$ are the idiosyncratic error terms.
 
 ```{r plot-utility}
-nudgey <- 0.01
- 
 utility_plot +
   geom_line(
-    data = utility %>%
-      gather(key = choice, value = u, -x),
-    aes(x = x, y = u, color = choice)
+    data = utility,
+    aes(x = x, y = utility_loss)
   ) +
   theme(legend.position = "none") +
-  scale_color_manual(values = c("Right" = "black", "Left" = purp)) +
   annotate(geom = "linerange",
-    x = dd$Actor + nudgey, ymax = 0, ymin = -u_scale*(dd$Actor + nudgey - dd$Right)^2,
-    color = "black", linetype = "dashed"
+    x = dd$Right, ymax = 0, ymin = -u_scale*(dd$Actor - dd$Right)^2,
+    linetype = "dashed"
   ) +
   annotate(geom = "linerange",
-    x = dd$Actor - nudgey, ymax = 0, ymin = -u_scale*(dd$Actor - nudgey - dd$Left)^2,
-    color = purp, linetype = "dashed"
+    x = dd$Left, ymax = 0, ymin = -u_scale*(dd$Actor - dd$Left)^2,
+    linetype = "dashed"
   ) +
   geom_point() +
   NULL
 ```
 
-With these utility functions laid out, it is possible to calculate the probability of $i$'s choice. Let $y_{ij} = 1$ signify the outcome that $i$ chooses Right, while $y_{ij} = 0$ signifies that $i$ chooses Left. The model so far implies that $y_{ij} = 1$ if $i$'s utility is greater for Right than for Left.
+    With these utility functions laid out, we can model $i$'s choice as a comparison of the utilities received by choosing Right or Left. Let $y_{ij} = 1$ signify the outcome that $i$ chooses Right, while $y_{ij} = 0$ signifies that $i$ chooses Left. The model so far implies that $y_{ij} = 1$ if $i$'s utility is greater for Right than for Left.
 \begin{align}(\#eq:choice-iff)
   y_{ij} = 1 &\iff U_{i}\left(\psi_{j}\right) > U_{i}\left(\chi_{j}\right)
 \end{align}
-The deterministic (non-error) component of Equation&nbsp;\@ref(eq:choice-iff) is represented in Figure&nbsp;\@ref(fig:plot-utility). The two parabolas represent the deterministic component of $i$'s utility loss, owed only to her distance from $\psi_{j}$ and $\chi_{j}$, respectively. The vertex of a parabola is located at its respective choice location, indicating that the Actor would maximize her choice utility if her ideal point were located exactly at a choice's location in policy space (setting aside the error terms). In the current example, the Actor is closer to Right than to Left, so she receives greater utility (or, less utility *loss*) by choosing Right instead of Left. 
+Figure&nbsp;\@ref(fig:plot-utility) plots the deterministic component of Equation&nbsp;\@ref(eq:choice-iff), with idiosyncratic utility terms omitted. 
+The parabola represents $i$'s fixed utility loss for any choice along the ideological continuum, owed to her distance from that choice. The vertex of the parabola is at the Actor's location, indicating that she would maximize her (spatial) utility if she could choose a policy located exactly at her ideal point. Dashed lines below the Left and Right alternatives represent the utility loss owed to the Actor's distance from those specific choices. In the current example, the Actor is closer to Right than to Left, so she receives greater utility (or, less utility *loss*) by choosing Right instead of Left.
 
 ```{r plot-utility, include = TRUE, fig.height = 2, fig.width = 8, out.width = "100%", fig.cap = "A representation of quadratic utility loss over policy choices"}
 ```
@@ -168,7 +166,7 @@ The probabilistic expression in Equation&nbsp;\@ref(eq:choice-prob) serves as th
       \right)
 \end{split}
 \end{align}  
-The intuition for \@ref(eq:choice-manip) is that the Actor will choose the policy alternative that is nearest to her, *unless* idiosyncratic (non-policy) factors overcome her ideological considerations. Supposing that $i$ is closer to Right than to Left, $\left( \theta_{i} - \chi_{j}\right)^{2}$ will be larger than $\left( \theta_{i} - \psi_{j}\right)^{2}$, meaning that the left-hand side of the inequality (the deterministic component) will be some positive value. The only way for $i$ to choose Left would be if the idiosyncratic utility of Left over Right exceeded the deterministic utility of Right over Left. 
+The intuition for \@ref(eq:choice-manip) is that the Actor will choose the policy alternative that is nearest to her, *unless* idiosyncratic (non-policy) factors overcome her ideological considerations. Supposing that the Actor is closer to Right than to Left, $\left( \theta_{i} - \chi_{j}\right)^{2}$ will be larger than $\left( \theta_{i} - \psi_{j}\right)^{2}$, meaning that the left-hand side of the inequality (the deterministic component) will be some positive value. The only way for $i$ to choose Left would be if the idiosyncratic utility of Left over Right exceeded the deterministic utility of Right over Left. 
   \todo{assumes?}
 <!-- Note that the model so far assumes only that utility loss is quadratic over the ideological space and that the "coefficient" on the quadratic loss is equal for the distances to both Left and Right.  -->
 
@@ -218,16 +216,12 @@ The choice of link function depends on the parametric assumptions made about $\e
 <!-- is the Var() statement true for logit? is scale ≠ variance? -->
 <!-- Does londregan prefer logit due to identifiability concern??? -->
 
-How do we interpret the parameters $\beta_{j}$ and $\alpha_{j}$? Holding the error variance ($\sigma_{j}$) constant, the discrimination parameter $\beta_{j} = \dfrac{1}{\sigma_{ij}}2(\psi_{j} - \chi_{j})$ grows in magnitude as the difference between the Right and Left policy alternatives increases. The discrimination parameter behaves as a "coefficient" for Actor $i$'s ideal point in Equation&nbsp;\@ref(eq:glm), meaning that the Actor places greater weight on her policy preferences when the ideological implications of the choice are greater. The difficulty parameter $\alpha_{j} = \dfrac{1}{\sigma_{ij}}\left(\chi_{j}^{2} - \psi_{j}^{2}\right)$ serves as an intercept, capturing the phenomena that some policy choices present alternatives that are jointly more conservative or liberal on average. Suppose that $\alpha_{i} = 0$, which occurs if the Right and Left locations are equidistant from zero. In such a case, an Actor whose ideal point is located exactly at $\theta_{i} = 0$ would be indifferent (in expectation) to the choice of Left or Right.^[
+How do we interpret the parameters $\beta_{j}$ and $\alpha_{j}$? The discrimination parameter behaves as a "coefficient" for Actor $i$'s ideal point in Equation&nbsp;\@ref(eq:glm), meaning that the Actor's choice is more or less responsive to her policy preferences as $\beta_{j}$ varies. This happens as a function of the ideological distance between the Right and Left alternatives; holding the error variance ($\sigma_{j}$) constant, the discrimination parameter $\beta_{j} = \dfrac{1}{\sigma_{ij}}2(\psi_{j} - \chi_{j})$ grows in magnitude Right and Left alternatives grow farther apart. The difficulty parameter $\alpha_{j} = \dfrac{1}{\sigma_{ij}}\left(\chi_{j}^{2} - \psi_{j}^{2}\right)$ serves as an intercept, capturing the phenomena that some policy choices present alternatives that are jointly more conservative or liberal on average. It is understand $\alpha_{j}$'s behavior by considering special cases first. Suppose that $\alpha_{i} = 0$, which occurs if the Right and Left locations are equidistant from zero in opposite directions. In such a case, an Actor whose ideal point is located exactly at $\theta_{i} = 0$ would be indifferent (in expectation) to the choice of Left or Right, and the probability of choosing Right would be $0.5$.^[
   This holds in logit and probit models, since $\mathrm{logit}^{-1}(0) = 0.5$ and $\Phi(0) = 0.5$.
 ]
-If we give the Right alternative increasingly conservative values (increasing the value of $\psi_{j}$), the result is an $\alpha_{j}$ parameter that takes increasingly lower values. This leads to a lower probability that $i$ chooses Right, all else equal. The opposite intuition holds as the Left position becomes increasingly progressive, resulting in larger values of $\alpha_{j}$ that imply a higher probability of choosing Right, all else equal.
-\todo{...}
-<!-- what happens if Y > N for an individual located at theta = 0 -->
-<!-- if N > Y? -->
-<!-- $\chi_{j}$ or $\psi_{j}$ occupied the same location in ideological space. In the formal model, the Actor would be indifferent between two identical choices *in expectation*; their choice would hinge on the values of the idiosyncratic utility errors.  -->
-<!-- if they're equidistant, beta is always zero even if theta is not? Is this broken? -->
-
+If we move the Right alternative in a conservative direction (increasing the value of $\psi_{j}$), the result is a decrease in $\alpha_{j}$. This implies a lower probability that $i$ chooses Right, all else equal, because the Right alternative is moving farther from an Actor located at $\theta_{i} = 0$. The opposite intuition holds as the Left position becomes increasingly progressive, resulting in larger values of $\alpha_{j}$ that imply a higher probability of choosing Right, all else equal.^[
+  In a special case that Right and Left alternatives are located in exactly the same location, the result is $\alpha_{j} = \beta_{j} = 0$, leading all Actors to choose Right with probability $0.5$. This result represents a situation where policy preferences are not systematically related to the choice whatsoever, and only idiosyncratic error affects the choice of Right or Left. Although the model implies that this result is *mathematically* possible, it is not realistic to expect any of the policy choices in this dissertation to induce this behavior.
+]
 
 Others have noted [see @londregan:1999:ideal-pts] that the reduced form is equivalent to the "two-parameter Rasch model" from the psychometric field of item-response theory (IRT). I briefly discuss the intuition of these models and how their intuitions relate to ideal point models.
 
