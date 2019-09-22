@@ -87,8 +87,8 @@ resid_sigma_s <- 0.1
 resid_sigma_r <- 0.1
 
 # item parameters
-difficulty_sd <- 0.3
-discrimination_sd <- 0.35
+difficulty_sd <- 1
+discrimination_sd <- 0.5
 
 
 # 
