@@ -221,8 +221,8 @@ model {
   
 
   // ----- IRT params -----
-  disc_raw ~ lognormal(-0.75, 0.35); // item params: static for now?
-  cut_raw ~ normal(0, 0.1);
+  disc_raw ~ lognormal(0, 2); // item params: static for now?
+  cut_raw ~ normal(0, 2);
 
   // ---- district and state regressions ----
   // constants
