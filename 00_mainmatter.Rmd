@@ -1,0 +1,13 @@
+```{block, include = knitr:::pandoc_to() == "latex"}
+
+\mainmatter
+
+\DoubleSpacing
+
+<!-- figures count within chapter w/ decimal points -->
+  <!-- this doesn't work though? -->
+  <!-- \counterwithin{figure}{chapter} -->
+
+<!-- another attempt -->
+\renewcommand{\thefigure}{\thechapter.\arabic{figure}}
+```

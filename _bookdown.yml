@@ -1,0 +1,55 @@
+# for reference: 
+#   TJ Mahr: <https://github.com/tjmahr/dissertation/blob/master/_bookdown.yml>
+
+book_filename: "thesis-redo"
+output_dir: "_book"
+chapter_name: "Chapter "
+new_session: yes # knit, then merge
+# before_chapter_script: 
+#   - ./assets-bookdown/knitr-helpers.R
+#   - ./code/helpers/graphics-helpers.R
+# - knit helper (cache)
+# - essential packages 
+#   (for use in graphics theme? or just pkg::fun)
+# - also graphics theme?
+delete_merged_file: true
+rmd_files: 
+  latex:
+    - Index.Rmd 
+    - 00_dedication.Rmd
+    - 00_abstract.Rmd
+    - 00_contents.Rmd
+    - 00_thanks.Rmd
+    - 00_mainmatter.Rmd
+    - 01_arg.Rmd
+    - 020_model.Rmd
+    # - 021_model-sim.Rmd
+  html: 
+    - Index.Rmd 
+    # - 00-abstract.Rmd # tried and failed to get abstract on page 1
+    - 01_arg.Rmd
+    - 020_model.Rmd
+    # - 021_model-sim.Rmd
+  # what's in the original PDF?
+  # - title
+  # - git
+  # - dedication
+  # - abstract
+  # - contents, tables, figures
+  # - thanks
+  # - chapters
+  # "00-dedication.Rmd",
+  # "abstract.Rmd", "contents.Rmd", "thanks.Rmd", 
+  # "mainmatter.Rmd", 
+  # "01-arg.Rmd", 
+  # "02-0_model.Rmd", 
+  #   "02-1_model-sim.Rmd", "02-2_data.Rmd", "02-3_eval.Rmd",
+  # "03-positioning.Rmd", "04-voting.Rmd", "05-redistricting.Rmd",
+  # "90-appendix-intro.Rmd", 
+  #   "91-appendix-irt.Rmd", 
+  # "98-colophon.Rmd", 
+  # "99-references.Rmd"
+# download: [["thesis.pdf", "PDF"], ["thesis.epub", "EPUB"], ["thesis.docx", "Word"]]
+# clean:
+#   - dissertation.Rmd
+#   - dissertation.log

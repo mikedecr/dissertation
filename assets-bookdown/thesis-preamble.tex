@@ -1,0 +1,83 @@
+% ----------------------------------------------------
+%   Preamble for PDF build of thesis
+%   
+%   - don't do anything that compromises the HTML version!
+% ----------------------------------------------------
+
+% if this doesn't work in HTML, maybe don't bother
+% \usepackage{todonotes}
+% \presetkeys{todonotes}{color = violet!30}{}
+
+
+\usepackage[varqu, scaled = 0.95]{zi4}
+\usepackage[lf, mathtabular, minionint]{MinionPro}
+\usepackage[scaled = 0.9]{FiraSans}
+
+% \setsecnumdepth{subsubsection}
+
+% Advice: only write into subsection?
+% \setsecheadstyle{\large \raggedright \bfseries}
+% \setsubsecheadstyle{\raggedright \bfseries \itshape} 
+% \setsubsubsecheadstyle{\raggedright \itshape}
+% \setparaheadstyle{\raggedright \itshape}
+
+% document design
+\chapterstyle{dowding}
+\pagestyle{simple}
+
+% change page nums on chapter title page 
+\copypagestyle{chapter}{simple}
+\makeoddhead{chapter}{}{}{\thepage}
+\makeevenhead{chapter}{}{}{\thepage}
+\makeoddfoot{chapter}{}{}{}
+\makeevenfoot{chapter}{}{}{}
+\AtBeginDocument{\let\epsilon\varepsilon}
+
+% --- title page design -----------------------
+
+\usepackage{titling}
+% \title{\LARGE \textsc{$title$} \\[3pt]
+%        \Large $subtitle$}
+\preauthor{\begin{center} \normalsize{By} \\[6pt]}
+\postauthor{\vskip 48pt 
+            \normalsize
+            A dissertation submitted in partial fulfillment of the requirements for the degree of \\[3pt]
+            \large{\textsc{Doctor of Philosophy (Political Science)}} \\[3pt]
+            \normalsize{at the}  \\[3pt]
+            \large{\textsc{University of Wisconsin--Madison}},
+             \\[3pt]
+            \large{2020}
+            \par\end{center}
+            \vskip 12pt}
+
+\predate{
+  \vfill
+  \begin{center}
+}
+\date{Approved by the thesis committee on the oral defense date, \textbf{DATE}}
+\postdate{
+   \\[48pt] 
+   \end{center} 
+  % \hfill
+  % $for(signature)$  \\[24pt] \noindent $signature$ \hrulefill $endfor$ 
+  % \rule{0.5\textwidth}{.4pt} \\
+  \noindent Barry C.\ Burden (Chair) \hrulefill  \\[18pt]
+
+  % \rule{0.5\textwidth}{.4pt} \\ 
+  \noindent Kenneth R.\ Mayer \hrulefill  \\[18pt]
+
+  % \rule{0.5\textwidth}{.4pt} \\ 
+  \noindent Eleanor Neff Powell \hrulefill  \\[18pt]
+
+  % \rule{0.5\textwidth}{.4pt} \\ 
+  \noindent Alexander M.\ Tahk \hrulefill  \\[18pt]
+
+  % \rule{0.5\textwidth}{.4pt} \\ 
+  \noindent Michael W.\ Wagner \hrulefill           
+} 
+
+
+
+
+
+

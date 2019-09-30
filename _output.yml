@@ -1,0 +1,32 @@
+# for reference: 
+# - TJ Mahr: <https://github.com/tjmahr/dissertation/blob/master/_output.yml>
+
+bookdown::gitbook:
+  split_by: rmd # "none" creates one document (not paginated)
+  number_sections: true
+  dev: png
+  fig_caption: true
+  lib_dir: "_assets-gitbook"
+  config: 
+    split_bib: false 
+    sharing: no
+    download: pdf
+    toc:
+      before: |
+        <li><a href="./index.html">Do Primaries Work?</a></li>
+
+
+bookdown::pdf_book:
+  number_sections: true
+  fig_caption: true
+  dev: cairo_pdf
+  toc: false
+  keep_tex: true
+  includes: 
+      in_header: 
+        - assets-bookdown/thesis-preamble.tex
+
+# eventually: 
+# oggdown::thesis_pdf:
+#   template: assets/template.tex
+

@@ -1,0 +1,568 @@
+# Modeling the Constituency's Policy Preferences {#ch:model}
+
+In this chapter, I present the statistical model I use to estimate the policy ideal points of district-party publics. I proceed in the following major steps:
+
+1. Review the theoretical intuitions of ideal point models, starting with the underlying utility model and describing its variants as they relate to political choice. 
+2. Lay out the statistical model I employ in my analysis. 
+3. Test the model's performance at recovering latent parameters from simulated data. 
+4. Describe the data used to estimate the model
+5. Descriptive analysis of the estimated ideal points, with comparisons to conceptually similar measures
+
+
+```{r knitr-02-model, include = FALSE, cache = FALSE}
+source(here::here("assets-bookdown", "knitr-helpers.R"))
+source(here::here("code", "helpers", "graphics-helpers.R"))
+```
+
+```{r r-02-model, cache = FALSE}
+library("knitr")
+library("here")
+library("magrittr")
+library("tidyverse")
+library("extrafont")
+library("latex2exp")
+```
+
+
+
+
+
+## Spatial Models of Policy Choice in Political Science
+
+<!-- goal: spatial >> IRT >> Parameterizations -->
+
+Political scientists invoke ideal point models to summarize actors' policy preferences in ideological space, where preferences are represented by a location in a Euclidean $\mathbb{R}^{d}$ plane (for potentially high values of $d$) that represents a combination of policy outcomes in $d$ dimensions of policy concern.
+  <!-- to do: $d$ cite -->
+  <!-- canonical cite for the or the notion of policy dimensions? -->
+Political actors of various types can face "choices" over alternative policy options---legislators voting on bills, survey respondents stating their policy preferences. Analysis commonly theorize about how actors make these decisions by invoking rational choice models about actor preferences and behaviors. Actors have a utility function over policy alternatives in the ideological space, and they make policy choices that maximize their utility.
+
+What are we doing in this section:
+
+- Ideal point models usually have an analytic basis in spatial voting models
+- This model comes from a similar setup as well
+- describe the theory of choice modeling applied to ideology
+- theoretical basis in utility model of choice
+- inferences about latent preferences estimated with a statistical model 
+
+
+Intuition of a *spatial* model (graphically)
+
+- a voter has a preferred policy location
+- they choose from the closer of two alternatives
+- The "ideal point" $\neq$ ideology
+  - It's an extra leap to talk about it as "ideology"
+  - ideal point is an "operationalization" of a nebulous concept
+  - so truly we are estimating the "ideal point" under an assumed model
+
+
+
+Actor has choices over Right and Left. They choose the closer alternative.
+
+
+```{r spatial-data}
+dd <- tibble(
+  Left = -1,
+  Right = 1,
+  Actor = 0.3
+) 
+
+long_dd <- dd %>%
+  gather(key = label, value = location) %>%
+  mutate(height = 0) %>%  
+  print()
+
+x_min <- -2
+x_max <- 2
+u_scale <- 2
+
+utility <- tibble(
+  x = seq(x_min, x_max, .01),
+  utility_loss = u_scale * -(x - dd$Actor)^2,
+  Right = u_scale * -(x - dd$Right)^2,
+  Left = u_scale * -(x - dd$Left)^2
+) %>%
+  print(n = nrow(.))
+
+```
+
+
+```{r plot-space-1, out.width = "100%", fig.height = 2, fig.width = 8, include = TRUE}
+utility_plot <- ggplot(long_dd) +
+  aes(x = location, y = height) +
+  geom_point() +
+  theme_void() +
+  annotate(geom = "line", x = c(-2, 2), y = 0) +
+  geom_text(aes(label = label), nudge_y = 1) +
+  coord_cartesian(ylim = c(-3, 3)) 
+
+utility_plot
+```
+
+More formally, choices Right and Left provide some utility to the Actor. Notationally, consider actors indexed $i \in \{1, \ldots, n\}$ who are faced with choice tasks (e.g.\ bills, survey items) indexed $j \in \{1, \ldots, J\}$. Let $\theta_{i}$ represent actor $i$'s ideal point, while $\psi_{j}$ and $\chi_j$ represent the Right and Left locations for choice $j$, respectively. The utility that an actor receives from a Right choice is a function of the distance between the Actor's ideal point and the Right location. The Actor maximizes their choice utility if either Right or Left falls exactly on the Actor's ideal point. The functional form of utility loss on either side of the choice location is an assumption made by the researcher---some scholars assume that utility loss follows a Gaussian curve, while others choose a quadratic utility loss [@clinton-jackman-rivers:2004:ideal]. For this analysis, we assume a quadratic utility loss. This choice implies a utility function over the squared distance between an Actor and a choice location---I refer to this utility loss as the "deterministic" component of $i$'s utility function---plus idiosyncratic sources of utility that can be thought of as error terms. The utility Actor $i$ receives from choosing Right for choice $j$ is $U_{i}\left(\psi_{j}\right) = -\left( \theta_{i} - \psi_{j}\right)^{2} + \nu_{ij}$, while the utility of choosing Left on choice $j$ is $U_{i}\left(\chi_{j}\right) = -\left( \theta_{i} - \chi_{j}\right)^{2} + \eta_{ij}$, where $\nu_{ij}$ and $\eta_{ij}$ are the idiosyncratic error terms.
+
+```{r plot-utility}
+utility_plot +
+  geom_line(
+    data = utility,
+    aes(x = x, y = utility_loss)
+  ) +
+  theme(legend.position = "none") +
+  annotate(geom = "linerange",
+    x = dd$Right, ymax = 0, ymin = -u_scale*(dd$Actor - dd$Right)^2,
+    linetype = "dashed"
+  ) +
+  annotate(geom = "linerange",
+    x = dd$Left, ymax = 0, ymin = -u_scale*(dd$Actor - dd$Left)^2,
+    linetype = "dashed"
+  ) +
+  geom_point() +
+  NULL
+```
+
+With these utility functions laid out, we can model $i$'s choice as a comparison of the utilities received by choosing Right or Left. Let $y_{ij} = 1$ signify the outcome that $i$ chooses Right, while $y_{ij} = 0$ signifies that $i$ chooses Left. The model so far implies that $y_{ij} = 1$ if $i$'s utility is greater for Right than for Left.
+\begin{align}(\#eq:choice-iff)
+  y_{ij} = 1 &\iff U_{i}\left(\psi_{j}\right) > U_{i}\left(\chi_{j}\right)
+\end{align}
+Figure&nbsp;\@ref(fig:plot-utility) plots the deterministic component of Equation&nbsp;\@ref(eq:choice-iff), with idiosyncratic utility terms omitted. 
+The parabola represents $i$'s fixed utility loss for any choice along the ideological continuum, owed to her distance from that choice. The vertex of the parabola is at the Actor's location, indicating that she would maximize her (spatial) utility if she could choose a policy located exactly at her ideal point. Dashed lines below the Left and Right alternatives represent the utility loss owed to the Actor's distance from those specific choices. In the current example, the Actor is closer to Right than to Left, so she receives greater utility (or, less utility *loss*) by choosing Right instead of Left.
+
+```{r plot-utility, include = TRUE, fig.height = 2, fig.width = 8, out.width = "100%", fig.cap = "A representation of quadratic utility loss over policy choices"}
+```
+
+It is important to remember that Figure&nbsp;\@ref(fig:plot-utility) shows only the deterministic component of choice task $j$; random error components $\nu_{ij}$ and $\eta_{ij}$ are omitted. With idiosyncratic utility error incorporated, Equation&nbsp;\@ref(eq:choice-iff) implies that even though the Actor's distance to Right is smaller than her distance to Left, there is still a probability that $i$ chooses Left. This probability depends on the instantiated values of the idiosyncratic error terms for each choice. We can restate Equation&nbsp;\@ref(eq:choice-iff) probabilistically:
+\begin{align}
+  \begin{split}
+  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
+    \mathrm{Pr}\left(U_{i}\left(\psi_{j}\right) > U_{i}\left(\chi_{j}\right) \right) \\
+  &=
+    \mathrm{Pr}\left( 
+      -\left( \theta_{i} - \psi_{j}\right)^{2} + \nu_{ij} > 
+      -\left( \theta_{i} - \chi_{j}\right)^{2} + \eta_{ij}
+    \right)
+  \end{split}
+(\#eq:choice-prob)
+\end{align}
+The probabilistic expression in Equation&nbsp;\@ref(eq:choice-prob) serves as the basis for a statistical model of the choice between Right and Left. Rearranging terms slightly:
+\begin{align} 
+\begin{split}
+  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
+      \mathrm{Pr}\left( 
+        -\left( \theta_{i} - \psi_{j}\right)^{2} + \nu_{ij} > 
+        -\left( \theta_{i} - \chi_{j}\right)^{2} + \eta_{ij}
+      \right) \\
+  &= \mathrm{Pr}\left(
+      \left( \theta_{i} - \chi_{j}\right)^{2} -
+            \left( \theta_{i} - \psi_{j}\right)^{2} 
+        > \eta_{ij} - \nu_{ij}
+      \right)
+\end{split}
+(\#eq:choice-manip)
+\end{align}  
+The intuition for \@ref(eq:choice-manip) is that the Actor will choose the policy alternative that is nearest to her, *unless* idiosyncratic (non-policy) factors overcome her ideological considerations. Supposing that the Actor is closer to Right than to Left, $\left( \theta_{i} - \chi_{j}\right)^{2}$ will be larger than $\left( \theta_{i} - \psi_{j}\right)^{2}$, meaning that the left-hand side of the inequality (the deterministic component) will be some positive value. The only way for $i$ to choose Left would be if the idiosyncratic utility of Left over Right exceeded the deterministic utility of Right over Left. 
+  <!-- to do: assumes? -->
+<!-- Note that the model so far assumes only that utility loss is quadratic over the ideological space and that the "coefficient" on the quadratic loss is equal for the distances to both Left and Right.  -->
+
+Equation&nbsp;\@ref(eq:choice-manip) can be rearranged to reveal an appealing appealing parametric form for $i$'s choice probability. Expanding the polynomial terms on the left side of the inequality...
+\begin{align}
+\begin{split}
+  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
+    \mathrm{Pr}\left(
+           \left( \theta_{i} - \chi_{j}\right)^{2} -
+           \left( \theta_{i} - \psi_{j}\right)^{2} 
+           > \eta_{ij} - \nu_{ij} 
+         \right) \\
+  &= \mathrm{Pr}\left(
+      \theta_{i}^{2} - 2\theta_{i}\chi_{j} + \chi_{j}^{2} 
+      - \theta_{i}^{2} + 2\theta_{i}\psi_{j} - \psi_{j}^{2}
+      > \eta_{ij} - \nu_{ij} 
+    \right) \\
+  &= \mathrm{Pr}\left(
+      2\theta_{i}\psi_{j} - 2\theta_{i}\chi_{j} + 
+      \chi_{j}^{2} - \psi_{j}^{2}
+      > \eta_{ij} - \nu_{ij} 
+    \right) \\
+  &= \mathrm{Pr}\left(
+      2(\psi_{j} - \chi_{j})\theta_{i} +
+      \chi_{j}^{2} - \psi_{j}^{2}
+      > \eta_{ij} - \nu_{ij} 
+    \right) \\
+  &= \mathrm{Pr}\left(
+      \beta_{j}\theta_{i} +
+      \alpha_{j}
+      > \epsilon_{ij}
+    \right)
+\end{split}
+(\#eq:choice-2p)
+\end{align}
+Equation&nbsp;\@ref(eq:choice-2p) simplifies the model by introducing the "discrimination parameter" $\beta_{j}$, the "difficulty parameter" $\alpha_{j}$, and $\epsilon_{ij}$.^[
+  The practice of referring to these parameters as "discrimination" and "difficulty" parameters is inherited from item-response theory (IRT), an area of psychometrics that is similarly interested in inferring latent traits from observed response data. I describe the analogies between ideal point models and psychometric IRT models in the following section.
+]
+Following @clinton-jackman-rivers:2004:ideal, it is assumed that utility errors $\eta_{ij}$ and $\nu_{ij}$ are distributed such that $\mathrm{E}\left[\eta_{ij}\right] = \mathrm{E}\left[\nu_{ij}\right]$ and that $\mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right] = \sigma^{2}_{j}$. Let $\beta_{j} = \dfrac{1}{\sigma_{ij}}2(\psi_{j} - \chi_{j})$, let $\alpha_{j} = \dfrac{1}{\sigma_{ij}}\left(\chi_{j}^{2} - \psi_{j}^{2}\right)$, and let $\epsilon_{ij} = \dfrac{1}{\sigma_{ij}}\left(\eta_{ij} - \nu_{ij}\right)$. Parameterizing the model in this way expresses the utility comparison in a simpler, linear form. The final line reveals how the utility model reduces to binary choice models that are common in political science. Expressed as a generalized linear model with inverse link function $f^{-1}(\cdot)$...
+\begin{align}
+  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
+  f^{-1}\left( \beta_{j}\theta_{i} + \alpha_{j} \right).
+  (\#eq:glm)
+\end{align}
+The choice of link function depends on the parametric assumptions made about $\eta_{ij}$ and $\nu_{ij}$ (and thus $\epsilon_{ij}$). If it is assumed that utility errors are Normal, this implies that $\epsilon_{ij}$ is a standard Normal draw, so \@ref(eq:glm) is a probit model where $f^{-1}$ is the cumulative Normal distribution function. Equation&nbsp;\@ref(eq:glm) is a logistic/logit model if $\epsilon_{ij}$ is a draw from a standard logistic distribution, which implies that $\nu_{ij}$ and $\eta_{ij}$ are distributed type-1 extreme value [@clinton-jackman-rivers:2004:ideal]. 
+  <!-- to do: logit? var? -->
+ <!-- such that $\mathrm{Var}\left(\epsilon_{ij}\right) = \sigma_{ij}^{2}$.  -->
+<!-- two things. -->
+<!-- is the Var() statement true for logit? is scale ≠ variance? -->
+<!-- Does londregan prefer logit due to identifiability concern??? -->
+
+How do we interpret the parameters $\beta_{j}$ and $\alpha_{j}$? The discrimination parameter behaves as a "coefficient" for Actor $i$'s ideal point in Equation&nbsp;\@ref(eq:glm), meaning that the Actor's choice is more or less responsive to her policy preferences as $\beta_{j}$ varies. This happens as a function of the ideological distance between the Right and Left alternatives; holding the error variance ($\sigma_{j}$) constant, the discrimination parameter $\beta_{j} = \dfrac{1}{\sigma_{ij}}2(\psi_{j} - \chi_{j})$ grows in magnitude Right and Left alternatives grow farther apart. The difficulty parameter $\alpha_{j} = \dfrac{1}{\sigma_{ij}}\left(\chi_{j}^{2} - \psi_{j}^{2}\right)$ serves as an intercept, capturing the phenomena that some policy choices present alternatives that are jointly more conservative or liberal on average. It is understand $\alpha_{j}$'s behavior by considering special cases first. Suppose that $\alpha_{i} = 0$, which occurs if the Right and Left locations are equidistant from zero in opposite directions. In such a case, an Actor whose ideal point is located exactly at $\theta_{i} = 0$ would be indifferent (in expectation) to the choice of Left or Right, and the probability of choosing Right would be $0.5$.^[
+  This holds in logit and probit models, since $\mathrm{logit}^{-1}(0) = 0.5$ and $\Phi(0) = 0.5$.
+]
+If we move the Right alternative in a conservative direction (increasing the value of $\psi_{j}$), the result is a decrease in $\alpha_{j}$. This implies a lower probability that $i$ chooses Right, all else equal, because the Right alternative is moving farther from an Actor located at $\theta_{i} = 0$. The opposite intuition holds as the Left position becomes increasingly progressive, resulting in larger values of $\alpha_{j}$ that imply a higher probability of choosing Right, all else equal.^[
+  In a special case that Right and Left alternatives are located in exactly the same location, the result is $\alpha_{j} = \beta_{j} = 0$, leading all Actors to choose Right with probability $0.5$. This result represents a situation where policy preferences are not systematically related to the choice whatsoever, and only idiosyncratic error affects the choice of Right or Left. Although the model implies that this result is *mathematically* possible, it is not realistic to expect any of the policy choices in this dissertation to induce this behavior.
+]
+
+Others have noted [see @londregan:1999:ideal-pts] that the reduced form is equivalent to the "two-parameter Rasch model" from the psychometric field of item-response theory (IRT). I briefly discuss the intuition of these models and how their intuitions relate to ideal point models.
+
+
+
+<!-- RASCH MODEL
+^[
+  The names "difficulty" and "discrimination" come from models developed in an education testing, where some test questions may differ in their difficulty as well as how well the question discriminates between high- and low-ability test takers. See e.g.\ @fox:2010:bayesian-IRT.
+] -->
+
+
+
+
+<!-- parametric assumptions -->
+<!-- Up to this point, we have assumed symmetric and equally-weighted quadratic utility loss over ideological distances. No parametric assumptions have yet been made about the idiosyncratic errors or the difference in errors.  -->
+
+
+
+This would imply that $\alpha_{j} = 0$, 
+
+ increase (that is, move to the right). 
+
+An intuition for this parameter is that
+
+
+ for the is that $i$'s choice places greater weight 
+
+
+
+
+
+<!-- to do: error -->
+<!-- Assumptions about the error? Interpretation of the "random" vs "unsystematic" meaning of error? -->
+
+
+<!-- What is the formal model intuition?  -->
+
+<!-- ### Unobserved Utility and Observed Choices -->
+
+Ideology itself is unobservable. It affects the way people feel about policy, but we don't directly observe it. Explicit measures of ideological self identification are not themselves reliable because people don't understand those items
+  <!-- to do: TK -->
+  <!-- cite -->
+and because they aren't great at predicting policy views either
+  <!-- to do: TK -->
+  <!-- cite -->
+
+
+While we do not directly observe ideal points, the individuals make are observable functions of unobserved preferences. These problems are common in micro-economic modeling---what inferences can be made about unobserved utilities from observed choices? Ideal point models, as a result, typically have a theoretical basis in a utility model. 
+
+
+Measurement model: 
+
+- We can't see the construct that we want, so we estimate it
+- by building a model that relates the unobserved construct to observed data
+
+<!-- Utility framework
+
+- normal error
+- symmetric utility loss on either end of kappa
+
+-->
+
+
+### Item-Response Theory
+
+(IRT)
+
+
+
+### Ability-only model
+
+We begin with a simple model where an individual $i$ gives a conservative response to item $j$ if they derive more utility than they would from a liberal response. Their utility function is made up of their ideal point $\theta_{i}$ and idiosyncratic error $\varepsilon_{\mathit{ij}}$. We can assume that the threshold between liberal and conservative responses is at $0$; this is merely a scale and location restriction on what is otherwise an unstructured ideological space. 
+\begin{align}
+  y_{\mathit{ij}} &= I\left( \theta_{i} + \varepsilon_{\mathit{ij}} > 0 \right)
+  (\#eq:ability-only)
+\end{align}
+This means $y_{\mathit{ij}} = 1$ when the utility is positive, and $y_{\mathit{ij}} = 0$ otherwise.
+
+Assuming that the idiosyncratic utility is $\varepsilon_{\mathit{ij}} \sim \mathrm{Normal}(0, 1)$ gives us a probit model,
+\begin{align}
+  \mathrm{Pr}\left( y_{\mathit{ij}} = 1 \right) 
+    &= 
+  \Phi \left( \theta_{i} \right),
+  (\#eq:ability-only-probit)
+\end{align}
+where $\Phi(\cdot)$ is the Gaussian cumulative distribution function. This assumption restricts $\theta$ such that the probability of a correct response is $50\%$ when $\theta = 0$. The scale of $\theta$ is also restricted by the assumption that $\mathrm{Var}\left[\varepsilon_{\mathit{ij}}\right] = 1$.
+
+```{r plot-ability-model, include = TRUE, out.width = "80%", fig.width = 6, fig.height = 4, fig.cap = "Ability-only model of item response"}
+# No systematic item effects, only a normal CDF
+ability_bound <- 3
+
+tibble(theta = seq(-ability_bound, ability_bound, .01)) %>%
+  mutate(p = pnorm(q = theta, mean = 0, sd = 1)) %>%
+  ggplot(aes(x = theta, y = p)) +
+    coord_cartesian(xlim = c(-ability_bound, ability_bound),
+                    ylim = c(0, 1)) +
+    geom_segment(aes(x = -4, xend = 0, y = 0.5, yend = 0.5), 
+                 linetype = "dotted", size = 0.25, color = "steelblue") +
+    geom_segment(aes(x = 0, xend = 0, y = 0.5, yend = -1), 
+                 linetype = "dotted", size = 0.25, color = "steelblue") +
+    geom_line() +
+    annotate(geom = "text", x = 0, y = 0.5, 
+             label = TeX("$\\mathrm{Pr}(\\mathit{y}_{\\mathit{ij}} = 1) = 0.5$\n when $\\theta_{\\mathit{i}}$ is $0$"),
+             hjust = -0.2,
+             family = "Minion Pro") +
+    labs(x = TeX("Ideal Point $(\\theta_{\\mathit{i}})$"),
+         y = "Probability of Conservative Response") 
+```
+
+
+### One-parameter Rasch model
+
+Ability model assumes no "item effects"---there is no systematic variation at the item level that would lean to a correlated effect for one item across individuals.
+  <!-- to do: e.g. -->
+  <!-- such as ... difficulty of a test question -->
+
+This is the justification for the one-parameter Rasch model, developed in an educational testing framework. The model defines the probability that individual $i$ answers item $j$ "correctly" as a comparison between an individual $i$'s latent "ability" ($\theta_{i}$) and a test question $j$'s "difficulty" ($\kappa_{j}$). Assuming that other disturbances affecting item responses ($\varepsilon_{\mathit{ij}}$) are normally distributed, individual $i$'s response to item $j$ is
+\begin{align}
+  y_{\mathit{ij}} &= 
+    I\left( \left[\theta_{i} - \kappa_{j}\right] + \varepsilon_{\mathit{ij}} > 0 \right),
+    (\#eq:onepar-model)
+\end{align}
+which yields a probit model for a discrete outcome.
+\begin{align}
+  \mathrm{Pr}\left( y_{\mathit{ij}} = 1 \right) 
+  &= 
+  \Phi \left( \theta_{i} - \kappa_{j} \right)
+  (\#eq:onepar-probit)
+\end{align}
+
+Adapting this model to the context of survey response, an individual respondent $i$ is asked to choose between two alternatives on policy item $j$. We let $\theta_{i}$ be $i$'s ideal point on a liberal-conservative dimension, where larger values of $\theta$ are more conservative, and $\kappa_{j}$ is the midpoint between the liberal and conservative policy alternatives. Respondent $i$ is more likely to give a conservative response on policy $j$ if their ideal point is to the "right" of the item midpoint (their ideal point is nearer to the conservative policy choice), but their response is affected by other normally distributed factors and is thus predicted only probabilistically.
+
+
+### Two-parameter Rasch Model
+
+The item-response model makes sense only under the assumption that policy issues are choices along a single underlying dimension. The one parameter model allows non-ideological factors to affect item responses but assumes that these extraneous factors are independent across items and individuals. Policy issues don't all have the same salience to partisan and ideological debate, however, so political scientists often model policy item responses using a two-parameter model. The two-parameter model includes the additional item parameter $\beta_{j}$, which relaxes the assumption that all items are equally related to latent ideology. This "discrimination" parameter captures how strongly the item divides the responses of liberals and conservatives. 
+\begin{align}
+  \mathrm{Pr}\left( y_{\mathit{ij}} = 1 \right)
+  &= 
+  \Phi \left( \beta_{j}\left[\theta_{i} - \kappa_{j}\right] \right),
+  (\#eq:twopar-model)
+\end{align}
+
+
+
+
+```{r plot-example-iccs, include = TRUE, echo = FALSE, fig.cap = str_glue("Examples of item characteristic curves for {ex_items} simulated items."), fig.width = 6, fig.height = 4, out.width = "80%"}
+# ---- create example ICCs -----------------------
+
+set.seed(2012)
+
+ex_items <- 5
+
+ex_item_params <- 
+  tibble(cutpoint = rnorm(ex_items, 0, 1.5), 
+         discrimination = rlnorm(ex_items, 0, 1)) %>%
+  mutate(item = 1:n()) 
+
+ex_iccs <- ex_item_params %>%
+crossing(theta = seq(-5, 5, .01)) %>%
+  mutate(eta = discrimination * (theta - cutpoint),
+         prob = pnorm(eta))
+
+
+# ---- plot them -----------------------
+
+ggplot(ex_iccs, aes(x = theta, y = prob)) +
+  geom_point(data = ex_item_params, aes(x = cutpoint, y = 0.5),
+             size = 1.5) +
+  geom_line(aes(group = as.factor(item)), show.legend = FALSE) +
+  scale_y_continuous(breaks = c(0, .5, 1)) +
+  scale_x_continuous(breaks = c(-3, 0, 3),
+                     labels = c("Liberal", "Moderate", "Conservative")) +
+  scale_color_brewer(palette = "Set2") +
+  labs(x = TeX("Ideal Point $(\\theta_{\\mathit{i}})$"), y = "Probability of Conservative Response") +
+  NULL
+```
+
+
+
+### Applications of the IRT Approach
+
+<!-- ### Estimating Citizen Ideology with Survey Data -->
+
+<!-- ### Statistical Estimation of Ideal Points -->
+
+<!-- Relation to additive indices (ability-only models) -->
+
+
+
+## Modeling Party-Public Ideology in Congressional Districts
+
+This section outlines my group-level ideal point model for party publics. It begins by describing the connection between the individual-level IRT model and the group-level model and its implication for the parameterization of the model (Section&nbsp;\@ref(sec:how-to-group)). I then lay out the hierarchical model for party-public ideal points in its static form (Section&nbsp;\@ref(sec:geographic-model)) and its dynamic form (Section&nbsp;\@ref(sec:dynamic-model)). Lastly, I discuss more technical features of model implementation, including prior distributions and model identification (Section&nbsp;\@ref(sec:priors-identification)) and parameterization in Stan (Section&nbsp;\@ref(sec:stan-setup)).
+
+
+<!-- ### Static Model -->
+
+### Group-Level IRT Setup {#sec:how-to-group}
+
+<!--  -->
+
+
+To motivate the intuition of the group model, we begin the intuition of the individual and then reparameterize it.
+
+Assume that individuals answer policy items according to their own individual ideal points. We observe a binary response from individual $i$ to item $j$, which we model as a probabilistic outcome with probability $\pi_{\mathit{ij}}$.
+\begin{align}
+  y_{\mathit{ij}} &\sim \mathrm{Bernoulli}(\pi_{\mathit{ij}})
+  (\#eq:y-i-response)
+\end{align}
+Our model for the response probability is given by a probit model, following the utility intuition described above.
+\begin{align}
+  \pi_{\mathit{ij}} 
+  &= 
+  \Phi\left( \beta_{j}\left[ \theta_{i} - \kappa_{j} \right] \right)
+  (\#eq:y-i-probit)
+\end{align}
+
+Let $\sigma_{j} = \beta^{-1}_{j}$, so item discrimination is instead expressed as a "dispersion" parameter [@fox:2010:bayesian-IRT; @caughey-warshaw:2015:DGIRT].
+\begin{align}
+  \pi_{\mathit{ij}} &= \Phi\left( \frac{\theta_{i} - \kappa_{j}}{\sigma_{j}} \right)
+  (\#eq:y-i-irt)
+\end{align}
+
+Assume that individuals are normal draws from the mean of their group, where a group is a party in a district.^[
+  Notation for Normal distributions will always describe the scale parameter in terms of standard deviation $\sigma$ instead of variance $\sigma^2$. This keeps the notation consistent with the way Normal distributions are expressed in Stan code.
+]
+\begin{align}
+  \theta_{i} &\sim \mathrm{Normal}\left( \theta_{g[i]}, \sigma_{g[i]} \right)
+  (\#eq:theta-i-draw)
+\end{align}
+
+The outcome data at the group level, rather than individual Bernoulli outcomes, are expressed as grouped Binomial outcomes $Y_{gj}$: the number of conservative responses in group $g$ to item $j$ given the total number of responses per group per item, $n_{gj}$. The probability that a randomly selected individual gives a conservative response (the "true conservative probability" to item $j$ in group $g$) is $\bar{\pi}_{gj}$.
+\begin{align}
+  Y_{gj} &= \mathrm{Binomial}\left( \bar{\pi}_{gj}, n_{gj} \right)
+  (\#eq:y-g-binom)
+\end{align}
+
+The probability for each item-group is given a probit model from the spatial utility model.
+\begin{align}
+  \bar{\pi}_{gj} 
+  &= 
+  \Phi\left(
+    \frac{\theta_{g} - \kappa_{j}}{
+          \sqrt{ \sigma_{g}^{2} + \sigma^{2}_{j}}}
+  \right),
+  (\#eq:y-g-probit)
+\end{align}
+where $\sigma_{g}$ is the standard deviation of ideal points within group $g$, which is introduced because we are now estimating the mean response within a group rather than an individual item response. Larger values of $\sigma_{g}$ indicate more uncertainty over the item response and attenuate $\bar{\pi}_{gj}$ toward $50\%$.^[
+  The binomial setup assumes that each of the $n_{gj}$ trials is independent conditional on the mean ideal point $\theta_{g}$ and the item parameters $\kappa_{j}$ and $\sigma_{j}$. This assumption is violated if individuals in a group answer multiple items---errors are not independent across items. I describe a design-weighting correction for this assumption in Section&nbsp;\@ref(sec:stan-setup).
+]
+<!-- to do: section -->
+  <!-- That's not the right section? -->
+
+
+### Geographic Model for Group Means and Scales {#sec:geographic-model}
+
+Estimates for $\theta_{g}$ and scales $\sigma_{g}$ are improved using a hierarchical model.
+  <!-- to do: scales -->
+<!-- why "scales" -->
+
+
+- Using geographic data to improve estimation
+- Hierarchical model accounts for multiple sources of variation
+- Partial pooling estimates for groups without as much data
+- First, using traditional notation. Reparameterization in Section&nbsp;\@ref(sec:stan-setup) greatly improves the estimation in Stan.
+
+<!-- ##### Conventional hierarchical notation -->
+We consider it a draw a distribution with hypermean $\bar{\theta}_{g}$ and scalar standard deviation $\psi_{\theta}$
+\begin{align}
+  \theta_{g} &\sim \mathrm{Normal}\left(\bar{\theta}_{g}, \psi_{\theta}\right)
+  (\#eq:theta-g-draw)
+\end{align}
+The hierarchical setup improves estimates by casting the hypermean as a conditional mean from a regression on group data. We specify this regression using geographic-level data from the districts and states where each group is located:
+\begin{align}
+  \bar{\theta}_{g} &= \beta_{0p[g]} + X_{d[g]}\beta_{p[g]} + \alpha_{s[g]p[g]},
+  (\#eq:theta-g-hlm)
+\end{align}
+where $\beta_{0}$ is a constant, $X_{d}$ represents district-level data with coefficients $\beta$, and $\alpha_{s}$ represents state effects. A key feature of the hierarchical model is that the parameters are indexed by $p$ and thus dependent on the party to which $g$ belongs. This means there are two constants $\beta_{0p}$  where $p \in \{1, 2\}$ indexes party. Group-level covariates $X_{g}$ have coefficient vectors $\beta_{p}$ that vary by party as well. We include this flexibility because geographic covariates (such as racial composition) may have different correlations with ideal points depending on the party. This is a departure from the model laid out by @caughey-warshaw:2015:DGIRT, which holds the geographic regression fixed for all groups in the data.
+
+We use a similar hierarchical regression for group scales (suppressing the $g$ subscript which is implied by the combination of $d$ and $p$).
+\begin{align}
+  \log \left( \sigma_{g} \right) 
+  &\sim 
+  \mathrm{Normal}\left( 
+    \delta_{0p} + X_{d}\delta_{p} + \eta_{sp}, 
+    \psi_{\sigma}
+  \right),
+  (\#eq:sigma-g-draw)
+\end{align}
+where $\delta_{0p}$ represents constants for each party, $\delta_{p}$ is a party-specific vector of coefficients on district features, and $\eta_{sp}$ are party-specific state effects.
+
+The state effects are in turn regressions on state features.
+\begin{align}
+\begin{split}
+  \alpha_{sp} &\sim
+    \mathrm{Normal}\left(Z_{s}\gamma_{p} + \rho_{r[s]p}, \psi_{\alpha}\right), \\
+  \eta_{sp} &\sim 
+    \mathrm{Normal}\left(Z_{s}\zeta_{p} + \chi_{r[s]p}, \psi_{\eta}\right),
+\end{split}
+(\#eq:state-effects-draws)
+\end{align}
+where $Z_{s}$ contains state covariates which have party-specific coefficients $\gamma_{p}$ (for group means) or $\zeta_{p}$ (for group scales). Each state effect is a function of a party-specific region effect $\rho_{rp}$ (for group means) and $\chi_{rp}$ (for group scales) for Census regions indexed $r$.
+
+### Weighting for Sample Design and Repeated Observations per Individual {#sec:model-weights}
+
+### Dynamic Model {#sec:dynamic-model}
+
+### Priors and Identification {#sec:priors-identification}
+
+
+
+
+
+### Model Implementation in Stan {#sec:stan-setup}
+
+<!-- Non-Centered Parameterization -->
+Hierarchical models often have posterior distributions whose curvature presents difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations]. To improve the estimation in Stan,
+  <!-- to do: Stan -->
+<!-- Flag early on that I'll be setting things up to make things easier in Stan -->
+I parameterize the hierarchical models in the "non-centered" rather than the "centered" form. Whereas the centered form considers $\theta_g$ as a random draw from a distribution, the non-centered parameterization considers $\theta_{g}$ as a function of the hypermean and a random error.
+\begin{align}
+  \theta_{g} &=
+    \beta_{0p} + X_{g}\beta_{p} + \alpha_{s[g]} + z_{g}\varepsilon
+  (\#eq:theta-g-noncenter)
+\end{align}
+where $z_{g}\varepsilon$ represents a group-level error term. It is composed of a $z$-score that is $\mathrm{Normal}\left(0, 1\right)$ and a scale parameter $\varepsilon$. The non-centered paramaterization has the same algebraic behavior as the centered parameterization, but it has the practical effect of improving Monte Carlo sampling by de-correlating the parameters in the hierarchical model. We can also de-center the $\alpha_{s[g]}$ term
+\begin{align}
+  \alpha_{s[g]p} &= Z_{s[g]}\gamma_{p} + u_{sp}\tau
+  (\#eq:state-effect-noncenter)
+\end{align}
+where $u_{sp}$ is a $z$-score distributed $\mathrm{Normal}\left(0, 1\right)$, and $\tau$ is a scale factor.
+
+<!-- Heteroskedastic model -->
+We also have a hierarchical model that predicts the ideal point standard deviation within each group, $\sigma_{g}$. This makes the model "heteroskedastic"---we are modeling the mean ideal point within each group and the variance, conditional on hierarchical covariates. The model for $\sigma_{g}$ in non-centered form is as follows:
+\begin{align}
+  \log(\sigma_{g}) &= X_{g}\delta_{p} + Z_{s[g]}\eta_{p} + m_{g}\nu + m_{sp}\lambda
+  (\#eq:sigma-g-hetero-noncenter)
+\end{align}
+Where $X_{g}$ and $Z_{sp}$ are the same group- and state-level covariates as the above regression, $\delta_{p}$ and $\eta_{p}$ are party-varying coefficients. The terms $m_{g}\nu$ and $m_{sp}\lambda$ are "factored" error terms for groups and states, where $m_{g}$ and $m_{sp}$ are each distributed $\mathrm{Normal\left(0, 1\right)}$, while $\nu$ and $\lambda$ are scale factors.
+  <!-- to do: Factoring -->
+<!-- Describe it as factoring the scale parameter out of an error term} -->
+
+
+##### IRT Model
+
+##### Noncentered Hierarchical Model
+
+##### Any other vector/matrix tricks?
+
+##### Read stan files into an appendix?

@@ -1,0 +1,12 @@
+<!-- black links -->
+<!-- \hypersetup{linkcolor = black} -->
+
+<!-- content pages and names -->
+  \cleardoublepage
+  \tableofcontents
+  
+  \clearpage
+  \listoftables 
+  
+  \clearpage
+  \listoffigures

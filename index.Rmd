@@ -1,0 +1,100 @@
+---
+# for reference:
+# - Mahr: <https://github.com/tjmahr/dissertation/blob/master/index.Rmd>
+
+title: "Do Primaries Work?"
+subtitle: "Nomination Politics and the Representation of Local Partisan Preferences" 
+author: "Michael G. DeCrescenzo"
+date: |
+  | Compiled `r format(Sys.time(), "%B %d, %Y: %H:%M")` 
+site: "bookdown::bookdown_site"
+
+# annoying top-level LaTeX control
+documentclass: memoir
+fontsize: 12pt
+geometry: "left = 1.25in, right = 1.25in, top = 1.25in, bottom = 1.25in"
+bibliography: assets-bookdown/thesis.bib
+csl: assets-bookdown/ajps.csl
+---
+
+
+
+<!-- rendering -->
+
+```{r render-GITBOOK, eval = FALSE, cache = FALSE, include = FALSE}
+# setwd(here::here("writing"))
+bookdown::render_book("foo.Rmd", "bookdown::gitbook")
+# setwd(here::here())
+```
+
+```{r render-PDF, eval = FALSE, cache = FALSE, include = FALSE}
+# setwd(here::here("writing"))
+bookdown::render_book("foo.Rmd", "bookdown::pdf_book")
+# setwd(here::here())
+```
+
+```{r render-preview-CHAPTER, eval = FALSE, cache = FALSE, include = FALSE}
+bookdown::preview_chapter('01-arg.Rmd')
+# bookdown::preview_chapter('01-arg.Rmd')
+# bookdown::preview_chapter('01-arg.Rmd')
+```
+
+```{r serve-book, eval = FALSE, cache = FALSE, include = FALSE}
+bookdown::serve_book(
+  dir = here::here(), 
+  output_dir = here::here("_book"), 
+  preview = TRUE, 
+  in_session = TRUE, 
+  quiet = FALSE
+)
+# servr::daemon_stop() 
+```
+
+
+
+<!------- TO DO ---------
+- Fix this git stuff
+------------------------->
+
+```{r helpers-index, include = FALSE, cache = FALSE}
+source(here::here("assets-bookdown", "knitr-helpers.R"))
+source(here::here("code", "helpers", "graphics-helpers.R"))
+```
+
+<!-- git info  -->
+```{r git-info, include = FALSE, cache = FALSE}
+branch_name <- system("git symbolic-ref --short HEAD", intern = TRUE)
+commit_hash <- system("git log --pretty=%t", intern = TRUE)[1]
+commit_msg <- system("git log --pretty=%s", intern = TRUE)[1]
+```
+
+
+<!-- appears on page 1 if HTML -->
+```{block, include = knitr::is_html_output(), cache = FALSE}
+Commit ``r commit_hash`` on branch "``r branch_name``":
+
+    `r commit_msg`
+```
+
+
+<!-- BEGIN FRONTMATTER CONTENT -->
+
+<!-- HTML abstract -->
+`r if (knitr::is_html_output()) include_text("00_abstract.rmd")`
+
+<!-- TeX: roman numbering, not on title page -->
+`r if (knitr::is_latex_output()) include_text("00_frontmatter.rmd")`
+
+
+
+
+
+
+
+
+<!------- TO DO ---------
+- License
+------------
+
+
+
