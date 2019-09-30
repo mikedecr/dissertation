@@ -27,6 +27,11 @@ title: Overall thesis notes
         - there are also other ways to get alpha = 0 that aren't equidistant 
     - [ ] Document-level aesthetic to-dos (some time...)
 - Code fixes
+    - [ ] script to move data from Box?
+    - [x] redo bookdown
+    - [x] output-specific rendering: <https://bookdown.org/yihui/bookdown/usage.html>
+    - [x] graphics device should be f() rendered doctype
+    - [ ] if a chapter is rendered in a fresh env, the first thing it caches
     - [ ] dir paths go into a modular file
     - [ ] which params can we avoid saving (in simulation)?
     - [ ] move estimation from "combine data" into sampling file
@@ -34,6 +39,9 @@ title: Overall thesis notes
     - [ ] simulation: within-district variance should be an afterthought after the distribution of averages...
         - variance within group should be greater than between
         - does this mean that the exercise is dumb?
+- [ ] substance
+    - candidates fear idiosyncratic issues
+    - reinterpret all questions as interview questions or news questions rather than as job talk questions
 - [ ] LICENSE
 
 
