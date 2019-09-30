@@ -6,8 +6,4 @@ This dissertation puts the big questions of primary representation to the test u
 
 ## Repository notes
 
-If you are viewing this repository on GitHub, know that you are splashing onto the `master` branch. The master branch will almost always lag behind my work on other branches. Furthermore, there is always a chance that the online repository lags the work on my local machine.
-
-
-
-
+If you are viewing this repository on GitHub, know that you are most likely splashing onto the `master` branch. The master branch will almost always lag behind other branches. Furthermore, there is always a chance that the online repository lags the work on my local machine.

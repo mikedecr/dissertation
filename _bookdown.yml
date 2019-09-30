@@ -1,7 +1,7 @@
 # for reference: 
 #   TJ Mahr: <https://github.com/tjmahr/dissertation/blob/master/_bookdown.yml>
 
-book_filename: "thesis-redo"
+book_filename: "MGD-thesis"
 output_dir: "_book"
 chapter_name: "Chapter "
 new_session: yes # knit, then merge
