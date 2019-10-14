@@ -6,7 +6,8 @@ title: "Do Primaries Work?"
 subtitle: "Nomination Politics and the Representation of Local Partisan Preferences" 
 author: "Michael G. DeCrescenzo"
 date: |
-  | Compiled `r format(Sys.time(), "%B %d, %Y: %H:%M")` 
+  | `r if (knitr::is_latex_output()) "IDK some fuckin day" else if (knitr::is_html_output()) stringr::str_glue("Compiled {format(Sys.time(), '%B %d, %Y: %H:%M')}")`
+#  `r format(Sys.time(), "%B %d, %Y: %H:%M")` 
 site: "bookdown::bookdown_site"
 
 # annoying top-level LaTeX control
@@ -19,22 +20,45 @@ csl: assets-bookdown/ajps.csl
 
 
 
+```{r helpers-index, include = FALSE, cache = FALSE}
+source(here::here("assets-bookdown", "knitr-helpers.R"))
+source(here::here("code", "helpers", "graphics-helpers.R"))
+```
+
+<!-- BEGIN FRONTMATTER CONTENT -->
+
+<!-- HTML abstract -->
+`r if (knitr::is_html_output()) include_text("00_abstract.rmd")`
+
+<!-- TeX: roman numbering, not on title page -->
+`r if (knitr::is_latex_output()) include_text("00_frontmatter.rmd")`
+
+
+
+
+
 <!-- rendering -->
 
 ```{r render-GITBOOK, eval = FALSE, cache = FALSE, include = FALSE}
 # setwd(here::here("writing"))
-bookdown::render_book("foo.Rmd", "bookdown::gitbook")
+bookdown::render_book("Index.Rmd", "bookdown::gitbook")
 # setwd(here::here())
 ```
 
 ```{r render-PDF, eval = FALSE, cache = FALSE, include = FALSE}
 # setwd(here::here("writing"))
-bookdown::render_book("foo.Rmd", "bookdown::pdf_book")
+bookdown::render_book("Index.Rmd", "bookdown::pdf_book")
+# setwd(here::here())
+```
+
+```{r render-HTML, eval = FALSE, cache = FALSE, include = FALSE}
+# setwd(here::here("writing"))
+bookdown::render_book("Index.Rmd", "bookdown::html_book")
 # setwd(here::here())
 ```
 
 ```{r render-preview-CHAPTER, eval = FALSE, cache = FALSE, include = FALSE}
-bookdown::preview_chapter('01-arg.Rmd')
+bookdown::preview_chapter('01_arg.Rmd')
 # bookdown::preview_chapter('01-arg.Rmd')
 # bookdown::preview_chapter('01-arg.Rmd')
 ```
@@ -56,10 +80,6 @@ bookdown::serve_book(
 - Fix this git stuff
 ------------------------->
 
-```{r helpers-index, include = FALSE, cache = FALSE}
-source(here::here("assets-bookdown", "knitr-helpers.R"))
-source(here::here("code", "helpers", "graphics-helpers.R"))
-```
 
 <!-- git info  -->
 ```{r git-info, include = FALSE, cache = FALSE}
@@ -75,18 +95,6 @@ Commit ``r commit_hash`` on branch "``r branch_name``":
 
     `r commit_msg`
 ```
-
-
-<!-- BEGIN FRONTMATTER CONTENT -->
-
-<!-- HTML abstract -->
-`r if (knitr::is_html_output()) include_text("00_abstract.rmd")`
-
-<!-- TeX: roman numbering, not on title page -->
-`r if (knitr::is_latex_output()) include_text("00_frontmatter.rmd")`
-
-
-
 
 
 
