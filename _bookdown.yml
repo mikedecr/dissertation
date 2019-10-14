@@ -23,13 +23,18 @@ rmd_files:
     - 00_mainmatter.Rmd
     - 01_arg.Rmd
     - 020_model.Rmd
-    # - 021_model-sim.Rmd
+    - 021_model-sim.Rmd
+    - 030_descriptives.Rmd
+    - 90_backmatter.Rmd
+    - 99_references.Rmd
   html: 
     - Index.Rmd 
     # - 00-abstract.Rmd # tried and failed to get abstract on page 1
     - 01_arg.Rmd
     - 020_model.Rmd
-    # - 021_model-sim.Rmd
+    - 021_model-sim.Rmd
+    - 030_descriptives.Rmd
+    - 99_references.Rmd
   # what's in the original PDF?
   # - title
   # - git
