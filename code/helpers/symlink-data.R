@@ -53,4 +53,4 @@ lapply(here("data", source_folders), dir.create, recursive = TRUE)
 # create symlinks to original source files in target dir
 file.symlink(from = source_paths, to = here("data", target_paths))
 
-
+rm(list = c("source_dir", "source_folders", "source_paths", "target_paths"))
