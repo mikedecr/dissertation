@@ -194,3 +194,6 @@ thesis-redo.rds
 020_model_files
 021_model-sim_cache
 021_model-sim_files
+MGD-thesis.rds
+render*.rds
+*.utf8.md
