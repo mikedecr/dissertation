@@ -19,7 +19,6 @@ Lastly, I describe how I fit the model to real data. This section describes data
 
 ```{r knitr-02-model, include = FALSE, cache = FALSE}
 source(here::here("assets-bookdown", "knitr-helpers.R"))
-source(here::here("code", "helpers", "graphics-helpers.R"))
 ```
 
 ```{r r-02-model, cache = FALSE}

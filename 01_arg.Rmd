@@ -13,7 +13,6 @@
 
 ```{r knitr-01-arg, include = FALSE, cache = FALSE}
 source(here::here("assets-bookdown", "knitr-helpers.R"))
-source(here::here("code", "helpers", "graphics-helpers.R"))
 
 # knitr::opts_chunk$set(
 #   cache.path = 
