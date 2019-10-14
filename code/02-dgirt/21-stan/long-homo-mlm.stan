@@ -205,11 +205,8 @@ model {
 
   }
 
-
-
   // to do: DLM
-
-
+  
 }
 
 generated quantities {

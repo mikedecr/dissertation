@@ -188,3 +188,9 @@ _book
 _bookdown_files
 thesis-redo.tex
 thesis-redo.rds
+01_arg_cache
+01_arg_files
+020_model_cache
+020_model_files
+021_model-sim_cache
+021_model-sim_files

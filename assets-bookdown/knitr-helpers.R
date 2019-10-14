@@ -1,5 +1,5 @@
 # ----------------------------------------------------
-#   Knit assistance
+#   Knit/paper-writing assistance
 # ----------------------------------------------------
 
 # Default chunk options for all chapters
@@ -21,4 +21,18 @@ options(knitr.graphics.auto_pdf = TRUE)
 # a function to read .Rmd files
 include_text <- function(input, sep = "\n\n  "){
   paste(readLines(input), collapse = sep)
+}
+
+# smarter number functions
+smart_number <- function(n, ...) {
+  if ((n == as.integer(n)) == FALSE) {
+    return(n)
+  } else 
+  if (abs(n) >= 10) {
+    return(scales::number(n, big.mark = ",", ...))
+  } else 
+  if (abs(n) < 10) {
+    return(english::english(n, ...))
+  } else 
+  stop("Something is wrong with this number")
 }
