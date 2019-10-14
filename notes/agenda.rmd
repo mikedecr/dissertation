@@ -5,17 +5,19 @@ title: Overall thesis notes
 # Today
 
 - Bureaucracy:
+    - [ ] More goal-setting for more spread-out meetings
     - [ ] Barry meeting
     - [ ] Ken meeting
-    - [ ] Alex meeting
+    - [x] Alex meeting
     - [ ] Ellie meeting
     - [ ] Mike meeting
     - [ ] Nadav meeting
 - Ask Alex about: 
-    - [ ] identifiability in heteroskedastic model
-    - [ ] hierarchical priors for item parameters?
+    - [x] variance of normal/logistic in formal model
+    - [x] hierarchical priors for item parameters?
         - CW do *not* do this
-    - [ ] variance of normal/logistic in formal model
+        - Alex says: multivariate normal because they'll be correlated
+    - [ ] identifiability in heteroskedastic model (Londregan?)
 - Paper fixes
     - [ ] vector form covariates in model math section
     - [ ] IRT model from formal assumptions
@@ -25,7 +27,8 @@ title: Overall thesis notes
         - alpha = 0
         - beta also = 0?
         - there are also other ways to get alpha = 0 that aren't equidistant 
-    - [ ] Document-level aesthetic to-dos (some time...)
+    - [x] Document-level aesthetic to-dos (some time...)
+    - [ ] first references: MCMC, IRT, SPD
 - Code fixes
     - [ ] script to move data from Box?
     - [x] redo bookdown
