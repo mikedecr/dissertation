@@ -29,21 +29,9 @@ library("broom")
 library("tidybayes")
 ```
 
-```{r move-data, cache = FALSE, eval = FALSE}
-# file.copy(
-#   from = normalizePath("~/Box Sync/research/thesis/data"), 
-#   to = here("data")
-# )
-```
-
 
 ```{r 021-helper-vars}
 # helper variables
-# fix this eventually
-# where_data <- normalizePath("../../Box Sync/research/thesis/data") %>% print
-input_dir <- 61770486756
-mcmc_dir <- 80447647711
-
 sim_seed <- 01110011
 ```
 
@@ -57,33 +45,27 @@ Because the model is custom-built with `Stan`, it comes with no off-the-shelf qu
 # (3) remove list
 
 # box_read(524570617700)
-param_list <-
-  readRDS(here("_data", "mcmc", "dgirt", "test", "input", "sim-params.RDS"))
+here("data", "mcmc", "dgirt", "test", "input", "sim-params.RDS") %>%
+  readRDS() %>% 
+  list2env(envir = .GlobalEnv)
 
-list2env(param_list, envir = .GlobalEnv)
 ls()
-
-rm(param_list)
 ```
 
 
 ```{r read-test-stanfit}
 # box_read(507153233559)
-stanfit <- readRDS(here("_data", "mcmc", "dgirt", "test", "samples", "test-homsk-stanfit.RDS"))
+stanfit <- readRDS(here("data", "mcmc", "dgirt", "test", "samples", "test-homsk-stanfit.RDS"))
 ```
 
 ```{r tidybayes-tidy}
 df_stanfit <- tidy_draws(stanfit)
 ```
 
-```{r read-test-stanpars}
-# load(here("_data", "mcmc", "dgirt", "test", "input", "mcmc-params.Rdata"))
-
-mcmc_params <- readRDS(here("_data", "mcmc", "dgirt", "test", "input", "mcmc-params.RDS"))
-
-list2env(mcmc_params, envir = .GlobalEnv)
-
-rm(mcmc_params)
+```{r read-test-stanpars, cache = FALSE}
+here("data", "mcmc", "dgirt", "test", "input", "mcmc-params.RDS") %>%
+  readRDS() %>% 
+  list2env(envir = .GlobalEnv)
 
 total_iterations <- (n_chains * (n_iterations - n_warmup) / n_thin)
 ```
@@ -128,7 +110,7 @@ I estimate the model by storing `r comma(total_iterations)` samples for each par
 
 ```{r read-true-thetas}
 group_level <- readRDS(
-  here("_data", "mcmc", "dgirt", "test", "input", "group-level-data.RDS")
+  here("data", "mcmc", "dgirt", "test", "input", "group-level-data.RDS")
 )
 ```
 
@@ -207,7 +189,7 @@ icc_draws <- draws %>%
 
 ```{r read-ij-data}
 ij_level <- readRDS(
-  here("_data", "mcmc", "dgirt", "test", "input", "ij-level-data.RDS")
+  here("data", "mcmc", "dgirt", "test", "input", "ij-level-data.RDS")
 )
 ```
 
@@ -215,13 +197,13 @@ ij_level <- readRDS(
 
 <!-- ICCs -->
 ```{r, eval = FALSE}
-ij_level %>%
-  ggplot() +
-  aes(x = theta_i, y = pi_ij) +
-  geom_line() +
-  facet_wrap(~ as.factor(item))
+# # Just testing ICCs from known params
+# ij_level %>%
+#   ggplot() +
+#   aes(x = theta_i, y = pi_ij) +
+#   geom_line() +
+#   facet_wrap(~ as.factor(item))
 ```
-
 
 ```{r plot-sim-ICCs, include = TRUE, fig.height = 10, fig.width = 8, out.width = "100%", fig.cap = 'Testing the ideal point model on simulated data: item characteristic curves from estimated (yellow) and true (black) item parameters'}
 icc_draws %>%
