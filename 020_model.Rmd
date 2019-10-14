@@ -1,12 +1,20 @@
 # Modeling the Constituency's Policy Preferences {#ch:model}
 
-In this chapter, I present the statistical model I use to estimate the policy ideal points of district-party publics. I proceed in the following major steps:
+To study how partisan constituencies are represented in primary elections, we require a measure of the partisan constituency's policy preferences. This chapter presents the statistical model that I use to estimate the policy ideal points of district-party publics. 
 
-1. Review the theoretical intuitions of ideal point models, starting with the underlying utility model and describing its variants as they relate to political choice. 
-2. Lay out the statistical model I employ in my analysis. 
-3. Test the model's performance at recovering latent parameters from simulated data. 
-4. Describe the data used to estimate the model
-5. Descriptive analysis of the estimated ideal points, with comparisons to conceptually similar measures
+This chapter proceeds in three major steps. First, I review the theoretical basis for ideal point models, which can be traced to spatial models of policy choice from classic formal theory work in American political science such as @downs:1957:economic-theory. I connect these formal models to statistical models of policy ideal points [in a style that follows @clinton-jackman-rivers:2004:ideal] as well as their connection to Item Response Theory (IRT) models from psychometrics and education testing [e.g. @fox:2010:bayesian-IRT].
+
+Second, I specify and test the group-level model that I build and employ in my analysis of district-party publics. This discussion includes details that are relevant to Bayesian estimation, including identification restrictions on the latent policy space, specification of prior distributions, and model parameterizations that expedite estimation with Markov chain Monte Carlo (MCMC). I begin with a static model for one time period, and then I describe a dynamic model that smooths estimates across time using hierarchical priors for model parameters [@caughey-warshaw:2015:DGIRT]. I test both the static and the dynamic models by fitting them to simulated data and determining how well they recover known parameter values.
+<!------- TO DO ---------
+- Prior checking
+------------------------->
+
+Lastly, I describe how I fit the model to real data. This section describes data collection, data processing, and model performance, and it includes a preview of the estimates before a descriptive analysis in Chapter&nbsp;\@ref(ch:descriptives).
+
+
+<!------- TO DO ---------
+- Should this include a comparison to CDW measures? Hill measures?
+------------------------->
 
 
 ```{r knitr-02-model, include = FALSE, cache = FALSE}
@@ -25,39 +33,11 @@ library("latex2exp")
 
 
 
-
-
-## Spatial Models of Policy Choice in Political Science
+## Spatial Models and Ideal Points
 
 <!-- goal: spatial >> IRT >> Parameterizations -->
 
-Political scientists invoke ideal point models to summarize actors' policy preferences in ideological space, where preferences are represented by a location in a Euclidean $\mathbb{R}^{d}$ plane (for potentially high values of $d$) that represents a combination of policy outcomes in $d$ dimensions of policy concern.
-  <!-- to do: $d$ cite -->
-  <!-- canonical cite for the or the notion of policy dimensions? -->
-Political actors of various types can face "choices" over alternative policy options---legislators voting on bills, survey respondents stating their policy preferences. Analysis commonly theorize about how actors make these decisions by invoking rational choice models about actor preferences and behaviors. Actors have a utility function over policy alternatives in the ideological space, and they make policy choices that maximize their utility.
-
-What are we doing in this section:
-
-- Ideal point models usually have an analytic basis in spatial voting models
-- This model comes from a similar setup as well
-- describe the theory of choice modeling applied to ideology
-- theoretical basis in utility model of choice
-- inferences about latent preferences estimated with a statistical model 
-
-
-Intuition of a *spatial* model (graphically)
-
-- a voter has a preferred policy location
-- they choose from the closer of two alternatives
-- The "ideal point" $\neq$ ideology
-  - It's an extra leap to talk about it as "ideology"
-  - ideal point is an "operationalization" of a nebulous concept
-  - so truly we are estimating the "ideal point" under an assumed model
-
-
-
-Actor has choices over Right and Left. They choose the closer alternative.
-
+Ideal points are constructs from *spatial* models of political choice. These models exist under formal theory---they simplify scenarios in the political world into sets of actors whose behaviors obey utility functions that conform to mathematical assumptions. Spatial models invoke a concept of "policy space," where possible policy outcomes are represented as locations along a number line or a multidimensional plane. A canonical example is a left-right continuum, where progressive or "liberal" policies occupy locations on the left side of the continuum, while conservative policies are on the right side. Depending on the scenario, actors of various types (voters, legislators, executives...) have to choose policy outcomes that result from their interactions with other players. Actors are at least partially motivated by their policy preferences, so they strive to achieve policy outcomes that they prefer. Sometimes these actors' face constrained choices---they can't achieve their most-preferred policy, so they settle on something that is as close as they can get.
 
 ```{r spatial-data}
 dd <- tibble(
@@ -86,7 +66,7 @@ utility <- tibble(
 ```
 
 
-```{r plot-space-1, out.width = "100%", fig.height = 2, fig.width = 8, include = TRUE}
+```{r plot-space-1, out.width = "100%", fig.height = 2, fig.width = 8, include = TRUE, fig.cap = "An Actor and two policy outcomes (Left and Right) represented as locations in ideological/policy space"}
 utility_plot <- ggplot(long_dd) +
   aes(x = location, y = height) +
   geom_point() +
@@ -98,7 +78,37 @@ utility_plot <- ggplot(long_dd) +
 utility_plot
 ```
 
-More formally, choices Right and Left provide some utility to the Actor. Notationally, consider actors indexed $i \in \{1, \ldots, n\}$ who are faced with choice tasks (e.g.\ bills, survey items) indexed $j \in \{1, \ldots, J\}$. Let $\theta_{i}$ represent actor $i$'s ideal point, while $\psi_{j}$ and $\chi_j$ represent the Right and Left locations for choice $j$, respectively. The utility that an actor receives from a Right choice is a function of the distance between the Actor's ideal point and the Right location. The Actor maximizes their choice utility if either Right or Left falls exactly on the Actor's ideal point. The functional form of utility loss on either side of the choice location is an assumption made by the researcher---some scholars assume that utility loss follows a Gaussian curve, while others choose a quadratic utility loss [@clinton-jackman-rivers:2004:ideal]. For this analysis, we assume a quadratic utility loss. This choice implies a utility function over the squared distance between an Actor and a choice location---I refer to this utility loss as the "deterministic" component of $i$'s utility function---plus idiosyncratic sources of utility that can be thought of as error terms. The utility Actor $i$ receives from choosing Right for choice $j$ is $U_{i}\left(\psi_{j}\right) = -\left( \theta_{i} - \psi_{j}\right)^{2} + \nu_{ij}$, while the utility of choosing Left on choice $j$ is $U_{i}\left(\chi_{j}\right) = -\left( \theta_{i} - \chi_{j}\right)^{2} + \eta_{ij}$, where $\nu_{ij}$ and $\eta_{ij}$ are the idiosyncratic error terms.
+Figure&nbsp;\@ref(fig:plot-space-1) plots a simple example of an Actor's choice over two policies in one-dimensional policy space. The "Left" outcome is a more progressive policy outcome than the "Right" outcome, indicated by their locations on the line. The Actor has a location herself, which corresponds to her most-desired policy outcome. There is no policy located exactly at the Actor's preferred location, but the Actor is closer to the Right policy than to the Left. Supposing that the Actor could make an error-free choice over which policy to implement, it appears she would prefer the Right outcome to the Left outcome.
+
+Formal models are more careful to specify the assumptions governing these scenarios, which can be complicated in many cases. For example, we can imagine that locations along the left-right continuum can be assigned values on the real number line. Figure&nbsp;\@ref(fig:plot-space-1) shows a one-dimensional number line, but we could generalize the scenario to say that policy locations can be represented by locations $\mathbb{R}^{d}$, or a real-valued coordinate in $d$-dimensional space. The Actor's location is synonymous with her "ideal point," her most-preferred policy. This is the point where the Actor's utility, in an economic utility model, is maximized with respect to policy considerations. Utility implies that the Actor has a utility function that is defined over the policy space; the Actor's realized utility depends on the distance between her ideal point and a potential policy outcome. Outcomes nearer to the Actor's ideal point are generally more preferred than farther outcomes, but this too is subject to assumptions about the shape of the Actor's utility function. Typically utility functions are assumed to be symmetric around an Actor's ideal point, so the "closer" policy is always more preferred, all else equal. The notion of an ideal point is similar to a "bliss point" in microeconomics: the quantity of a good consumed such that *more* consumption would result in *less* overall utility. Whether an Actor can choose the closest policy to herself depends on the structure of the game: the presence and strategy profiles of other Actors, the sequence of play, and the presence of other non-policy features of Actors' utility functions.
+
+<!-- to do: $d$ cite -->
+<!-- canonical cite for the or the notion of policy dimensions? -->
+
+Formal models of ideal points are distinct from statistical models of ideal points. Formal models are primarily theoretical exercises; they explore the incentives and likely actions of Actors in specific choice contexts, building theoretical intuitions that can be applied in the study of real-world politics with real data. Statistical models, on the other hand, explicitly or implicitly *assume* a formal model as given and estimate its parameters using data. Data could come from legislators casting voting on bills, judges ruling on case outcomes, survey respondents stating their policy preferences (as in this project), and other situations. Researchers are typically interested in parameter estimates for the Actors' ideal points, although sometimes the parameters about the policy alternatives are substantively interesting.
+<!------- TO DO ---------
+- when are item params interesting  
+------------------------->
+
+<!------- TO DO ---------
+- describe where ideal point ≠ ideology?
+- ideal point is an operationalization of a nebulous, potentially high-dimensional concept called ideology?
+- latent construct: none of the parameters are known, we have identifiability issues, and the model is still assumed!!
+- this really is model-driven, we are assuming a model
+------------------------->
+
+Having distinguished formal and statistical models, I now show a derivation of a statistical model from a formal model. This exercise model will serve as a theoretical basis for the class of statistical models explored in this dissertation. I begin with notation to describe an arbitrary number of actors indexed $i \in \{1, \ldots, n\}$ making an arbitrary number of policy choices (bills, survey items, etc.) indexed $j \in \{1, \ldots, J\}$. Every Actor has an ideal point, or a location in the policy space, represented by $\theta_{i}$. Every task is choice between a Left policy located at $\lambda_{j}$ and a Right policy located at $\rho_{j}$. 
+
+The utility that an Actor receives from a Left or Right choice is a function of the distance between her ideal point and the respective choice location---utility is maximized if an Actor can choose a policy located exactly on her ideal point, and utility is "lost" for choices farther and farther from her ideal point. The functional form of utility loss is an assumption made by the researcher---some scholars assume that utility loss follows a Gaussian curve, while others choose a quadratic utility loss [@clinton-jackman-rivers:2004:ideal]. For this analysis, we assume a quadratic utility loss.^[
+  Researchers typically avoid linear losses for technical reasons: a linear utility loss function is non-differentiable at the ideal point because function comes to a point. This prevents the researcher from using differential calculus to find a point of maximum utility.
+]
+<!------- TO DO ---------
+- differentiable cite?
+------------------------->
+
+The choice of quadratic loss implies a utility function over the *squared distance* between an Actor and a choice location. The utility Actor $i$ receives from choosing Right for choice $j$ is $U_{i}\left(\rho_{j}\right) = -\left( \theta_{i} - \rho_{j}\right)^{2} + \nu_{ij}$, while the utility of choosing Left on choice $j$ is $U_{i}\left(\lambda_{j}\right) = -\left( \theta_{i} - \lambda_{j}\right)^{2} + \eta_{ij}$, where $\nu_{ij}$ and $\eta_{ij}$ are the idiosyncratic error terms. I sometimes refer to the quadratic utility loss as the "deterministic" component of the Actor's utility function, while the idiosyncratic error terms are "stochastic" components.^[
+  Foreshadowing: Statistical estimates for model parameters are possible once we make distributional assumptions about the stochastic utility errors.
+]
 
 ```{r plot-utility}
 utility_plot +
@@ -119,71 +129,62 @@ utility_plot +
   NULL
 ```
 
-With these utility functions laid out, we can model $i$'s choice as a comparison of the utilities received by choosing Right or Left. Let $y_{ij} = 1$ signify the outcome that $i$ chooses Right, while $y_{ij} = 0$ signifies that $i$ chooses Left. The model so far implies that $y_{ij} = 1$ if $i$'s utility is greater for Right than for Left.
-\begin{align}(\#eq:choice-iff)
-  y_{ij} = 1 &\iff U_{i}\left(\psi_{j}\right) > U_{i}\left(\chi_{j}\right)
+<!-- break -->
+
+With these utility functions laid out, we can write Actor $i$'s decision as a comparison of the utilities received by choosing Right or Left. Let $y_{ij} = 1$ signify the outcome that $i$ chooses Right, while $y_{ij} = 0$ signifies that $i$ chooses Left. The model so far implies that $y_{ij} = 1$ if $i$'s utility is greater for Right than for Left.
+\begin{align}
+  y_{ij} = 1 &\iff U_{i}\left(\rho_{j}\right) > U_{i}\left(\lambda_{j}\right)
+  (\#eq:choice-iff)
 \end{align}
-Figure&nbsp;\@ref(fig:plot-utility) plots the deterministic component of Equation&nbsp;\@ref(eq:choice-iff), with idiosyncratic utility terms omitted. 
-The parabola represents $i$'s fixed utility loss for any choice along the ideological continuum, owed to her distance from that choice. The vertex of the parabola is at the Actor's location, indicating that she would maximize her (spatial) utility if she could choose a policy located exactly at her ideal point. Dashed lines below the Left and Right alternatives represent the utility loss owed to the Actor's distance from those specific choices. In the current example, the Actor is closer to Right than to Left, so she receives greater utility (or, less utility *loss*) by choosing Right instead of Left.
+To visualize this choice, I represent the deterministic components of Equation&nbsp;\@ref(eq:choice-iff) in Figure&nbsp;\@ref(fig:plot-utility), with idiosyncratic utility terms omitted. The parabola represents $i$'s fixed utility loss for any choice along the ideological continuum, owed to her distance from that choice. The vertex of the parabola is at the Actor's location, indicating that she would maximize her (spatial) utility if she could choose a policy located exactly at her ideal point. Dashed lines below the Left and Right alternatives represent the utility loss owed to the Actor's distance from those specific choices. In the current example, the Actor is closer to Right than to Left, so she receives greater utility (or, less utility *loss*) by choosing Right instead of Left.
 
 ```{r plot-utility, include = TRUE, fig.height = 2, fig.width = 8, out.width = "100%", fig.cap = "A representation of quadratic utility loss over policy choices"}
 ```
 
-It is important to remember that Figure&nbsp;\@ref(fig:plot-utility) shows only the deterministic component of choice task $j$; random error components $\nu_{ij}$ and $\eta_{ij}$ are omitted. With idiosyncratic utility error incorporated, Equation&nbsp;\@ref(eq:choice-iff) implies that even though the Actor's distance to Right is smaller than her distance to Left, there is still a probability that $i$ chooses Left. This probability depends on the instantiated values of the idiosyncratic error terms for each choice. We can restate Equation&nbsp;\@ref(eq:choice-iff) probabilistically:
+It is important to remember that Figure&nbsp;\@ref(fig:plot-utility) shows only the deterministic component of choice task $j$; random error components $\nu_{ij}$ and $\eta_{ij}$ are omitted. With idiosyncratic utility error incorporated, Equation&nbsp;\@ref(eq:choice-iff) implies that even though the Actor's distance to Right is smaller than her distance to Left, there is still a probability that $i$ chooses Left. This probability depends on the instantiated values of the idiosyncratic error terms for each choice. These error terms represent the accumulation of several possible, non-ideological shocks to utility: random misperceptions about the policy locations, domain-specific considerations about a choice that aren't summarized by ideology, and so on. Supposing that these idiosyncratic terms follow *some* probability distribution, we can restate Equation&nbsp;\@ref(eq:choice-iff) with probabilistic notation:
 \begin{align}
   \begin{split}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
-    \mathrm{Pr}\left(U_{i}\left(\psi_{j}\right) > U_{i}\left(\chi_{j}\right) \right) \\
+    \mathrm{Pr}\left(U_{i}\left(\rho_{j}\right) > U_{i}\left(\lambda_{j}\right) \right) \\
   &=
     \mathrm{Pr}\left( 
-      -\left( \theta_{i} - \psi_{j}\right)^{2} + \nu_{ij} > 
-      -\left( \theta_{i} - \chi_{j}\right)^{2} + \eta_{ij}
-    \right)
-  \end{split}
-(\#eq:choice-prob)
-\end{align}
-The probabilistic expression in Equation&nbsp;\@ref(eq:choice-prob) serves as the basis for a statistical model of the choice between Right and Left. Rearranging terms slightly:
-\begin{align} 
-\begin{split}
-  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
-      \mathrm{Pr}\left( 
-        -\left( \theta_{i} - \psi_{j}\right)^{2} + \nu_{ij} > 
-        -\left( \theta_{i} - \chi_{j}\right)^{2} + \eta_{ij}
-      \right) \\
+      -\left( \theta_{i} - \rho_{j}\right)^{2} + \nu_{ij} > 
+      -\left( \theta_{i} - \lambda_{j}\right)^{2} + \eta_{ij}
+    \right) \\
   &= \mathrm{Pr}\left(
-      \left( \theta_{i} - \chi_{j}\right)^{2} -
-            \left( \theta_{i} - \psi_{j}\right)^{2} 
+      \left( \theta_{i} - \lambda_{j}\right)^{2} -
+            \left( \theta_{i} - \rho_{j}\right)^{2} 
         > \eta_{ij} - \nu_{ij}
       \right)
 \end{split}
-(\#eq:choice-manip)
+(\#eq:choice-prob)
 \end{align}  
-The intuition for \@ref(eq:choice-manip) is that the Actor will choose the policy alternative that is nearest to her, *unless* idiosyncratic (non-policy) factors overcome her ideological considerations. Supposing that the Actor is closer to Right than to Left, $\left( \theta_{i} - \chi_{j}\right)^{2}$ will be larger than $\left( \theta_{i} - \psi_{j}\right)^{2}$, meaning that the left-hand side of the inequality (the deterministic component) will be some positive value. The only way for $i$ to choose Left would be if the idiosyncratic utility of Left over Right exceeded the deterministic utility of Right over Left. 
+The intuition for \@ref(eq:choice-prob) is that the Actor will choose the policy alternative that is nearest to her, *unless* idiosyncratic (non-policy) factors overcome her ideological considerations. Supposing that the Actor is closer to Right than to Left, $\left( \theta_{i} - \lambda_{j}\right)^{2}$ will be larger than $\left( \theta_{i} - \rho_{j}\right)^{2}$, meaning that the left-hand side of the inequality (the deterministic component) will be some positive value. The only way for $i$ to choose Left would be if the idiosyncratic utility of Left over Right exceeded the deterministic utility of Right over Left. 
   <!-- to do: assumes? -->
 <!-- Note that the model so far assumes only that utility loss is quadratic over the ideological space and that the "coefficient" on the quadratic loss is equal for the distances to both Left and Right.  -->
 
-Equation&nbsp;\@ref(eq:choice-manip) can be rearranged to reveal an appealing appealing parametric form for $i$'s choice probability. Expanding the polynomial terms on the left side of the inequality...
+Equation&nbsp;\@ref(eq:choice-prob) can be rearranged to reveal an appealing appealing functional form for $i$'s choice probability. Expanding the polynomial terms on the left side of the inequality...
 \begin{align}
 \begin{split}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
     \mathrm{Pr}\left(
-           \left( \theta_{i} - \chi_{j}\right)^{2} -
-           \left( \theta_{i} - \psi_{j}\right)^{2} 
+           \left( \theta_{i} - \lambda_{j}\right)^{2} -
+           \left( \theta_{i} - \rho_{j}\right)^{2} 
            > \eta_{ij} - \nu_{ij} 
          \right) \\
   &= \mathrm{Pr}\left(
-      \theta_{i}^{2} - 2\theta_{i}\chi_{j} + \chi_{j}^{2} 
-      - \theta_{i}^{2} + 2\theta_{i}\psi_{j} - \psi_{j}^{2}
+      \theta_{i}^{2} - 2\theta_{i}\lambda_{j} + \lambda_{j}^{2} 
+      - \theta_{i}^{2} + 2\theta_{i}\rho_{j} - \rho_{j}^{2}
       > \eta_{ij} - \nu_{ij} 
     \right) \\
   &= \mathrm{Pr}\left(
-      2\theta_{i}\psi_{j} - 2\theta_{i}\chi_{j} + 
-      \chi_{j}^{2} - \psi_{j}^{2}
+      2\theta_{i}\rho_{j} - 2\theta_{i}\lambda_{j} + 
+      \lambda_{j}^{2} - \rho_{j}^{2}
       > \eta_{ij} - \nu_{ij} 
     \right) \\
   &= \mathrm{Pr}\left(
-      2(\psi_{j} - \chi_{j})\theta_{i} +
-      \chi_{j}^{2} - \psi_{j}^{2}
+      2(\rho_{j} - \lambda_{j})\theta_{i} +
+      \lambda_{j}^{2} - \rho_{j}^{2}
       > \eta_{ij} - \nu_{ij} 
     \right) \\
   &= \mathrm{Pr}\left(
@@ -195,93 +196,44 @@ Equation&nbsp;\@ref(eq:choice-manip) can be rearranged to reveal an appealing ap
 (\#eq:choice-2p)
 \end{align}
 Equation&nbsp;\@ref(eq:choice-2p) simplifies the model by introducing the "discrimination parameter" $\beta_{j}$, the "difficulty parameter" $\alpha_{j}$, and $\epsilon_{ij}$.^[
-  The practice of referring to these parameters as "discrimination" and "difficulty" parameters is inherited from item-response theory (IRT), an area of psychometrics that is similarly interested in inferring latent traits from observed response data. I describe the analogies between ideal point models and psychometric IRT models in the following section.
+  Referring to these parameters as "discrimination" and "difficulty" parameters is inherited from item-response theory (IRT), an area of psychometrics that is similarly interested in inferring latent traits from observed response data.
 ]
-Following @clinton-jackman-rivers:2004:ideal, it is assumed that utility errors $\eta_{ij}$ and $\nu_{ij}$ are distributed such that $\mathrm{E}\left[\eta_{ij}\right] = \mathrm{E}\left[\nu_{ij}\right]$ and that $\mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right] = \sigma^{2}_{j}$. Let $\beta_{j} = \dfrac{1}{\sigma_{ij}}2(\psi_{j} - \chi_{j})$, let $\alpha_{j} = \dfrac{1}{\sigma_{ij}}\left(\chi_{j}^{2} - \psi_{j}^{2}\right)$, and let $\epsilon_{ij} = \dfrac{1}{\sigma_{ij}}\left(\eta_{ij} - \nu_{ij}\right)$. Parameterizing the model in this way expresses the utility comparison in a simpler, linear form. The final line reveals how the utility model reduces to binary choice models that are common in political science. Expressed as a generalized linear model with inverse link function $f^{-1}(\cdot)$...
+Following @clinton-jackman-rivers:2004:ideal, it is assumed that utility errors $\eta_{ij}$ and $\nu_{ij}$ are distributed such that $\mathrm{E}\left[\eta_{ij}\right] = \mathrm{E}\left[\nu_{ij}\right]$ and that $\mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right] = \sigma^{2}_{j}$. Let $\beta_{j} = \dfrac{1}{\sigma_{ij}}2(\rho_{j} - \lambda_{j})$, let $\alpha_{j} = \dfrac{1}{\sigma_{ij}}\left(\lambda_{j}^{2} - \rho_{j}^{2}\right)$, and let $\epsilon_{ij} = \dfrac{1}{\sigma_{ij}}\left(\eta_{ij} - \nu_{ij}\right)$. Parameterizing the model in this way expresses the utility comparison in a simpler, linear form. The final line reveals how the utility model reduces to binary choice models that are common in political science. Assuming as @clinton-jackman-rivers:2004:ideal do that $\epsilon_{ij}$ is a draw from a standard Normal distribution, the final line in Equation&nbsp;\@ref(eq:choice-2p) implies a probit model,
 \begin{align}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
-  f^{-1}\left( \beta_{j}\theta_{i} + \alpha_{j} \right).
-  (\#eq:glm)
+  \Phi\left( \beta_{j}\theta_{i} + \alpha_{j} \right).
+  (\#eq:probit-irt)
 \end{align}
-The choice of link function depends on the parametric assumptions made about $\eta_{ij}$ and $\nu_{ij}$ (and thus $\epsilon_{ij}$). If it is assumed that utility errors are Normal, this implies that $\epsilon_{ij}$ is a standard Normal draw, so \@ref(eq:glm) is a probit model where $f^{-1}$ is the cumulative Normal distribution function. Equation&nbsp;\@ref(eq:glm) is a logistic/logit model if $\epsilon_{ij}$ is a draw from a standard logistic distribution, which implies that $\nu_{ij}$ and $\eta_{ij}$ are distributed type-1 extreme value [@clinton-jackman-rivers:2004:ideal]. 
-  <!-- to do: logit? var? -->
- <!-- such that $\mathrm{Var}\left(\epsilon_{ij}\right) = \sigma_{ij}^{2}$.  -->
-<!-- two things. -->
-<!-- is the Var() statement true for logit? is scale ≠ variance? -->
-<!-- Does londregan prefer logit due to identifiability concern??? -->
-
-How do we interpret the parameters $\beta_{j}$ and $\alpha_{j}$? The discrimination parameter behaves as a "coefficient" for Actor $i$'s ideal point in Equation&nbsp;\@ref(eq:glm), meaning that the Actor's choice is more or less responsive to her policy preferences as $\beta_{j}$ varies. This happens as a function of the ideological distance between the Right and Left alternatives; holding the error variance ($\sigma_{j}$) constant, the discrimination parameter $\beta_{j} = \dfrac{1}{\sigma_{ij}}2(\psi_{j} - \chi_{j})$ grows in magnitude Right and Left alternatives grow farther apart. The difficulty parameter $\alpha_{j} = \dfrac{1}{\sigma_{ij}}\left(\chi_{j}^{2} - \psi_{j}^{2}\right)$ serves as an intercept, capturing the phenomena that some policy choices present alternatives that are jointly more conservative or liberal on average. It is understand $\alpha_{j}$'s behavior by considering special cases first. Suppose that $\alpha_{i} = 0$, which occurs if the Right and Left locations are equidistant from zero in opposite directions. In such a case, an Actor whose ideal point is located exactly at $\theta_{i} = 0$ would be indifferent (in expectation) to the choice of Left or Right, and the probability of choosing Right would be $0.5$.^[
-  This holds in logit and probit models, since $\mathrm{logit}^{-1}(0) = 0.5$ and $\Phi(0) = 0.5$.
+where $\Phi\left(\cdot\right)$ is the cumulative Normal distribution function. If we instead assume that $\epsilon_{ij}$ is a draw from a standard Logistic distribution,^[
+  A technical point of difference between the probit and logit model is the way parameters are scaled to yield the final line of Equation&nbsp;\@ref(eq:choice-2p). This is because the scale parameter in a logistic distribution is not its standard deviation but a function of the standard deviation. If $\sigma_{j}^2 = \mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right]$, then the logit model is created by scaling by $s_{j} = \frac{\sqrt{3}}{\pi}\sigma_{j}$ instead of by $\sigma_{j}$.
 ]
-If we move the Right alternative in a conservative direction (increasing the value of $\psi_{j}$), the result is a decrease in $\alpha_{j}$. This implies a lower probability that $i$ chooses Right, all else equal, because the Right alternative is moving farther from an Actor located at $\theta_{i} = 0$. The opposite intuition holds as the Left position becomes increasingly progressive, resulting in larger values of $\alpha_{j}$ that imply a higher probability of choosing Right, all else equal.^[
-  In a special case that Right and Left alternatives are located in exactly the same location, the result is $\alpha_{j} = \beta_{j} = 0$, leading all Actors to choose Right with probability $0.5$. This result represents a situation where policy preferences are not systematically related to the choice whatsoever, and only idiosyncratic error affects the choice of Right or Left. Although the model implies that this result is *mathematically* possible, it is not realistic to expect any of the policy choices in this dissertation to induce this behavior.
-]
-
-Others have noted [see @londregan:1999:ideal-pts] that the reduced form is equivalent to the "two-parameter Rasch model" from the psychometric field of item-response theory (IRT). I briefly discuss the intuition of these models and how their intuitions relate to ideal point models.
-
-
-
-<!-- RASCH MODEL
-^[
-  The names "difficulty" and "discrimination" come from models developed in an education testing, where some test questions may differ in their difficulty as well as how well the question discriminates between high- and low-ability test takers. See e.g.\ @fox:2010:bayesian-IRT.
-] -->
+we obtain a logit model.
+\begin{align}
+  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
+  \mathrm{logit}^{-1}\left( \beta_{j}\theta_{i} + \alpha_{j} \right).
+  (\#eq:logit-irt)
+\end{align}
+For computational purposes described in Section&nbsp;\@ref(#sec:stan-setup), I use a logit model. I discuss the intuition for these new parameters $\alpha_{j}$ and $\beta_{j}$ in the next section.
 
 
-
-
-<!-- parametric assumptions -->
-<!-- Up to this point, we have assumed symmetric and equally-weighted quadratic utility loss over ideological distances. No parametric assumptions have yet been made about the idiosyncratic errors or the difference in errors.  -->
+<!------- TO DO ---------
+- revisit link fn
+- Does londregan prefer logit due to some identifiability concern???
+------------------------->
 
 
 
-This would imply that $\alpha_{j} = 0$, 
+### The "Item Response Theory" Approach to Survey Response
 
- increase (that is, move to the right). 
+Past ideal point modeling in political science has noted the similarity between the logit and probit models and models developed under item response theory (IRT) in psychometrics [for example, @londregan:1999:ideal-pts]. The mission of IRT models in psychometrics is similar to ideal point models in political science: measuring latent features in the data given individuals' response patterns to various stimuli. The canonical example is in education testing, where tests are used to measure a student's unobserved academic "ability" level. This section describes the intuition of IRT models in the educational testing context, important mathematical features of the model's functional form assumptions, and extends the IRT model's intuition into the context of this project: survey responses about policy preferences.
 
-An intuition for this parameter is that
+Contours:
 
-
- for the is that $i$'s choice places greater weight 
-
-
-
-
-
-<!-- to do: error -->
-<!-- Assumptions about the error? Interpretation of the "random" vs "unsystematic" meaning of error? -->
-
-
-<!-- What is the formal model intuition?  -->
-
-<!-- ### Unobserved Utility and Observed Choices -->
-
-Ideology itself is unobservable. It affects the way people feel about policy, but we don't directly observe it. Explicit measures of ideological self identification are not themselves reliable because people don't understand those items
-  <!-- to do: TK -->
-  <!-- cite -->
-and because they aren't great at predicting policy views either
-  <!-- to do: TK -->
-  <!-- cite -->
-
-
-While we do not directly observe ideal points, the individuals make are observable functions of unobserved preferences. These problems are common in micro-economic modeling---what inferences can be made about unobserved utilities from observed choices? Ideal point models, as a result, typically have a theoretical basis in a utility model. 
-
-
-Measurement model: 
-
-- We can't see the construct that we want, so we estimate it
-- by building a model that relates the unobserved construct to observed data
-
-<!-- Utility framework
-
-- normal error
-- symmetric utility loss on either end of kappa
-
--->
-
-
-### Item-Response Theory
-
-(IRT)
+- measurement model;
+    - Latent construct 
+    - Elicited responses aren't perfectly informative: error, question bias
+- items $j$, what do we learn about them
+- Rasch models
 
 
 
@@ -301,7 +253,7 @@ Assuming that the idiosyncratic utility is $\varepsilon_{\mathit{ij}} \sim \math
   \Phi \left( \theta_{i} \right),
   (\#eq:ability-only-probit)
 \end{align}
-where $\Phi(\cdot)$ is the Gaussian cumulative distribution function. This assumption restricts $\theta$ such that the probability of a correct response is $50\%$ when $\theta = 0$. The scale of $\theta$ is also restricted by the assumption that $\mathrm{Var}\left[\varepsilon_{\mathit{ij}}\right] = 1$.
+where $\Phi(\cdot)$ is the Normal cumulative distribution function. This assumption restricts $\theta$ such that the probability of a correct response is $50\%$ when $\theta = 0$. The scale of $\theta$ is also restricted by the assumption that $\mathrm{Var}\left[\varepsilon_{\mathit{ij}}\right] = 1$.
 
 ```{r plot-ability-model, include = TRUE, out.width = "80%", fig.width = 6, fig.height = 4, fig.cap = "Ability-only model of item response"}
 # No systematic item effects, only a normal CDF
@@ -393,6 +345,84 @@ ggplot(ex_iccs, aes(x = theta, y = prob)) +
   labs(x = TeX("Ideal Point $(\\theta_{\\mathit{i}})$"), y = "Probability of Conservative Response") +
   NULL
 ```
+
+```{r}
+knitr::knit_exit()
+```
+
+<!-- IRT model parameters -->
+
+How do we interpret the parameters $\beta_{j}$ and $\alpha_{j}$? The discrimination parameter behaves as a "coefficient" for Actor $i$'s ideal point in Equation&nbsp;\@ref(eq:glm), meaning that the Actor's choice is more or less responsive to her policy preferences as $\beta_{j}$ varies. This happens as a function of the ideological distance between the Right and Left alternatives; holding the error variance ($\sigma_{j}$) constant, the discrimination parameter $\beta_{j} = \dfrac{1}{\sigma_{ij}}2(\rho_{j} - \lambda_{j})$ grows in magnitude Right and Left alternatives grow farther apart. The difficulty parameter $\alpha_{j} = \dfrac{1}{\sigma_{ij}}\left(\lambda_{j}^{2} - \rho_{j}^{2}\right)$ serves as an intercept, capturing the phenomena that some policy choices present alternatives that are jointly more conservative or liberal on average. It is understand $\alpha_{j}$'s behavior by considering special cases first. Suppose that $\alpha_{i} = 0$, which occurs if the Right and Left locations are equidistant from zero in opposite directions. In such a case, an Actor whose ideal point is located exactly at $\theta_{i} = 0$ would be indifferent (in expectation) to the choice of Left or Right, and the probability of choosing Right would be $0.5$.^[
+  This holds in logit and probit models, since $\mathrm{logit}^{-1}(0) = 0.5$ and $\Phi(0) = 0.5$.
+]
+If we move the Right alternative in a conservative direction (increasing the value of $\rho_{j}$), the result is a decrease in $\alpha_{j}$. This implies a lower probability that $i$ chooses Right, all else equal, because the Right alternative is moving farther from an Actor located at $\theta_{i} = 0$. The opposite intuition holds as the Left position becomes increasingly progressive, resulting in larger values of $\alpha_{j}$ that imply a higher probability of choosing Right, all else equal.^[
+  In a special case that Right and Left alternatives are located in exactly the same location, the result is $\alpha_{j} = \beta_{j} = 0$, leading all Actors to choose Right with probability $0.5$. This result represents a situation where policy preferences are not systematically related to the choice whatsoever, and only idiosyncratic error affects the choice of Right or Left. Although the model implies that this result is *mathematically* possible, it is not realistic to expect any of the policy choices in this dissertation to induce this behavior.
+]
+
+Others have noted [see @londregan:1999:ideal-pts] that the reduced form is equivalent to the "two-parameter Rasch model" from the psychometric field of item-response theory (IRT). I briefly discuss the intuition of these models and how their intuitions relate to ideal point models.
+
+
+
+<!-- RASCH MODEL
+^[
+  The names "difficulty" and "discrimination" come from models developed in an education testing, where some test questions may differ in their difficulty as well as how well the question discriminates between high- and low-ability test takers. See e.g.\ @fox:2010:bayesian-IRT.
+] -->
+
+
+
+
+<!-- parametric assumptions -->
+<!-- Up to this point, we have assumed symmetric and equally-weighted quadratic utility loss over ideological distances. No parametric assumptions have yet been made about the idiosyncratic errors or the difference in errors.  -->
+
+
+
+This would imply that $\alpha_{j} = 0$, 
+
+ increase (that is, move to the right). 
+
+An intuition for this parameter is that
+
+
+ for the is that $i$'s choice places greater weight 
+
+
+
+
+
+<!-- to do: error -->
+<!-- Assumptions about the error? Interpretation of the "random" vs "unsystematic" meaning of error? -->
+
+
+<!-- What is the formal model intuition?  -->
+
+<!-- ### Unobserved Utility and Observed Choices -->
+
+Ideology itself is unobservable. It affects the way people feel about policy, but we don't directly observe it. Explicit measures of ideological self identification are not themselves reliable because people don't understand those items
+  <!-- to do: TK -->
+  <!-- cite -->
+and because they aren't great at predicting policy views either
+  <!-- to do: TK -->
+  <!-- cite -->
+
+
+While we do not directly observe ideal points, the individuals make are observable functions of unobserved preferences. These problems are common in micro-economic modeling---what inferences can be made about unobserved utilities from observed choices? Ideal point models, as a result, typically have a theoretical basis in a utility model. 
+
+
+Measurement model: 
+
+- We can't see the construct that we want, so we estimate it
+- by building a model that relates the unobserved construct to observed data
+
+<!-- Utility framework
+
+- normal error
+- symmetric utility loss on either end of kappa
+
+-->
+
+
+
+
 
 
 
@@ -513,11 +543,11 @@ The state effects are in turn regressions on state features.
   \alpha_{sp} &\sim
     \mathrm{Normal}\left(Z_{s}\gamma_{p} + \rho_{r[s]p}, \psi_{\alpha}\right), \\
   \eta_{sp} &\sim 
-    \mathrm{Normal}\left(Z_{s}\zeta_{p} + \chi_{r[s]p}, \psi_{\eta}\right),
+    \mathrm{Normal}\left(Z_{s}\zeta_{p} + \lambda_{r[s]p}, \psi_{\eta}\right),
 \end{split}
 (\#eq:state-effects-draws)
 \end{align}
-where $Z_{s}$ contains state covariates which have party-specific coefficients $\gamma_{p}$ (for group means) or $\zeta_{p}$ (for group scales). Each state effect is a function of a party-specific region effect $\rho_{rp}$ (for group means) and $\chi_{rp}$ (for group scales) for Census regions indexed $r$.
+where $Z_{s}$ contains state covariates which have party-specific coefficients $\gamma_{p}$ (for group means) or $\zeta_{p}$ (for group scales). Each state effect is a function of a party-specific region effect $\rho_{rp}$ (for group means) and $\lambda_{rp}$ (for group scales) for Census regions indexed $r$.
 
 ### Weighting for Sample Design and Repeated Observations per Individual {#sec:model-weights}
 
@@ -566,3 +596,4 @@ Where $X_{g}$ and $Z_{sp}$ are the same group- and state-level covariates as the
 ##### Any other vector/matrix tricks?
 
 ##### Read stan files into an appendix?
+
