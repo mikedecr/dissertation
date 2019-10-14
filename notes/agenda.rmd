@@ -30,7 +30,7 @@ title: Overall thesis notes
     - [x] Document-level aesthetic to-dos (some time...)
     - [ ] first references: MCMC, IRT, SPD
 - Code fixes
-    - [ ] script to move data from Box?
+    - [x] script to move data from Box?
     - [x] redo bookdown
     - [x] output-specific rendering: <https://bookdown.org/yihui/bookdown/usage.html>
     - [x] graphics device should be f() rendered doctype

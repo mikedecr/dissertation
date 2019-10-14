@@ -52,8 +52,8 @@ smart_number <- function(n, ...) {
 # to do: (?) 
 #  - symlink-data redundantly loads libs; eval in separate env?
 
-source(here::here("code", "helpers", "graphics-helpers.R"))
 source(here::here("code", "helpers", "symlink-data.R"))
+source(here::here("code", "helpers", "graphics-helpers.R"))
 
 
 
