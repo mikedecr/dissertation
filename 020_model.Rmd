@@ -1,5 +1,6 @@
 # Modeling the Constituency's Policy Preferences {#ch:model}
 
+
 To study how partisan constituencies are represented in primary elections, we require a measure of the partisan constituency's policy preferences. This chapter presents the statistical model that I use to estimate the policy ideal points of district-party publics. 
 
 This chapter proceeds in three major steps. First, I review the theoretical basis for ideal point models, which can be traced to spatial models of policy choice from classic formal theory work in American political science such as @downs:1957:economic-theory. I connect these formal models to statistical models of policy ideal points [in a style that follows @clinton-jackman-rivers:2004:ideal] as well as their connection to Item Response Theory (IRT) models from psychometrics and education testing [e.g. @fox:2010:bayesian-IRT].
@@ -20,6 +21,9 @@ Lastly, I describe how I fit the model to real data. This section describes data
 ```{r knitr-02-model, include = FALSE, cache = FALSE}
 source(here::here("assets-bookdown", "knitr-helpers.R"))
 ```
+
+<!-- bold math symbol -->
+<!-- $\newcommand{\bm}[1]{\boldsymbol{\mathbf{#1}}}$ -->
 
 ```{r r-02-model, cache = FALSE}
 library("knitr")
