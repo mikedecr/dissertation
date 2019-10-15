@@ -36,6 +36,7 @@ library("latex2exp")
 
 
 
+
 ## Spatial Models and Ideal Points
 
 <!-- goal: spatial >> IRT >> Parameterizations -->
@@ -191,33 +192,61 @@ Equation&nbsp;\@ref(eq:choice-prob) can be rearranged to reveal an appealing app
       > \eta_{ij} - \nu_{ij} 
     \right) \\
   &= \mathrm{Pr}\left(
-      \beta_{j}\theta_{i} +
-      \alpha_{j}
+      2(\rho_{j} - \lambda_{j})\theta_{i} +
+      \left(\rho_{j} - \lambda_{j}\right)\left(\rho_{j} + \lambda_{j}\right)
+      > \eta_{ij} - \nu_{ij} 
+    \right) \\
+  &= \mathrm{Pr}\left(
+      2\left(\rho_{j} - \lambda_{j}\right)
+      \left(\theta_{i} - \frac{\rho_{j} + \lambda_{j}}{2}\right)
+      > \eta_{ij} - \nu_{ij} 
+    \right) \\
+  &= \mathrm{Pr}\left(
+      \beta_{j}\left[\theta_{i} - \kappa_{j}\right]
       > \epsilon_{ij}
     \right)
 \end{split}
 (\#eq:choice-2p)
 \end{align}
-Equation&nbsp;\@ref(eq:choice-2p) simplifies the model by introducing the "discrimination parameter" $\beta_{j}$, the "difficulty parameter" $\alpha_{j}$, and $\epsilon_{ij}$.^[
-  Referring to these parameters as "discrimination" and "difficulty" parameters is inherited from item-response theory (IRT), an area of psychometrics that is similarly interested in inferring latent traits from observed response data.
+The final line of Equation&nbsp;\@ref(eq:choice-2p) simplifies the model by introducing the "discrimination parameter" $\beta_{j}$, the "midpoint" or "cutpoint" parameter $\kappa_{j}$, and $\epsilon_{ij}$.^[
+  Referring to these parameters as "discrimination" and "difficulty" parameters is inherited from item-response theory (IRT), an area of psychometrics that is similarly interested in inferring latent traits from observed response data. In the next section I show the relationship between the difficulty parameter and the cutpoint parameter.
 ]
-Following @clinton-jackman-rivers:2004:ideal, it is assumed that utility errors $\eta_{ij}$ and $\nu_{ij}$ are distributed such that $\mathrm{E}\left[\eta_{ij}\right] = \mathrm{E}\left[\nu_{ij}\right]$ and that $\mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right] = \sigma^{2}_{j}$. Let $\beta_{j} = \dfrac{1}{\sigma_{ij}}2(\rho_{j} - \lambda_{j})$, let $\alpha_{j} = \dfrac{1}{\sigma_{ij}}\left(\lambda_{j}^{2} - \rho_{j}^{2}\right)$, and let $\epsilon_{ij} = \dfrac{1}{\sigma_{ij}}\left(\eta_{ij} - \nu_{ij}\right)$. Parameterizing the model in this way expresses the utility comparison in a simpler, linear form. The final line reveals how the utility model reduces to binary choice models that are common in political science. Assuming as @clinton-jackman-rivers:2004:ideal do that $\epsilon_{ij}$ is a draw from a standard Normal distribution, the final line in Equation&nbsp;\@ref(eq:choice-2p) implies a probit model,
+Parameterizing the model in this way expresses the utility comparison in a simpler, linear form. Following @clinton-jackman-rivers:2004:ideal, we obtain these new parameters by making a parametric assumption for $\epsilon_{ij}$. Assume that $\epsilon_{ij}$ were a draw from a Logistic distribution with mean of $0$ and scale of $s_{ij}$. This would imply that $\mathrm{E}\left[\eta_{ij}\right] = \mathrm{E}\left[\nu_{ij}\right]$ and that $\mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right] = \dfrac{s_{ij}^{2}\pi^{2}}{3}$. With scale $s_{ij}$ in hand, let $\beta_{j} = \dfrac{1}{s_{ij}}2(\rho_{j} - \lambda_{j})$, let $\kappa_{j} = \dfrac{1}{s_{ij}}\left(\dfrac{\lambda_{j} + \rho_{j}}{2}\right)$, and let $\epsilon_{ij} = \dfrac{1}{s_{ij}}\left(\eta_{ij} - \nu_{ij}\right)$. I discuss the intuitions surrounding these new parameters $\kappa_{j}$ and $\beta_{j}$ in the next section.
+
+The parametric assumption for $\epsilon_{ij}$ reveals how the utility model reduces to a logistic regression model that is common in political science,
+\begin{align}
+\begin{split}
+  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
+  \mathrm{Pr}\left(
+    \beta_{j}\left[\theta_{i} - \kappa_{j}\right] - \epsilon_{ij} > 0 
+  \right) \\
+  &= 
+  \mathrm{logit}^{-1}\left( \beta_{j}\left[\theta_{i} - \kappa_{j}\right] \right),
+\end{split}
+(\#eq:logit-irt)
+\end{align}
+where $\mathrm{logit}^{-1}(\cdot)$ is the cumulative Logistic distribution function. This deviates slightly from @clinton-jackman-rivers:2004:ideal who assume that $\epsilon_{ij}$ is a draw from a standard Normal distribution rather than a standard Logistic distribution, a decision that instead implies a probit model,
 \begin{align}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
-  \Phi\left( \beta_{j}\theta_{i} + \alpha_{j} \right).
+  \Phi\left( \beta_{j}\theta_{i} + \kappa_{j} \right).
   (\#eq:probit-irt)
 \end{align}
-where $\Phi\left(\cdot\right)$ is the cumulative Normal distribution function. If we instead assume that $\epsilon_{ij}$ is a draw from a standard Logistic distribution,^[
-  A technical point of difference between the probit and logit model is the way parameters are scaled to yield the final line of Equation&nbsp;\@ref(eq:choice-2p). This is because the scale parameter in a logistic distribution is not its standard deviation but a function of the standard deviation. If $\sigma_{j}^2 = \mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right]$, then the logit model is created by scaling by $s_{j} = \frac{\sqrt{3}}{\pi}\sigma_{j}$ instead of by $\sigma_{j}$.
+where $\Phi\left(\cdot\right)$ is the cumulative Normal distribution function.^[
+  A technical point of difference between the probit and logit model is the way parameters are scaled to yield the final line of Equation&nbsp;\@ref(eq:choice-2p). If it is assumed that $\epsilon_{ij}$ is a standard Normal draw, the expression for $s_{ij}$ is simpler ($s^2_{ij} = \mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right]$), although the probit model overall is more computationally burdensome. 
 ]
-we obtain a logit model.
+<!-- 
 \begin{align}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
-  \mathrm{logit}^{-1}\left( \beta_{j}\theta_{i} + \alpha_{j} \right).
+  \mathrm{logit}^{-1}\left( \beta_{j}\theta_{i} + \kappa_{j} \right).
   (\#eq:logit-irt)
 \end{align}
-For computational purposes described in Section&nbsp;\@ref(#sec:stan-setup), I use a logit model. I discuss the intuition for these new parameters $\alpha_{j}$ and $\beta_{j}$ in the next section.
+ -->
+I opt for the logit model for computational reasons described in Section&nbsp;\@ref(#sec:stan-setup).
 
+
+<!-- Normal: $s_{j} = \sqrt{\mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right]}$
+
+Logistic: $s_{j} = \frac{\sqrt{3 \mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right]}}{\pi}$ -->
 
 <!------- TO DO ---------
 - revisit link fn
@@ -228,7 +257,26 @@ For computational purposes described in Section&nbsp;\@ref(#sec:stan-setup), I u
 
 ### The "Item Response Theory" Approach to Survey Response
 
-Past ideal point modeling in political science has noted the similarity between the logit and probit models and models developed under item response theory (IRT) in psychometrics [for example, @londregan:1999:ideal-pts]. The mission of IRT models in psychometrics is similar to ideal point models in political science: measuring latent features in the data given individuals' response patterns to various stimuli. The canonical example is in education testing, where tests are used to measure a student's unobserved academic "ability" level. This section describes the intuition of IRT models in the educational testing context, important mathematical features of the model's functional form assumptions, and extends the IRT model's intuition into the context of this project: survey responses about policy preferences.
+Past ideal point modeling in political science has noted the similarity between the logit and probit models and models developed under item response theory (IRT) in psychometrics [for example, @londregan:1999:ideal-pts]. The mission of IRT models in psychometrics is similar to ideal point models in political science: measuring latent features in the data given individuals' response patterns to various stimuli. The canonical example is in education testing, where tests are used to measure a student's unobserved academic "ability" level. This section elaborates on important theoretical and mathematical features of IRT models by drawing an analogy between the educational testing context to the current setting of survey response. 
+
+##### Latent traits
+The first important feature to note about IRT models is that they are *measurement models*. The goal of a measurement model is to use observed data $\mathbf{y}$ to estimate some construct of theoretical interest ${\theta}$, supposing that there is a distinction between the two. The observed data $\mathbf{y}$ may be affected by ${\theta}$, but there is no guarantee of a one-to-one correspondence between the two because $\theta$ is not directly observed. We might think of a measurement model represented with general notation $\mathbf{y} = f({\theta}, {\sigma})$, where ${\sigma}$ represents some vector of auxiliary model parameters.
+
+In an educational testing context, students are taking standardized tests intended to measure their academic "ability" levels. An analyst scoring the tests cannot observe a student's ability directly---it isn't clear what that would even mean. They do, however, observe the student's answers to known test questions. IRT models provides a structure to infer abilities from the student's pattern of test answers. The context of policy choice is similar. We cannot observe any individual's political ideology directly, but we theorize that it affects their responses to survey items about policy choices. The IRT setup lets us summarize an individual's policy preferences by analyzing the structure of their responses to various policy choices.
+
+<!------- TO DO ---------
+- Literature about "ideology" (Clinton piece?)
+- "traits"
+------------------------->
+
+##### Item parameters
+
+One parameter
+
+Two parameter
+
+Zero parameter
+
 
 Contours:
 
@@ -313,8 +361,6 @@ The item-response model makes sense only under the assumption that policy issues
   \Phi \left( \beta_{j}\left[\theta_{i} - \kappa_{j}\right] \right),
   (\#eq:twopar-model)
 \end{align}
-
-
 
 
 ```{r plot-example-iccs, include = TRUE, echo = FALSE, fig.cap = str_glue("Examples of item characteristic curves for {ex_items} simulated items."), fig.width = 6, fig.height = 4, out.width = "80%"}
