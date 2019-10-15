@@ -48,5 +48,4 @@ party_colors <- c("Democrats" = dblue, "Republicans" = rred)
 yel <- viridis::magma(1, alpha = 1, begin = 0.9, end = 0.9, direction = 1)
 purp <-  viridis::magma(1, alpha = 1, begin = 0.5, end = 0.5, direction = 1)
 
-# maybe delete?
-rm(font_fam)
+

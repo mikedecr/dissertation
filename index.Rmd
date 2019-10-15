@@ -22,7 +22,6 @@ csl: assets-bookdown/ajps.csl
 
 ```{r helpers-index, include = FALSE, cache = FALSE}
 source(here::here("assets-bookdown", "knitr-helpers.R"))
-source(here::here("code", "helpers", "graphics-helpers.R"))
 ```
 
 <!-- BEGIN FRONTMATTER CONTENT -->
