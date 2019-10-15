@@ -71,7 +71,9 @@ total_iterations <- (n_chains * (n_iterations - n_warmup) / n_thin)
 ```
 
 The model is designed to estimate group-level parameters from an individual-level data generating process. As such, I begin by simulating individual-level item response data before aggregating the data to the group level for estimation. I simulate a universe containing `r n_states` states nested within `r english(n_regions)` regions, allocated so each region contains `r english(n_states / n_regions)` states. Each state contains `r english(n_districts)` districts containing voters belonging to `r english(n_parties)` parties, totaling `r n_states * n_districts * n_parties` groups across `r n_states * n_districts` districts in the whole "country." Data for each district-party group contain responses to `r n_items` items that are answered by `r n_cases` unique individuals apiece. For simplicity, the simulation assumes that each individual answers only one question. When the model is implemented on real data, this assumption is relaxed by the weighting scheme laid out in Section&nbsp;\@ref(sec:model-weights).
-  \todo{Fix}
+  <!------- TO DO ---------
+  - Fix
+  ------------------------->
 
 Individual partisans respond to each item probabilistically according to the individual-level item response model originally laid out in Equation&nbsp;\@ref(eq:individual-irt). The probability $\pi$ that individual $i$ gives a conservative answer to item $j$ is
 \begin{align*}
@@ -104,7 +106,9 @@ The hierarchical regression contains district data $\mathbf{x}$, consisting of t
 To generate group means $\theta_{g}$, the constants $\beta_{0p}$ are explicitly set for each party $p$: $\beta_{0, p=1} = `r const_d`$ and $\beta_{0, p=2} = `r const_r`$. This implies that, on average, party $1$ is liberal, and party $2$ is conservative. District coefficients $\beta_{p}$ and state coefficients $\gamma_{p}$ are all simulated as Normal draws with mean $0$ and standard deviation `r sd_beta_d`. The hierarchical model contains party-specific error terms for districts (mean $0$, std.\ dev.\ $`r resid_theta_d`$), states (mean $0$, std.\ dev.\ $`r resid_theta_s`$), and regions (mean $0$, std.\ dev.\ $`r resid_theta_r`$). The setup is similar for the generation of group-level ideal point dispersion terms $\sigma_{g}$. The constants $\delta_{0p}$ are set to `r const_sig` for both parties, coefficients for districts ($\delta_p$) and states ($\zeta_{p}$) are both Normal draws with mean $0$ and std.\ dev.\ $`r sd_beta_d_sig`$, and there are separate mean-$0$ error terms for districts (sd $`r resid_sigma_d`$), states (sd $`r resid_sigma_s`$), and regions (sd $`r resid_sigma_r`$).
 
 It is important to note that many of the parameters in this simulation are not hand-selected but simulated from probability distributions. This is done to obscure the true values of these parameters, ensuring that prior distributions are specified without knowledge of true values. To stress-test the model, I use weakly informative prior distributions for each parameter that are intentionally set to be wider variance than the distributions that generate each parameter's true value.
-  \todo{more specific}
+  <!------- TO DO ---------
+  - more specific
+  ------------------------->
 
 I estimate the model by storing `r comma(total_iterations)` samples for each parameter across `r comma(n_chains)` Markov chains, `r comma(n_iterations - n_warmup)` iterations per chain. I warm up each chain for an initial `r comma(n_warmup)` iterations before saving samples.
 
