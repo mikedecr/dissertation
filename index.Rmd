@@ -12,7 +12,7 @@ site: "bookdown::bookdown_site"
 
 # annoying top-level LaTeX control
 documentclass: memoir
-fontsize: 12pt
+fontsize: 11pt
 geometry: "left = 1.25in, right = 1.25in, top = 1.25in, bottom = 1.25in"
 bibliography: assets-bookdown/thesis.bib
 csl: assets-bookdown/ajps.csl
@@ -36,31 +36,13 @@ source(here::here("assets-bookdown", "knitr-helpers.R"))
 
 
 
-<!-- rendering -->
+<!-- R E N D E R I N G 
 
-```{r render-GITBOOK, eval = FALSE, cache = FALSE, include = FALSE}
-# setwd(here::here("writing"))
-bookdown::render_book("Index.Rmd", "bookdown::gitbook")
-# setwd(here::here())
-```
+NOTE: if you move writing into subfolders: 
+      setwd(here::here("writing")); render_*(...); setwd(here::here())
 
-```{r render-PDF, eval = FALSE, cache = FALSE, include = FALSE}
-# setwd(here::here("writing"))
-bookdown::render_book("Index.Rmd", "bookdown::pdf_book")
-# setwd(here::here())
-```
+-->
 
-```{r render-HTML, eval = FALSE, cache = FALSE, include = FALSE}
-# setwd(here::here("writing"))
-bookdown::render_book("Index.Rmd", "bookdown::html_book")
-# setwd(here::here())
-```
-
-```{r render-preview-CHAPTER, eval = FALSE, cache = FALSE, include = FALSE}
-bookdown::preview_chapter('01_arg.Rmd')
-# bookdown::preview_chapter('01-arg.Rmd')
-# bookdown::preview_chapter('01-arg.Rmd')
-```
 
 ```{r serve-book, eval = FALSE, cache = FALSE, include = FALSE}
 bookdown::serve_book(
@@ -72,6 +54,26 @@ bookdown::serve_book(
 )
 # servr::daemon_stop() 
 ```
+
+```{r render-PDF, eval = FALSE, cache = FALSE, include = FALSE}
+bookdown::render_book("Index.Rmd", "bookdown::pdf_book")
+```
+
+
+
+```{r render-HTML, eval = FALSE, cache = FALSE, include = FALSE}
+bookdown::render_book("Index.Rmd", "bookdown::html_book")
+```
+
+```{r render-GITBOOK, eval = FALSE, cache = FALSE, include = FALSE}
+bookdown::render_book("Index.Rmd", "bookdown::gitbook")
+```
+
+```{r render-preview-CHAPTER, eval = FALSE, cache = FALSE, include = FALSE}
+bookdown::preview_chapter('01_arg.Rmd')
+```
+
+
 
 
 

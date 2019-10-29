@@ -18,6 +18,7 @@ title: Overall thesis notes
         - CW do *not* do this
         - Alex says: multivariate normal because they'll be correlated
     - [ ] identifiability in heteroskedastic model (Londregan?)
+    - [ ] addition of group variance in IRT model with a LOGIT?
 - Paper fixes
     - [ ] vector form covariates in model math section
     - [ ] IRT model from formal assumptions
@@ -30,6 +31,7 @@ title: Overall thesis notes
     - [x] Document-level aesthetic to-dos (some time...)
     - [ ] first references: MCMC, IRT, SPD
 - Code fixes
+    - [ ] offline mathjax
     - [x] script to move data from Box?
     - [x] redo bookdown
     - [x] output-specific rendering: <https://bookdown.org/yihui/bookdown/usage.html>

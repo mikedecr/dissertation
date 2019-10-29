@@ -12,18 +12,32 @@
 \usepackage[varqu, scaled = 0.95]{zi4}
 \usepackage[lf, mathtabular, minionint]{MinionPro}
 \usepackage[scaled = 0.9]{FiraSans}
-% \usepackage{bm}
 
-% \setsecnumdepth{subsubsection}
+% \usepackage{bm} 
+% this fails, too many math alphabets. Workaround...
+\newcommand{\bm}[1]{\boldsymbol{\mathbf{#1}}} 
+
+\setsecnumdepth{subsubsection}
 
 % Advice: only write into subsection?
-% \setsecheadstyle{\large \raggedright \bfseries}
-% \setsubsecheadstyle{\raggedright \bfseries \itshape} 
-% \setsubsubsecheadstyle{\raggedright \itshape}
+\setsecheadstyle{\large \raggedright \sffamily \bfseries}
+\setsubsecheadstyle{\raggedright \sffamily \bfseries} %\itshape
+\setsubsubsecheadstyle{\raggedright \sffamily \bfseries \itshape} 
 % \setparaheadstyle{\raggedright \itshape}
 
 % document design
-\chapterstyle{dowding}
+% --- serif chapter styles ---
+\chapterstyle{dash} % don't want serif though
+  \renewcommand*{\chaptitlefont}{\huge\sffamily\centering\bfseries}
+  \renewcommand*{\chapnumfont}{\chaptitlefont}
+% \chapterstyle{dowding}
+
+% --- sans serif chapter designs ---
+% \chapterstyle{ell}
+% \chapterstyle{komalike}
+%       \renewcommand*{\afterchapternum}{\newline}
+% \chapterstyle{dash}
+% \chapterstyle{lyhne}
 \pagestyle{simple}
 
 % change page nums on chapter title page 

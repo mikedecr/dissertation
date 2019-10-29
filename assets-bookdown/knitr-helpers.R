@@ -55,5 +55,5 @@ smart_number <- function(n, ...) {
 source(here::here("code", "helpers", "symlink-data.R"))
 source(here::here("code", "helpers", "graphics-helpers.R"))
 
-
+# ggsave("~/desktop/test.pdf", height = 4, width = 9, device = cairo_pdf); beepr::beep(2)
 
