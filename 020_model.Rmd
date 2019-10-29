@@ -199,11 +199,6 @@ Equation&nbsp;\@ref(eq:choice-prob) can be rearranged to reveal an appealing app
       2\theta_{i}R_{j} - 2\theta_{i}L_{j} + 
       L_{j}^{2} - R_{j}^{2}
       > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij} 
-    \right) \\
-  &= \mathrm{Pr}\left(
-      2(R_{j} - L_{j})\theta_{i} +
-      L_{j}^{2} - R_{j}^{2}
-      > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij} 
     \right)
 \end{split}
 (\#eq:expand-utility)
@@ -214,13 +209,13 @@ From here, there are two factorizations that reveal convenient expressions for i
 \begin{split}
   \mathrm{Pr}\left(y_{ij} = 1\right) &=     
     \mathrm{Pr}\left(
-      2(R_{j} - L_{j})\theta_{i} +
+      2\theta_{i}R_{j} - 2\theta_{i}L_{j} + 
       L_{j}^{2} - R_{j}^{2} 
       > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij}
     \right) \\
   &= 
     \mathrm{Pr}\left(
-      2(R_{j} - L_{j})\theta_{i} + 
+      2\theta_{i}R_{j} - 2\theta_{i}L_{j} + 
       \left(R_{j} - L_{j}\right)
       \left(R_{j} + L_{j}\right) 
       > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij} 
@@ -233,8 +228,7 @@ From here, there are two factorizations that reveal convenient expressions for i
 \end{split}
 (\#eq:factor-item-params)
 \end{align}
-The first manipulation is to decompose $L_{j}^{2} - R_{j}^{2}$ into the two factors $\left(R_{j} - L_{j}\right)\left(R_{j} + L_{j}\right)$. The second manipulation is to factor $2\left(R_{j} - L_{j}\right)$ out of the left-side of the inequality. We perform these manipulations because the resulting terms are appreciably more interpretable than before. First, note that $\frac{R_{j} + L_{j}}{2}$ is a formula for the midpoint between the Left and Right locations. This means that the expression $\theta_{i} - \frac{R_{j} + L_{j}}{2}$ intuitively represents the Actor's closeness to each policy alternative: 
-if the Actor is closer to Right than to Left, $\theta_{i}$ will be greater than the midpoint, and vice versa if she were closer to Left. Second, the $2\left(R_{j} - L_{j}\right)$ term captures how far apart the policy alternatives are from one another, increasing as the distance between Right and Left increases. Together, the left side of the inequality succinctly describes the deterministic component of the Actor's ideological choice: is she closer to the Left or Right policy, and by how much?
+The first manipulation is to decompose $L_{j}^{2} - R_{j}^{2}$ into the two factors $\left(R_{j} - L_{j}\right)\left(R_{j} + L_{j}\right)$. The second manipulation is to factor $2\left(R_{j} - L_{j}\right)$ out of the left-side of the inequality. We perform these manipulations because the resulting terms are appreciably more interpretable than before. First, note that $\frac{R_{j} + L_{j}}{2}$ is a formula for the midpoint between the Left and Right locations. This means that the expression $\theta_{i} - \frac{R_{j} + L_{j}}{2}$ intuitively conveys which policy alternative is closer to the Actor. If the Actor is closer to Right than to Left, $\theta_{i}$ will be greater than the midpoint, and vice versa if she were closer to Left. Second, the $2\left(R_{j} - L_{j}\right)$ term captures how far apart the policy alternatives are from one another, increasing as the distance between Right and Left increases. Together, the left side of the inequality succinctly describes the deterministic component of the Actor's ideological choice: is she closer to the Left or Right policy, and by how much?
 
 The final manipulation is to simplify the terms above, which results in a convenient parameterization for statistical estimation.
 \begin{align}
@@ -256,11 +250,11 @@ The final manipulation is to simplify the terms above, which results in a conven
 This results in the "discrimination parameter" $\beta_{j} = 2\left(R_{j} - L_{j}\right)$, the "midpoint" or "cutpoint" parameter $\kappa_{j} = \dfrac{R_{j} + L_{j}}{2}$, and a joint error term $\epsilon_{ij} = e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij}$.^[
   The names for these parameters are adapted from item-response theory (IRT), an area of psychometrics that is similarly interested in inferring latent traits from observed response data. I discuss the connection between this model and the IRT model in the next section.
 ]
-Parameterizing the model in this way expresses the utility comparison in a simpler, linear form. Similar to Equation&nbsp;\@ref(eq:factor-item-params) above, $\theta_{i} - \kappa_{j}$ shows how far the Actor is from the midpoint between Left and Right, and $\beta_{j}$ captures behaves as a "slope" on this distance that is itself a function of how far apart the policy alternatives are from each other. I explore the intuitions of this functional form more thoroughly in the following section.
+Parameterizing the model in this way expresses the utility comparison in a simpler, linear form. Similar to Equation&nbsp;\@ref(eq:factor-item-params) above, $\theta_{i} - \kappa_{j}$ shows how far the Actor is from the midpoint between Left and Right, and $\beta_{j}$ captures behaves as a "slope" on this distance: the distance from the midpoint has a _stronger influence_ when the policy alternatives are farther from one another, since more utility is lost over larger spatial distances. I explore the intuitions of this functional form more thoroughly in the following section.
 
 A complete statistical model is obtained by making a parametric assumption for the distribution of $\epsilon_{ij}$. Assuming that $\epsilon_{ij}$ is a draw from a standard Normal distribution,^[
   This implies that $\mathrm{E}\left(e^{\mathtt{L}}_{ij}\right) = \mathrm{E}\left(e^{\mathtt{R}}_{ij}\right)$ and that $\mathrm{Var}\left(e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij}\right) = s_{j} = 1$. 
-  For a given choice, imposing a scale restriction on the magnitude of $s_{j}$ is not problematic, since the ideological scale is latent and can be arbitrarily stretched. The important assumption is that the scale of the errors for each choice are equal across individuals: $s_{ij} = s_{j}$ for all $i$. 
+  For a given choice $j$, imposing a scale restriction on the magnitude of $s_{j}$ is not problematic since the ideological scale is latent and can be arbitrarily stretched. The important assumption is that the scale of the errors for each choice are equal across individuals: $s_{ij} = s_{j}$ for all $i$. 
 ]
 Equation&nbsp;\@ref(eq:choice-2p) implies a probit regression model for the probability that Actor $i$ chooses Right on choice $j$:
 \begin{align}
@@ -275,15 +269,15 @@ Equation&nbsp;\@ref(eq:choice-2p) implies a probit regression model for the prob
     \beta_{j}\left(\theta_{i} - \kappa_{j}\right) - \epsilon_{ij} > 0 
   \right) \\
   &= 
-  \Phi^{-1}\left( \beta_{j}\left(\theta_{i} - \kappa_{j}\right) \right),
+  \Phi\left( \beta_{j}\left(\theta_{i} - \kappa_{j}\right) \right),
 \end{split}
 (\#eq:logit-irt)
 \end{align}
-where $\Phi^{-1}(\cdot)$ is the cumulative Normal distribution function. Many IRT models assume that $\epsilon_{ij}$ follows a standard Logistic distribution, [for example @londregan:1999:ideal-pts], resulting in a logistic regression model rather than a probit model.^[
+where $\Phi(\cdot)$ is the cumulative Normal distribution function. Many IRT models assume that $\epsilon_{ij}$ follows a standard Logistic distribution, [for example @londregan:1999:ideal-pts], resulting in a logistic regression model rather than a probit model.^[
   A technical point of difference between the probit and logit model is the way parameters are scaled to yield the final line of Equation&nbsp;\@ref(eq:choice-2p). If it is assumed that $\epsilon_{ij}$ is a Logistic draw with scale $s_j$, this implies that 
   $\mathrm{Var}\left(e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij}\right) = \dfrac{s_{j}^{2}\pi^{2}}{3}$, where it is assumed that $s_{j} = 1$ for the standard Logistic model. 
 ]
-As I show below, the probit model facilitates a group-level much more easily than the logit model.
+As I show below, the probit model facilitates the group-level model much more easily than the logit model.
 
 <!------- TO DO ---------
 - Does londregan prefer logit due to some identifiability concern???
