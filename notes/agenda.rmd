@@ -7,7 +7,7 @@ title: Overall thesis notes
 - Bureaucracy:
     - [ ] More goal-setting for more spread-out meetings
     - [ ] Barry meeting
-    - [ ] Ken meeting
+    - [x] Ken meeting
     - [x] Alex meeting
     - [ ] Ellie meeting
     - [ ] Mike meeting
@@ -31,13 +31,10 @@ title: Overall thesis notes
     - [x] Document-level aesthetic to-dos (some time...)
     - [ ] first references: MCMC, IRT, SPD
 - Code fixes
+    - [ ] log1m/log1p functions for probit link
     - [ ] offline mathjax
-    - [x] script to move data from Box?
-    - [x] redo bookdown
-    - [x] output-specific rendering: <https://bookdown.org/yihui/bookdown/usage.html>
-    - [x] graphics device should be f() rendered doctype
-    - [ ] if a chapter is rendered in a fresh env, the first thing it caches
-    - [ ] dir paths go into a modular file
+    - [ ] if a chapter is rendered in a fresh env, the first thing it caches (what did this mean)
+    - [ ] dir paths go into a modular file? (still needed?)
     - [ ] which params can we avoid saving (in simulation)?
     - [ ] move estimation from "combine data" into sampling file
     - [ ] hack to the end of the simulation exercise
