@@ -5,6 +5,23 @@
 $\newcommand{\bm}[1]{\boldsymbol{\mathbf{#1}}}$
 ```
 
+
+
+```{r knitr-02-model, include = FALSE, cache = FALSE}
+source(here::here("assets-bookdown", "knitr-helpers.R"))
+```
+
+```{r r-02-model, cache = FALSE}
+library("knitr")
+library("here")
+library("magrittr")
+library("tidyverse")
+library("extrafont")
+library("latex2exp")
+```
+
+
+
 To study how partisan constituencies are represented in primary elections, we require a measure of the partisan constituency's policy preferences. This chapter presents the statistical model that I use to estimate the policy ideal points of district-party publics. 
 
 This chapter proceeds in three major steps. First, I review the theoretical basis for ideal point models, which can be traced to spatial models of policy choice from classic formal theory work in American political science such as @downs:1957:economic-theory. I connect these formal models to statistical models of policy ideal points [in a style that follows @clinton-jackman-rivers:2004:ideal] as well as their connection to Item Response Theory (IRT) models from psychometrics and education testing [e.g. @fox:2010:bayesian-IRT].
@@ -20,24 +37,6 @@ Lastly, I describe how I fit the model to real data. This section describes data
 <!------- TO DO ---------
 - Should this include a comparison to CDW measures? Hill measures?
 ------------------------->
-
-
-```{r knitr-02-model, include = FALSE, cache = FALSE}
-source(here::here("assets-bookdown", "knitr-helpers.R"))
-```
-
-<!-- bold math symbol -->
-<!-- $\newcommand{\bm}[1]{\boldsymbol{\mathbf{#1}}}$ -->
-
-```{r r-02-model, cache = FALSE}
-library("knitr")
-library("here")
-library("magrittr")
-library("tidyverse")
-library("extrafont")
-library("latex2exp")
-```
-
 
 
 
@@ -105,7 +104,7 @@ Formal models of ideal points are distinct from statistical models of ideal poin
 - this really is model-driven, we are assuming a model
 ------------------------->
 
-Having distinguished formal and statistical models, I now show a derivation of a statistical model from a formal model. This exercise model will serve as a theoretical basis for the class of statistical models explored in this dissertation. I begin with notation to describe an arbitrary number of actors indexed $i \in \{1, \ldots, n\}$ making an arbitrary number of policy choices (bills, survey items, etc.) indexed $j \in \{1, \ldots, J\}$. Every Actor has an ideal point, or a location in the policy space, represented by $\theta_{i}$. Every task is choice between a Left policy located at $\lambda_{j}$ and a Right policy located at $\rho_{j}$. 
+Having distinguished formal and statistical models, I now show a derivation of a statistical model from a formal model. This exercise model will serve as a theoretical basis for the class of statistical models explored in this dissertation. I begin with notation to describe an arbitrary number of actors indexed $i \in \{1, \ldots, n\}$ making an arbitrary number of policy choices (bills, survey items, etc.) indexed $j \in \{1, \ldots, J\}$. Every Actor has an ideal point, or a location in the policy space, represented by $\theta_{i}$. Every task is choice between a Left policy located at $L_{j}$ and a Right policy located at $R_{j}$. 
 
 The utility that an Actor receives from a Left or Right choice is a function of the distance between her ideal point and the respective choice location---utility is maximized if an Actor can choose a policy located exactly on her ideal point, and utility is "lost" for choices farther and farther from her ideal point. The functional form of utility loss is an assumption made by the researcher---some scholars assume that utility loss follows a Gaussian curve, while others choose a quadratic utility loss [@clinton-jackman-rivers:2004:ideal]. For this analysis, we assume a quadratic utility loss.^[
   Researchers typically avoid linear losses for technical reasons: a linear utility loss function is non-differentiable at the ideal point because function comes to a point. This prevents the researcher from using differential calculus to find a point of maximum utility.
@@ -114,9 +113,19 @@ The utility that an Actor receives from a Left or Right choice is a function of 
 - differentiable cite?
 ------------------------->
 
-The choice of quadratic loss implies a utility function over the *squared distance* between an Actor and a choice location. The utility Actor $i$ receives from choosing Right for choice $j$ is $U_{i}\left(\rho_{j}\right) = -\left( \theta_{i} - \rho_{j}\right)^{2} + \nu_{ij}$, while the utility of choosing Left on choice $j$ is $U_{i}\left(\lambda_{j}\right) = -\left( \theta_{i} - \lambda_{j}\right)^{2} + \eta_{ij}$, where $\nu_{ij}$ and $\eta_{ij}$ are the idiosyncratic error terms. I sometimes refer to the quadratic utility loss as the "deterministic" component of the Actor's utility function, while the idiosyncratic error terms are "stochastic" components.^[
+The choice of quadratic loss implies a utility function over the *squared distance* between an Actor and a choice location. The utility Actor $i$ receives from choosing Left or Right are given by utility functions $U_{i}\left(L_{j}\right)$ and $U_{i}\left(R_{j}\right)$, respectively. With quadratic utility loss, these utility functions take the form
+\begin{align}
+  \begin{split}
+    U_{i}\left(R_{j}\right) = - \left( \theta_{i} - R_{j}\right)^{2} + e^{\mathtt{R}}_{ij} \\ 
+    U_{i}\left(L_{j}\right) = - \left( \theta_{i} - L_{j}\right)^{2} + e^{\mathtt{L}}_{ij},
+  \end{split}
+  (\#eq:utility-fns)
+\end{align}
+where $e^{\mathtt{R}}_{ij}$ and $e^{\mathtt{L}}_{ij}$ are the idiosyncratic error terms for the Right and Left alternatives, respectively. I sometimes refer to the quadratic utility loss as the "deterministic" component of the Actor's utility function, while the idiosyncratic error terms are "stochastic" components.^[
   Foreshadowing: Statistical estimates for model parameters are possible once we make distributional assumptions about the stochastic utility errors.
 ]
+
+
 
 ```{r plot-utility}
 utility_plot +
@@ -139,122 +148,146 @@ utility_plot +
 
 <!-- break -->
 
-With these utility functions laid out, we can write Actor $i$'s decision as a comparison of the utilities received by choosing Right or Left. Let $y_{ij} = 1$ signify the outcome that $i$ chooses Right, while $y_{ij} = 0$ signifies that $i$ chooses Left. The model so far implies that $y_{ij} = 1$ if $i$'s utility is greater for Right than for Left.
+With these utility functions laid out, we can write Actor $i$'s decision as a comparison of the utilities received by choosing Right or Left. Let $y_{ij}$ indicate the Actor's choice of Right or Left, where Right is coded $1$, and Left is coded $0$. The model so far implies that $y_{ij} = 1$ (Actor chooses Right) if their utility is greater for Right than for Left.
 \begin{align}
-  y_{ij} = 1 &\iff U_{i}\left(\rho_{j}\right) > U_{i}\left(\lambda_{j}\right)
+  y_{ij} = 1 &\iff U_{i}\left(R_{j}\right) > U_{i}\left(L_{j}\right)
   (\#eq:choice-iff)
 \end{align}
-To visualize this choice, I represent the deterministic components of Equation&nbsp;\@ref(eq:choice-iff) in Figure&nbsp;\@ref(fig:plot-utility), with idiosyncratic utility terms omitted. The parabola represents $i$'s fixed utility loss for any choice along the ideological continuum, owed to her distance from that choice. The vertex of the parabola is at the Actor's location, indicating that she would maximize her (spatial) utility if she could choose a policy located exactly at her ideal point. Dashed lines below the Left and Right alternatives represent the utility loss owed to the Actor's distance from those specific choices. In the current example, the Actor is closer to Right than to Left, so she receives greater utility (or, less utility *loss*) by choosing Right instead of Left.
+To visualize this choice, I represent the deterministic components of Equation&nbsp;\@ref(eq:choice-iff) in Figure&nbsp;\@ref(fig:plot-utility), omitting the stochastic utility terms. The parabola represents $i$'s fixed utility loss for any choice along the ideological continuum, owed to her distance from that choice. The vertex of the parabola is at the Actor's location, indicating that she would maximize her spatial utility if she could choose a policy located exactly at her ideal point. Dashed lines below the Left and Right alternatives represent the utility loss owed to the Actor's distance from those specific choices. In the current example, the Actor is closer to Right than to Left, so she receives greater utility (or, less utility *loss*) by choosing Right instead of Left.
 
 ```{r plot-utility, include = TRUE, fig.height = 2, fig.width = 8, out.width = "100%", fig.cap = "A representation of quadratic utility loss over policy choices"}
 ```
 
-It is important to remember that Figure&nbsp;\@ref(fig:plot-utility) shows only the deterministic component of choice task $j$; random error components $\nu_{ij}$ and $\eta_{ij}$ are omitted. With idiosyncratic utility error incorporated, Equation&nbsp;\@ref(eq:choice-iff) implies that even though the Actor's distance to Right is smaller than her distance to Left, there is still a probability that $i$ chooses Left. This probability depends on the instantiated values of the idiosyncratic error terms for each choice. These error terms represent the accumulation of several possible, non-ideological shocks to utility: random misperceptions about the policy locations, domain-specific considerations about a choice that aren't summarized by ideology, and so on. Supposing that these idiosyncratic terms follow *some* probability distribution, we can restate Equation&nbsp;\@ref(eq:choice-iff) with probabilistic notation:
+It is important to remember that Figure&nbsp;\@ref(fig:plot-utility) shows only the deterministic component of choice task $j$; random error components $e^{\mathtt{R}}_{ij}$ and $e^{\mathtt{L}}_{ij}$ are omitted. With idiosyncratic utility error incorporated, Equation&nbsp;\@ref(eq:choice-iff) implies that even though the Actor's distance to Right is smaller than her distance to Left, there is still a probability that $i$ chooses Left. This probability depends on the instantiated values of the idiosyncratic error terms for each choice. These error terms represent the accumulation of several possible, non-ideological shocks to utility: random misperceptions about the policy locations, domain-specific considerations about a choice that aren't summarized by ideology, and so on. Supposing that these idiosyncratic terms follow some probability distribution, we can restate Equation&nbsp;\@ref(eq:choice-iff) with probabilistic notation:
 \begin{align}
   \begin{split}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
-    \mathrm{Pr}\left(U_{i}\left(\rho_{j}\right) > U_{i}\left(\lambda_{j}\right) \right) \\
+    \mathrm{Pr}\left(U_{i}\left(R_{j}\right) > U_{i}\left(L_{j}\right) \right) \\
   &=
     \mathrm{Pr}\left( 
-      -\left( \theta_{i} - \rho_{j}\right)^{2} + \nu_{ij} > 
-      -\left( \theta_{i} - \lambda_{j}\right)^{2} + \eta_{ij}
+      -\left( \theta_{i} - R_{j}\right)^{2} + e^{\mathtt{R}}_{ij} > 
+      -\left( \theta_{i} - L_{j}\right)^{2} + e^{\mathtt{L}}_{ij}
     \right) \\
   &= \mathrm{Pr}\left(
-      \left( \theta_{i} - \lambda_{j}\right)^{2} -
-            \left( \theta_{i} - \rho_{j}\right)^{2} 
-        > \eta_{ij} - \nu_{ij}
+      \left( \theta_{i} - L_{j}\right)^{2} -
+            \left( \theta_{i} - R_{j}\right)^{2} 
+        > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij}
       \right)
 \end{split}
 (\#eq:choice-prob)
 \end{align}  
-The intuition for \@ref(eq:choice-prob) is that the Actor will choose the policy alternative that is nearest to her, *unless* idiosyncratic (non-policy) factors overcome her ideological considerations. Supposing that the Actor is closer to Right than to Left, $\left( \theta_{i} - \lambda_{j}\right)^{2}$ will be larger than $\left( \theta_{i} - \rho_{j}\right)^{2}$, meaning that the left-hand side of the inequality (the deterministic component) will be some positive value. The only way for $i$ to choose Left would be if the idiosyncratic utility of Left over Right exceeded the deterministic utility of Right over Left. 
+The intuition for Equation&nbsp;\@ref(eq:choice-prob) is that the Actor will choose the policy alternative that is nearest to her *unless* idiosyncratic (non-policy) factors overcome her ideological considerations. Supposing that the Actor is closer to Right than to Left, $\left( \theta_{i} - L_{j}\right)^{2}$ will be greater than $\left( \theta_{i} - R_{j}\right)^{2}$, capturing the Actor's deterministic inclination to prefer Right over Left. The only way for $i$ to choose Left would be if the idiosyncratic utility of Left over Right exceeded the Actor's deterministic inclinations.
   <!-- to do: assumes? -->
 <!-- Note that the model so far assumes only that utility loss is quadratic over the ideological space and that the "coefficient" on the quadratic loss is equal for the distances to both Left and Right.  -->
 
-Equation&nbsp;\@ref(eq:choice-prob) can be rearranged to reveal an appealing appealing functional form for $i$'s choice probability. Expanding the polynomial terms on the left side of the inequality...
+
+Equation&nbsp;\@ref(eq:choice-prob) can be rearranged to reveal an appealing appealing functional form for $i$'s choice probability. First, expand the polynomial terms on the left side of the inequality...
 \begin{align}
 \begin{split}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
     \mathrm{Pr}\left(
-           \left( \theta_{i} - \lambda_{j}\right)^{2} -
-           \left( \theta_{i} - \rho_{j}\right)^{2} 
-           > \eta_{ij} - \nu_{ij} 
+           \left( \theta_{i} - L_{j}\right)^{2} -
+           \left( \theta_{i} - R_{j}\right)^{2} 
+           > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij} 
          \right) \\
   &= \mathrm{Pr}\left(
-      \theta_{i}^{2} - 2\theta_{i}\lambda_{j} + \lambda_{j}^{2} 
-      - \theta_{i}^{2} + 2\theta_{i}\rho_{j} - \rho_{j}^{2}
-      > \eta_{ij} - \nu_{ij} 
+      \theta_{i}^{2} - 2\theta_{i}L_{j} + L_{j}^{2} 
+      - \theta_{i}^{2} + 2\theta_{i}R_{j} - R_{j}^{2}
+      > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij} 
     \right) \\
   &= \mathrm{Pr}\left(
-      2\theta_{i}\rho_{j} - 2\theta_{i}\lambda_{j} + 
-      \lambda_{j}^{2} - \rho_{j}^{2}
-      > \eta_{ij} - \nu_{ij} 
+      2\theta_{i}R_{j} - 2\theta_{i}L_{j} + 
+      L_{j}^{2} - R_{j}^{2}
+      > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij} 
     \right) \\
   &= \mathrm{Pr}\left(
-      2(\rho_{j} - \lambda_{j})\theta_{i} +
-      \lambda_{j}^{2} - \rho_{j}^{2}
-      > \eta_{ij} - \nu_{ij} 
-    \right) \\
-  &= \mathrm{Pr}\left(
-      2(\rho_{j} - \lambda_{j})\theta_{i} +
-      \left(\rho_{j} - \lambda_{j}\right)\left(\rho_{j} + \lambda_{j}\right)
-      > \eta_{ij} - \nu_{ij} 
-    \right) \\
-  &= \mathrm{Pr}\left(
-      2\left(\rho_{j} - \lambda_{j}\right)
-      \left(\theta_{i} - \frac{\rho_{j} + \lambda_{j}}{2}\right)
-      > \eta_{ij} - \nu_{ij} 
-    \right) \\
-  &= \mathrm{Pr}\left(
-      \beta_{j}\left[\theta_{i} - \kappa_{j}\right]
-      > \epsilon_{ij}
+      2(R_{j} - L_{j})\theta_{i} +
+      L_{j}^{2} - R_{j}^{2}
+      > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij} 
     \right)
+\end{split}
+(\#eq:expand-utility)
+\end{align}
+
+From here, there are two factorizations that reveal convenient expressions for important constructs in the model.
+\begin{align}
+\begin{split}
+  \mathrm{Pr}\left(y_{ij} = 1\right) &=     
+    \mathrm{Pr}\left(
+      2(R_{j} - L_{j})\theta_{i} +
+      L_{j}^{2} - R_{j}^{2} 
+      > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij}
+    \right) \\
+  &= 
+    \mathrm{Pr}\left(
+      2(R_{j} - L_{j})\theta_{i} + 
+      \left(R_{j} - L_{j}\right)
+      \left(R_{j} + L_{j}\right) 
+      > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij} 
+    \right) \\
+  &= \mathrm{Pr}\left(
+      2\left(R_{j} - L_{j}\right)
+      \left(\theta_{i} - \frac{R_{j} + L_{j}}{2}\right)
+      > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij} 
+    \right)
+\end{split}
+(\#eq:factor-item-params)
+\end{align}
+The first manipulation is to decompose $L_{j}^{2} - R_{j}^{2}$ into the two factors $\left(R_{j} - L_{j}\right)\left(R_{j} + L_{j}\right)$. The second manipulation is to factor $2\left(R_{j} - L_{j}\right)$ out of the left-side of the inequality. We perform these manipulations because the resulting terms are appreciably more interpretable than before. First, note that $\frac{R_{j} + L_{j}}{2}$ is a formula for the midpoint between the Left and Right locations. This means that the expression $\theta_{i} - \frac{R_{j} + L_{j}}{2}$ intuitively represents the Actor's closeness to each policy alternative: 
+if the Actor is closer to Right than to Left, $\theta_{i}$ will be greater than the midpoint, and vice versa if she were closer to Left. Second, the $2\left(R_{j} - L_{j}\right)$ term captures how far apart the policy alternatives are from one another, increasing as the distance between Right and Left increases. Together, the left side of the inequality succinctly describes the deterministic component of the Actor's ideological choice: is she closer to the Left or Right policy, and by how much?
+
+The final manipulation is to simplify the terms above, which results in a convenient parameterization for statistical estimation.
+\begin{align}
+\begin{split}
+  \mathrm{Pr}\left(y_{ij} = 1\right) 
+  &= 
+    \mathrm{Pr}\left(
+      2\left(R_{j} - L_{j}\right)
+      \left(\theta_{i} - \frac{R_{j} + L_{j}}{2}\right)
+      > e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij} 
+    \right) \\
+  &= \mathrm{Pr}\left(
+      \beta_{j}\left(\theta_{i} - \kappa_{j}\right)
+      > \epsilon_{ij}
+    \right),
 \end{split}
 (\#eq:choice-2p)
 \end{align}
-The final line of Equation&nbsp;\@ref(eq:choice-2p) simplifies the model by introducing the "discrimination parameter" $\beta_{j}$, the "midpoint" or "cutpoint" parameter $\kappa_{j}$, and $\epsilon_{ij}$.^[
-  Referring to these parameters as "discrimination" and "difficulty" parameters is inherited from item-response theory (IRT), an area of psychometrics that is similarly interested in inferring latent traits from observed response data. In the next section I show the relationship between the difficulty parameter and the cutpoint parameter.
+This results in the "discrimination parameter" $\beta_{j} = 2\left(R_{j} - L_{j}\right)$, the "midpoint" or "cutpoint" parameter $\kappa_{j} = \dfrac{R_{j} + L_{j}}{2}$, and a joint error term $\epsilon_{ij} = e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij}$.^[
+  The names for these parameters are adapted from item-response theory (IRT), an area of psychometrics that is similarly interested in inferring latent traits from observed response data. I discuss the connection between this model and the IRT model in the next section.
 ]
-Parameterizing the model in this way expresses the utility comparison in a simpler, linear form. Following @clinton-jackman-rivers:2004:ideal, we obtain these new parameters by making a parametric assumption for $\epsilon_{ij}$. Assume that $\epsilon_{ij}$ were a draw from a Logistic distribution with mean of $0$ and scale of $s_{ij}$. This would imply that $\mathrm{E}\left[\eta_{ij}\right] = \mathrm{E}\left[\nu_{ij}\right]$ and that $\mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right] = \dfrac{s_{ij}^{2}\pi^{2}}{3}$. With scale $s_{ij}$ in hand, let $\beta_{j} = \dfrac{1}{s_{ij}}2(\rho_{j} - \lambda_{j})$, let $\kappa_{j} = \dfrac{1}{s_{ij}}\left(\dfrac{\lambda_{j} + \rho_{j}}{2}\right)$, and let $\epsilon_{ij} = \dfrac{1}{s_{ij}}\left(\eta_{ij} - \nu_{ij}\right)$. I discuss the intuitions surrounding these new parameters $\kappa_{j}$ and $\beta_{j}$ in the next section.
+Parameterizing the model in this way expresses the utility comparison in a simpler, linear form. Similar to Equation&nbsp;\@ref(eq:factor-item-params) above, $\theta_{i} - \kappa_{j}$ shows how far the Actor is from the midpoint between Left and Right, and $\beta_{j}$ captures behaves as a "slope" on this distance that is itself a function of how far apart the policy alternatives are from each other. I explore the intuitions of this functional form more thoroughly in the following section.
 
-The parametric assumption for $\epsilon_{ij}$ reveals how the utility model reduces to a logistic regression model that is common in political science,
+A complete statistical model is obtained by making a parametric assumption for the distribution of $\epsilon_{ij}$. Assuming that $\epsilon_{ij}$ is a draw from a standard Normal distribution,^[
+  This implies that $\mathrm{E}\left(e^{\mathtt{L}}_{ij}\right) = \mathrm{E}\left(e^{\mathtt{R}}_{ij}\right)$ and that $\mathrm{Var}\left(e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij}\right) = s_{j} = 1$. 
+  For a given choice, imposing a scale restriction on the magnitude of $s_{j}$ is not problematic, since the ideological scale is latent and can be arbitrarily stretched. The important assumption is that the scale of the errors for each choice are equal across individuals: $s_{ij} = s_{j}$ for all $i$. 
+]
+Equation&nbsp;\@ref(eq:choice-2p) implies a probit regression model for the probability that Actor $i$ chooses Right on choice $j$:
 \begin{align}
 \begin{split}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
   \mathrm{Pr}\left(
-    \beta_{j}\left[\theta_{i} - \kappa_{j}\right] - \epsilon_{ij} > 0 
+      \beta_{j}\left(\theta_{i} - \kappa_{j}\right)
+      > \epsilon_{ij}
+    \right) \\
+  &= 
+  \mathrm{Pr}\left(
+    \beta_{j}\left(\theta_{i} - \kappa_{j}\right) - \epsilon_{ij} > 0 
   \right) \\
   &= 
-  \mathrm{logit}^{-1}\left( \beta_{j}\left[\theta_{i} - \kappa_{j}\right] \right),
+  \Phi^{-1}\left( \beta_{j}\left(\theta_{i} - \kappa_{j}\right) \right),
 \end{split}
 (\#eq:logit-irt)
 \end{align}
-where $\mathrm{logit}^{-1}(\cdot)$ is the cumulative Logistic distribution function. This deviates slightly from @clinton-jackman-rivers:2004:ideal who assume that $\epsilon_{ij}$ is a draw from a standard Normal distribution rather than a standard Logistic distribution, a decision that instead implies a probit model,
-\begin{align}
-  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
-  \Phi\left( \beta_{j}\theta_{i} + \kappa_{j} \right).
-  (\#eq:probit-irt)
-\end{align}
-where $\Phi\left(\cdot\right)$ is the cumulative Normal distribution function.^[
-  A technical point of difference between the probit and logit model is the way parameters are scaled to yield the final line of Equation&nbsp;\@ref(eq:choice-2p). If it is assumed that $\epsilon_{ij}$ is a standard Normal draw, the expression for $s_{ij}$ is simpler ($s^2_{ij} = \mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right]$), although the probit model overall is more computationally burdensome. 
+where $\Phi^{-1}(\cdot)$ is the cumulative Normal distribution function. Many IRT models assume that $\epsilon_{ij}$ follows a standard Logistic distribution, [for example @londregan:1999:ideal-pts], resulting in a logistic regression model rather than a probit model.^[
+  A technical point of difference between the probit and logit model is the way parameters are scaled to yield the final line of Equation&nbsp;\@ref(eq:choice-2p). If it is assumed that $\epsilon_{ij}$ is a Logistic draw with scale $s_j$, this implies that 
+  $\mathrm{Var}\left(e^{\mathtt{L}}_{ij} - e^{\mathtt{R}}_{ij}\right) = \dfrac{s_{j}^{2}\pi^{2}}{3}$, where it is assumed that $s_{j} = 1$ for the standard Logistic model. 
 ]
-<!-- 
-\begin{align}
-  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
-  \mathrm{logit}^{-1}\left( \beta_{j}\theta_{i} + \kappa_{j} \right).
-  (\#eq:logit-irt)
-\end{align}
- -->
-I opt for the logit model for computational reasons described in Section&nbsp;\@ref(#sec:stan-setup).
-
-
-<!-- Normal: $s_{j} = \sqrt{\mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right]}$
-
-Logistic: $s_{j} = \frac{\sqrt{3 \mathrm{Var}\left[\eta_{ij} - \nu_{ij}\right]}}{\pi}$ -->
+As I show below, the probit model facilitates a group-level much more easily than the logit model.
 
 <!------- TO DO ---------
-- revisit link fn
 - Does londregan prefer logit due to some identifiability concern???
+- cite CW/Fox
 ------------------------->
 
 
