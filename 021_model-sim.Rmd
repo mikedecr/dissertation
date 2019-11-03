@@ -18,7 +18,7 @@ source(here::here("assets-bookdown", "knitr-helpers.R"))
 library("here")
 library("magrittr")
 library("tidyverse")
-library("boxr"); box_auth()
+# library("boxr"); box_auth()
 
 library("scales")
 library("english")
@@ -75,9 +75,12 @@ The model is designed to estimate group-level parameters from an individual-leve
   - Fix
   ------------------------->
 
-Individual partisans respond to each item probabilistically according to the individual-level item response model originally laid out in Equation&nbsp;\@ref(eq:individual-irt). The probability $\pi$ that individual $i$ gives a conservative answer to item $j$ is
+Individual partisans respond to each item probabilistically according to the individual-level item response model originally laid out in Equation&nbsp;\@ref(eq:y-i-irt). The probability $\pi$ that individual $i$ gives a conservative answer to item $j$ is
 \begin{align*}
-  \pi_{\mathit{ij}} &= \Phi\left( \frac{\theta_{i} - \kappa_{j}}{\sigma_{j}} \right),
+  y_{ij} &\sim \mathrm{Bernoulli}(\pi_{ij}) \\
+  \pi_{ij} 
+  &= 
+  \Phi\left(\frac{\theta_{i} - \kappa_{j}}{\sigma_{j}}\right)
 \end{align*} 
 where $\Phi()$ is the cumulative normal distribution function of ideal point $\theta_{i}$, item midpoint $\kappa_{j}$, and item dispersion $\sigma_{j}$. Once individual responses are simulated, the number of conservative responses summed within each item-group and supplied to the group-level likelihood model.
 
@@ -92,7 +95,7 @@ Individual ideal point parameters are Normal draws within their respective distr
     \epsilon_{dp}^{\mathtt{district}} + 
     \epsilon_{sp}^{\mathtt{state}} + 
     \epsilon_{rp}^{\mathtt{region}} \\
-  \log\left(\sigma\right)_{g} &=
+  \log\left(\sigma_{g}\right) &=
     \delta_{0p} + 
     \mathbf{x}^{T}_{d}\delta_{p} + 
     \mathbf{z}^{T}_{s}\zeta_{p} +
@@ -141,7 +144,7 @@ thetas <- tidy_stanfit %>%
 axis_limit <- thetas %$% max(max(theta_g), max(estimate)) %>% ceiling() %>% abs()
 ```
 
-```{r plot-theta-scatters, include = TRUE, fig.height = 4, fig.width = 5, out.width = "70%", fig.cap = "Testing the ideal point model with simulated data: estimated vs. ``true'' ideal points for district-party groups. Estimates are plotted with means and `r number(conf_level, scale = 100, accuracy = 1)` percent intervals. Ellipses are included to identify the parties and carry no statistical interpretation."}
+```{r plot-theta-scatters, include = TRUE, fig.height = 4, fig.width = 5, out.width = "70%", fig.cap = "Testing the ideal point model with simulated data: estimated vs. true ideal points for district-party groups. Estimates are plotted with means and compatibility intervals. Ellipses are included to identify the parties and carry no statistical interpretation."}
 ggplot(thetas) +
   aes(x = theta_g, y = estimate, color = as.factor(party)) +
   geom_mark_ellipse(
@@ -159,7 +162,9 @@ ggplot(thetas) +
     fatten = 2
   ) +
   labs(
-    y = "Model Estimate",
+    y = as.character(str_glue(
+      "Model Estimate\n({percent(conf_level, accuracy = 1)} intervals)"
+    )),
     x = "True Ideal Point",
     color = "Party"
   ) +

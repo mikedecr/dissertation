@@ -70,7 +70,11 @@ bookdown::render_book("Index.Rmd", "bookdown::gitbook")
 ```
 
 ```{r render-preview-CHAPTER, eval = FALSE, cache = FALSE, include = FALSE}
-bookdown::preview_chapter('01_arg.Rmd')
+bookdown::preview_chapter('020_model.Rmd')
+```
+
+```{r render-interactive, eval = FALSE, cache = FALSE, include = FALSE}
+rmarkdown::render(here::here('020_model.Rmd'))
 ```
 
 
