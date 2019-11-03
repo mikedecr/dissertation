@@ -17,11 +17,18 @@
 % this fails, too many math alphabets. Workaround...
 \newcommand{\bm}[1]{\boldsymbol{\mathbf{#1}}} 
 
+% teletype math using zi4?
+\renewcommand{\mathtt}[1]{\text{\texttt{#1}}}
+% \usepackage{xpatch}
+% \DeclareMathVersion{ttmath}
+%   \SetSymbolFont{letters}{ttmath}{OT1}{\ttdefault}{m}{n}
+% \xapptocmd{\ttfamily}{\mathversion{ttmath}}{}{}
+
 \setsecnumdepth{subsubsection}
 
 % Advice: only write into subsection?
-\setsecheadstyle{\large \raggedright \sffamily \bfseries}
-\setsubsecheadstyle{\raggedright \sffamily \bfseries} %\itshape
+\setsecheadstyle{\Large \raggedright \sffamily \bfseries}
+\setsubsecheadstyle{\large \raggedright \sffamily \bfseries} %\itshape
 \setsubsubsecheadstyle{\raggedright \sffamily \bfseries \itshape} 
 % \setparaheadstyle{\raggedright \itshape}
 
@@ -51,6 +58,7 @@
 % --- title page design -----------------------
 
 \usepackage{titling}
+% \pretitle{\LARGE}
 % \title{\LARGE \textsc{$title$} \\[3pt]
 %        \Large $subtitle$}
 \preauthor{\begin{center} \normalsize{By} \\[6pt]}
