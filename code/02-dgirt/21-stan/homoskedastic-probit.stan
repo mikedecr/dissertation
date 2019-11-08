@@ -44,10 +44,10 @@ data {
   int<lower = 1, upper = n_item> item[n];
 
   // hierarchical covariates
-  int k_d;              // num of district covariates
+  int<lower = 1> k_d;              // num of district covariates
   matrix[n, k_d] X;     // district covariate matrix
 
-  int k_s;              // num of state covariates
+  int<lower = 0> k_s;              // num of state covariates
   matrix[n, k_s] Z;     // state covariate matrix
 
   // no region covariates?
