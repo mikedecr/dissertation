@@ -170,6 +170,8 @@ transformed parameters {
       sqrt( square(sigma_in_g) + square(dispersion[item[i]]) );
   }
 
+  prob = Phi_approx(eta);
+
 }
 
 
@@ -177,7 +179,8 @@ transformed parameters {
 model {
  
   // ----- data model -----
-  y ~ binomial_logit(trials, eta);  // logit link!!!!
+  // y ~ binomial_logit(trials, eta);  // logit link!!!!
+  y ~ binomial(trials, prob);
   
 
   // ----- IRT params -----
