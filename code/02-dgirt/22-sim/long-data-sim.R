@@ -30,8 +30,8 @@ if (whoami == "decrescenzo") {
   pacman::p_unload(ggplot2) 
 }
 
-input_dir <- 61770486756
-mcmc_dir <- 80447647711
+input_dir <- 88879630028
+mcmc_dir <- 88879669159
 
 # ----------------------------------------------------
 #   Create data
@@ -123,9 +123,7 @@ params <-
 (params_to_save <- ls()[ls() %in% excludes == FALSE] )
 
 
-lapply(params_to_save, get) %>%
-  set_names(params_to_save) %>%
-  box_write(filename = "sim-params.RDS", dir_id = input_dir)
+
 
 
 
@@ -216,7 +214,7 @@ group_level <- district_level %>%
   print()
 
 
-box_write(group_level, "group-level-data.RDS", dir_id = input_dir)
+
 
 
 # hypermeans as f(covariates)
@@ -315,7 +313,7 @@ ij_level <-
   print()
 
 
-box_write(ij_level, "ij-level-data.RDS", dir_id = input_dir)
+
 
 
 if (whoami == "michaeldecrescenzo") {
@@ -413,19 +411,7 @@ dgirt <- function(model, data, ...) {
   )
 }
 
-# this needs to run from SSC?
-box_write(
-  x = list(
-    n_chains = n_chains, 
-    n_iterations = n_iterations, 
-    n_warmup = n_warmup, 
-    n_thin = n_thin,
-    adapt_delta = adapt_delta,
-    max_treedepth = max_treedepth
-  ), 
-  filename = "mcmc-params.RDS", 
-  dir_id = input_dir
-)
+
 
 # "theta", "cutpoint", "discrimination", "dispersion",
 # "sigma_in_g", "eta"
@@ -444,7 +430,8 @@ message("compiling models")
 # local stan file
 long_homsk <-
   stanc(
-    file = here("code", "02-dgirt", "21-stan", "long-homo-mlm.stan")
+    file = here("code", "02-dgirt", "21-stan", "homoskedastic-probit.stan")
+    # file = here("code", "02-dgirt", "21-stan", "long-homo-mlm.stan")
   ) %>%
   stan_model(stanc_ret = ., verbose = TRUE) %>%
   print()
@@ -486,16 +473,40 @@ message("models compiled")
 
 # same in data/sim-dgirt/mcmc
 mcmc_homsk <- dgirt(long_homsk, stan_data)
-boxr::box_write(mcmc_homsk, "test-homsk-stanfit.RDS", dir_id = mcmc_dir)
+boxr::box_write(mcmc_homsk, "test-probit.RDS", dir_id = mcmc_dir)
+# boxr::box_write(mcmc_homsk, "test-homsk-stanfit.RDS", dir_id = mcmc_dir)
 
-mcmc_het <- dgirt(long_het, stan_data)
-boxr::box_write(mcmc_het, "test-het-stanfit.Rds", dir_id = mcmc_dir)
+# mcmc_het <- dgirt(long_het, stan_data)
+# boxr::box_write(mcmc_het, "test-het-stanfit.Rds", dir_id = mcmc_dir)
 beepr::beep(2)
 
 # mcmc_het
 
 
 stop()
+
+# ---- save data -----------------------
+lapply(params_to_save, get) %>%
+  set_names(params_to_save) %>%
+  box_write(filename = "sim-params.RDS", dir_id = input_dir)
+
+box_write(group_level, "group-level-data.RDS", dir_id = input_dir)
+
+box_write(ij_level, "ij-level-data.RDS", dir_id = input_dir)
+
+# this needs to run from SSC?
+box_write(
+  x = list(
+    n_chains = n_chains, 
+    n_iterations = n_iterations, 
+    n_warmup = n_warmup, 
+    n_thin = n_thin,
+    adapt_delta = adapt_delta,
+    max_treedepth = max_treedepth
+  ), 
+  filename = "mcmc-params.RDS", 
+  dir_id = input_dir
+)
 
 # ---- things to think about -----------------------
 # When you eventually run this, maybe you should run it in stages
