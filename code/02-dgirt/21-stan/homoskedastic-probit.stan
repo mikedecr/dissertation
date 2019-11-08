@@ -113,7 +113,7 @@ transformed parameters {
   vector<lower = 0>[n_item] dispersion;
 
   // vector[n] eta2; // normal CDF
-  // vector<lower = 0, upper = 1>[n] pprob; // normal CDF
+  vector<lower = 0, upper = 1>[n] pprob; // normal CDF
 
   // --- hierarchical regressions ---
   // theta regression
@@ -170,7 +170,7 @@ transformed parameters {
       sqrt( square(sigma_in_g) + square(dispersion[item[i]]) );
   }
 
-  prob = Phi_approx(eta);
+  pprob = Phi_approx(eta);
 
 }
 
@@ -180,7 +180,7 @@ model {
  
   // ----- data model -----
   // y ~ binomial_logit(trials, eta);  // logit link!!!!
-  y ~ binomial(trials, prob);
+  y ~ binomial(trials, pprob);
   
 
   // ----- IRT params -----
