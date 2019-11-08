@@ -121,8 +121,6 @@ The choice of quadratic loss implies a utility function over the *squared distan
 \end{align}
 where $e^{\mathtt{R}}_{ij}$ and $e^{\mathtt{L}}_{ij}$ are the idiosyncratic error terms for the Right and Left alternatives, respectively. I sometimes refer to the quadratic utility loss as the "deterministic" component of the Actor's utility function, while the idiosyncratic error terms are "stochastic" components.
 
-
-
 ```{r plot-utility}
 utility_plot +
   geom_line(
@@ -727,7 +725,7 @@ MCMC algorithms evaluate the right-side of this proportionality at each iteratio
 
 In the current case, it is the probability of the data $\log p(y \mid \theta)$ that presents a problem. The Binomial log likelihood function as written in Stan will not accept non-integer data, so I rewrite the kernel of the Binomial log likelihood,
 \begin{align}
-  \log p\left(y \mid \theta\right) \propto s^{*}_{gj} \log \pi_{gj} + \left(n_{gj}^{*} - s^{*}_{gj}\right) \log \left(1 -\pi_{gj}\right)
+  \log p\left(s^{*}_{gj} \mid \pi_{gj} \right) \propto s^{*}_{gj} \log \pi_{gj} + \left(n_{gj}^{*} - s^{*}_{gj}\right) \log \left(1 -\pi_{gj}\right)
   (\#eq:weighted-ll-raw)
 \end{align}
 where the number of trials $n_{gj}^{*}$ and the number of successes $s^{*}_{gj}$ can take non-integer values. This is the same approach that @ghitza-gelman:2013:subgroup-mrp take in a frequentist maximum likelihood context.^[
@@ -838,11 +836,11 @@ I specify priors for the unscaled item cutpoints and difficulties that are Norma
     e^{\iota_{j}^{*}} 
   \end{bmatrix}
   &\sim 
-  \mathrm{Normal}\left(\overrightarrow{\bm{\mu}}, \bm{\Sigma}\right)
+  \mathrm{Normal}\left(\bm{\mu}, \bm{\Sigma}\right)
 \end{align}
-where $\overrightarrow{\bm{\mu}}$ is a vector of means and $\bm{\Sigma}$ is a variance-covariance matrix. I give independent Normal hyperpriors to the means and an LKJ prior to the variance-covariance matrix [@LKJ:2009:correlation-matrices],
+where $\bm{\mu}$ is a vector of means and $\bm{\Sigma}$ is a variance-covariance matrix. I give independent Normal hyperpriors to the means and an LKJ prior to the variance-covariance matrix [@LKJ:2009:correlation-matrices],
 \begin{align}
-  \overrightarrow{\bm{\mu}} &\sim 
+  \bm{\mu} &\sim 
     \mathrm{Normal}\left( 
       \begin{bmatrix} 0 \\ 0 \end{bmatrix}, 
       \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} 
@@ -857,4 +855,3 @@ Constants and Coefficients for hierarchical regressions are given $\mathrm{Norma
 ### Dynamic Model {#sec:dynamic-model}
 
 TBD.
-
