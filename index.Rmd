@@ -6,9 +6,10 @@ title: "Do Primaries Work?"
 subtitle: "Nomination Politics and the Representation of Local Partisan Preferences" 
 author: "Michael G. DeCrescenzo"
 date: |
-  | `r if (knitr::is_latex_output()) "IDK some fuckin day" else if (knitr::is_html_output()) stringr::str_glue("Compiled {format(Sys.time(), '%B %d, %Y: %H:%M')}")`
+  | `r if (knitr::is_latex_output()) "IDK yet" else if (knitr::is_html_output()) stringr::str_glue("Compiled {format(Sys.time(), '%B %d, %Y: %H:%M')}")`
 #  `r format(Sys.time(), "%B %d, %Y: %H:%M")` 
 site: "bookdown::bookdown_site"
+github-repo: "mikedecr/dissertation"
 
 # annoying top-level LaTeX control
 documentclass: memoir

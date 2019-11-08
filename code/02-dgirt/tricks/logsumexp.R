@@ -28,6 +28,24 @@ d <-
   ) %>%
   print()
 
+# robust addition: 
+log_sum_exp <- function(u, v) {
+  max(u, v) + log(exp(u - max(u, v)) + exp(v - max(u, v)))
+}
+
+robust_link <- function(x) {
+  plogis(log_sum_exp(0.07056 * x^(3), 1.5976 * x))
+}
+
+
+d %>%
+  mutate(
+    robust_add = log_sum_exp(0.07056 * link_prob^(3), 1.5976 * link_prob),
+    robust_link = plogis(robust_add)
+  )
+  
+
+
 approx_link <- function(x) {
   (0.07056 * x^(3)) + (1.5976 * x)
 }
@@ -53,12 +71,11 @@ log_prob <- function(x, y, n) {
   y * log1m(link_star) + (n - y) * log1m(link_star_m)
 }
 
-d %$%
-  log1p(link_p)
+d %$% log1p(link_prob)
 
 d %>%
   mutate(
-    log_prob_mgd = log_prob(x = link_p, y = y, n = 1)
+    log_prob_mgd = log_prob(x = link_prob, y = y, n = 1)
   )
   
 

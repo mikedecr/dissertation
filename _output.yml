@@ -7,6 +7,8 @@ bookdown::gitbook:
   number_sections: true
   fig_caption: true
   dev: png
+  # mathjax: "/Applications/RStudio.app/Contents/Resources/resources/mathjax-26/MathJax.js" 
+  # bug? https://github.com/rstudio/rmarkdown/issues/1283
   lib_dir: "_assets-gitbook"
   config: 
     # search: yes

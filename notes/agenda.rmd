@@ -13,12 +13,13 @@ title: Overall thesis notes
     - [ ] Mike meeting
     - [ ] Nadav meeting
 - Ask Alex about: 
-    - [x] variance of normal/logistic in formal model
+    - [ ] weighting questions:
+        - can we calculate weighted $s^{*}$ without going through $\bar{y}^{*}$
+        - notation for the hierarchical model and cell weights? i in some set? s[g]?
     - [x] hierarchical priors for item parameters?
         - CW do *not* do this
         - Alex says: multivariate normal because they'll be correlated
     - [ ] identifiability in heteroskedastic model (Londregan?)
-    - [ ] addition of group variance in IRT model with a LOGIT?
 - Paper fixes
     - [ ] vector form covariates in model math section
     - [ ] IRT model from formal assumptions

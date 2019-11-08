@@ -7,7 +7,6 @@
 # - functions (include rmd, smarter_number)
 # - call other helpers [graphics theme, symlink data]
 
-
 # Default chunk options for all chapters
 # file stems are appended to cache and fig paths
 knitr::opts_chunk$set(
