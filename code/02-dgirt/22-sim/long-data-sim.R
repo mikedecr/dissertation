@@ -386,8 +386,8 @@ lapply(stan_data, dim)
 
 
 # ---- sampler hyperparameters -----------------------
-# leave one core open
-n_chains <- min(c(parallel::detectCores() - 1, 10))
+# leave one core open on home machine
+n_chains <- min(c(parallel::detectCores() - 1, 5))
 n_iterations <- 1500
 n_warmup <- 1000
 n_thin <- 1
@@ -483,7 +483,6 @@ beepr::beep(2)
 # mcmc_het
 
 
-stop()
 
 # ---- save data -----------------------
 lapply(params_to_save, get) %>%
@@ -507,6 +506,11 @@ box_write(
   filename = "mcmc-params.RDS", 
   dir_id = input_dir
 )
+
+
+# ---- stopping -----------------------
+stop()
+
 
 # ---- things to think about -----------------------
 # When you eventually run this, maybe you should run it in stages
