@@ -6,7 +6,7 @@
 # replications/
 # data/cces-cdf
 
-# start by hiding data to be save
+# start by hiding data to be safe
 data/*
 
 # set up a script to get data folders
@@ -198,3 +198,4 @@ MGD-thesis.rds
 render*.rds
 *.utf8.md
 tmp-pdfcrop-86118.tex
+Barry-ch-2.pdf
