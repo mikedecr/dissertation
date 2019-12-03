@@ -53,7 +53,10 @@ bookdown::serve_book(
   in_session = TRUE, 
   quiet = FALSE
 )
-# servr::daemon_stop() 
+```
+
+```{r stop-server, eval = FALSE, cache = FALSE, include = FALSE}
+servr::daemon_stop()
 ```
 
 ```{r render-PDF, eval = FALSE, cache = FALSE, include = FALSE}

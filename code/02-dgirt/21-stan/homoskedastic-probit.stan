@@ -8,14 +8,12 @@
 // then: grouped response data & matrix of covariates
 
 // to do:
-// - [x] hyper theta (noncentered)
 // - [ ] implement a to-do code (¿¿??) 
-// - [ ] identification in GenQ block?
 // - [ ] expando model algebra (likelihood as a grid?)
-// - [ ] dispersion vs discrimination?
-// - [ ] hyper sigma (noncentered)
 // - [ ] flexi priors (intercept, what else?)
 // - [ ] mvnorm hierarchical coefs?
+// - [ ] mvnorm item params?
+    // read the text, exponential priors, lkj on the correlation
 // - [ ] missing data? is this needed?
 // - [ ] dynamics (REVERSE) random walk?
 
@@ -51,11 +49,9 @@ data {
   matrix[n, k_s] Z;     // state covariate matrix
 
   // no region covariates?
-  // int k_r
-  // matrix W
+  // int k_r; // matrix W;
 
   // ¿? n vs. n_* rows? How to deal with this in params
-
 
   // ---- prior data ----
   // theta means
@@ -63,7 +59,6 @@ data {
 
 }
 
-// transformed data {}
 
 parameters {
  
@@ -106,14 +101,13 @@ parameters {
 transformed parameters {
 
   // item response model
+  vector<lower = 0, upper = 1>[n] pprob;       // normal CDF
   vector[n] eta;                               // link scale index
   vector[n_group] theta;                       // group mean
   vector[n_item] cutpoint;                     // identified cutpoint
   vector<lower = 0>[n_item] discrimination;    // identified discrimination
   vector<lower = 0>[n_item] dispersion;
 
-  // vector[n] eta2; // normal CDF
-  vector<lower = 0, upper = 1>[n] pprob; // normal CDF
 
   // --- hierarchical regressions ---
   // theta regression
@@ -179,9 +173,15 @@ transformed parameters {
 model {
  
   // ----- data model -----
-  // y ~ binomial_logit(trials, eta);  // logit link!!!!
   y ~ binomial(trials, pprob);
+
+  // weighted likelihood
+  // target += y .* log(pprob) + (trials - y) .* log(1 - pprob);
+
+  // logit link
+  // y ~ binomial_logit(trials, eta);  
   
+
 
   // ----- IRT params -----
   disc_raw ~ lognormal(0, 2); // item params: static for now?

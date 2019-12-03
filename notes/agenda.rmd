@@ -4,6 +4,8 @@ title: Overall thesis notes
 
 # Today
 
+_left off at LKJ_
+
 - Bureaucracy:
     - [ ] More goal-setting for more spread-out meetings
     - [ ] Barry meeting
@@ -13,6 +15,7 @@ title: Overall thesis notes
     - [ ] Mike meeting
     - [ ] Nadav meeting
 - Ask Alex about: 
+    - [ ] remembering districts(?) we don't have a lag on the previous district value, only the geographic coefficients
     - [ ] weighting questions:
         - can we calculate weighted $s^{*}$ without going through $\bar{y}^{*}$
         - notation for the hierarchical model and cell weights? i in some set? s[g]?
@@ -33,19 +36,18 @@ title: Overall thesis notes
     - [ ] first references: MCMC, IRT, SPD
 - Code fixes
     - [ ] log1m/log1p functions for probit link
-    - [ ] offline mathjax
-    - [ ] if a chapter is rendered in a fresh env, the first thing it caches (what did this mean)
-    - [ ] dir paths go into a modular file? (still needed?)
     - [ ] which params can we avoid saving (in simulation)?
+    - [ ] dir paths go into a modular file?
     - [ ] move estimation from "combine data" into sampling file
     - [ ] hack to the end of the simulation exercise
+    - [ ] offline mathjax
     - [ ] simulation: within-district variance should be an afterthought after the distribution of averages...
         - variance within group should be greater than between
         - does this mean that the exercise is dumb?
 - [ ] substance
     - candidates fear idiosyncratic issues
     - reinterpret all questions as interview questions or news questions rather than as job talk questions
-- [ ] LICENSE
+- [ ] LICENSE?
 
 
 
