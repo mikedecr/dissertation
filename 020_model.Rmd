@@ -19,9 +19,15 @@ library("tidyverse")
 library("extrafont")
 library("latex2exp")
 library("scales")
+library("patchwork")
 ```
 
 To study how partisan constituencies are represented in primary elections, we require a measure of the partisan constituency's policy preferences. This chapter presents the statistical model that I use to estimate the policy ideal points of district-party publics. 
+<!------- TO DO ---------
+- first references
+- what is "constituency?" voters? just partisans?
+- What is "district-party"
+------------------------->
 
 This chapter proceeds in three major steps. First, I review the theoretical basis for ideal point models, which can be traced to spatial models of policy choice from classic formal theory work in American political science such as @downs:1957:economic-theory. I connect these formal models to statistical models of policy ideal points [in a style that follows @clinton-jackman-rivers:2004:ideal] as well as their connection to Item Response Theory (IRT) models from psychometrics and education testing [e.g. @fox:2010:bayesian-IRT].
 
@@ -43,7 +49,7 @@ Lastly, I describe how I fit the model to real data. This section describes data
 
 <!-- goal: spatial >> IRT >> Parameterizations -->
 
-Ideal points are constructs from *spatial* models of political choice. These models exist under formal theory---they simplify scenarios in the political world into sets of actors whose behaviors obey utility functions that conform to mathematical assumptions. Spatial models invoke a concept of "policy space," where possible policy outcomes are represented as locations along a number line or a multidimensional plane. A canonical example is a left-right continuum, where progressive or "liberal" policies occupy locations on the left side of the continuum, while conservative policies are on the right side. Depending on the scenario, actors of various types (voters, legislators, executives...) have to choose policy outcomes that result from their interactions with other players. Actors are at least partially motivated by their policy preferences, so they strive to achieve policy outcomes that they prefer. Sometimes these actors' face constrained choices---they can't achieve their most-preferred policy, so they settle on something that is as close as they can get.
+Ideal points are constructs from *spatial* models of political choice. These models exist under formal theory---they simplify scenarios in the political world into sets of actors whose behaviors obey utility functions that conform to mathematical assumptions. Spatial models invoke a concept of "policy space," where actor preferences and potential policy outcomes are represented as locations along a number line. A canonical example is a left-right continuum, where progressive or "liberal" policies occupy locations on the left side of the continuum, while conservative policies are on the right side. Actors are at least partially motivated by their policy preferences, so they strive to achieve policy outcomes that are closest to their own locations. Depending on the structure of the game, these actors often face constrained choices; they can't achieve their most-preferred policy, so they settle on something that is as close as they can get.
 
 ```{r spatial-data}
 dd <- tibble(
@@ -86,7 +92,7 @@ utility_plot
 
 Figure&nbsp;\@ref(fig:plot-space-1) plots a simple example of an Actor's choice over two policies in one-dimensional policy space. The "Left" outcome is a more progressive policy outcome than the "Right" outcome, indicated by their locations on the line. The Actor has a location herself, which corresponds to her most-desired policy outcome. There is no policy located exactly at the Actor's preferred location, but the Actor is closer to the Right policy than to the Left. Supposing that the Actor could make an error-free choice over which policy to implement, it appears she would prefer the Right outcome to the Left outcome.
 
-Formal models are more careful to specify the assumptions governing these scenarios, which can be complicated in many cases. For example, suppose that locations along the left-right continuum can be assigned values on the real number line. Figure&nbsp;\@ref(fig:plot-space-1) shows a one-dimensional number line, but policies can be generally represented as locations in multidimensional $\mathbb{R}^{d}$ space. The Actor's location is synonymous with her "ideal point," her most-preferred policy. This is the point where the Actor's utility, in an economic utility model, is maximized with respect to policy considerations. Utility implies that the Actor has a utility function that is defined over the policy space; the Actor's realized utility depends on the distance between her ideal point and a potential policy outcome. Outcomes nearer to the Actor's ideal point are generally more preferred than farther outcomes, but this too is subject to assumptions about the shape of the Actor's utility function. Typically utility functions are assumed to be symmetric around an Actor's ideal point, so the "closer" policy is always more preferred, all else equal. The notion of an ideal point is similar to a "bliss point" in microeconomics: the quantity of a good consumed such that *more* consumption would result in *less* overall utility. Whether an Actor can choose the closest policy to herself depends on the structure of the game: the presence and strategy profiles of other Actors, the sequence of play, and the presence of other non-policy features of Actors' utility functions.
+Formal models are more careful to specify the assumptions governing these scenarios, which can be complicated in many cases. For example, suppose that locations along the left-right continuum can be assigned values on the real number line. Figure&nbsp;\@ref(fig:plot-space-1) shows a one-dimensional number line, but policies can be generally represented as locations in multidimensional $\mathbb{R}^{d}$ space. The Actor's location is synonymous with her most preferred policy: her "ideal point." This is the point where the Actor's utility, in an economic utility model, is maximized with respect to policy considerations. Utility implies that the Actor has a utility function that is defined over the policy space, which depends on the distance between her ideal point and a potential policy outcome. Outcomes nearer to the Actor's ideal point are generally more preferred than farther outcomes, but this too is subject to assumptions about the shape of the Actor's utility function. Typically utility functions are assumed to be single-peaked and symmetric around an Actor's ideal point, so a closer policy is always more preferred, all else equal. The notion of an ideal point is similar to a "bliss point" in microeconomics: the optimal quantity of a good consumed such that any more or less consumption would result in decreased utility. Whether an Actor can choose the closest policy to herself depends on the structure of the game: the presence and strategy profiles of other Actors, the sequence of play, and the presence of other non-policy features of Actors' utility functions.
 
 <!-- to do: $d$ cite -->
 <!-- canonical cite for the or the notion of policy dimensions? -->
@@ -105,7 +111,7 @@ Formal models of ideal points are distinct from statistical models of ideal poin
 
 Having distinguished formal and statistical models, I now show a derivation of a statistical model from a formal model. This exercise model will serve as a theoretical basis for the class of statistical models explored in this dissertation. I begin with notation to describe an arbitrary number of actors indexed $i \in \{1, \ldots, n\}$ making an arbitrary number of policy choices (bills, survey items, etc.) indexed $j \in \{1, \ldots, J\}$. Every Actor has an ideal point, or a location in the policy space, represented by $\theta_{i}$. Every task is choice between a Left policy located at $L_{j}$ and a Right policy located at $R_{j}$. 
 
-The utility that an Actor receives from a Left or Right choice is a function of the distance between her ideal point and the respective choice location---utility is maximized if an Actor can choose a policy located exactly on her ideal point, and utility is "lost" for choices farther and farther from her ideal point. The functional form of utility loss is an assumption made by the researcher---some scholars assume that utility loss follows a Gaussian curve, while others choose a quadratic utility loss [@clinton-jackman-rivers:2004:ideal]. For this analysis, I assume a quadratic utility loss.^[
+The utility that an Actor receives from a Left or Right choice is a function of the distance between her ideal point and the respective choice location. Utility is maximized if an Actor can choose a policy located exactly on her ideal point, and utility is "lost" for choices farther and farther from her ideal point. The functional form of utility loss is an assumption made by the researcher. Some scholars assume that utility loss follows a Gaussian curve, while others choose a quadratic utility loss [@clinton-jackman-rivers:2004:ideal]. For this analysis, I assume a quadratic utility loss.^[
   Researchers typically avoid linear losses for technical reasons: a linear utility loss function is non-differentiable at the ideal point because function comes to a point. This prevents the researcher from using differential calculus to find a point of maximum utility.
 ]
 <!------- TO DO ---------
@@ -153,7 +159,7 @@ To visualize this choice, I represent the deterministic components of Equation&n
 ```{r plot-utility, include = TRUE, fig.height = 2, fig.width = 8, out.width = "100%", fig.cap = "A representation of quadratic utility loss over policy choices"}
 ```
 
-It is important to remember that Figure&nbsp;\@ref(fig:plot-utility) shows only the deterministic component of choice task $j$; random error components $u^{\mathtt{R}}_{ij}$ and $u^{\mathtt{L}}_{ij}$ are omitted. With idiosyncratic utility error incorporated, Equation&nbsp;\@ref(eq:choice-iff) implies that even though the Actor's distance to Right is smaller than her distance to Left, there is still a probability that $i$ chooses Left. This probability depends on the instantiated values of the idiosyncratic error terms for each choice. These error terms represent the accumulation of several possible, non-ideological shocks to utility: random misperceptions about the policy locations, domain-specific considerations about a choice that aren't summarized by ideology, and so on. Supposing that these idiosyncratic terms follow some probability distribution, Equation&nbsp;\@ref(eq:choice-iff) can be represented probabilistically:
+It is important to remember that Figure&nbsp;\@ref(fig:plot-utility) shows only the deterministic component of choice task $j$; random error components $u^{\mathtt{R}}_{ij}$ and $u^{\mathtt{L}}_{ij}$ are omitted. With idiosyncratic utility error incorporated, Equation&nbsp;\@ref(eq:choice-iff) implies that even though the Actor's distance to Right is smaller than her distance to Left, there remains a nonzero probability that $i$ chooses Left. This probability depends on the instantiated values of the idiosyncratic error terms for each choice. These error terms represent the accumulation of several possible, non-ideological shocks to utility: systematic decision factors that are not summarized by ideology, issue-specific considerations that do not apply broadly across all issues, random misperceptions about the policy locations, and so on. Supposing that these idiosyncratic terms follow some probability distribution, Equation&nbsp;\@ref(eq:choice-iff) can be represented probabilistically:
 \begin{align}
   \begin{split}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
@@ -171,12 +177,11 @@ It is important to remember that Figure&nbsp;\@ref(fig:plot-utility) shows only 
 \end{split}
 (\#eq:choice-prob)
 \end{align}  
-The intuition for Equation&nbsp;\@ref(eq:choice-prob) is that the Actor will choose the policy alternative that is nearest to her *unless* idiosyncratic (non-policy) factors overcome her ideological considerations. Supposing that the Actor is closer to Right than to Left, $\left( \theta_{i} - L_{j}\right)^{2}$ will be greater than $\left( \theta_{i} - R_{j}\right)^{2}$, capturing the Actor's deterministic inclination to prefer Right over Left. The only way for $i$ to choose Left would be if the idiosyncratic utility of Left over Right exceeded the Actor's deterministic inclinations.
+The intuition for Equation&nbsp;\@ref(eq:choice-prob) is that the Actor will choose the policy alternative that is nearest to her *unless* idiosyncratic or non-policy factors overcome her ideological considerations. Supposing that the Actor is closer to Right than to Left, $\left( \theta_{i} - L_{j}\right)^{2}$ will be greater than $\left( \theta_{i} - R_{j}\right)^{2}$, capturing the Actor's deterministic inclination to prefer Right over Left. The only way for $i$ to choose Left would be if the idiosyncratic utility of Left over Right exceeded the Actor's deterministic inclinations.
   <!-- to do: assumes? -->
 <!-- Note that the model so far assumes only that utility loss is quadratic over the ideological space and that the "coefficient" on the quadratic loss is equal for the distances to both Left and Right.  -->
 
-
-Equation&nbsp;\@ref(eq:choice-prob) can be rearranged to reveal an appealing appealing functional form for $i$'s choice probability. First, expand the polynomial terms on the left side of the inequality...
+Equation&nbsp;\@ref(eq:choice-prob) can be rearranged to reveal an appealing functional form for $i$'s choice probability. First, expand the polynomial terms on the left side of the inequality...
 \begin{align}
 \begin{split}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
@@ -223,7 +228,9 @@ From here, there are two factorizations that reveal convenient expressions for i
 \end{split}
 (\#eq:factor-item-params)
 \end{align}
-The first manipulation is to decompose $L_{j}^{2} - R_{j}^{2}$ into the two factors $\left(R_{j} - L_{j}\right)\left(R_{j} + L_{j}\right)$. The second manipulation is to factor $2\left(R_{j} - L_{j}\right)$ out of the left-side of the inequality. We perform these manipulations because the resulting terms are appreciably more interpretable than before. First, note that $\frac{R_{j} + L_{j}}{2}$ is a formula for the midpoint between the Left and Right locations. This means that the expression $\theta_{i} - \frac{R_{j} + L_{j}}{2}$ intuitively conveys which policy alternative is closer to the Actor. If the Actor is closer to Right than to Left, $\theta_{i}$ will be greater than the midpoint, and vice versa if she were closer to Left. Second, the $2\left(R_{j} - L_{j}\right)$ term captures how far apart the policy alternatives are from one another, increasing as the distance between Right and Left increases. Together, the left side of the inequality succinctly describes the deterministic component of the Actor's ideological choice: is she closer to the Left or Right policy, and by how much?
+The first manipulation is to decompose $L_{j}^{2} - R_{j}^{2}$ into the two factors $\left(R_{j} - L_{j}\right)\left(R_{j} + L_{j}\right)$. The second manipulation is to factor $2\left(R_{j} - L_{j}\right)$ out of the left-side of the inequality. We perform these manipulations because the resulting terms are appreciably more interpretable than before. First, note that $\frac{R_{j} + L_{j}}{2}$ is a formula for the midpoint between the Left and Right locations. This means that the expression $\theta_{i} - \frac{R_{j} + L_{j}}{2}$ intuitively conveys which policy alternative is closer to the Actor. If the Actor is closer to Right than to Left, $\theta_{i}$ will be greater than the midpoint, and vice versa if she were closer to Left. Second, the $2\left(R_{j} - L_{j}\right)$ term captures how far apart the policy alternatives are from one another, increasing as the distance between Right and Left increases. Together, the left side of the inequality succinctly describes the deterministic component of the Actor's ideological choice: is she closer to the Left or Right policy, and by how much?^[
+  @ansolabehere-et-al:2001:candidate-positioning and @burden:2004:candidate-positioning use candidate midpoints as predictors in regression analyses to estimate the impact of candidate ideal points in House elections.
+]
 
 The final manipulation is to simplify the terms above, which results in a convenient parameterization for statistical estimation.
 \begin{align}
@@ -287,11 +294,14 @@ Scholars of ideal point models have noted their similarity to models developed u
 
 #### Latent Traits
 
-The first important feature to note about IRT models is that they are *measurement models*. The goal of a measurement model is to use observed data $\mathbf{y}$ to estimate some construct of theoretical interest $\bm{\theta}$, supposing that there is a distinction between the two. The observed data $\mathbf{y}$ are affected by $bm{\theta}$, but there is no guarantee of a one-to-one correspondence between the two because $\bm{\theta}$ is not directly observed. We can represent a measurement model with general notation $\mathbf{y} = f(\bm{\theta}, \bm{\sigma})$, where $\bm{\sigma}$ represents some vector of auxiliary model parameters to be estimated in addition to $\bm{\theta}$ by fitting the model to observed data.
+The first important feature to note about IRT models is that they are *measurement models*. The goal of a measurement model is to use observed data $\mathbf{y}$ to estimate some construct of theoretical interest $\bm{\theta}$, supposing that there is a distinction between the two. The observed data $\mathbf{y}$ are affected by $\bm{\theta}$, but there is no guarantee of a one-to-one correspondence between the two because $\bm{\theta}$ is not directly observed. We can represent a measurement model with general notation $\mathbf{y} = f(\bm{\theta}, \bm{\sigma})$, where $\bm{\sigma}$ represents some vector of auxiliary model parameters to be estimated in addition to $\bm{\theta}$ by fitting the model to observed data.
 
-In an educational testing context, students take standardized tests intended to measure their academic "ability" levels. Analysts who score the tests cannot observe a student's ability directly---it isn't clear how that would be possible. They do, however, observe the student's answers to known test questions. IRT models provides a structure to infer abilities from the student's pattern of test answers. The context of policy choice is similar. It is impossible to observe any individual's political ideology directly, but we theorize that it affects their responses to survey items about policy choices. The IRT setup lets us summarize an individual's policy preferences by analyzing the structure of their responses to various policy choices.
+In an educational testing context, students take standardized tests intended to measure their academic "ability" levels. Analysts who score the tests cannot observe a student's ability directly---it is unclear how that would be possible. They do, however, observe the student's answers to known test questions. IRT models provides a structure to infer abilities from the student's pattern of test answers. The context of policy choice is similar. It is impossible to observe any individual's political ideology directly, but we theorize that it affects their responses to survey items about policy choices. The IRT setup lets us summarize an individual's policy preferences by analyzing the structure of their responses to various policy choices.
 
-It is crucial to note that the only way to estimate a latent construct from observed data is for the model to impose assumptions about the functional relationship between the latent construct and the observed data. In this sense, the estimates can be sensitive to the model's assumptions. While this is always important to acknowledge, it is also valuable to note that model-dependence is an ever-present consideration even for simpler measurement strategies, such as an additive index that sums or averages across a battery of variables. In fact, additive indices can be written as limiting cases of measurement model where key parameters are assumed to be known and fixed. In this way, measurement models *relax* the assumptions of simpler measurement strategies, even if the underlying mathematics are more intensive. The impulse to view measurement models as stacking "additional" assumptions atop a simpler measurement strategy is generally backward.
+It is crucial to note that the only way to estimate a latent construct from observed data is for the model to impose assumptions about the functional relationship between the latent construct and the observed data. In this sense, the estimates can be sensitive to the model's assumptions. While this is always important to acknowledge, it is also valuable to note that model-dependence is an ever-present consideration even for simpler measurement strategies, such as an additive index that sums or averages across a battery of variables. In fact, additive indices are special cases of measurement model where key parameters are assumed to be known and fixed, which is problematic if there is any reason to suspect that item responses are correlated across individuals.^[
+  Midpoint and discrimination parameters would be sources of this correlation. Additive indices are similar to a model where all all midpoint and discrimination are respectively equal to $0$ and $1$ by assumption.
+]
+In this way, measurement models *relax* the assumptions of simpler measurement strategies, even if the underlying mathematics are more intensive. 
 
 <!------- TO DO ---------
 - Literature about "ideology" (Clinton piece?)
@@ -360,18 +370,20 @@ ex_iccs <- ex_item_params %>%
   print()
 ```
 
-Measurement models are meant to relax assumptions about the data's functional dependence on the construct of interest. Item response theory focuses this effort on the items to which subjects respond. Different items may reveal different information about the latent construct; the design of the model governs how those item differences can manifest [see @fox:2010:bayesian-IRT for a comprehensive review of IRT modeling].
+Measurement models relax assumptions about the data's functional dependence on the construct of interest. Item response theory focuses this effort on the items to which subjects respond. Different items may reveal different information about the latent construct; the design of the model governs how those item differences can manifest [see @fox:2010:bayesian-IRT for a comprehensive review of IRT modeling].
 
-Consider a simple model where a student $i$ is more likely to answer test questions $j$ correctly if she has greater academic ability $\theta_{i}$. Analogously, a citizen who is more conservative is more likely to voice conservative preferences for policy question $j$. Keeping the logistic functional form from above, we can represent this simple model with the equation:
+Consider a simple model where a student $i$ is more likely to answer test questions $j$ correctly if she has greater academic ability $\theta_{i}$. Analogously, a citizen who is more conservative is more likely to express conservative preferences for policy question $j$. Keeping the probit functional form from above, we can represent this simple model with the equation:
 \begin{align}
   \mathrm{Pr}\left( y_{ij} = 1 \right) &= 
   \Phi\left(\theta_{i}\right),
   (\#eq:ability-only)
 \end{align}
-where $\theta_{i}$ is scaled such that the probability of a correct/conservative response is $0.5$ at $\theta_{i} = 0$. This model makes the implicit assumption that knowing $\theta_{i}$ is sufficient to produce exchangeable response data; there are no systematic differences in the difficulty level of the test questions or the ideological nature of the policy choices that would affect the propensity of subjects to answer correctly/conservatively on average. This implicit assumption is obviously unrealistic. Just as some test questions are naturally more difficult than others, some policy questions present more extreme or lopsided choices than others, leading citizens with otherwise equivalent $\theta$ values to vary systematically in their response probability across items. Although the "ability-only" model seems ridiculous when posed as such, political science is replete with additive measurement scales that imply the same basic structure that omits item-level variation: indices of policy views, the racial resentment scale, survey-based scales of political participation, and more.
+where $\theta_{i}$ is scaled such that the probability of a correct/conservative response is $0.5$ at $\theta_{i} = 0$. This model makes the implicit assumption that knowing $\theta_{i}$ is sufficient to produce exchangeable response data; there are no systematic differences in the difficulty level of the test questions or the ideological nature of the policy choices that would affect the propensity of subjects to answer correctly/conservatively on average. This implicit assumption is often unrealistic. Just as some test questions are naturally more difficult than others, some policy questions present more extreme or lopsided choices than others, leading citizens with otherwise equivalent $\theta$ values to vary systematically in their response probability across items. Although the "ability-only" model seems unrealistic when posed as such, political science is replete with additive measurement scales that omit all item-level variation: indices of policy views, the racial resentment scale, survey-based scales of political participation, and more.
 
-
-Rather than assume that all items behave identically for all individuals, IRT explicitly models the systematic variation at the item level using _item parameters._ IRT models have different behaviors based on the parameterization of the item effects in the model. The simplest IRT model is the "one-parameter" model, which includes an item-specific intercept $\kappa_{j}$.
+Rather than assume that all items behave identically for all individuals, IRT explicitly models the systematic variation at the item level using _item parameters._ IRT models have different behaviors based on the parameterization of the item effects in the model. The simplest IRT model is the "one-parameter" model,^[
+  One-parameter logit models are often called "Rasch" models, whereas their corresponding probit models are often called "Normal Ogive" models [@fox:2010:bayesian-IRT].
+]
+which includes an item-specific intercept $\kappa_{j}$.
 \begin{align}
   \mathrm{Pr}\left( y_{ij} = 1 \right) 
   &= \Phi\left(\theta_{i} - \kappa_{j}\right)
@@ -417,17 +429,10 @@ Figure&nbsp;\@ref(fig:plot-example-iccs) shows how response probabilities are af
 <!-- IRT model parameters -->
 #### IRT Interpretation of the Ideal Point Model
 
-How do we interpret our statistical model of ideal points in light of item response theory? Recall the statistical model that we derived from the utility model above. An Actor $i$ faces policy question $j$, with a Right alternative located at $R_{j}$ and a Left alternative located at $L_{j}$. The Actor chooses the alternative closest to her ideal point $\theta_{i}$, subject to idiosyncratic utility shocks summarized by $\epsilon_{ij}$. Letting $y_{ij}$ indicate the outcome that Actor $i$ chooses the Right position on policy question $j$, the probability that $y_{ij} = 1$ is given by
-\begin{align}
-  \mathrm{Pr}\left(y_{ij} = 1\right) &= 
-    \Phi\left( 
-      \iota_{j}\left(\theta_{i} - \kappa_{j}\right) 
-    \right)
-\end{align}
-where $\kappa_{j}$ represents the item cutpoint and $\iota_{j}$ represents the item discrimination.
+How do we interpret our statistical model of ideal points in light of item response theory? Recall the statistical model that we derived from the utility model above. An Actor $i$ faces policy question $j$, with a Right alternative located at $R_{j}$ and a Left alternative located at $L_{j}$. The Actor chooses the alternative closest to her ideal point $\theta_{i}$, subject to idiosyncratic utility shocks summarized by $\epsilon_{ij}$. Letting $y_{ij}$ indicate the outcome that Actor $i$ chooses the Right position on policy question $j$, the probability that $y_{ij} = 1$ is given by the two-parameter model in Equation&nbsp;\@ref(eq:2p-ogive) (or \@ref(eq:choice-2p) above).
 
 The behavior of the item parameters can be understood by remembering that they are functions of the Left and Right choice locations. For instance, the cutpoint parameter $\kappa_{j}$ represents an intercept shift for an items response function and is equal to $\dfrac{R_{j} + L_{j}}{2}$. Suppose that $\theta_{i} - \kappa_{j} = 0$, which occurs if the item cutpoint falls directly on an Actor's ideal point. In such a case, the Actor would be indifferent (in expectation) to the choice of Left or Right, and the probability of choosing Right would collapse to $0.5$.^[
-  This holds in logit and probit models, since $\mathrm{logit}^{-1}(0) = 0.5$ and $\Phi(0) = 0.5$.
+  This holds in logit and probit models, since $\mathrm{logit}^{-1}(0)$ and $\Phi(0)$ are both equal to $0.5$.
 ]
 The value of $\kappa_{j}$ increases by moving either the Right or Left alternatives to the right (increasing $R_{j}$ or $L_{j}$), subject to the constraint that $R_{j} \geq L_{j}$. Larger values of the item cutpoint imply a lower probability that the Actor chooses Right, since $\kappa_{j}$ has a non-positive effect on the conservative response probability.^[
   Formally we can show this by taking the derivative of the link function with respect to the cutpoint: $\dfrac{\partial \iota_{j}\left(\theta_{i} - \kappa_{j}\right)}{\partial \kappa_{j}} = -\iota_{j}$, where $\iota_{j}$ is constrained to be greater than or equal to zero
@@ -521,7 +526,7 @@ and model testing methods such as prior predictive checks and posterior predicti
 - clean this up
 ------------------------->
 
-So far we have modeled individual responses to policy items according to their own individual ideal points. In the group model, we assume that individual ideal points are distributed within a group $g$, where groups are define as the intersection of Congressional districts $d$ and political party affiliations $p$.
+So far we have modeled individual responses to policy items according to their own individual ideal points, but this project is concerned with the average ideal point of a _group_ of individuals. In the group model, we assume that individual ideal points are distributed within a group $g$, where groups are define as the intersection of congressional districts $d$ and political party affiliations $p$.
 
 As before, we observe a binary response from individual $i$ to item $j$, which we regard as a probabilistic conservative response with probability $\pi_{ij}$, which is given a probit model.
 \begin{align}
@@ -536,15 +541,16 @@ As before, we observe a binary response from individual $i$ to item $j$, which w
 - Is this Fox? or Mislevy?
 ------------------------->
 
-Following @fox:2010:bayesian-IRT and @caughey-warshaw:2015:DGIRT, it is helpful to reparameterize the IRT model to accommodate a group-level extension. Let $\sigma_{j} = \iota^{-1}_{j}$, referring to this new parameter as the item "dispersion" parameter. @caughey-warshaw:2015:DGIRT describe the dispersion parameter as introducing additional "measurement error" in $\pi_{ij}$ beyond the Normally distributed utility error from $\epsilon_{ij}$ above.
+Following @fox:2010:bayesian-IRT and @caughey-warshaw:2015:DGIRT, it is helpful to reparameterize the IRT model to accommodate a group-level extension. This parameterization replaces item "discrimination" with item "dispersion" using the parameter $\sigma_{j} = \iota^{-1}_{j}$ and rewriting the model as
 \begin{align}
   \pi_{ij} 
   &= 
-  \Phi\left(\frac{\theta_{i} - \kappa_{j}}{\sigma_{j}}\right)
+  \Phi\left(\frac{\theta_{i} - \kappa_{j}}{\sigma_{j}}\right).
   (\#eq:y-i-irt)
 \end{align}
+@caughey-warshaw:2015:DGIRT describe the dispersion parameter as introducing "measurement error" in $\pi_{ij}$ beyond the standard Normal utility error from $\epsilon_{ij}$ above.
 
-The group model begins with the notion that there is a probability distribution of ideal points within a group $g$, where a "group" is a partisan constituency within a Congressional district. Supposing that deviations from the group mean are realized by the accumulation of a large number of random forces, we can represent an individual ideal point as a Normal draw from the group,^[
+The group model begins with the notion that there is a probability distribution of ideal points within a group $g$, where a "group" is a partisan constituency within a congressional district. Supposing that individual deviations from the group mean are realized by the accumulation of a large number of random forces, we can represent an individual ideal point as a Normal draw from the group,^[
   Notation for Normal distributions will always describe the scale parameter in terms of standard deviation $\sigma$ instead of variance $\sigma^2$. This keeps the notation consistent with the way Normal distributions are expressed in Stan code.
 ]
 \begin{align}
@@ -554,7 +560,7 @@ The group model begins with the notion that there is a probability distribution 
 \end{align}
 where $\bar{\theta}_{g[i]}$ and $\sigma_{g[i]}$ are the mean and standard deviation of ideal points within $i$'s group $g$. 
 
-While it is possible to continue building the model hierarchically from \@ref(eq:theta-i-draw), it would be far too computationally expensive to estimate every individual's ideal point in additional to the group-level parameters---every individual ideal point is essentially a nuisance parameter. Instead, we rewrite the model by aggregating individual-level survey response data to the group level, expressing the grouped outcome data as a function of the group parameters. Let $s_{gj} = \sum\limits_{i \in g}^{n_{gj}} y_{ij}$, the number of conservative responses from group $g$ to item $j$, where $n_{gj}$ is the total number of responses (trials) of $j$ within group $g$. Supposing these trials were collected independently across groups and items, we could model the grouped outcome as a binomial random variable,
+While it is possible to continue building the model hierarchically from \@ref(eq:theta-i-draw), it would be far too computationally expensive to estimate every individual's ideal point in additional to the group-level parameters---every individual ideal point is essentially a nuisance parameter. Instead, we rewrite the model by aggregating individual-level survey response data to the group level, expressing the grouped outcome data as a function of the group parameters. Let $s_{gj} = \sum\limits_{i \in g}^{n_{gj}} y_{ij}$, the number of conservative responses from group $g$ to item $j$, where $n_{gj}$ is the total number of responses (trials) to item $j$ by members of group $g$. Supposing these trials were collected independently across groups and items (an assumption that is relaxed later), we could model the grouped outcome as a binomial random variable,
 \begin{align}
   \begin{split}
   s_{gj} &\sim 
@@ -573,7 +579,7 @@ where $\pi_{gj}$ is the probability that a randomly selected individual from gro
 - should I just rewrite it in my own style?
 ------------------------->
 
-The current setup assumes that every item response is independent, conditional on the group and the item. This assumption is violated if the same individuals in a group answer multiple items---one individual who answers `r smart_number(20)` items is less informative about the group average than `r smart_number(20)` who answer one item apiece. While this too could be addressed by explicitly modeling each individual's ideal point (extending the model directly from Equation&nbsp;\@ref(eq:theta-i-draw)), I implement a weighting routine that downweights information from repeated-subject observations while adjusting for nonrepresentative sample design, which I describe in Section&nbsp;\@ref(sec:model-weights).
+The current setup assumes that every item response is independent, conditional on the group and the item. This assumption is violated if the same individuals in a group answer multiple items---one individual who answers `r smart_number(20)` items is less informative about the group average than `r smart_number(20)` individuals who answer one item apiece. While this too could be addressed by explicitly modeling each individual's ideal point (extending the model directly from Equation&nbsp;\@ref(eq:theta-i-draw)), I implement a weighting routine that downweights information from repeated-subject observations while adjusting for nonrepresentative sample design, as I will describe in Section&nbsp;\@ref(sec:model-weights).
 
 <!------- TO DO ---------
 - I fix the rounding components here with my likelihood fix.
@@ -582,11 +588,11 @@ The current setup assumes that every item response is independent, conditional o
 
 ### Hierarchical Model for Group Parameters {#sec:geographic-model}
 
-The group model described so far can be estimated straightforwardly if there are enough responses from enough individuals in enough district-party groups. In practice, however, a single survey will not contain a representative sample of all Congressional districts, and certainty not a representative sample of partisans-within-districts. I specify a hierarchical model for the group parameters in order to stabilize the estimates in a principled way. The hierarchical models learns how group ideal points are related to cross-sectional (and eventually, over-time) 
+The group model described so far can be estimated straightforwardly if there are enough responses from enough individuals in enough district-party groups. In practice, however, a single survey will not contain a representative sample of all congressional districts, and certainty not a representative sample of partisans-within-districts. I specify a hierarchical model for the group parameters in order to stabilize the estimates in a principled way. The hierarchical model learns how group ideal points are related to cross-sectional (and eventually, over-time) 
 <!------- TO DO ---------
 - dynamics  
 ------------------------->
-variation in key covariates, borrowing strength from data-rich groups to stabilize estimates for data-sparse groups, and even imputing estimates for groups with no survey data at all. This section describes the multilevel structure using traditional notation for hierarchical models; later in Section&nbsp;\@ref(sec:stan-setup) I describe how I parameterize the model for improved estimation in Stan.
+variation in key covariates, borrowing strength from data-rich groups to stabilize estimates for data-sparse groups, and even imputing estimates for groups with no survey data at all. This section describes the multilevel structure using traditional notation for hierarchical models; later in Section&nbsp;\@ref(sec:stan-setup) I describe how I parameterize the model for the estimation routine.
 
 <!------- TO DO ---------
 - don't forget the fact that CW aren't non-centered?
@@ -594,30 +600,34 @@ variation in key covariates, borrowing strength from data-rich groups to stabili
 
 I posit a hierarchical structure where groups $g$ are "cross-classified" within districts $d$ and parties $p$. This means that groups are nested within districts and within parties, but districts and parties have no nesting relationship to one another. Districts are further nested within states $s$. I represent this notationally by referring to group $g$'s district as $d[g]$, or the $g$^th^ value of the vector $\mathbf{d}$. Similarly, $g$'s party is $p[g]$. For higher levels such as $g$'s state, I write $s[g]$ as shorthand for the more-specific but more-tedious $s[d[g]]$.
 
-I use this hierarchical structure to model the probability distribution of $\bar{\theta}_{g}$. I consider the group ideal point as a Normal draw from the distribution of groups whose hypermean is predicted by a regression on geographic-level data with parameters that are indexed by political party. This regression takes the form
+I use this hierarchical structure to model the probability distribution of group ideal points $\bar{\theta}_{g}$. I consider the group ideal point as a Normal draw from the distribution of groups whose hypermean is predicted by a regression on geographic-level data with parameters that are indexed by political party. This regression takes the form
 \begin{align}
   \bar{\theta}_{g} &\sim \mathrm{Normal}\left(
-    \mu_{0p[g]} + \mathbf{x}^{\intercal}_{d[g]}\beta_{p[g]} + \alpha^{\mathtt{state}}_{s[g]p[g]},
+    \mu_{p[g]} + \mathbf{x}^{\intercal}_{d[g]}\beta_{p[g]} + \alpha^{\mathtt{state}}_{s[g]p[g]},
     \sigma^{\mathtt{group}}_{p} %_
   \right) 
   (\#eq:theta-g-hlm)
 \end{align}
-where $\mu_{0p[g]}$ is a constant specific to party $p$,^[
+where $\mu_{p[g]}$ is a constant specific to party $p$,^[
   Or "grand mean," since all covariates are eventually be centered at their means.
 ]
-$\mathbf{x}_{d}$ is a vector of Congressional district-level covariates with party-specific coefficients $\beta_{p}$. State effects $\alpha^{\mathtt{state}}_{sp}$ are also specific to each party. The benefit of specifying separate parameters for each party is that geographic features (such as racial composition, income inequality, and so on) may be related to ideology in ways that are not identical across all parties. This is an important departure from the structure laid out by @caughey-warshaw:2015:DGIRT, which estimates the same set of geographic effects for all groups in the data.
+$\mathbf{x}_{d}$ is a vector of congressional district-level covariates with party-specific coefficients $\beta_{p}$. State effects $\alpha^{\mathtt{state}}_{sp}$ are also specific to each party. The benefit of specifying separate parameters for each party is that geographic features (such as racial composition, income inequality, and so on) may be related to ideology in ways that are not identical across all parties. This is an important departure from the structure laid out by @caughey-warshaw:2015:DGIRT, which estimates the same set of geographic effects for all groups in the data.
+<!------- TO DO ---------
+- Barry says to milk this, with an example maybe
+- I think perhaps preview to use the estimates from the model?
+------------------------->
 
 <!-- We use a similar hierarchical regression for group scales (suppressing the $g$ subscript which is implied by the combination of $d$ and $p$).
 \begin{align}
   \log \left( \sigma_{g} \right) 
   &\sim 
   \mathrm{Normal}\left( 
-    \delta_{0p} + X_{d}\delta_{p} + \eta_{sp}, 
+    \delta_{p} + X_{d}\delta_{p} + \eta_{sp}, 
     \psi_{\sigma}
   \right),
   (\#eq:sigma-g-draw)
 \end{align}
-where $\delta_{0p}$ represents constants for each party, $\delta_{p}$ is a party-specific vector of coefficients on district features, and $\eta_{sp}$ are party-specific state effects. -->
+where $\delta_{p}$ represents constants for each party, $\delta_{p}$ is a party-specific vector of coefficients on district features, and $\eta_{sp}$ are party-specific state effects. -->
 
 The state effects are regressions on state features as well,
 \begin{align}
@@ -647,7 +657,11 @@ for Census regions indexed $r$, which is a modeled mean-zero effect to capture c
 
 ### Weighted Outcome Data {#sec:model-weights}
 
-The group-level model learns about group ideal points by surveying individuals within groups, but the model currently assumes that all $y_{gj}$ are independent conditional on the item. If the same individuals answer multiple items, this assumption is violated. Additionally, we cannot assume that responses are independent in the presence of nonrepresentative survey designs. This section describes an approach for weighting group-level data that adjusts for both issues. The corrections are lifted from @caughey-warshaw:2015:DGIRT, but I am able to relax the constraint that resulting data must be integer valued.
+The group-level model learns about group ideal points by surveying individuals within groups, but the model currently assumes that all $y_{gj}$ are independent conditional on the item. If the same individuals answer multiple items, this assumption is violated. Additionally, we cannot assume that responses are independent in the presence of nonrepresentative survey designs. This section describes an approach for weighting group-level data that adjusts for both issues. The corrections are lifted from @caughey-warshaw:2015:DGIRT with slight modifications.
+<!-- but I am able to relax the constraint that resulting data must be integer valued. -->
+<!------- TO DO ---------
+- introduce data typing
+------------------------->
 
 <!-- The recipe contains three adjustments: a "design effect" to account for nonequal response probabilities within a given group $g$, an adjusted sample size for every group-item combination, and an adjusted number of successes for each group-item.  -->
 
@@ -691,14 +705,14 @@ The weighted number of successes in each cell, in turn, is
 \end{align}
 where I take the minimum to ensure that the number of successes does not exceed the adjusted sample size. 
 
-It is likely that many values of $n^{*}_{gj}$ and $s^{*}_{gj}$ will be non-integers. Ordinarily this would be a problem for estimation in Stan, since Stan's Binomial likelihood function will not accept floating-point arguments. @caughey-warshaw:2015:DGIRT ensure integer data with additional rounding steps during reweighting. Instead of rounding, I write a custom Binomial likelihood function in Stan that returns log-probabilities for weighted data, which I describe below.
+It is likely that many values of $n^{*}_{gj}$ and $s^{*}_{gj}$ will be non-integers. Ordinarily this would be a problem for modeling a Binomial random variable, since a Binomial is an integer-valued count of successes given an integer number of trials and a success probability. For this reason, many statistical programs will return an error if a floating-point argument is bassed to the Binomial probability mass function. Whereas @caughey-warshaw:2015:DGIRT calculate $\lceil n^{*}_{gj} \rceil$ and $\lfloor s^{*}_{gj} \rceil$ to obtain integer data for estimation, I instead implement a custom Binomial quasi-likelihood function that returns log probabilities for weighted data (see Section&nbsp;\@ref(sec:logp-accumulator)).
 
 
 ### Model Implementation in Stan {#sec:stan-setup}
 
-The model is estimated with Stan, a programming language for high-performance Bayesian analysis that extends and interfaces with `C++` [@carpenter-at-al:2016:stan]. Although it possible to estimate Stan models using front-end software packages such as `brms` [@burkner:2017:brms], complicated models must be programmed with raw Stan code, which can be intensive. This section describes instances where the model _as programmed in Stan_ departs from the model _as written_ above. Although these alterations do not change the theoretical statistical properties of the model, they improve the practical performance of the model by protecting against biased MCMC convergence and floating point arithmetic errors.
+I build and estimate the modeling using Stan, a programming language for high-performance Bayesian analysis that extends and interfaces with `C++` [@carpenter-at-al:2016:stan]. Stan implements an adaptive variant of Hamiltonian Monte Carlo (HMC), an algorithm that efficiently collects posterior samples by "surfing" a Markov proposal trajectory along the gradient of the posterior distribution. Because the algorithm uses the posterior gradient to generate proposals, the algorithm concentrates proposals in regions of high transition probability and performs better in high dimensions than conventional Gibbs sampling algorithms. Although it possible to estimate Stan models using front-end software packages such as `brms` for R [@burkner:2017:brms], complicated models must be programmed with raw Stan code, which can be intensive. This section describes instances where the model _as programmed in Stan_ departs from the model _as written_ above. Although these alterations do not change the theoretical statistical properties of the model, they are essential for the model's computational viability by protecting against biased MCMC convergence and floating point arithmetic errors.
 <!------- TO DO optimization? ------------------------->
-These contributions should be highlighted here because they are crucial to ensuring valid inferences and are substantive improvements on the work by @caughey-warshaw:2015:DGIRT. 
+These contributions should be highlighted here because they are crucial to ensuring valid inferences and are substantive improvements on previous software implementations of group-level IRT models.
 
 <!------- TO DO ---------
 - intro to Bayesian computation?
@@ -708,7 +722,7 @@ These contributions should be highlighted here because they are crucial to ensur
 
 
 
-#### Log-Likelihood for Weighted Data {#sec:logp-accumulator}
+#### Log Likelihood for Weighted Data {#sec:logp-accumulator}
 
 One important implementation consideration for the group IRT model is the presence of weighted, non-integer response data. As described in Section&nbsp;\@ref(sec:model-weights), grouped data require reweighting to account for nonrepresentative sample designs and repeated observations within individual members of a group. The resulting data are likely to take non-integer values, which would cause the built-in Binomial likelihood function to fail. Whereas @caughey-warshaw:2015:DGIRT round their data to conform to Stan's Binomial likelihood function, my approach rewrites the likelihood function to accept non-integer data. This allows me to maintain the precision in the underlying data while still correcting the issue at hand.
 
@@ -722,7 +736,7 @@ where $\theta$ and $y$ generically represent parameters and observed data. For c
   \log p(\theta \mid y) &\propto \log p(y \mid \theta) + \log p(\theta),
   (\#eq:bayes-prop-log)
 \end{align}
-MCMC algorithms calculate the right-side of this proportionality at each iteration of the sampler to decide if proposed parameters should be accepted into the sample or rejected. In Stan, this calculation is passed to the _log density accumulator_, a variable containing sum the sum of the log likelihood and log prior density at every sampler iteration [@carpenter-at-al:2016:stan]. 
+MCMC algorithms calculate the right-side of this proportionality at each iteration of the sampler to decide if proposed parameters should be accepted into the sample or rejected. In Stan, this calculation is passed to the _log density accumulator_, a variable containing the sum of the log likelihood and log prior density at every sampler iteration [@carpenter-at-al:2016:stan]. 
 
 In the current case, it is the probability of the data $\log p(y \mid \theta)$ that presents a problem. The Binomial log likelihood function as written in Stan will not accept non-integer data, so I rewrite the kernel $K(\cdot)$ of the Binomial log likelihood,
 \begin{align}
@@ -733,7 +747,7 @@ In the current case, it is the probability of the data $\log p(y \mid \theta)$ t
   (\#eq:weighted-ll-raw)
 \end{align}
 where the number of trials $n_{gj}^{*}$ and the number of successes $s^{*}_{gj}$ can take non-integer values. This is the same approach that @ghitza-gelman:2013:subgroup-mrp take in a frequentist maximum likelihood context.^[
-  They describe this as "simply the weighted log-likelihood approach to fitting generalized linear models with weighted data" [@ghitza-gelman:2013:subgroup-mrp, 765].
+  They describe this as "simply the weighted log likelihood approach to fitting generalized linear models with weighted data" [@ghitza-gelman:2013:subgroup-mrp, 765].
 ]
 Rather than declare that $s^{*}_{gj}$ is a standard Binomial draw, I pass the results of Equation&nbsp;\@ref(eq:weighted-ll-raw) directly to the log density accumulator. This serves as the log likelihood for the response data. Other sampling statements that add prior density to the accumulator are unaffected by my approach to the log likelihood.
 
@@ -768,29 +782,32 @@ To do:
 #### Non-Centered Parameterization {#sec:noncentering}
 
 <!-- Non-Centered Parameterization -->
-Hierarchical models have posterior distributions whose curvature presents difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations]. To improve the estimation in Stan,
+Many common MCMC algorithms have 
+
+
+Hierarchical models have posterior distributions whose curvatures present difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations]. To improve the estimation in Stan,
   <!-- to do: Stan -->
 <!-- Flag early on that I'll be setting things up to make things easier in Stan -->
 I program the hierarchical models in the "non-centered" rather than the "centered" parameterizations. Whereas the centered parameterization considers $\bar{\theta}_{g}$ as a random draw from its hierarchical distribution (Equation&nbsp;\@ref(eq:theta-g-hlm) above),
-the non-centered parameterization considers $\bar{\theta}_{g}$ as a _deterministic_ function of its hypermean regression plus a random variate. 
+the non-centered parameterization defines $\bar{\theta}_{g}$ as a deterministic function of its conditional hypermean and a random variable.
 \begin{align}
   \bar{\theta}_{g} &=
-    \mu_{0} + \mathbf{x}^{\intercal}_{d[g]}\beta_{p[g]} + 
+    \mu_{p[g]} + \mathbf{x}^{\intercal}_{d[g]}\beta_{p[g]} + 
     \alpha^{\mathtt{state}}_{s[g]p[g]} + 
     u_{g}\tau_{p[g]}, \\
     u_{g} &\sim \mathrm{Normal}\left(0, 1\right)
   (\#eq:theta-g-noncenter)
 \end{align}
-where $u_{g}\tau_{p[g]}$ is a group-level error term. It is composed of a standard Normal variate $u_{g}$ and a scalar parameter $\tau_{p}$ that controls the variance of the error term. The non-centered model is _algebraically_ equivalent to centered model, but "factoring out" the hypermean and the error variance from the hierarchical model improves MCMC estimation by de-correlating (or "un-nesting") the parameters that compose the hierarchical distribution. This ameliorates the estimation bias that would result from poor posterior exploration otherwise [@betancourt:2015:hamiltonian].^[
-  Stan's Hamiltonian Monte Carlo algorithm generates parameter proposals by proposing a "trajectory" through the parameter space that coasts along the gradient of the distribution. Areas of high curvature in the posterior gradient lead to "divergences" in Stan's HMC algorithm: transitions where the calculated log density diverges substantially from what Stan anticipated when it proposed the transition. Markov chains with many divergent transitions can be severely biased. Non-centered parameterizations are very effective at guarding against divergences in hierarchical models. 
+where $u_{g}\tau_{p[g]}$ is a group-level error term. It is composed of a standard Normal variate $u_{g}$ and a scalar parameter $\tau_{p}$ that controls the variance of the error term. The non-centered model is algebraically equivalent to centered model, but it "factors out" the hypermean and the error variance from the hierarchical model. This improves MCMC estimation by de-correlating (or "unnesting") the parameters that compose the hierarchical distribution. Hierarchical models using a centered parameterization are vulnerable to estimation biases that result from poor posterior exploration [@betancourt:2015:hamiltonian].^[
+  Because Stan's HMC algorithm uses the gradient of the posterior distribution to propose efficient transition trajectories through the parameter space, it adaptively builds expectations about the log density of the next Markov state. Areas of high curvature in the posterior gradient can lead to "divergences" in the HMC algorithm: transitions where the log density of a state diverges substantially from what Stan anticipated when it proposed the transition. Markov chains with many divergent transitions have a high risk of being severely biased, since the divergences indicate that the Markov chain is failing to efficiently navigate the parameter space [@betancourt:2015:hamiltonian]. The non-centered parameterization smooths out these problematic regions of posterior density, safeguarding against biased MCMC estimates.
 ]
-This is a crucial extension to the estimation approach developed by @caughey-warshaw:2015:DGIRT, whose model implements a centered parameterization for all of its hierarchical models. 
+This is a crucial extension to the estimation approach developed by @caughey-warshaw:2015:DGIRT, whose model implements all hierarchical components using the centered parameterization.
 
 Equation&nbsp;\@ref(eq:theta-g-noncenter) is an incomplete implementation of the non-centered form; to complete the parameterization, I apply it too all hierarchical components in the regression, including the state and region effects.
 \begin{align}
 \begin{split}
   \bar{\theta}_{g} &=
-    \mu_{0} + 
+    \mu_{p[g]} + 
     \mathbf{x}^{\intercal}_{d[g]}\beta_{p[g]} + 
     u^{\mathtt{group}}_{g}\tau^{\mathtt{group}}_{p[g]} \\
     &\quad +
@@ -834,7 +851,7 @@ Latent ideal point models are unidentified without restrictions on the latent sp
   \kappa_{j} &= \kappa^{*}_{j} - \frac{1}{J}\sum\limits_{j = 1}^{J} \kappa^{*}_{j},
   (\#eq:scale-midpoint)
 \end{align}
-which is performed in every iteration of the sampler. The scale of the latent space is set by restricting the product of the $J$ difficulty parameters to be $1$. Letting $\iota^{*}_{j}$ be the unscaled difficulty parameter...
+which is performed in every iteration of the sampler. The scale of the latent space is set by restricting the product of the $J$ difficulty parameters to be $1$. Letting $\iota^{*}_{j}$ be the unscaled difficulty parameter, the scaled $\iota_{j}$ is defined as follows.
 \begin{align}
 \begin{split}
   \iota_{j} &= 
@@ -851,7 +868,7 @@ which is performed in every iteration of the sampler. The scale of the latent sp
 \end{align}
 Item discrimination is then reparameterized as dispersion, $\sigma_{j} = \iota_{j}^{-1}$. These restrictions on the item parameters are sufficient to identify $\theta_{g}$.
 
-I specify priors for the unscaled item cutpoints and difficulties that are Normal and LogNormal, respectively. In order to model their joint distribution, I specify a multivariate Normal distribution for the cutpoint and exponentiated difficulty parameter. 
+I specify priors for the unscaled item midpoint and difficulty parameters that are Normal and LogNormal, respectively. In order to model their joint distribution, I specify a multivariate Normal distribution for the cutpoint and logged difficulty parameter,
 <!------- TO DO ---------
 - Come back to This
 - why give discrimination a LN prior? because it's multiplied into the equation, would be added on the log scale?
@@ -859,27 +876,140 @@ I specify priors for the unscaled item cutpoints and difficulties that are Norma
 \begin{align}
   \begin{bmatrix}
     \kappa^{*}_{j} \\
-    \mathrm{exp}\left(\iota_{j}^{*}\right)
+    \mathrm{log}\left(\iota^{*}_{j}\right)
   \end{bmatrix}
   &\sim 
   \mathrm{Normal}\left(\bm{\mu}, \bm{\Sigma}\right)
 \end{align}
-where $\bm{\mu}$ is a $2$-vector of means and $\bm{\Sigma}$ is a $2 \times 2$ variance-covariance matrix. The hierarchical model for the item parameters allows the model to adaptively estimate the means for the cutpoint and discrimination parameters, rather than "forgetting" the information learned from one item when updating the prior for the next item. This partially pools the item parameters toward their means somewhat.
-
-<!------- TO DO ---------
-- I don't actually implement this yet
-------------------------->
-
-I give independent Normal hyperpriors to the mean vector and an LKJ prior to the variance-covariance matrix [@LKJ:2009:correlation-matrices],
+where $\bm{\mu}$ is a $2$-vector of means and $\bm{\Sigma}$ is a $2 \times 2$ variance-covariance matrix. The hierarchical model partially pools the item parameters toward a common multivariate distribution rather than "forgetting" the information learned from one item when updating the prior for the next item. The discrimination parameter, which has a product of $1$ when scaled, is logged so that it has a mean of $0$ on the log scale. This simplifies the prior specification of the mean vector $\bm{\mu}$, which is a standard multivariate Normal with no off-diagonal elements.
 \begin{align}
   \bm{\mu} &\sim 
     \mathrm{Normal}\left( 
       \begin{bmatrix} 0 \\ 0 \end{bmatrix}, 
       \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} 
-    \right) \\ 
-  \bm{\Sigma} &\sim \mathrm{LKJcorr}(2),
+    \right)
 \end{align}
-where the LKJ scale parameter of $2$ provides weak regularization against off-diagonal covariance terms, whereas $\mathrm{LKJcorr(1)}$ would result in a flat prior over the whole matrix. 
+
+```{r lkj-sim, eval = FALSE}
+
+# make dlkjcorr matrices
+# extract rho for plotting
+# sim items using dexp and multiplication
+
+sim_lkj_params <- 
+  tibble(id = 1:10000) %>%
+  mutate(
+    sd1 = rnorm(n = n(), mean = 0, sd = 1) %>% abs(),
+    sd2 = rnorm(n = n(), mean = 0, sd = 1) %>% abs()
+  ) %>%
+  group_by_all() %>%
+  mutate(
+    lkj = map(id, 
+      ~ rethinking::rlkjcorr(n = 1, K = 2, eta = 2) %>% 
+        as.matrix()
+    ),
+    rho = map(lkj, ~ .x[1, 2]),
+    vdiag = 
+      map2(sd1, sd2, ~ c(.x, .y)^2 %>% diag() %>% as.matrix()),
+    vc = 
+      map2(vdiag, lkj, ~ .x %*% .y %*% .x),
+    items = map(vc, 
+      ~ mvtnorm::rmvnorm(
+          n = 1, 
+          mean = c(
+            rnorm(1, mean = 0, sd = 1), 
+            rnorm(1, mean = 0, sd = 1)
+          ),
+          sigma = .x
+        ) %>% 
+        as_tibble() %>%
+        rename(cutpoint = V1, log_disc = V2)
+    )
+  ) %>%
+  ungroup() %>%
+  unnest_legacy(items, rho) %>%
+  print()
+
+# sim_lkj_params %>% pull(lkj)
+
+# sim_lkj_params %>% pull(vdiag)
+
+# sim_lkj_params %>% pull(vc)
+
+# sim_lkj_params %>% pull(items)
+```
+
+
+```{r plot-lkj}
+# point density
+p_item_scatter <- ggplot(sim_lkj_params) +
+  aes(x = cutpoint, y = log_disc) +
+  ggpointdensity::geom_pointdensity(size = 1, show.legend = FALSE) +
+  viridis::scale_color_viridis(option = "cividis") +
+  # coord_cartesian(ylim = c(-5, 5), xlim = c(-5, 5))
+  # coord_fixed()
+  labs(
+    x = TeX("Cutpoint ( $\\kappa_{j}$ )"),
+    y = TeX("Log Discrimination ( $\\iota_{j}$ )")
+  ) +
+  theme(legend.position = "none") +
+  NULL
+
+p_lkj_hist <- sim_lkj_params %>% 
+  mutate(disc = exp(log_disc)) %>%
+  gather(key = param, value = value, rho, sd1) %>%
+  # cutpoint, contains("disc"), contains("sd")) %>%
+  ggplot() +
+    aes(x = value) +
+    facet_wrap(
+      ~ param, scales = "free",
+      labeller = 
+        as_labeller(c("rho" = "Off-diagonal correlations", "sd1" = "Hierarchical Std. Dev"))
+    ) + 
+    geom_histogram(bins = 30, boundary = 0, fill = purp, color = "black") +
+    labs(x = " ", y = "Frequency")
+
+# update patchwork omg
+(p_lkj_hist / p_item_scatter) +
+  plot_layout(heights = 1)
+
+```
+
+I build a prior for the variance-covariance matrix $\bm{\Sigma}$ by first factoring out the variance components, exposing a correlation matrix with unit diagonals and a correlation parameter $\rho$. 
+\begin{align}
+  \bm{\Sigma} &= 
+  \begin{bmatrix}
+    \sigma^{2}_{\kappa^{*}_{j}} & 
+      \rho \sigma_{\kappa^{*}_{j}} \sigma_{\iota^{*}_{j}} \\
+    \rho \sigma_{\kappa^{*}_{j}} \sigma_{\iota^{*}_{j}} & 
+      \sigma^{2}_{\iota^{*}_{j}}
+  \end{bmatrix}
+  \\
+  &= 
+    \begin{bmatrix} 
+      \sigma^{2}_{\kappa^{*}_{j}} & 0 \\
+      0 & \sigma^{2}_{\iota^{*}_{j}}
+    \end{bmatrix}
+    \bm{S} 
+    \begin{bmatrix} 
+      \sigma^{2}_{\kappa^{*}_{j}} & 0 \\
+      0 & \sigma^{2}_{\iota^{*}_{j}}
+    \end{bmatrix} \\
+  \bm{S} &=
+    \begin{bmatrix}
+      1 & \rho \\
+      \rho & 1
+    \end{bmatrix}
+\end{align}
+I then specify priors for $\sigma_{\kappa^{*}_{j}}$, $\sigma_{\iota^{*}_{j}}$, and the matrix $\bm{S}$ separately. The standard deviation terms $\sigma_{\kappa^{*}_{j}}$ and $\sigma_{\iota^{*}_{j}}$ are given weakly informative $\text{Exponential}\left(1\right)$ priors, which weakly regularize toward zero with an expected value of $1$. I give $\bm{S}$ a prior from the LKJ distribution, which is a generalization of the Beta distribution that is defined over the space of symmetric positive definite matrices with unit diagonals, such as a correlation matrix [@LKJ:2009:correlation-matrices]. 
+\begin{align}
+  \bm{S} &\sim \mathrm{LKJcorr}(\eta = 2)
+\end{align}
+The LKJ distribution has one shape parameter $\eta$, which can be interpreted like a shape parameter for a symmetric Beta distribution. Setting $\eta = 1$ yields a flat prior over all correlation matrices, where $\eta > 1$ concentrates prior density toward the identity matrix as $\eta$ increases. The chosen value of $\eta = 2$ provides weak regularization against extreme correlations near $-1$ and $+1$. Although it would have been sufficient to specify a prior for $\rho$ instead of the entire matrix $\bm{S}$, this convenience only arises in small (in this case, $2 \times 2$) correlation matrices. Larger matrices would require explicit priors for a larger number of off-diagonal parameters. The LKJ prior can be applied to larger correlation matrices, so I choose it for the sake of building a more general and extensible model.
+
+<!------- TO DO ---------
+- I don't actually implement this yet
+------------------------->
 
 ```{r gen-normal-priors}
 normal_priors <- crossing(x = 1:1000000, sd = c(0.5, 1)) %>%
@@ -895,7 +1025,7 @@ normal_priors <- crossing(x = 1:1000000, sd = c(0.5, 1)) %>%
 ggplot(normal_priors) +
   aes(x = pnorm(v) - pnorm(0)) +
   facet_wrap(~ sd_label) +
-  geom_histogram(boundary = 0, fill = yel) +
+  geom_histogram(boundary = 0, fill = purp, color = "black") +
   labs(x = "Effect on Conservative Response Probability (Baseline = 0.5)", y = NULL) +
   scale_x_continuous(limits = c(-0.5, 0.5)) +
   theme(
