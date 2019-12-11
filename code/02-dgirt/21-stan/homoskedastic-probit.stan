@@ -64,7 +64,7 @@ parameters {
  
   // --- IRT ---
   vector[n_item] cut_raw; // raw item midpoint
-  vector<lower = 0>[n_item] disc_raw;  // raw item discrimination
+  vector<lower = 0>[n_item] log_disc_raw;  // raw item discrimination
   real<lower = 0> sigma_in_g; // only 1. If heteroskedastic: next block
 
   
@@ -105,6 +105,7 @@ transformed parameters {
   vector[n] eta;                               // link scale index
   vector[n_group] theta;                       // group mean
   vector[n_item] cutpoint;                     // identified cutpoint
+  // vector<lower = 0>[n_item] disc_raw      ;    // exp(log(disc))
   vector<lower = 0>[n_item] discrimination;    // identified discrimination
   vector<lower = 0>[n_item] dispersion;
 
@@ -120,7 +121,9 @@ transformed parameters {
 
   // discrimination are prod = 1
   // dispersion = 1 / discrimination
-  discrimination = disc_raw * pow(exp(sum(log(disc_raw))), (-inv(n_item)));
+  // disc_raw = exp(log_disc_raw)); use the logged in the formula
+  discrimination = 
+    exp(log_disc_raw) * pow(exp(sum(log_disc_raw))), (-inv(n_item)));
   dispersion = inv(discrimination);
 
   // loop over groups to get theta
@@ -184,27 +187,27 @@ model {
 
 
   // ----- IRT params -----
-  disc_raw ~ lognormal(0, 2); // item params: static for now?
-  cut_raw ~ normal(0, 2);
+  log_disc_raw ~ normal(0, 1); // item params: static for now?
+  cut_raw ~ normal(0, 1);
   sigma_in_g ~ lognormal(0, 1);    // will become regression
 
 
   // ---- district and state regressions ----
-  const_mean ~ normal([0, 0], [2, 2]); // TK fix
+  const_mean ~ normal([0, 0], [1, 1]); // TK fix
   z_grp_mean ~ normal(0, 1);       // group zs, all independent and one-dim
   
   for (p in 1:n_party) {
     
-    coef_grp_mean[ , p] ~ normal(0, 1); // multivariate? soon DLM
-    coef_st_mean[ , p] ~ normal(0, 1);
+    coef_grp_mean[ , p] ~ normal(0, 0.5); // multivariate? soon DLM
+    coef_st_mean[ , p] ~ normal(0, 0.5);
 
     z_st_mean[ , p] ~ normal(0, 1);     // SxP state Z scores
     z_rg_mean[ , p] ~ normal(0, 1);     // RxP region Z scores
 
     // P-vectors of error scales
-    scale_grp_mean[p] ~ lognormal(0, 1); // group scale
-    scale_st_mean[p] ~ lognormal(0, 1);  // state scales
-    scale_rg_mean[p] ~ lognormal(0, 1);  // region scales
+    scale_grp_mean[p] ~ normal(0, 1); // group scale
+    scale_st_mean[p] ~ normal(0, 1);  // state scales
+    scale_rg_mean[p] ~ normal(0, 1);  // region scales
 
   }
 
