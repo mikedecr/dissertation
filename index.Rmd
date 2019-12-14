@@ -44,6 +44,13 @@ NOTE: if you move writing into subfolders:
 
 -->
 
+```{r render-GITBOOK, eval = FALSE, cache = FALSE, include = FALSE}
+bookdown::render_book(
+  input = "Index.Rmd", 
+  output_format = "bookdown::gitbook"
+  # , new_session = FALSE # knits IN SESSION
+)
+```
 
 ```{r serve-book, eval = FALSE, cache = FALSE, include = FALSE}
 bookdown::serve_book(
@@ -69,9 +76,7 @@ bookdown::render_book("Index.Rmd", "bookdown::pdf_book")
 bookdown::render_book("Index.Rmd", "bookdown::html_book")
 ```
 
-```{r render-GITBOOK, eval = FALSE, cache = FALSE, include = FALSE}
-bookdown::render_book("Index.Rmd", "bookdown::gitbook")
-```
+
 
 ```{r render-preview-CHAPTER, eval = FALSE, cache = FALSE, include = FALSE}
 bookdown::preview_chapter('020_model.Rmd')

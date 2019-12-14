@@ -24,6 +24,7 @@ bookdown::pdf_book:
   number_sections: true
   fig_caption: true
   dev: cairo_pdf
+  # dev: png
   toc: false
   keep_tex: true
   includes: 

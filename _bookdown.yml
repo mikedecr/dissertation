@@ -23,7 +23,7 @@ rmd_files:
     - 00_mainmatter.Rmd
     - 01_arg.Rmd
     - 020_model.Rmd
-    - 021_model-sim.Rmd
+    # - 021_model-sim.Rmd
     - 030_descriptives.Rmd
     - 040_positioning.Rmd
     - 050_voting.Rmd
@@ -34,7 +34,7 @@ rmd_files:
     # - 00-abstract.Rmd # tried and failed to get abstract on page 1
     - 01_arg.Rmd
     - 020_model.Rmd
-    - 021_model-sim.Rmd
+    # - 021_model-sim.Rmd
     - 030_descriptives.Rmd
     - 040_positioning.Rmd
     - 050_voting.Rmd
