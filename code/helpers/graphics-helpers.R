@@ -48,4 +48,10 @@ party_colors <- c("Democrats" = dblue, "Republicans" = rred)
 yel <- viridis::magma(1, alpha = 1, begin = 0.9, end = 0.9, direction = 1)
 purp <-  viridis::magma(1, alpha = 1, begin = 0.5, end = 0.5, direction = 1)
 
+primary <- 
+  viridis::viridis(1, alpha = 1, begin = 0.5, end = 0.5, direction = 1)
+secondary <- 
+  viridis::viridis(1, alpha = 1, begin = 0.35, end = 0.35, direction = 1)
+primary_light <- xaringanthemer::lighten_color(primary, 0.5)
+secondary_light <- xaringanthemer::lighten_color(secondary, 0.5)
 
