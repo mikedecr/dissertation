@@ -15,9 +15,8 @@ knitr::opts_chunk$set(
   cache = TRUE, 
   echo = FALSE, include = FALSE, 
   warning = FALSE, message = FALSE, 
-  # fig device is f(pandoc_to)
-  fig.align = "center", 
-  dpi = 300
+  # fig device is f(pandoc_to) by default
+  fig.align = "center", dpi = 300#, fig.retina = 3
 )
 
 # graphics device, use PDF in LaTeX

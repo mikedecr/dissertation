@@ -70,7 +70,10 @@ here("data", "mcmc", "dgirt", "test", "input", "mcmc-params.RDS") %>%
 total_iterations <- (n_chains * (n_iterations - n_warmup) / n_thin)
 ```
 
-The model is designed to estimate group-level parameters from an individual-level data generating process. As such, I begin by simulating individual-level item response data before aggregating the data to the group level for estimation. I simulate a universe containing `r n_states` states nested within `r english(n_regions)` regions, allocated so each region contains `r english(n_states / n_regions)` states. Each state contains `r english(n_districts)` districts containing voters belonging to `r english(n_parties)` parties, totaling `r n_states * n_districts * n_parties` groups across `r n_states * n_districts` districts in the whole "country." Data for each district-party group contain responses to `r n_items` items that are answered by `r n_cases` unique individuals apiece. For simplicity, the simulation assumes that each individual answers only one question. When the model is implemented on real data, this assumption is relaxed by the weighting scheme laid out in Section&nbsp;\@ref(sec:model-weights).
+The model is designed to estimate group-level parameters from an individual-level data generating process. As such, I begin by simulating individual-level item response data before aggregating the data to the group level for estimation. I simulate a universe containing `r n_states` states nested within `r english(n_regions)` regions, allocated so each region contains `r english(n_states / n_regions)` states. Each state contains `r english(n_districts)` districts containing voters belonging to `r english(n_parties)` parties, totaling `r n_states * n_districts * n_parties` groups across `r n_states * n_districts` districts in the whole "country." Data for each district-party group contain responses to `r n_items` items that are answered by `r n_cases` unique individuals apiece.^[
+  While a single survey will not contain `r n_items` policy items, this study will pool items from several surveys into a final dataset.
+]
+ For simplicity, the simulation assumes that each individual answers only one question. When the model is implemented on real data, this assumption is relaxed by the weighting scheme laid out in Section&nbsp;\@ref(sec:model-weights).
   <!------- TO DO ---------
   - Fix
   ------------------------->
@@ -82,9 +85,9 @@ Individual partisans respond to each item probabilistically according to the ind
   &= 
   \Phi\left(\frac{\theta_{i} - \kappa_{j}}{\sigma_{j}}\right)
 \end{align*} 
-Once individual responses are simulated, the number of conservative responses are summed within each item-group and supplied to the group-level response model.
+Once individual responses are simulated, the number of conservative responses are summed within each item-group and supplied to the model for estimation.
 
-Simulating these individual level responses requires that we supply hyperparameter values to ideal points $\theta_{i}$, cutpoints $\kappa_{j}$, and dispersions $\sigma_{j}$. Beginning with the item parameters, every cutpoint value is drawn a Normal distribution with mean $0$ and standard deviation `r difficulty_sd`. Every dispersion parameter is defined as $\sigma_{j} = \iota_{j}^{-1}$, where $\iota_{j}$ is a LogNormal draw with mean $0$ and standard deviation `r discrimination_sd` on the log scale.
+Simulating these individual level responses requires that we provide hyperparameter values to ideal points $\theta_{i}$, cutpoints $\kappa_{j}$, and dispersions $\sigma_{j}$. Beginning with the item parameters, every cutpoint value is drawn a Normal distribution with mean $0$ and standard deviation `r difficulty_sd`. Every dispersion parameter is defined as $\sigma_{j} = \iota_{j}^{-1}$, where $\iota_{j}$ is a LogNormal draw with mean $0$ and standard deviation `r discrimination_sd` on the log scale.
 
 Individual ideal point parameters are Normal draws within their respective district-party groups ($\theta_{i} \sim \mathrm{Normal}\left(\bar{\theta}_{g[i]}, \sigma_{g[i]}\right)$), where each group has a potentially unique mean and standard deviation. As described in Section&nbsp;\@ref(sec:geographic-model), group means are generated from hierarchical models with parameters that vary across parties. I also specify a group-level regression to generate heteroskedasticity in $\sigma_{g}$, which the model does not currently estimate.
 <!------- TO DO ---------

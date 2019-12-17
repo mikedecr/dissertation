@@ -446,47 +446,6 @@ Because $\iota_{j} = 2(R_{j} - L_{j})$, the discrimination parameter grows when 
 
 In a special case that Right and Left alternatives are located in exactly the same location, the result is $\kappa_{j} = \iota_{j} = 0$, leading all Actors to choose Right with probability $0.5$. This result represents a situation where policy preferences are not systematically related to the choice whatsoever, and only idiosyncratic error affects the choice of Right or Left. Although the model implies that this result is *mathematically* possible, it is not realistic to expect any of the policy choices in this project to induce this behavior.
 
-<!------- TO DO ---------
-- I made this plot of the item params as f(bill locations)
-- I don't want to delete the code but it currently isn't doing anything
-------------------------->
-
-```{r item-derivs, eval = FALSE}
-item_grid <- 
-  tibble(
-    right = seq(-3, 3, .01),
-    left = seq(-3, 3, .01)
-  ) %>% 
-  expand(right, left) %>%
-  filter(right > left) %>%
-  mutate(
-    Midpoint = 0.5 * (right + left),
-    Discrimination = 2 * (right - left)
-  ) %>%
-  gather(key = param, value = value, -right, -left) %>%
-  print()
-```
-
-```{r plot-item-derivs, eval = FALSE, include = FALSE, fig.cap = "Item parameters as functions of choice locations", fig.height = 3, fig.width = 8, out.width = "100%"}
-grad <- ggplot(item_grid) +
-  aes(x = right, y = left, z = value) +
-  facet_wrap(~ fct_rev(param)) +
-  viridis::scale_fill_viridis(option = "inferno") +
-  coord_fixed() +
-  labs(
-    x = TeX("Right Location: $\R_j$"),
-    y = TeX("Left Location: $\L_j$"),
-    fill = "Parameter\nValue"
-  )
-
-grad + 
-  geom_tile(aes(fill = value)) +
-  stat_contour(bins = 10, color = "white") + 
-  NULL
-```
-
-
-
 
 <!-- parametric assumptions -->
 <!-- Up to this point, we have assumed symmetric and equally-weighted quadratic utility loss over ideological distances. No parametric assumptions have yet been made about the idiosyncratic errors or the difference in errors.  -->
@@ -513,7 +472,7 @@ This section outlines my group-level ideal point model for party publics. It beg
 model identification, 
 prior distributions, 
 and model testing methods such as prior predictive checks and posterior predictive checks.
-<!-- (Section&nbsp;\@ref(sec:priors-identification))  -->
+<!-- (Section&nbsp;\@ref(sec:priors))  -->
 <!-- (Section&nbsp;\@ref(sec:stan-setup)). -->
 
 
@@ -564,8 +523,8 @@ While it is possible to continue building the model hierarchically from \@ref(eq
 \begin{align}
   \begin{split}
   s_{gj} &\sim 
-      \mathrm{Binomial}\left(n_{gj}, \pi_{gj}\right) \\
-    \pi_{gj} &=
+      \mathrm{Binomial}\left(n_{gj}, \bar{\pi}_{gj}\right) \\
+    \bar{\pi}_{gj} &=
       \Phi\left(
         \frac{\bar{\theta}_{g} - \kappa_{j}}{
               \sqrt{ \sigma_{g}^{2} + \sigma^{2}_{j}}}
@@ -573,7 +532,7 @@ While it is possible to continue building the model hierarchically from \@ref(eq
   \end{split} %_ 
   (\#eq:y-g-irt)
 \end{align}
-where $\pi_{gj}$ is the probability that a randomly selected individual from group $g$ gives a conservative response to item $j$. Our uncertainty about any random individual's ideal point relative to the group mean is included in the model as group-level variance term. If individual ideal points are Normal within their group, this within-group variance can simply be added to the probit model as another source of measurement error, with larger within-group variances further attenuating $\pi_{ij}$ toward $0.5$. @caughey-warshaw:2015:DGIRT derive this result in the supplementary appendix to their article.
+where $\bar{\pi}_{gj}$ is the "average" conservative response probability for item $j$ in group $g$, or the probability that a randomly selected individual from group $g$ gives a conservative response to item $j$. Our uncertainty about any random individual's ideal point relative to the group mean is included in the model as group-level variance term. If individual ideal points are Normal within their group, this within-group variance can simply be added to the probit model as another source of measurement error, with larger within-group variances further attenuating $\bar{\pi}_{ij}$ toward $0.5$. @caughey-warshaw:2015:DGIRT derive this result in the supplementary appendix to their article.
 
 <!------- TO DO ---------
 - should I just rewrite it in my own style?
@@ -655,6 +614,53 @@ for Census regions indexed $r$, which is a modeled mean-zero effect to capture c
 \end{align}
 
 
+### Identification Restrictions {#sec:identification-restrictions}
+
+Ideal point models, as with all latent space models, are unidentified without restrictions on the policy space. The model as written can rationalize many possible estimates for the unknown parameters, with no prior basis for deciding which estimates are best.
+A two-parameter model such as this requires some restriction on the polarity, location, and scale of the policy space. 
+
+\begin{itemize}  
+\item Location: the latent scale can be arbitrarily shifted right or left. We could add some constant to every ideal point, and the response probability would be unaffected if we also add the same constant to every item cutpoint. 
+\item Scale: the latent scale can be arbitrarily stretched or compressed. We could multiply the latent space by some scale factor, and the response probability would be unaffected if we also multiply the discrimination parameter by the inverse scale factor.
+\item Polarity: the latent scale could be reversed. We could flip the sign of every ideal point, and the response probability would be unaffected if we also flip the sign of every item parameter.
+\end{itemize}
+
+These properties are present with every statistical model, but covariate data typically provide the restrictions necessary to identify a model.^[
+  We could imagine shifting, stretching, or reversing the sign of a covariate to reveal the same mathematical behaviors. 
+  All of these transformations would result in the same predictions as long as the parameters are also transformed to compensate.
+]
+Because the response probability is a function of the interaction of multiple parameters in a latent space, however, data alone do not provide the necessary restrictions on the space to provide a unique solution. Absent any natural restriction from the data, I provide my own restrictions on the polarity, location, and scale of the policy space. 
+
+The polarity of the space is fixed by coding all items such that conservative responses are $1$ and liberal responses are $0$. This ensures that increasing values on the link scale always lead to an increasing probability of a _conservative_ item response. Additionally I impose a restriction that all discrimination parameters are positive, which implies that shifting any ideal point farther to the _right_ of an item cutpoint increases the probability of a conservative response, all else equal.
+
+The location of the space is set by restricting the sum of the $J$ item cutpoints to be $0$. 
+If $\tilde{\kappa}_{j}$ were an unrestricted item cutpoint, the restricted cutpoint $\kappa_{j}$ used in response model would be defined as
+\begin{align}
+  \kappa_{j} &= \tilde{\kappa}_{j} - \frac{1}{J}\sum\limits_{j = 1}^{J} \tilde{\kappa}_{j},
+  (\#eq:scale-midpoint)
+\end{align}
+which is performed in every iteration of the sampler. 
+This restriction on the sum of the cutpoint parameters also implies a restriction on the mean of the cutpoints, since $\frac{1}{J}0 = 0$.
+
+Lastly, I set the scale of the latent space by restricting the product of the $J$ discrimination parameters to be equal to $1$.
+I implement this by restricting the log discrimination parameter to have a sum of $0$, which achieves an equivalent transformation.^[
+  A quick demonstration using three unknown values $a$, $b$, and $c$. If $a \times b \times c = 1$, then $\log(a) + \log(b) + \log(c) = \log(1)$, where $\log(1) = 0$.
+]
+Letting $\tilde{\iota}_{j}$ be the unrestricted difficulty parameter, we obtain the restricted $\iota_{j}$ as follows.
+\begin{align}
+  \iota_{j} &= \text{exp}\left(\log\left(\iota_{j}\right) \right) \\
+  \log\left(\iota_{j}\right) &= \log\left(\tilde{\iota}_{j}\right) - \frac{1}{J} \sum\limits_{j= 1}^{J} \log\left(\tilde{\iota}_{j}\right)
+  (\#eq:scale-difficulty)
+\end{align}
+Item discrimination is then reparameterized as dispersion, $\sigma_{j} = \iota_{j}^{-1}$. These restrictions on the item parameters are sufficient to identify $\theta_{g}$.
+
+<!-- \iota_{j} &= 
+    \tilde{\iota}_{j} \left(
+      \prod\limits_{j = 1}^{J}\tilde{\iota}_{j} 
+    \right)^{-1/J} -->
+
+
+
 ### Weighted Outcome Data {#sec:model-weights}
 
 The group-level model learns about group ideal points by surveying individuals within groups, but the model currently assumes that all $y_{gj}$ are independent conditional on the item. If the same individuals answer multiple items, this assumption is violated. Additionally, we cannot assume that responses are independent in the presence of nonrepresentative survey designs. This section describes an approach for weighting group-level data that adjusts for both issues. The corrections are lifted from @caughey-warshaw:2015:DGIRT with slight modifications.
@@ -708,9 +714,19 @@ where I take the minimum to ensure that the number of successes does not exceed 
 It is likely that many values of $n^{*}_{gj}$ and $s^{*}_{gj}$ will be non-integers. Ordinarily this would be a problem for modeling a Binomial random variable, since a Binomial is an integer-valued count of successes given an integer number of trials and a success probability. For this reason, many statistical programs will return an error if a floating-point argument is bassed to the Binomial probability mass function. Whereas @caughey-warshaw:2015:DGIRT calculate $\lceil n^{*}_{gj} \rceil$ and $\lfloor s^{*}_{gj} \rceil$ to obtain integer data for estimation, I instead implement a custom Binomial quasi-likelihood function that returns log probabilities for weighted data (see Section&nbsp;\@ref(sec:logp-accumulator)).
 
 
-### Model Implementation in Stan {#sec:stan-setup}
 
-I build and estimate the modeling using Stan, a programming language for high-performance Bayesian analysis that extends and interfaces with `C++` [@carpenter-at-al:2016:stan]. Stan implements an adaptive variant of Hamiltonian Monte Carlo (HMC), an algorithm that efficiently collects posterior samples by "surfing" a Markov proposal trajectory along the gradient of the posterior distribution. Because the algorithm uses the posterior gradient to generate proposals, the algorithm concentrates proposals in regions of high transition probability and performs better in high dimensions than conventional Gibbs sampling algorithms. Although it possible to estimate Stan models using front-end software packages such as `brms` for R [@burkner:2017:brms], complicated models must be programmed with raw Stan code, which can be intensive. This section describes instances where the model _as programmed in Stan_ departs from the model _as written_ above. Although these alterations do not change the theoretical statistical properties of the model, they are essential for the model's computational viability by protecting against biased MCMC convergence and floating point arithmetic errors.
+### Bayesian Estimation and Computational Implementation {#sec:stan-setup}
+
+<!-- ### Model Implementation in Stan  -->
+
+<!------- TO DO ---------
+BAYESIAN OVERTURE
+
+- key benefits (just another parameter)
+- additional considerations
+------------------------->
+
+I implement the model using Stan, a programming language for high-performance Bayesian analysis that extends and interfaces with `C++` [@carpenter-at-al:2016:stan]. Stan implements an adaptive variant of Hamiltonian Monte Carlo (HMC), an algorithm that efficiently collects posterior samples by "surfing" a Markov proposal trajectory along the gradient of the posterior distribution. Because the algorithm uses the posterior gradient to generate proposals, the algorithm concentrates proposals in regions of high transition probability and performs better in high dimensions than conventional Gibbs sampling algorithms. Although it possible to estimate Stan models using front-end software packages such as `brms` for R [@burkner:2017:brms], complicated models must be programmed with raw Stan code, which can be intensive. This section describes instances where the model _as programmed in Stan_ departs from the model _as written_ above. Although these alterations do not change the theoretical statistical properties of the model, they are essential for the model's computational viability by protecting against biased MCMC convergence and floating point arithmetic errors.
 <!------- TO DO optimization? ------------------------->
 These contributions should be highlighted here because they are crucial to ensuring valid inferences and are substantive improvements on previous software implementations of group-level IRT models.
 
@@ -720,70 +736,10 @@ These contributions should be highlighted here because they are crucial to ensur
     - log probability 
 -->
 
-
-
-#### Log Likelihood for Weighted Data {#sec:logp-accumulator}
-
-One important implementation consideration for the group IRT model is the presence of weighted, non-integer response data. As described in Section&nbsp;\@ref(sec:model-weights), grouped data require reweighting to account for nonrepresentative sample designs and repeated observations within individual members of a group. The resulting data are likely to take non-integer values, which would cause the built-in Binomial likelihood function to fail. Whereas @caughey-warshaw:2015:DGIRT round their data to conform to Stan's Binomial likelihood function, my approach rewrites the likelihood function to accept non-integer data. This allows me to maintain the precision in the underlying data while still correcting the issue at hand.
-
-To explain how this works in Stan, some context on Bayesian computation is helpful. It is usually sufficient for Bayesian estimation with Markov chain Monte Carlo to calculate the posterior density of model parameters only up to a proportionality constant,
-\begin{align}
-  (\#eq:bayes-prop)
-  p(\theta \mid y) &\propto p(y \mid \theta)p(\theta),
-\end{align}
-where $\theta$ and $y$ generically represent parameters and observed data. For computational stability, especially in high dimensions where probability densities get very small, these calculations are done on the log scale.
-\begin{align}
-  \log p(\theta \mid y) &\propto \log p(y \mid \theta) + \log p(\theta),
-  (\#eq:bayes-prop-log)
-\end{align}
-MCMC algorithms calculate the right-side of this proportionality at each iteration of the sampler to decide if proposed parameters should be accepted into the sample or rejected. In Stan, this calculation is passed to the _log density accumulator_, a variable containing the sum of the log likelihood and log prior density at every sampler iteration [@carpenter-at-al:2016:stan]. 
-
-In the current case, it is the probability of the data $\log p(y \mid \theta)$ that presents a problem. The Binomial log likelihood function as written in Stan will not accept non-integer data, so I rewrite the kernel $K(\cdot)$ of the Binomial log likelihood,
-\begin{align}
-  \log K\left(p\left(s^{*}_{gj} \mid \pi_{gj} \right)\right) 
-  &=
-    s^{*}_{gj} \log \pi_{gj} 
-    + \left(n_{gj}^{*} - s^{*}_{gj}\right) \log \left(1 -\pi_{gj}\right)
-  (\#eq:weighted-ll-raw)
-\end{align}
-where the number of trials $n_{gj}^{*}$ and the number of successes $s^{*}_{gj}$ can take non-integer values. This is the same approach that @ghitza-gelman:2013:subgroup-mrp take in a frequentist maximum likelihood context.^[
-  They describe this as "simply the weighted log likelihood approach to fitting generalized linear models with weighted data" [@ghitza-gelman:2013:subgroup-mrp, 765].
-]
-Rather than declare that $s^{*}_{gj}$ is a standard Binomial draw, I pass the results of Equation&nbsp;\@ref(eq:weighted-ll-raw) directly to the log density accumulator. This serves as the log likelihood for the response data. Other sampling statements that add prior density to the accumulator are unaffected by my approach to the log likelihood.
-
-I implement Equation&nbsp;\@ref(eq:weighted-ll-raw) using a log sum of exponentials routine, a practice for robust computational arithmetic that prevents numerical underflow [e.g. @Carpenter:2016:logsumexp].
-
-[ insert what that routine actually would be]
-
-\begin{align}
-  \eta_{gj} &= 
-    \left(
-      \frac{\bar{\theta}_{g} - \kappa_{j}}{
-            \sqrt{ \sigma_{g}^{2} + \sigma^{2}_{j}}}
-    \right) \\
-  \pi_{gj} &= 
-    \tilde{\Phi}\left(\eta_{gj}\right) \text{ (logistic approximation to $\Phi(\cdot)$)}\\
-  &= 
-    \mathrm{logit}^{-1}\left(
-      0.07056 \eta_{gj}^{3} + 1.5976 \eta_{gj}
-    \right)
-  (\#eq:robust-likelihood)
-\end{align}
-
-To do:
-
-- does the logistic approximation fail without log-sum-exponential after the changes we've made to the model already?
-
-<!------- TO DO ---------
-- come back to this after trying the probit in the code again!
-------------------------->
-
-
 #### Non-Centered Parameterization {#sec:noncentering}
 
 <!-- Non-Centered Parameterization -->
-Many common MCMC algorithms have 
-
+<!-- Many common MCMC algorithms have  -->
 
 Hierarchical models have posterior distributions whose curvatures present difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations]. To improve the estimation in Stan,
   <!-- to do: Stan -->
@@ -798,7 +754,7 @@ the non-centered parameterization defines $\bar{\theta}_{g}$ as a deterministic 
     u_{g} &\sim \mathrm{Normal}\left(0, 1\right)
   (\#eq:theta-g-noncenter)
 \end{align}
-where $u_{g}\tau_{p[g]}$ is a group-level error term. It is composed of a standard Normal variate $u_{g}$ and a scalar parameter $\tau_{p}$ that controls the variance of the error term. The non-centered model is algebraically equivalent to centered model, but it "factors out" the hypermean and the error variance from the hierarchical model. This improves MCMC estimation by de-correlating (or "unnesting") the parameters that compose the hierarchical distribution. Hierarchical models using a centered parameterization are vulnerable to estimation biases that result from poor posterior exploration [@betancourt:2015:hamiltonian].^[
+where $u_{g}\tau_{p[g]}$ is a group-level error term. It is composed of a standard Normal variate $u_{g}$ and a scalar parameter $\tau_{p}$ that controls the scale of the error term. The non-centered model is equivalent to centered model algebraically and in the likelihood, but it factors out (or "unnests") the hypermean and the error variance from the hierarchical model. This improves MCMC sampling by de-correlating the parameters that compose the hierarchical distribution. Hierarchical models using a centered parameterization are vulnerable to estimation biases that result from poor posterior exploration [@betancourt:2015:hamiltonian].^[
   Because Stan's HMC algorithm uses the gradient of the posterior distribution to propose efficient transition trajectories through the parameter space, it adaptively builds expectations about the log density of the next Markov state. Areas of high curvature in the posterior gradient can lead to "divergences" in the HMC algorithm: transitions where the log density of a state diverges substantially from what Stan anticipated when it proposed the transition. Markov chains with many divergent transitions have a high risk of being severely biased, since the divergences indicate that the Markov chain is failing to efficiently navigate the parameter space [@betancourt:2015:hamiltonian]. The non-centered parameterization smooths out these problematic regions of posterior density, safeguarding against biased MCMC estimates.
 ]
 This is a crucial extension to the estimation approach developed by @caughey-warshaw:2015:DGIRT, whose model implements all hierarchical components using the centered parameterization.
@@ -835,6 +791,64 @@ Where $X_{g}$ and $Z_{sp}$ are the same group- and state-level covariates as the
 - Read stan files into an appendix?
 ------------------------->
 
+
+#### Log Likelihood for Weighted Data {#sec:logp-accumulator}
+
+One important implementation consideration for the group IRT model is the presence of weighted, non-integer response data. As described in Section&nbsp;\@ref(sec:model-weights), grouped data require reweighting to account for nonrepresentative sample designs and repeated observations within individual members of a group. The resulting data are likely to take non-integer values, which would cause the built-in Binomial likelihood function to fail. Whereas @caughey-warshaw:2015:DGIRT round their data to conform to Stan's Binomial likelihood function, my approach rewrites the likelihood function to accept non-integer data. This allows me to maintain the precision in the underlying data while still correcting the issue at hand.
+
+To explain how this works in Stan, some context on Bayesian computation is helpful. It is usually sufficient for Bayesian estimation with Markov chain Monte Carlo to calculate the posterior density of model parameters only up to a proportionality constant,
+\begin{align}
+  (\#eq:bayes-prop)
+  p(\theta \mid y) &\propto p(y \mid \theta)p(\theta),
+\end{align}
+where $\theta$ and $y$ generically represent parameters and observed data. For computational stability, especially in high dimensions where probability densities get very small, these calculations are done on the log scale.
+\begin{align}
+  \log p(\theta \mid y) &\propto \log p(y \mid \theta) + \log p(\theta),
+  (\#eq:bayes-prop-log)
+\end{align}
+MCMC algorithms calculate the right-side of this proportionality at each iteration of the sampler to decide if proposed parameters should be accepted into the sample or rejected. In Stan, this calculation is passed to the _log density accumulator_, a variable containing the sum of the log likelihood and log prior density at every sampler iteration [@carpenter-at-al:2016:stan]. 
+
+In the current case, it is the probability of the data $\log p(y \mid \theta)$ that presents a problem. The Binomial log likelihood function as written in Stan will not accept non-integer data, so I rewrite the kernel $K(\cdot)$ of the Binomial log likelihood,
+\begin{align}
+  \log K\left(p\left(s^{*}_{gj} \mid \bar{\pi}_{gj} \right)\right) 
+  &=
+    s^{*}_{gj} \log \bar{\pi}_{gj} 
+    + \left(n_{gj}^{*} - s^{*}_{gj}\right) \log \left(1 -\bar{\pi}_{gj}\right)
+  (\#eq:weighted-ll-raw)
+\end{align}
+where the number of trials $n_{gj}^{*}$ and the number of successes $s^{*}_{gj}$ can take non-integer values. This is the same approach that @ghitza-gelman:2013:subgroup-mrp take in a frequentist maximum likelihood context.^[
+  They describe this as "simply the weighted log likelihood approach to fitting generalized linear models with weighted data" [@ghitza-gelman:2013:subgroup-mrp, 765].
+]
+Rather than declare that $s^{*}_{gj}$ is a standard Binomial draw, I pass the results of Equation&nbsp;\@ref(eq:weighted-ll-raw) directly to the log density accumulator. This serves as the log likelihood for the response data. Other sampling statements that add prior density to the accumulator are unaffected by my approach to the log likelihood.
+
+I implement Equation&nbsp;\@ref(eq:weighted-ll-raw) using a log sum of exponentials routine, a practice for robust computational arithmetic that prevents numerical underflow [e.g. @Carpenter:2016:logsumexp].
+
+[ insert what that routine actually would be]
+
+\begin{align}
+  \eta_{gj} &= 
+    \left(
+      \frac{\bar{\theta}_{g} - \kappa_{j}}{
+            \sqrt{ \sigma_{g}^{2} + \sigma^{2}_{j}}}
+    \right) \\
+  \bar{\pi}_{gj} &= 
+    \tilde{\Phi}\left(\eta_{gj}\right) \text{ (logistic approximation to $\Phi(\cdot)$)}\\
+  &= 
+    \mathrm{logit}^{-1}\left(
+      0.07056 \eta_{gj}^{3} + 1.5976 \eta_{gj}
+    \right)
+  (\#eq:robust-likelihood)
+\end{align}
+
+To do:
+
+- does the logistic approximation fail without log-sum-exponential after the changes we've made to the model already?
+
+<!------- TO DO ---------
+- come back to this after trying the probit in the code again!
+------------------------->
+
+
 #### Optimized IRT Model
 
 The matrix expansion trick would go here, if I did it.
@@ -844,44 +858,211 @@ The matrix expansion trick would go here, if I did it.
 ------------------------->
 
 
-### Priors and Identification {#sec:priors-identification}
 
-Latent ideal point models are unidentified without restrictions on the latent space. The polarity of the scale is set by coding all items such that conservative responses are $1$ and liberal responses are $0$. The location of the scale is set by restricting the mean of the $J$ item cutpoints to be $0$. If $\kappa^{*}_{j}$ were the "unscaled" item cutpoint, the cutpoint used in the analysis would be
-\begin{align}
-  \kappa_{j} &= \kappa^{*}_{j} - \frac{1}{J}\sum\limits_{j = 1}^{J} \kappa^{*}_{j},
-  (\#eq:scale-midpoint)
-\end{align}
-which is performed in every iteration of the sampler. The scale of the latent space is set by restricting the product of the $J$ difficulty parameters to be $1$. Letting $\iota^{*}_{j}$ be the unscaled difficulty parameter, the scaled $\iota_{j}$ is defined as follows.
-\begin{align}
-\begin{split}
-  \iota_{j} &= 
-    \iota^{*}_{j} \left(
-      \prod\limits_{i = 1}^{J}\iota^{*}_{j} 
-    \right)^{-1/J}
-    % \\
-  % &= 
-    % \iota^{*}_{j} \left(
-      % \sum\limits_{i = 1}^{J} e^{\log \iota^{*}_{j}} 
-    % \right)^{\frac{-1}{J}} %_
-\end{split}
-(\#eq:scale-difficulty)
-\end{align}
-Item discrimination is then reparameterized as dispersion, $\sigma_{j} = \iota_{j}^{-1}$. These restrictions on the item parameters are sufficient to identify $\theta_{g}$.
+### Prior Distributions and Prior Checks {#sec:priors}
 
-I specify priors for the unscaled item midpoint and difficulty parameters that are Normal and LogNormal, respectively. In order to model their joint distribution, I specify a multivariate Normal distribution for the cutpoint and logged difficulty parameter,
+<!------- TO DO ---------
+- Does intro to Bayesian stuff more rightly go in Ch 1/Intro?
+------------------------->
+The Bayesian modeling paradigm requires a joint prior probability distribution over the model parameters, which can be a benefit and a drawback of the approach. 
+Priors are beneficial as means to encode external information into a model. 
+This allows any analysis to move past "model fitting" and toward generalizing beyond a given dataset, since the posterior distribution represents a synthesis of external information with current data. 
+Furthermore, prior distributions are a framework for _formally_ including external information, rather than informally and invisibly using prior information as criteria for model selection.
+<!------- TO DO ---------
+- cite this burn!!!
+------------------------->
+Priors most useful for stabilizing parameter estimates and downweighting unreasonable estimates, not by upweighting a researcher's preferred narrative of the data-generating process.
+This is especially valuable in data-sparse settings when parameters are weakly identified or not identified at all, such as hierarchical models where group parameters can be imputed by estimating the distribution from which they are drawn using hyperpriors [@gelman-hill:2006:multilevel]. The drawback of Bayesian modeling is that prior specification is additional work for the researcher, which can be complicated especially in situations where a model is sensitive to the choice of prior. 
+
+This section provides describes and justifies priors used in the group ideal point model. The discussion here is more detailed than in a typical paper describing a Bayesian ideal point model for several reasons. 
+Firstly, the norms of the typical Bayesian workflow are evolving toward more rigorous checking of prior choices and their implications. These prior checks allow researchers to explore and demonstrate the consequences of their prior choices in transparent ways, but most Bayesian analyses in political science lack these explicit prior checks. Authors often declare their prior choices without explicitly justifying these choices, which can make prior specification feel opaque or even arbitrary to non-Bayesian readers.
+Secondly, and more specifically to this project, the nonlinearities introduced by a probit model present particular challenges for specifying priors. Some of my choices depart from those in previous Bayesian ideal point models for important theoretical and practical reasons that I explain below.
+Thirdly, model parameterization is important for effective Bayesian computation, and although reparameterizations do not affect the likelihood of data given the parameters, parameterization naturally affects the choice of priors.
+This exploration of priors is a crucial component of the model-building process for this project and is uncommon in other Bayesian works in political science, so it is important to justify these choices with sufficient detail.
+
+
+#### Understanding the Probit Model
+
+Important elements of a Bayesian modeling workflow, including simulations using fake data and the prior distributions for model parameters [@betancourt:2018:workflow-blog;@gabry-et-al:2019:visualization].
+
+
+General thoughts about priors
+
+- priors and likelihoods
+    - probit is a nonlinear model
+    - data aren't additively related to y, but some other thing
+    - the prior is specified in reference to some likelihood
+- WIPS and the evolution of thinking about this
+    - likelihood is important weak information
+    - constraining values to what is reasonable
+    - but not so informed that we're downweighting reasonable values unless when context demands
+        - sometimes it does, like identifiability, strong regularization/separation
+- parameterization
+    - normal(a, b) or a + bu, u ~ normal(0, 1)
+
+
+How the probit model works
+
+- there is a latent scale
+- covariates typically have linear, additive effects
+- error is assumed Normal
+- the latent scale is identified as having location zero and scale 1
+- this means the predicted probability of a 1 is the probability that the index > 0, which is equivalent to the normal CDF at the predicted index value
+- coefficients are uncertain, so uncertainty in posterior data are owed to probabilistic uncertainty about y given an index value, and baseline uncertainty about location on the index given covariates
+
+How Bayesian modeling with probit works:
+
+- because we know the Normal distribution, we know the region of quantile space that reasonably produces our outcome data
+- combination of data and parameters shouldn't realistically lead us beyond the quantiles that produce probabilities between 1% and 99% (justify)
+- it isn't crazy that some of our predictions are highly determined, so we don't want to be too restrictive, but broadly speaking, a priori, you know (justify better)
+
+Divergence from past work
+
+- Clinton, Jackman, Rivers
+- Treier and Hillygus
+- Caughey and Warshaw
+    - noncentering
+    - lognormal
+
+
+
+```{r probit-explore}
+prior_probit <- 
+  tibble(
+    x = seq(-6, 6, .01),
+    Probability = pnorm(x)
+  ) %>%
+  print()
+```
+
+```{r plot-valid-probit, include = TRUE, fig.width = 5, fig.height = 4, out.width = "70%", fig.cap = "The region of the probit model's linear index that maps to response probabilities between 0 and 99 percent."}
+ggplot(prior_probit) +
+  aes(x = x, y = Probability) +
+  labs(x = "Linear Index Value", y = "Success Probability") +
+  scale_x_continuous(
+    breaks = seq(prior_probit$x %>% min(), prior_probit$x %>% max(), by = 1)
+  ) +
+  coord_cartesian(ylim = c(0, 1)) +
+  # layered ribbons
+  geom_ribbon(
+    data = tibble(
+      x = c(qnorm(.005), qnorm(.995)),
+      ymin = -2, ymax = 2
+    ),
+    aes(ymin = ymin, ymax = ymax, y = NULL),
+    fill = primary_light, alpha = 0.3
+  ) +
+  geom_ribbon(
+    data = tibble(
+      x = c(qnorm(.025), qnorm(.975)),
+      ymin = -2, ymax = 2
+    ),
+    aes(ymin = ymin, ymax = ymax, y = NULL),
+    fill = primary_light, alpha = 0.5
+  ) +
+  geom_ribbon(
+    data = tibble(
+      x = c(qnorm(.05), qnorm(.95)),
+      ymin = -2, ymax = 2
+    ),
+    aes(ymin = ymin, ymax = ymax, y = NULL),
+    fill = primary_light, alpha = 0.7
+  ) +
+  # 90%
+  annotate(geom = "text", x = 3, y = 0.5, hjust = -0.1, label = "Inner 90%") +
+  annotate(
+    geom = "segment", 
+    x = 3, xend = 0.85, y = 0.50, yend = 0.50
+  ) +
+  annotate(geom = "point", x = 0.85, y = 0.5, size = 1) +
+  # 95%
+  annotate(geom = "text", x = 3, y = 0.35, hjust = -0.1, label = "Inner 95%") +
+  annotate(
+    geom = "segment", 
+    x = 3, xend = mean(qnorm(c(.975, .95))), y = 0.35, yend = 0.35
+  ) +
+  annotate(geom = "point", x = mean(qnorm(c(.975, .95))), y = 0.35, size = 1) +
+  # 99%
+  annotate(geom = "text", x = 3, y = .20, hjust = -0.1, label = "Inner 99%") +
+  annotate(
+    geom = "segment", 
+    x = 3, xend = mean(qnorm(c(.995, .975))), y = .20, yend = .20
+  ) +
+  annotate(geom = "point", x = mean(qnorm(c(.995, .975))), y = 0.2, size = 1) +
+  # cdf
+  geom_line(size = 0.75) +
+  annotate(
+    geom = "text", label = "Normal CDF\n(Inverse Probit)",
+    x = -3, y = .85,
+    hjust = 1
+  ) +
+  annotate(
+    geom = "segment", x = -3, xend = qnorm(.85),
+    y = .85, yend = .85
+  ) +
+  annotate(geom = "point", x = qnorm(.85), y = .85, size = 1)
+```
+
+
+```{r, eval = FALSE}
+# ---- investigation of CJR and Treier/Hillygus priors ------------
+
+treier <- tibble(
+  beta = rnorm(5000, mean = 0, sd = 1)
+) %>%
+  mutate(group = row_number()) %>%
+  crossing(theta = seq(-3, 3, .01)) %>%
+  mutate(
+    index = beta * (theta - 0),
+    prob = pnorm(index)
+  ) %>%
+  print()
+
+treier %>%
+  filter(theta == 1) %>%
+  ggplot() +
+    aes(x = prob) +
+    geom_histogram(boundary = 0, binwidth = .01) +
+    labs(
+      x = "Prior Probability of Conservative Response",
+      y = "Prior Frequency (5k draws)",
+      title = TeX("Discrimination ~ $N(0, 1)$")
+    )
+
+  ggplot(treier) +
+    aes(x= theta, y = prob) +
+    geom_line(
+      aes(group = group),
+      alpha = 0.25
+    )
+```
+
+#### Item Parameters
+
+
+
+I specify priors on the unscaled cutpoint and discrimination parameters that are Normal and LogNormal, respectively. In order to model their joint distribution, I specify a multivariate Normal distribution for the cutpoint and logged discrimination parameter,
 <!------- TO DO ---------
 - Come back to This
 - why give discrimination a LN prior? because it's multiplied into the equation, would be added on the log scale?
 ------------------------->
 \begin{align}
   \begin{bmatrix}
-    \kappa^{*}_{j} \\
-    \mathrm{log}\left(\iota^{*}_{j}\right)
+    \tilde{\kappa}_{j} \\
+    \mathrm{log}\left(\tilde{\iota}_{j}\right)
   \end{bmatrix}
   &\sim 
   \mathrm{Normal}\left(\bm{\mu}, \bm{\Sigma}\right)
 \end{align}
-where $\bm{\mu}$ is a $2$-vector of means and $\bm{\Sigma}$ is a $2 \times 2$ variance-covariance matrix. The hierarchical model partially pools the item parameters toward a common multivariate distribution rather than "forgetting" the information learned from one item when updating the prior for the next item. The discrimination parameter, which has a product of $1$ when scaled, is logged so that it has a mean of $0$ on the log scale. This simplifies the prior specification of the mean vector $\bm{\mu}$, which is a standard multivariate Normal with no off-diagonal elements.
+where $\bm{\mu}$ is a $2$-vector of means and $\bm{\Sigma}$ is a $2 \times 2$ variance-covariance matrix. 
+Whereas @caughey-warshaw:2015:DGIRT specify independent priors for all item cutpoint and discrimination parameters separately, my hierarchical model partially pools the item parameters toward a common distribution. 
+This allows estimates to borrow precision from one another rather than "forgetting" the information learned from one item when updating the prior for the next item.
+The discrimination parameter, which has a product of $1$ when scaled, is logged so that it has a mean of $0$ on the log scale. 
+This simplifies the prior specification of the mean vector $\bm{\mu}$, which is a standard multivariate Normal with no off-diagonal elements.^[
+  Although I use a joint prior, the assumptions about the parameters' marginal distributions are similar to @caughey-warshaw:2015:DGIRT. 
+  Their choice to restrict discrimination parameter to have a product of $1$ and a LogNormal distribution is identical to my choice to restrict log discrimination parameters to have a sum of $0$ and a Normal prior.
+  The benefit of my parameterization is that, by specifying the Normal family directly on the logged discrimination parameter, it is much simpler to build the joint hierarchical prior for all item parameters simultaneously.
+]
 \begin{align}
   \bm{\mu} &\sim 
     \mathrm{Normal}\left( 
@@ -890,29 +1071,78 @@ where $\bm{\mu}$ is a $2$-vector of means and $\bm{\Sigma}$ is a $2 \times 2$ va
     \right)
 \end{align}
 
-```{r lkj-sim, eval = FALSE}
+```{r lkj-density}
+# compute LKJ density for fixed rho values
+# also generate density for sd terms
+lkj_scale <- 1
+# sqrt(pi) / sqrt(2)
+
+# (to plot exact densities, not samples)
+lkj_density <- tibble(rho = seq(-1, 1, length.out = 1000)) %>%
+  mutate(id = row_number()) %>%
+  mutate(
+    mat = map(rho, ~ matrix(data = c(1, .x, .x, 1), nrow = 2, ncol = 2)),
+    prop_density_lkj = map_dbl(mat, ~ rethinking::dlkjcorr(.x, eta = 2, log = TRUE))
+    # log SHOULD be false but bug in the program
+    # , density_lkj = prop_density_lkj / sum(prop_density_lkj)
+  ) %>%
+  mutate(
+    sd = seq(0, 3.5, length.out = n()),
+    density_halfnorm = 2 * dnorm(sd, mean = 0, sd = 1)
+  ) %>%
+  print()
+
+p_lkj <- ggplot(lkj_density) +
+  aes(x = rho, y = prop_density_lkj, ymax = prop_density_lkj, ymin = 0) +
+  geom_ribbon(, fill = primary_light, color = NA, alpha = 0.5) +
+  geom_line() +
+  labs(
+    x = TeX("Off-Diagonal Correlation ($\\rho$)"),
+    y = "Prior Density"
+  ) +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+  NULL
+
+lkj_dens_plots <- 
+  p_lkj +
+    aes(x = sd, y = density_halfnorm, ymax = density_halfnorm) +
+    labs(
+      x = TeX("Item Scales ($\\sigma_{\\tilde{\\kappa}}$ and $\\sigma_{\\tilde{\\iota}}$)"),
+      y = "Prior Density",
+      title = "Variance-Covariance Matrix Components"
+    ) +
+  p_lkj 
+
+lkj_dens_plots
+```
+
+
+```{r lkj-sim}
 
 # make dlkjcorr matrices
 # extract rho for plotting
 # sim items using dexp and multiplication
 
-sim_lkj_params <- 
-  tibble(id = 1:10000) %>%
+# this is much faster, dipshit
+# rethinking::rlkjcorr(1000, K = 2, eta = 4) %>%
+#   as.data.frame() %>% # for breaking-change stability
+#   as_tibble()
+
+sim_lkj_params <- rethinking::rlkjcorr(3000, K = 2, eta = 4) %>%
+  as.data.frame() %>% # for breaking-change stability
+  as_tibble(.name_repair = "check_unique") %>%
+  select(rho = V2) %>%
   mutate(
-    sd1 = rnorm(n = n(), mean = 0, sd = 1) %>% abs(),
-    sd2 = rnorm(n = n(), mean = 0, sd = 1) %>% abs()
+    sd1 = rnorm(n = n(), mean = 0, sd = lkj_scale) %>% abs(),
+    sd2 = rnorm(n = n(), mean = 0, sd = lkj_scale) %>% abs(),
+    id = 1:n()
   ) %>%
-  group_by_all() %>%
+  group_by(id) %>%
   mutate(
-    lkj = map(id, 
-      ~ rethinking::rlkjcorr(n = 1, K = 2, eta = 2) %>% 
-        as.matrix()
-    ),
-    rho = map(lkj, ~ .x[1, 2]),
-    vdiag = 
-      map2(sd1, sd2, ~ c(.x, .y)^2 %>% diag() %>% as.matrix()),
-    vc = 
-      map2(vdiag, lkj, ~ .x %*% .y %*% .x),
+    cor_matrix = 
+      map(rho, ~ matrix(data = c(1, .x, .x, 1), nrow = 2, ncol = 2)),
+    vdiag = map2(sd1, sd2, ~ c(.x, .y) %>% diag() %>% as.matrix()),
+    vc = map2(vdiag, cor_matrix, ~ .x %*% .y %*% .x),
     items = map(vc, 
       ~ mvtnorm::rmvnorm(
           n = 1, 
@@ -927,91 +1157,101 @@ sim_lkj_params <-
     )
   ) %>%
   ungroup() %>%
-  unnest_legacy(items, rho) %>%
+  unnest(items) %>%
   print()
 
+sim_lkj_params %>% pull(sd1) %>% mean()
 # sim_lkj_params %>% pull(lkj)
-
 # sim_lkj_params %>% pull(vdiag)
-
 # sim_lkj_params %>% pull(vc)
-
 # sim_lkj_params %>% pull(items)
 ```
 
 
-```{r plot-lkj}
+
+```{r plot-item-scatter}
 # point density
+outer_point <- sim_lkj_params %$% 
+  abs(max(max(cutpoint), max(log_disc))) %>%
+  print()
+
 p_item_scatter <- ggplot(sim_lkj_params) +
   aes(x = cutpoint, y = log_disc) +
-  ggpointdensity::geom_pointdensity(size = 1, show.legend = FALSE) +
-  viridis::scale_color_viridis(option = "cividis") +
-  # coord_cartesian(ylim = c(-5, 5), xlim = c(-5, 5))
-  # coord_fixed()
-  labs(
-    x = TeX("Cutpoint ( $\\kappa_{j}$ )"),
-    y = TeX("Log Discrimination ( $\\iota_{j}$ )")
+  ggpointdensity::geom_pointdensity(
+    size = 1
   ) +
-  theme(legend.position = "none") +
+  viridis::scale_color_viridis(option = "viridis") +
+  labs(
+    x = TeX("Cutpoint ( $\\tilde{\\kappa}_{j}$ )"),
+    y = TeX("Log Discrimination ( log $\\tilde{\\iota}_{j}$ )"),
+    title = "Unscaled Item Parameters",
+    subtitle = "Simulated from joint prior",
+    color = "Density (num. neighbors)"
+  ) +
+  coord_cartesian(
+    ylim = c(-outer_point, outer_point),
+    xlim = c(-outer_point, outer_point)
+  ) +
   NULL
 
-p_lkj_hist <- sim_lkj_params %>% 
-  mutate(disc = exp(log_disc)) %>%
-  gather(key = param, value = value, rho, sd1) %>%
-  # cutpoint, contains("disc"), contains("sd")) %>%
-  ggplot() +
-    aes(x = value) +
-    facet_wrap(
-      ~ param, scales = "free",
-      labeller = 
-        as_labeller(c("rho" = "Off-diagonal correlations", "sd1" = "Hierarchical Std. Dev"))
-    ) + 
-    geom_histogram(bins = 30, boundary = 0, fill = purp, color = "black") +
-    labs(x = " ", y = "Frequency")
+lkj_item_sim <- 
+  p_item_scatter + guide_area() + plot_layout(guides = 'collect')
 
-# update patchwork omg
-(p_lkj_hist / p_item_scatter) +
-  plot_layout(heights = 1)
-
+lkj_item_sim  
 ```
 
-I build a prior for the variance-covariance matrix $\bm{\Sigma}$ by first factoring out the variance components, exposing a correlation matrix with unit diagonals and a correlation parameter $\rho$. 
+```{r plot-lkj}
+lkj_dens_plots  / lkj_item_sim
+```
+
+I build a prior for the variance-covariance matrix $\bm{\Sigma}$ by decomposing it into a diagonal matrix of scale terms and a correlation matrix. First I factor out the scale components.
 \begin{align}
   \bm{\Sigma} &= 
   \begin{bmatrix}
-    \sigma^{2}_{\kappa^{*}_{j}} & 
-      \rho \sigma_{\kappa^{*}_{j}} \sigma_{\iota^{*}_{j}} \\
-    \rho \sigma_{\kappa^{*}_{j}} \sigma_{\iota^{*}_{j}} & 
-      \sigma^{2}_{\iota^{*}_{j}}
+    \sigma^{2}_{\tilde{\kappa}} & 
+      \rho \sigma_{\tilde{\kappa}} \sigma_{\tilde{\iota}} \\
+    \rho \sigma_{\tilde{\kappa}} \sigma_{\tilde{\iota}} & 
+      \sigma^{2}_{\tilde{\iota}}
   \end{bmatrix}
   \\
   &= 
     \begin{bmatrix} 
-      \sigma^{2}_{\kappa^{*}_{j}} & 0 \\
-      0 & \sigma^{2}_{\iota^{*}_{j}}
+      \sigma_{\tilde{\kappa}} & 0 \\
+      0 & \sigma_{\tilde{\iota}}
     \end{bmatrix}
     \bm{S} 
     \begin{bmatrix} 
-      \sigma^{2}_{\kappa^{*}_{j}} & 0 \\
-      0 & \sigma^{2}_{\iota^{*}_{j}}
-    \end{bmatrix} \\
+      \sigma_{\tilde{\kappa}} & 0 \\
+      0 & \sigma_{\tilde{\iota}}
+    \end{bmatrix}
+\end{align}
+The resulting matrix $\bm{S}$ is a $2 \times 2$ correlation matrix, meaning it has a unit diagonal and off-diagonal correlation terms (denoted $\rho$).
+\begin{align}
   \bm{S} &=
     \begin{bmatrix}
       1 & \rho \\
       \rho & 1
     \end{bmatrix}
 \end{align}
-I then specify priors for $\sigma_{\kappa^{*}_{j}}$, $\sigma_{\iota^{*}_{j}}$, and the matrix $\bm{S}$ separately. The standard deviation terms $\sigma_{\kappa^{*}_{j}}$ and $\sigma_{\iota^{*}_{j}}$ are given weakly informative $\text{Exponential}\left(1\right)$ priors, which weakly regularize toward zero with an expected value of $1$. I give $\bm{S}$ a prior from the LKJ distribution, which is a generalization of the Beta distribution that is defined over the space of symmetric positive definite matrices with unit diagonals, such as a correlation matrix [@LKJ:2009:correlation-matrices]. 
+I then specify priors for the scale terms, $\sigma_{\tilde{\kappa}}$ and $\sigma_{\tilde{\iota}}$, and the correlation matrix $\bm{S}$ separately. This approach is also known as a "separation strategy" for covariance matrix priors [@barnard-mcculloch-meng:2000:covariance-separation].^[
+  Although inverse-Wishart priors are often chosen for covariance matrices because they ensure conjugacy of the multivariate Normal distribution, recent work by Bayesian statisticians suggests that the separation strategy for covariance matrices is superior. The inverse-Wishart distribution has certain restrictive properties such as prior dependency between scales and correlations (large and small scales imply large and small correlations, respectively) that many Bayesian statisticians find undesirable compared to priors specified using the more flexible separation strategy [@alvarez-niemi-simpson:2014:covariance-prior; @akinc-vandebroek:2018:covariance-prior]. Furthermore, the conjugacy of the inverse-Wishart is irrelevant for this model because conjugacy does not provide the same computational benefit for Hamiltonian Monte Carlo samplers as it does for Gibbs samplers or analytic posterior computation.
+]
+The scale terms $\sigma_{\tilde{\kappa}}$ and $\sigma_{\tilde{\iota}}$ are given weakly informative $\text{Half-Normal}\left(0, 1\right)$ priors, which provide weak regularization toward zero but whose scale is wide enough that the data are likely to dominate the prior. I give $\bm{S}$ a prior from the LKJ distribution, which is a generalization of the Beta distribution defined over the space of symmetric, positive-definite, unit-diagonal matrices, such as a correlation matrix [@LKJ:2009:correlation-matrices].^[
+  For a matrix $\bm{S}$ that follows an LKJ distribution with shape parameter $\eta$, the density of $\bm{S}$ is a function of its determinant: $\mathrm{LKJcorr}(\bm{S} \mid \eta) = c \times \mathrm{det}\left(\bm{S}\right)^{\eta - 1}$ with proportionality constant $c$ that depends on the dimensionality of $\bm{S}$.
+]
 \begin{align}
   \bm{S} &\sim \mathrm{LKJcorr}(\eta = 2)
 \end{align}
-The LKJ distribution has one shape parameter $\eta$, which can be interpreted like a shape parameter for a symmetric Beta distribution. Setting $\eta = 1$ yields a flat prior over all correlation matrices, where $\eta > 1$ concentrates prior density toward the identity matrix as $\eta$ increases. The chosen value of $\eta = 2$ provides weak regularization against extreme correlations near $-1$ and $+1$. Although it would have been sufficient to specify a prior for $\rho$ instead of the entire matrix $\bm{S}$, this convenience only arises in small (in this case, $2 \times 2$) correlation matrices. Larger matrices would require explicit priors for a larger number of off-diagonal parameters. The LKJ prior can be applied to larger correlation matrices, so I choose it for the sake of building a more general and extensible model.
+The LKJ distribution has one shape parameter $\eta$, which can be interpreted like a shape parameter for a symmetric Beta distribution. Setting $\eta = 1$ yields a flat prior over all correlation matrices, where increasing values of $\eta1$ concentrate prior density toward the mode, which is an identity matrix. The chosen value of $\eta = 2$ provides weak regularization against extreme correlations near $-1$ and $+1$. Although it would have been sufficient to specify a prior for $\rho$ instead of the entire matrix $\bm{S}$, this convenience only arises in small (in this case, $2 \times 2$) correlation matrices. Larger matrices (such as those that would result from a more complex IRT model specification) would require explicit priors for a larger number of off-diagonal parameters. The LKJ prior can be generally applied to larger correlation matrices, so I choose it for the sake of building a more flexible and extensible model.
 
-<!------- TO DO ---------
-- I don't actually implement this yet
-------------------------->
+Figure&nbsp;\@ref(fig:plot-lkj) plots several details of the item prior. The top row shows the prior densities for the terms in the decomposed variance-covariance matrix $\bm{\Sigma}$. The left panel shows the Half-Normal prior density for the scale terms. The right panel shows the marginal distribution of $\rho$, the off-diagonal parameter in the matrix $\bm{S}$ that controls the covariance of items in the joint prior, generated from the LKJ correlation matrix prior. The bottom panel shows the distribution of item parameter values simulated from the multivariate Normal distribution implied by the joint hierarchical prior. Each point represents a simulated item as a combination of cutpoint values (on the horizontal axis) and log-discrimination values (on the vertical axis). Points are colored according to the number of nearby points, which informally conveys the prior density of items with particular cutpoint and discrimination values.
 
-```{r gen-normal-priors}
+```{r plot-lkj, include = TRUE, fig.height = 6.5, fig.width = 6, out.width = "80%", fig.cap = "Components of the joint hierarchical prior for the unscaled item parameters. Top row shows prior densities for the parameters of the decomposed variance-covariance matrix, including the standard deviation terms (left) and the item correlation from the LKJ distribution (right). The bottom row shows prior values for unscaled items simulated from the joint prior."}
+```
+
+<!-- This is rnorm for coef priors
+
+```{r gen-normal-priors, eval = FALSE}
 normal_priors <- crossing(x = 1:1000000, sd = c(0.5, 1)) %>%
   group_by(sd) %>%
   mutate(
@@ -1021,11 +1261,14 @@ normal_priors <- crossing(x = 1:1000000, sd = c(0.5, 1)) %>%
   print()
 ```
 
-```{r plot-normal-priors, include = TRUE, fig.cap = "Histograms of priors draws for coefficients and constants in the hierarchical model for group means", fig.width = 6, fig.height = 3, out.width = "80%"}
+```{r plot-normal-priors, eval = FALSE}
 ggplot(normal_priors) +
   aes(x = pnorm(v) - pnorm(0)) +
   facet_wrap(~ sd_label) +
-  geom_histogram(boundary = 0, fill = purp, color = "black") +
+  geom_histogram(
+    boundary = 0, 
+    fill = primary_light, color = "black"
+  ) +
   labs(x = "Effect on Conservative Response Probability (Baseline = 0.5)", y = NULL) +
   scale_x_continuous(limits = c(-0.5, 0.5)) +
   theme(
@@ -1034,14 +1277,227 @@ ggplot(normal_priors) +
   )
 ```
 
+-->
 
-For the hierarchical model that smooths group estimates, I give coefficients $\mathrm{Normal}\left(0, 0.5\right)$ priors. Substantively, this represents a prior where a typical draw, expected to be one standard deviation away from the mean, would change the probability of a conservative response from `r smart_number(pnorm(0), accuracy = .01)` to `r smart_number(pnorm(0.5), accuracy = .01)` (if above) or to `r smart_number(pnorm(-0.5), accuracy = .01)` (if below). Constants are given less informative $\mathrm{Normal}\left(0, 1\right)$ priors, whose density is rather flat when transformed from the link scale to the probability scale, as shown in Figure&nbsp;\@ref(fig:plot-normal-priors). Given that $95$ percent of the standard Normal distribution falls between the quantiles `r number(qnorm(0.025), accuracy = 0.01)` and `r number(qnorm(0.975), accuracy = 0.01)`, our priors should not give much weight to coefficients large enough to cause the response probability to leap from one end of that scale to the other.
+
+#### Ideal Point Parameters
+
+```{r joint-prior, eval = FALSE}
+n_norm_sim <- 5000
+
+sim_responses <- sim_lkj_params %$%
+  tibble(
+    cutpoint = cutpoint - mean(cutpoint),
+    log_disc = log_disc - mean(log_disc)
+  ) %>%
+  mutate(
+    discrimination = exp(log_disc),
+    dispersion = 1 / discrimination,
+    mu = rnorm(n = n(), mean = 0, sd = 1),
+    beta = rnorm(n = n(), mean = 0, sd = 0.5),
+    sigma = abs(rnorm(n = n(), mean = 0, sd = 1))
+  ) %>%
+  crossing(x = seq(0, 2, .5)) %>%
+  mutate(
+    theta = mu + beta * x,
+    index = (theta - cutpoint) / sqrt(dispersion^2 + sigma^2),
+    prob = pnorm(index)
+  ) %>%
+  print()
+
+ggplot(sim_responses) +
+  aes(x = dispersion) +
+  geom_histogram(binwidth = .1) +
+  coord_cartesian(xlim = c(0, 10))
+
+ggplot(sim_responses) +
+  aes(x = prob, y = as.factor(x)) +
+  ggridges::geom_density_ridges(
+    aes(height = ..count..),
+    stat = "binline",
+    position = "identity",
+    boundary = 0,
+    binwidth = .01,
+    draw_baseline = FALSE
+  )
+
+ggplot(sim_responses) +
+  aes(x = theta, y = prob) +
+  facet_wrap(~ x) +
+  ggpointdensity::geom_pointdensity() 
+
+ggplot(sim_responses) +
+  aes(x = x, y = prob) +
+  ggpointdensity::geom_pointdensity() 
+
+sim_responses %>%
+  # filter(dispersion == sample(dispersion, 1)) %>%
+  ggplot() +
+  aes(x = theta, y = cutpoint) +
+  facet_wrap(~ x) +
+  geom_point(alpha = 0.5, aes(color = prob))
+```
+
+```{r, eval = FALSE}
+tibble(x = seq(0, 10, .01)) %>%
+  ggplot() +
+  aes(x = x, y = dlnorm(x, meanlog = 1)) +
+  geom_line()
+```
+
+For the hierarchical model that smooths group estimates, the model is parameterized to ease the specification of priors. First I standardize all covariates to have a mean of zero. This ensures that the constant $\mu_{p}$ in the hierarchical model for $\bar{\theta}_{g}$ (See Equation&nbsp;\@ref(eq:theta-g-hlm)) can be interpreted as a "grand mean" for party $p$, the average group ideal point for party $p$ when all covariates are at their means. I then give this grand mean a $\text{Normal}\left(0, 1 \right)$ prior, which implies a flat prior on the probability scale. Substantively this represents an assumption where the predicted probability of a conservative response for the typical item 
+
+```{r, eval = FALSE}
+# pass the items and HLM into the IRT model
+sim_lkj_params %$%
+  tibble(
+    cutpoint = cutpoint - mean(cutpoint),
+    dispersion = 1 / exp(log_disc - mean(log_disc))
+  ) %>%
+  mutate(r = row_number()) %>%
+  crossing(theta = seq(-3, 3, .1)) %>%
+  mutate(
+    pp = pnorm((theta - cutpoint) / dispersion)
+  ) %>%
+  arrange(theta) %>%
+  group_by(theta) %>%
+  mutate(
+    quantile = gtools::quantcut(pp)
+  ) %>%
+  ggplot() +
+    aes(x = theta, y = pp) +
+    geom_point(
+      aes(color = quantile), show.legend = FALSE,
+      alpha = 0.25,
+      shape = 19,
+      position = position_jitter(width = 0.05)
+    ) +
+    theme_void()
+
+
+tibble(
+  alpha = rnorm(n_norm_sim, mean = 0, sd = 1),
+  beta = rnorm(n_norm_sim, mean = 0, sd = 1),
+)
+```
+
+<!------- TO DO ---------
+- come back
+------------------------->
+
+average Democratic constituency and the average Republican constituency "could be anything." Because the latent scale is identified by restricting the item parameters, the relaxed prior for the average ideal points prevents the ideal point priors from interfering with the identification of the scale.
+
+```{r, eval = FALSE}
+norm_sim <- 
+  tibble(
+    alpha = rnorm(n_norm_sim, mean = 0, sd = 1),
+    beta = rnorm(n_norm_sim, mean = 0, sd = 1) 
+  ) %>%
+  mutate(r = row_number()) %>%
+  crossing(x = seq(-3, 3, .001)) %>%
+  mutate(
+    link_hat = (beta * x) + alpha,
+    p_hat = pnorm(link_hat)
+  ) %>%
+  print()
+
+norm_sim %>% 
+  filter(r == sample(r, 1000)) %>%
+  ggplot() +
+  aes(x = x, y = p_hat) +
+  geom_line(aes(group = r), alpha = 0.25) +
+  geom_vline(xintercept = seq(-2, 2, .5), color = "red")
+
+norm_sim %>%
+  filter(x %in% seq(0, 2, .5)) %>%
+  # filter(beta > 0) %>%
+  # filter(between(alpha, -.25, .25)) %>%
+  ggplot() +
+    aes(y = as.factor(x), x = p_hat) +
+    ggridges::geom_density_ridges(
+      aes(
+        height = ..count..
+        # fill = between(p_hat, quantile(p_hat, .05), quantile(p_hat, .95))
+      ),
+      stat = "binline",
+      position = "identity",
+      boundary = 0,
+      binwidth = .01,
+      draw_baseline = FALSE
+    ) +
+    theme(legend.position = "none") +
+    # scale_fill_manual(values = c(secondary_light, primary_light)) +
+    labs(
+      title = TeX("$\\hat{\\pi}_{i} = \\Phi(\\alpha + \\beta x_{i})$"),
+      subtitle = TeX("$\\alpha \\sim N(0, 1)$, $\\beta \\sim N(0, 1)$"),
+      x = TeX("$\\hat{\\pi}_{i}$"),
+      y = "At values of X = ..."
+    )
+
+norm_sim %>%
+  filter(x %in% seq(0, 2, 1)) %>%
+  ggplot() +
+    aes(x = beta, y = p_hat) +
+    ggpointdensity::geom_pointdensity(
+      size = 1,
+      method = "default"
+    ) +
+    facet_wrap(~ str_glue("X = {x}")) +
+    labs(
+      x = TeX("Hierarchical Coefficient Value: $\\beta_{p}$"),
+      y = TeX("Conservative Response Probability: $\\bar{\\pi}_{gj}$"),
+      color = "Density (num. neighbors)"
+    ) +
+    viridis::scale_color_viridis()
+
+
+norm_sim %>%
+  filter(x %in% seq(0, 2, .5)) %>%
+  ggplot() +
+    aes(x = p_hat) +
+    geom_histogram() +
+    facet_wrap(~ x)
+
+
+norm_sim %>%
+  filter(x == 1) %>%
+  filter(beta >= 0) %>%
+  mutate(inner = between(p_hat, quantile(p_hat, .05), quantile(p_hat, .95))) %>%
+  ggplot() +
+    aes(x = p_hat) +
+    geom_histogram(
+      boundary = 0, binwidth = 0.025,
+      aes(fill = inner)
+    )
+
+norm_sim %>%
+  arrange(beta) %>%
+  print() %>%
+  filter(between(beta, quantile(beta, .05), quantile(beta, .95)))
+
+qnorm(p = .975, mean = 0, sd = 0.5) %>%
+  pnorm(q = ., mean = 0, sd = 1)
+
+```
+
+I set priors for the coefficients in the hierarchical model by 
+
+I give coefficients $\mathrm{Normal}\left(0, 0.5\right)$ priors. Substantively, this represents a prior where a typical draw, expected to be one standard deviation away from the mean, would change the probability of a conservative response from `r smart_number(pnorm(0), accuracy = .01)` to `r smart_number(pnorm(1), accuracy = .01)` (if above) or to `r smart_number(pnorm(-0.5), accuracy = .01)` (if below). Constants are given less informative $\mathrm{Normal}\left(0, 1\right)$ priors, whose density is rather flat when transformed from the link scale to the probability scale, as shown in Figure&nbsp;\@ref(fig:plot-normal-priors). Given that $95$ percent of the standard Normal distribution falls between the quantiles `r number(qnorm(0.025), accuracy = 0.01)` and `r number(qnorm(0.975), accuracy = 0.01)`, our priors should not give much weight to coefficients large enough to cause the response probability to leap from one end of that scale to the other.
+
+<!-- ```{r plot-normal-priors, include = TRUE, fig.cap = "Histograms of priors draws for coefficients and constants in the hierarchical model for group means", fig.width = 6, fig.height = 3, out.width = "80%"} -->
+<!-- ``` -->
 
 <!------- TO DO ---------
 - make this adaptive?
 ------------------------->
 
-Within-group standard deviations, as well as the scale parameters in the non-centered error terms ($\tau$), are given $\mathrm{LogNormal}\left(0, 1\right)$ priors. 
+Within-group standard deviations, as well as the scale parameters in the non-centered error terms ($\tau$), are given $\mathrm{LogNormal}\left(0, 1\right)$ priors.
+
+<!------- TO DO ---------
+- scales go in here too
+- $sigma_theta$
+- $sigma_group, state, region$
+- ------------------------->
 
 
 ### Dynamic Model {#sec:dynamic-model}

@@ -24,6 +24,7 @@ _left off at LKJ_
         - Alex says: multivariate normal because they'll be correlated
     - [ ] identifiability in heteroskedastic model (Londregan?)
 - Paper fixes
+    - [ ] cite bailey for ranef approach (incidental parameters problem)
     - [ ] vector form covariates in model math section
     - [ ] pi-bar in the group model (to show that $\neq \pi$ )
     - [x] IRT model from formal assumptions
