@@ -63,9 +63,14 @@ data {
 parameters {
  
   // --- IRT ---
-  vector[n_item] cut_raw; // raw item midpoint
-  vector<lower = 0>[n_item] log_disc_raw;  // raw item discrimination
   real<lower = 0> sigma_in_g; // only 1. If heteroskedastic: next block
+  vector[2] item_params[n_item]; // cutpoint and log discrimination
+
+  // hierarchical item/LKJ setup
+  vector[2] mu;
+  vector<lower = 0>[2] item_scales;
+  corr_matrix[2] item_corr;
+
 
   
   // --- HIERARCHY ---
@@ -104,11 +109,16 @@ transformed parameters {
   vector<lower = 0, upper = 1>[n] pprob;       // normal CDF
   vector[n] eta;                               // link scale index
   vector[n_group] theta;                       // group mean
-  vector[n_item] cutpoint;                     // identified cutpoint
-  // vector<lower = 0>[n_item] disc_raw      ;    // exp(log(disc))
-  vector<lower = 0>[n_item] discrimination;    // identified discrimination
+
+  // item parameters
+  vector[n_item] cut_raw;       // raw item midpoint
+  vector[n_item] log_disc_raw;  // raw item discrimination
+  vector[n_item] cutpoint;                  // identified cutpoint
+  vector<lower = 0>[n_item] discrimination; // identified discrimination
   vector<lower = 0>[n_item] dispersion;
 
+  // item covariance matrix
+  cov_matrix[2] item_sigma; //item_scales %*% item_corr %*% item_scales
 
   // --- hierarchical regressions ---
   // theta regression
@@ -116,15 +126,18 @@ transformed parameters {
   matrix[n_state, n_party] st_offset_mean;
   matrix[n_region, n_party] rg_offset_mean;
 
+  // extract raw item params
+  // first index is ARRAY position, second is vector element?
+  cut_raw = to_vector(item_params[ , 1]);
+  log_disc_raw = to_vector(item_params[ , 2]);
   // cutpoints are mean 0 (dynamic: in year 1)
+  // log-disc are mean 0 (disc is product 1)
   cutpoint = cut_raw - mean(cut_raw);
-
-  // discrimination are prod = 1
-  // dispersion = 1 / discrimination
-  // disc_raw = exp(log_disc_raw)); use the logged in the formula
-  discrimination = 
-    exp(log_disc_raw) * pow(exp(sum(log_disc_raw))), (-inv(n_item)));
+  discrimination = exp(log_disc_raw - mean(log_disc_raw));
   dispersion = inv(discrimination);
+
+  // create VC matrix for items: diag(v)*M*diag(v)
+  item_sigma = quad_form_diag(item_corr, item_scales);
 
   // loop over groups to get theta
   // IRT index (loop group-item)
@@ -187,9 +200,18 @@ model {
 
 
   // ----- IRT params -----
-  log_disc_raw ~ normal(0, 1); // item params: static for now?
-  cut_raw ~ normal(0, 1);
+  item_corr ~ lkj_corr(2);    // lkj prior
+  item_scales ~ normal(0, 1); // half normal scales
   sigma_in_g ~ lognormal(0, 1);    // will become regression
+  
+  // array of 2-vectors drawn from 2D multinormal normal
+  item_params ~ multi_normal(mu, item_sigma);
+  
+  // if we need to loop items, major index is the array position
+  // for (j in 1:n_item) {
+  //   item_params[j] ~ multi_normal(mu, item_sigma);
+  // }
+
 
 
   // ---- district and state regressions ----

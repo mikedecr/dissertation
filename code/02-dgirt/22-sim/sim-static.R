@@ -4,7 +4,7 @@
 # ----------------------------------------------------
 
 # exec from local file:
-# source(here::here("code", "02-dgirt", "22-sim", "long-data-sim.R"))
+# source(here::here("code", "02-dgirt", "22-sim", "sim-static.R"))
 
 
 library("here")
@@ -424,12 +424,13 @@ dgirt <- function(model, data, ...) {
 # ---- compile model -----------------------
 
 message("compiling models")
-# stop()
+stop()
 
 
 # local stan file
 long_homsk <-
   stanc(
+    # file = here("code", "02-dgirt", "21-stan", "probit-lkj.stan")
     file = here("code", "02-dgirt", "21-stan", "homoskedastic-probit.stan")
     # file = here("code", "02-dgirt", "21-stan", "long-homo-mlm.stan")
   ) %>%
