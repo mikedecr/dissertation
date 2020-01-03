@@ -424,7 +424,7 @@ dgirt <- function(model, data, ...) {
 # ---- compile model -----------------------
 
 message("compiling models")
-stop()
+# stop("run models yourself")
 
 
 # local stan file
@@ -437,12 +437,13 @@ long_homsk <-
   stan_model(stanc_ret = ., verbose = TRUE) %>%
   print()
 
-long_het <-  
-  stanc(
-    file = here("code", "02-dgirt", "21-stan", "long-hetero-mlm.stan")
-  ) %>%
-  stan_model(stanc_ret = ., verbose = TRUE) %>%
-  print()
+
+# long_het <-  
+#   stanc(
+#     file = here("code", "02-dgirt", "21-stan", "long-hetero-mlm.stan")
+#   ) %>%
+#   stan_model(stanc_ret = ., verbose = TRUE) %>%
+#   print()
 
 if (whoami == "michaeldecrescenzo") {
   beepr::beep(2)
@@ -450,8 +451,7 @@ if (whoami == "michaeldecrescenzo") {
 
 
 long_homsk
-
-long_het
+# long_het
 
 message("models compiled")
 
@@ -474,7 +474,7 @@ message("models compiled")
 
 # same in data/sim-dgirt/mcmc
 mcmc_homsk <- dgirt(long_homsk, stan_data)
-boxr::box_write(mcmc_homsk, "test-probit.RDS", dir_id = mcmc_dir)
+boxr::box_write(mcmc_homsk, "test-probit-lkj-stanfit.RDS", dir_id = mcmc_dir)
 # boxr::box_write(mcmc_homsk, "test-homsk-stanfit.RDS", dir_id = mcmc_dir)
 
 # mcmc_het <- dgirt(long_het, stan_data)
@@ -510,7 +510,9 @@ box_write(
 
 
 # ---- stopping -----------------------
+message("print before stopping")
 stop()
+message("print after stopping")
 
 
 # ---- things to think about -----------------------
