@@ -24,7 +24,7 @@ rmd_files:
     - 01_arg.Rmd
     - 020_model.Rmd
     # - 021_model-sim.Rmd
-    - 030_descriptives.Rmd
+    - 030_causality.Rmd
     - 040_positioning.Rmd
     - 050_voting.Rmd
     - 90_backmatter.Rmd
@@ -35,7 +35,7 @@ rmd_files:
     - 01_arg.Rmd
     - 020_model.Rmd
     # - 021_model-sim.Rmd
-    - 030_descriptives.Rmd
+    - 030_causality.Rmd
     - 040_positioning.Rmd
     - 050_voting.Rmd
     - 99_references.Rmd

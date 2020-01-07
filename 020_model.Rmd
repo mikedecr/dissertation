@@ -36,7 +36,7 @@ Second, I specify and test the group-level model that I build and employ in my a
 - Prior checking
 ------------------------->
 
-Lastly, I describe how I fit the model to real data. This section describes data collection, data processing, and model performance, and it includes a preview of the estimates before a descriptive analysis in Chapter&nbsp;\@ref(ch:descriptives).
+Lastly, I describe how I fit the model to real data. This section describes data collection, data processing, and model performance, and a descriptive analysis of the estimates.
 
 
 <!------- TO DO ---------
@@ -636,23 +636,23 @@ The polarity of the space is fixed by coding all items such that conservative re
 The location of the space is set by restricting the sum of the $J$ item cutpoints to be $0$. 
 If $\tilde{\kappa}_{j}$ were an unrestricted item cutpoint, the restricted cutpoint $\kappa_{j}$ used in response model would be defined as
 \begin{align}
-  \kappa_{j} &= \tilde{\kappa}_{j} - \frac{1}{J}\sum\limits_{j = 1}^{J} \tilde{\kappa}_{j},
+  \kappa_{j} &= \tilde{\kappa}_{j} - \frac{\sum\limits_{j = 1}^{J} \tilde{\kappa}_{j}}{J},
   (\#eq:scale-midpoint)
 \end{align}
 which is performed in every iteration of the sampler. 
-This restriction on the sum of the cutpoint parameters also implies a restriction on the mean of the cutpoints, since $\frac{1}{J}0 = 0$.
+This restriction on the sum of the cutpoint parameters also implies a restriction on the mean of the cutpoints, since $\frac{0}{J} = 0$.
 
 Lastly, I set the scale of the latent space by restricting the product of the $J$ discrimination parameters to be equal to $1$.
 I implement this by restricting the log discrimination parameter to have a sum of $0$, which achieves an equivalent transformation.^[
-  A quick demonstration using three unknown values $a$, $b$, and $c$. If $a \times b \times c = 1$, then $\log(a) + \log(b) + \log(c) = \log(1)$, where $\log(1) = 0$.
+  A quick demonstration using three unknown values $a$, $b$, and $c$. If $a \times b \times c = 1$, then $\log(a) + \log(b) + \log(c) = \log(1)$, which is equal to $0$.
 ]
-Letting $\tilde{\iota}_{j}$ be the unrestricted difficulty parameter, we obtain the restricted $\iota_{j}$ as follows.
+Letting $\tilde{\iota}_{j}$ be the unrestricted discrimination parameter, we obtain the restricted $\iota_{j}$ as follows.
 \begin{align}
   \iota_{j} &= \text{exp}\left(\log\left(\iota_{j}\right) \right) \\
   \log\left(\iota_{j}\right) &= \log\left(\tilde{\iota}_{j}\right) - \frac{1}{J} \sum\limits_{j= 1}^{J} \log\left(\tilde{\iota}_{j}\right)
   (\#eq:scale-difficulty)
 \end{align}
-Item discrimination is then reparameterized as dispersion, $\sigma_{j} = \iota_{j}^{-1}$. These restrictions on the item parameters are sufficient to identify $\theta_{g}$.
+Item discrimination is then reparameterized as dispersion, $\sigma_{j} = \iota_{j}^{-1}$. These restrictions on the item parameters are sufficient to identify $\bar{\theta}_{g}$.
 
 <!-- \iota_{j} &= 
     \tilde{\iota}_{j} \left(
@@ -726,7 +726,7 @@ BAYESIAN OVERTURE
 - additional considerations
 ------------------------->
 
-I implement the model using Stan, a programming language for high-performance Bayesian analysis that extends and interfaces with `C++` [@carpenter-at-al:2016:stan]. Stan implements an adaptive variant of Hamiltonian Monte Carlo (HMC), an algorithm that efficiently collects posterior samples by "surfing" a Markov proposal trajectory along the gradient of the posterior distribution. Because the algorithm uses the posterior gradient to generate proposals, the algorithm concentrates proposals in regions of high transition probability and performs better in high dimensions than conventional Gibbs sampling algorithms. Although it possible to estimate Stan models using front-end software packages such as `brms` for R [@burkner:2017:brms], complicated models must be programmed with raw Stan code, which can be intensive. This section describes instances where the model _as programmed in Stan_ departs from the model _as written_ above. Although these alterations do not change the theoretical statistical properties of the model, they are essential for the model's computational viability by protecting against biased MCMC convergence and floating point arithmetic errors.
+I implement the model using Stan, a programming language for high-performance Bayesian analysis that extends and interfaces with `C++` [@carpenter-at-al:2016:stan]. Stan implements an adaptive variant of Hamiltonian Monte Carlo (HMC), an algorithm that efficiently collects posterior samples by "surfing" a Markov proposal trajectory along the gradient of the posterior distribution. Because the algorithm uses the posterior gradient to generate proposals, the algorithm concentrates proposals in regions of high transition probability and performs better in high dimensions than conventional Gibbs sampling algorithms. Although it possible to estimate Stan models using front-end software packages such as `brms` for R [@burkner:2017:brms], complicated models must be programmed with raw Stan code, which can be intensive. This section describes instances where the model _as programmed in Stan_ departs from the model _as written_ above. Although these alterations do not change the statistical intuitions of the model, they are essential for the model's computational stability by protecting against biased MCMC estimation and floating point arithmetic errors.
 <!------- TO DO optimization? ------------------------->
 These contributions should be highlighted here because they are crucial to ensuring valid inferences and are substantive improvements on previous software implementations of group-level IRT models.
 
@@ -744,7 +744,7 @@ These contributions should be highlighted here because they are crucial to ensur
 Hierarchical models have posterior distributions whose curvatures present difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations]. To improve the estimation in Stan,
   <!-- to do: Stan -->
 <!-- Flag early on that I'll be setting things up to make things easier in Stan -->
-I program the hierarchical models in the "non-centered" rather than the "centered" parameterizations. Whereas the centered parameterization considers $\bar{\theta}_{g}$ as a random draw from its hierarchical distribution (Equation&nbsp;\@ref(eq:theta-g-hlm) above),
+I program the hierarchical models using a "non-centered" parameterization rather than a "centered" parameterization. Whereas the centered parameterization considers $\bar{\theta}_{g}$ as a random draw from a hierarchical distribution (Equation&nbsp;\@ref(eq:theta-g-hlm) above),
 the non-centered parameterization defines $\bar{\theta}_{g}$ as a deterministic function of its conditional hypermean and a random variable.
 \begin{align}
   \bar{\theta}_{g} &=
@@ -754,8 +754,8 @@ the non-centered parameterization defines $\bar{\theta}_{g}$ as a deterministic 
     u_{g} &\sim \mathrm{Normal}\left(0, 1\right)
   (\#eq:theta-g-noncenter)
 \end{align}
-where $u_{g}\tau_{p[g]}$ is a group-level error term. It is composed of a standard Normal variate $u_{g}$ and a scalar parameter $\tau_{p}$ that controls the scale of the error term. The non-centered model is equivalent to centered model algebraically and in the likelihood, but it factors out (or "unnests") the hypermean and the error variance from the hierarchical model. This improves MCMC sampling by de-correlating the parameters that compose the hierarchical distribution. Hierarchical models using a centered parameterization are vulnerable to estimation biases that result from poor posterior exploration [@betancourt:2015:hamiltonian].^[
-  Because Stan's HMC algorithm uses the gradient of the posterior distribution to propose efficient transition trajectories through the parameter space, it adaptively builds expectations about the log density of the next Markov state. Areas of high curvature in the posterior gradient can lead to "divergences" in the HMC algorithm: transitions where the log density of a state diverges substantially from what Stan anticipated when it proposed the transition. Markov chains with many divergent transitions have a high risk of being severely biased, since the divergences indicate that the Markov chain is failing to efficiently navigate the parameter space [@betancourt:2015:hamiltonian]. The non-centered parameterization smooths out these problematic regions of posterior density, safeguarding against biased MCMC estimates.
+where $u_{g}\tau_{p[g]}$ behaves as a group-level error term. It is composed of a standard Normal variate $u_{g}$ and a scalar parameter $\tau_{p}$ that controls the scale of the error term. The non-centered model is algebraically equivalent to centered model in the likelihood, but it factors out (or "unnests") the location and the scale from the hyperprior. The non-centered parameterization improves MCMC sampling by de-correlating the parameters that compose the hierarchical distribution. Hierarchical models using a centered parameterization, on the other hand, are vulnerable to estimation biases due to poor posterior exploration [@betancourt:2015:hamiltonian].^[
+  Stan's HMC algorithm is programmed to diagnose poor posterior exploration by detecting "divergent transitions" during sampling. Because Stan's HMC algorithm uses the gradient of the posterior distribution to propose efficient transition trajectories through the parameter space, it adaptively builds expectations about the probability density of the next Markov state. Areas of high curvature in the posterior gradient can lead to "divergences" in the HMC algorithm: transitions where the log density of a state differs substantially from what Stan anticipated when it proposed the transition. Markov chains with many divergent transitions have a high risk of being severely biased, since the divergences indicate that the Markov chain is failing to efficiently navigate the parameter space [@betancourt:2015:hamiltonian]. The non-centered parameterization smooths out these problematic regions of posterior density, safeguarding against biased MCMC estimates.
 ]
 This is a crucial extension to the estimation approach developed by @caughey-warshaw:2015:DGIRT, whose model implements all hierarchical components using the centered parameterization.
 

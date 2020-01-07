@@ -7,11 +7,7 @@ title: Overall thesis notes
 _left off at LKJ_
 
 - Bureaucracy:
-    - [ ] More goal-setting for more spread-out meetings
-    - [ ] Barry meeting
-    - [x] Ken meeting
-    - [x] Alex meeting
-    - [ ] Ellie meeting
+    - [ ] New table of contents, descriptions of the chapters, circulate to the four
     - [ ] Mike meeting
     - [ ] Nadav meeting
 - Ask Alex about: 
@@ -37,6 +33,11 @@ _left off at LKJ_
     - [x] Document-level aesthetic to-dos (some time...)
     - [ ] first references: MCMC, IRT, SPD
 - Code fixes
+    - [ ] Fix linstat runs
+        - [ ] save stderr and stdout separately
+        - [ ] run short background
+        - [ ] mac access to linstat files
+        - [ ] run long background
     - [ ] discrimination should just be mean 0 on the log scale, not product 1
     - [ ] which params can we avoid saving (in simulation)?
     - [ ] hack to the end of the simulation exercise

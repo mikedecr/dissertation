@@ -7,7 +7,10 @@ U.S. House primary data from @pettigrew-primary-data.
 
 DAGs
 
-Controlled direct effect (ideology, holding fixed the vote in the district)
+Controlled direct effect (intervene on ideology, intervene on fixed level of vote in the district):
+$p(y(\mathrm{do}(\theta), \mathrm{do}(v)) - y(\mathrm{do}(\theta'), \mathrm{do}(v)))$
 
+Natural direct effect (intervene on ideology, fixing the _given_ level of vote in the direct):
+$p\left( y\left(\mathrm{do}\left(\theta\right), v\right) - y\left(\mathrm{do}\left(\theta'\right), v\right) \right)$
 
 
