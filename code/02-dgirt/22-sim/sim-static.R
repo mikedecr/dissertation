@@ -479,7 +479,7 @@ boxr::box_write(mcmc_homsk, "test-probit-lkj-stanfit.RDS", dir_id = mcmc_dir)
 
 # mcmc_het <- dgirt(long_het, stan_data)
 # boxr::box_write(mcmc_het, "test-het-stanfit.Rds", dir_id = mcmc_dir)
-beepr::beep(2)
+# beepr::beep(2)
 
 # mcmc_het
 
