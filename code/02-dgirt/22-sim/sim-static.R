@@ -388,8 +388,8 @@ lapply(stan_data, dim)
 # ---- sampler hyperparameters -----------------------
 # leave one core open on home machine
 n_chains <- min(c(parallel::detectCores() - 1, 5))
-n_iterations <- 1500
-n_warmup <- 1000
+n_iterations <- 100
+n_warmup <- n_iterations / 2
 n_thin <- 1
 adapt_delta <- 0.9
 max_treedepth <- 15
