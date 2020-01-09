@@ -388,7 +388,7 @@ lapply(stan_data, dim)
 # ---- sampler hyperparameters -----------------------
 # leave one core open on home machine
 n_chains <- min(c(parallel::detectCores() - 1, 5))
-n_iterations <- 2000
+n_iterations <- 500
 n_warmup <- n_iterations / 2
 n_thin <- 1
 adapt_delta <- 0.9
@@ -481,7 +481,9 @@ message("models compiled")
 
 # same in data/sim-dgirt/mcmc
 mcmc_homsk <- dgirt(long_homsk, stan_data)
-boxr::box_write(mcmc_homsk, "test-probit-lkj-stanfit.RDS", dir_id = mcmc_dir)
+boxr::box_write(mcmc_homsk, "probit-lkj-500.RDS", dir_id = mcmc_dir)
+# boxr::box_write(mcmc_homsk, "short-probit-lkj-stanfit.RDS", dir_id = mcmc_dir)
+# boxr::box_write(mcmc_homsk, "test-probit-lkj-stanfit.RDS", dir_id = mcmc_dir)
 # boxr::box_write(mcmc_homsk, "test-homsk-stanfit.RDS", dir_id = mcmc_dir)
 
 # mcmc_het <- dgirt(long_het, stan_data)
