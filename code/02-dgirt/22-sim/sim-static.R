@@ -394,32 +394,42 @@ n_thin <- 1
 adapt_delta <- 0.9
 max_treedepth <- 15
 
+
+# which params to monitor?
+
+
 # black box all the sampling params
 dgirt <- function(model, data, ...) {
   sampling(
-    object = model, 
-    data = data, 
-    iter = n_iterations, 
-    thin = n_thin, 
-    chains = n_chains,
-    control = list(
-      adapt_delta = adapt_delta, 
-      max_treedepth = max_treedepth
+    object = model, data = data,
+    iter = n_iterations, thin = n_thin, chains = n_chains,
+    control = list(adapt_delta = adapt_delta, max_treedepth = max_treedepth),
+    include = FALSE, # drop the following params
+    pars = c(
+      "cut_raw", "log_disc_raw", "discrimination",
+      "eta",
+      "item_corr", "item_params", "item_sigma",
+      "z_grp_mean", "z_rg_mean", "z_st_mean"
+    ),
+    diagnostic_file = here(
+      "data", "mcmc", "dgirt", "test", "logs",
+      str_glue(
+        "diagnose_", deparse(substitute(model)), "_", 
+        as.character(Sys.Date()), ".txt"
+      )
     ),
     ..., 
     verbose = TRUE
   )
 }
 
-
-
-# "theta", "cutpoint", "discrimination", "dispersion",
-# "sigma_in_g", "eta"
-# "theta_hypermean", "scale_theta", "z_theta", 
-# "sigma_g_hypermean", "sigma_in_g", "scale_sigma", "z_sigma", 
-# "party_int", "party_int_sigma",
-# "party_coefs", "party_coefs_sigma"
-# 
+# sample_file = here(
+#   "data", "mcmc", "dgirt", "test", "samples",
+#   str_glue(
+#     "samples_", deparse(substitute(model)), "_", as.character(Sys.Date())
+#   )
+# ),
+# append_samples = TRUE, $ for appending to sample_file
 
 # ---- compile model -----------------------
 
@@ -430,13 +440,10 @@ message("compiling models")
 # local stan file
 long_homsk <-
   stanc(
-    # file = here("code", "02-dgirt", "21-stan", "probit-lkj.stan")
     file = here("code", "02-dgirt", "21-stan", "homoskedastic-probit.stan")
-    # file = here("code", "02-dgirt", "21-stan", "long-homo-mlm.stan")
   ) %>%
   stan_model(stanc_ret = ., verbose = TRUE) %>%
   print()
-
 
 # long_het <-  
 #   stanc(

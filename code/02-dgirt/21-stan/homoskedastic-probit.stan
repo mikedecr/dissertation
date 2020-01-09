@@ -241,5 +241,5 @@ generated quantities {
   // matrix[n_region, n_party] resid_rg_mean;    // RxP two-d region errors
 
   item_rho = item_corr[1, 2];   // random off-diagonal
-  
+
 }
