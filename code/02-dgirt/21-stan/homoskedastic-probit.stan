@@ -194,10 +194,6 @@ model {
   // weighted likelihood
   // target += y .* log(pprob) + (trials - y) .* log(1 - pprob);
 
-  // logit link
-  // y ~ binomial_logit(trials, eta);  
-  
-
 
   // ----- IRT params -----
   item_corr ~ lkj_corr(2);    // lkj prior
@@ -239,13 +235,11 @@ model {
 
 generated quantities {
 
-  vector[n_group] idtheta;
-  real theta_iter_mean;
-  real theta_iter_sd;
+  real item_rho; 
+  // vector[n_group] resid_grp_mean;             // G-long grp errors
+  // matrix[n_state, n_party] resid_st_mean;     // SxP state errors
+  // matrix[n_region, n_party] resid_rg_mean;    // RxP two-d region errors
 
-  theta_iter_mean = mean(theta);
-  theta_iter_sd = sd(theta);
-
-  idtheta = (theta - theta_iter_mean) / theta_iter_sd;
-
+  item_rho = item_corr[1, 2];   // random off-diagonal
+  
 }

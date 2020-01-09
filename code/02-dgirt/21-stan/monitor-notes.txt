@@ -1,0 +1,53 @@
+// rationale: we need to trim the size of the saved document
+
+
+# KEEP
+
+coef_grp_mean       4
+coef_st_mean        2
+const_mean          2
+cutpoint           40
+dispersion         40
+pprob            8000
+grp_offset_mean   200
+st_offset_mean     40
+rg_offset_mean     10
+item_scales         2
+mu                  2
+scale_grp_mean      2
+scale_rg_mean       2
+scale_st_mean       2
+sigma_in_g          1
+theta             200
+
+
+
+# CREATE
+
+item_rho [x]
+group_error [ ] 
+state_party_error [ ] 
+region_party_error [ ] 
+
+
+# DROP
+
+cut_raw            40
+log_disc_raw       40
+discrimination     40
+eta              8000
+item_corr           4
+item_params        80
+item_sigma          4
+z_grp_mean        200 [ now: solve as (offset - Xb)/scale if needed]
+z_rg_mean          10 [ eventually make combined error terms in GQ block]
+z_st_mean          40
+
+
+# DELETE?
+
+idtheta           200 [x]
+theta_iter_mean     1 [x]
+theta_iter_sd       1 [x]
+
+
