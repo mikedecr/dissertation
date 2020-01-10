@@ -12,7 +12,7 @@ library("boxr"); box_auth()
 library("latex2exp")
 
 # decide if we want this here
-source(here("code", "_assets", "setup-graphics.R"))
+source(here("code", "helpers", "graphics-helpers.R"))
 
 library("rstan")
 rstan_options(auto_write = TRUE)
@@ -28,14 +28,14 @@ library("tidybayes")
 
 # covariates already contain all districts (from skeleton)
 covs <- 
-  box_read(475862351387) %>%
+  box_read(533618708221) %>%
   # here("data", "dgirt", "model-data", "covariates-2010s.RDS") %>%
   # readRDS() %>%
   print()
 
 # megapoll, nested
 poll_nest <- 
-  box_read(481724358906) %>% 
+  box_read(533673369141) %>% 
   # here("data", "polls-clean", "megapoll.RDS") %>% readRDS() %>%
   ungroup() %>%
   print()
@@ -157,71 +157,10 @@ all_data %>% filter(is.na(s_wt))
 
 
 
-# ----------------------------------------------------
-#   Prepare Stan
-# ----------------------------------------------------
-
-# ---- compile models -----------------------
-
-
-# ---- compile model -----------------------
-
-# using local files
-
-long_homsk <- 
-  stanc(file = here("code", "02-dgirt", "21-stan", "long-homo-mlm.stan")) %>%
-  stan_model(stanc_ret = ., verbose = TRUE) %>%
-  print()
-
-long_het <- 
-  stanc(here("code", "02-dgirt", "21-stan", "long-hetero-mlm.stan")) %>%
-  stan_model(stanc_ret = ., verbose = TRUE) %>%
-  print()
-
-# beepr::beep(2)
-
-long_homsk
-long_het
-
-
-# ---- model function -----------------------
-
-# leave one core open
-n_chains <- min(c(parallel::detectCores() - 1, 10))
-n_iterations <- 2000
-n_warmup <- 1000
-n_thin <- 1
-
-# don't keep params that: 
-#   - are redundant (noncentering/augmenting)
-#   - can be calculated post-hoc (eta, pi)
-#   - are calculated for convenience (identification means, SDs)
-dgirt <- function(object, data) {
-  sampling(
-    object = object, 
-    data = data, 
-    iter = n_iterations, 
-    thin = n_thin, 
-    chains = n_chains,
-    control = list(adapt_delta = 0.9),
-    # drop specified parameters
-    include = FALSE,
-    pars = c(
-      "eta", "eta2", "pprob",
-      "z_grp_mean", "z_st_mean", "z_rg_mean", 
-      "scale_grp_mean", "scale_st_mean", "scale_rg_mean",
-      "z_grp_var", "z_st_var", "z_rg_var", 
-      "scale_grp_var", "scale_st_var", "scale_rg_var",
-      "theta_iter_mean", "theta_iter_sd", 
-      "log_sigma_iter_mean", "log_sigma_iter_sd"
-    ),
-    verbose = TRUE
-  )
-}
-
-
 
 # ---- stan data -----------------------
+
+# probably needs to go into run-static?
 
 # model-consistent names for indices
 # make into factors
@@ -238,49 +177,5 @@ master_data <- all_data %>%
   ) %>%
   print()
 
-box_write(master_data, "master-model-data.RDS", dir_id = 66271012903)
-
-
-# data are simple now!
-# index trackers, y data, covariates (w/ dims)
-stan_data <- master_data %>%
-  select(
-    state, region, district, party, group, item,
-    trials = n_wt, y = s_wt
-  ) %>%
-  compose_data(
-    X = 
-      select(master_data, prcntWhite:prcntUnemp, -prcntWhiteAll) %>% 
-      mutate_all(scale) %>%
-      as.matrix(),
-    Z = 
-      select(master_data, evangelical_pop:incomepcap) %>% 
-      mutate_all(scale) %>%
-      as.matrix() 
-  ) %>%
-  c(k_d = ncol(.$X),
-    k_s = ncol(.$Z)
-  )
-
-
-lapply(stan_data, head)
-
-
-
-mcmc_homsk <- dgirt(object = long_homsk, data = stan_data)
-boxr::box_write(
-  mcmc_homsk, 
-  as.character(str_glue("{Sys.Date()}-mcmc-homsk-2010s.RDS")), 
-  dir_id = 84484426292
-)
-
-mcmc_het <- dgirt(object = long_het, data = stan_data)
-boxr::box_write(
-  mcmc_het, 
-  as.character(str_glue("{Sys.Date()}-mcmc-ht-2010s.RDS")), 
-  dir_id = 84484426292
-)
-
-
-message("all done!")
+box_write(master_data, "master-model-data.RDS", dir_id = 88879654178)
 
