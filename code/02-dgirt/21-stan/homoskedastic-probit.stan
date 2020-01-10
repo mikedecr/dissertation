@@ -198,6 +198,7 @@ model {
   // ----- IRT params -----
   item_corr ~ lkj_corr(2);    // lkj prior
   item_scales ~ normal(0, 1); // half normal scales
+  mu ~ normal(0, 1);
   sigma_in_g ~ lognormal(0, 1);    // will become regression
   
   // array of 2-vectors drawn from 2D multinormal normal
