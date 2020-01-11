@@ -80,7 +80,7 @@ long_homsk
 # sampler hyperparameters
 # leave one core open on home machine
 n_chains <- min(c(parallel::detectCores() - 1, 5))
-n_iterations <- 200
+n_iterations <- 1000
 n_warmup <- n_iterations / 2
 n_thin <- 1
 adapt_delta <- 0.9
@@ -95,7 +95,7 @@ dgirt <- function(model, data, ...) {
     include = FALSE, # drop the following params
     pars = c(
       "cut_raw", "log_disc_raw", "discrimination",
-      "eta",
+      "eta", "pprob",
       "item_corr", "item_params", "item_sigma",
       "z_grp_mean", "z_rg_mean", "z_st_mean"
     ),
