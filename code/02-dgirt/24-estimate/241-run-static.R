@@ -80,7 +80,7 @@ long_homsk
 # sampler hyperparameters
 # leave one core open on home machine
 n_chains <- min(c(parallel::detectCores() - 1, 5))
-n_iterations <- 1000
+n_iterations <- 2000
 n_warmup <- n_iterations / 2
 n_thin <- 1
 adapt_delta <- 0.9
