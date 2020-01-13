@@ -1,0 +1,187 @@
+% ---------------------------------------------
+%  describe document
+% ---------------------------------------------
+
+\documentclass[12pt
+               % , final
+              ]{article}
+
+
+% --- type, text, math, in/out encoding -----------------------
+\usepackage{microtype}
+
+% minion pro loads textcomp, MnSymbol, amsmath
+% if you want to pass options, load them beforehand
+
+
+\usepackage[lf, mathtabular, minionint]{MinionPro} % serif
+\usepackage{MyriadPro}                             % sans family
+\usepackage[varqu, scaled = 0.95]{zi4}             % mono w/ straight quotes
+
+% if minion and/or myriad fail, load these
+% \usepackage{amsmath} 
+% \usepackage{amssymb}
+% \usepackage{amsmath}
+% \usepackage{libertine}
+% \usepackage{libertinust1math}
+% \usepackage{mathptmx} % serif = times (with math)
+% \usepackage{helvet} % sens-serif = helvetica clone
+
+\usepackage[utf8]{inputenc} % better interpretation of input characters
+\usepackage[T1]{fontenc}    % better output glyphs/behaviors
+
+
+% --- Margins and Spacing -----------------------
+
+\usepackage[margin = 1.25in]{geometry} %margins % ipad geometry is 4X3
+\usepackage{setspace}
+\usepackage{enumitem} % allows nosep option for compact lists
+  \setlist{noitemsep} % (no separation between list items)
+
+
+
+% --- tables and figures -----------------------
+
+\usepackage{graphicx} % input graphics
+\usepackage{float} % only good for H float option?
+\usepackage{placeins} % for \FloatBarrier
+\usepackage{booktabs} %? for toprule, midrule etc
+\usepackage{dcolumn} % decimal-aligned columns
+
+
+% --- document logic and utilities -----------------------
+
+% hyperlink options
+\usepackage{hyperref} 
+\hypersetup{colorlinks = true, 
+            citecolor = black, linkcolor = violet, urlcolor = teal}
+
+% to-do notes
+\usepackage[colorinlistoftodos, 
+            prependcaption, 
+            obeyFinal,
+            textsize = footnotesize]{todonotes}
+  \presetkeys{todonotes}{fancyline, color = violet!30}{}
+
+\usepackage{comment} % block comments
+
+
+% --- References -----------------------
+
+\usepackage[authordate, backend = biber]{biblatex-chicago}
+\addbibresource{/Users/michaeldecrescenzo/Dropbox/bib.bib}
+
+
+
+% --- global title/section formatting -----------------------
+
+% \usepackage{titling}
+% we used to have title customization stuff but it's noisy
+
+\usepackage{abstract}
+\renewcommand{\abstractname}{}    % clear the title
+\renewcommand{\absnamepos}{empty} % originally center
+
+\usepackage[rm, small, sc]{titlesec}
+\titleformat*{\subsection}{\itshape}
+\titleformat*{\paragraph}{\itshape}
+
+
+% --- user commands -----------------------
+
+% notes for figures
+\newcommand{\notes}[1]{\hfill \\
+% \raggedright 
+\small
+\emph{Notes:} #1}
+
+% input with unskip as one command
+\newcommand{\pull}[1]{\input{#1}\unskip}
+
+
+
+
+
+
+
+
+% ----------------------------------------------------
+%   writing
+% ----------------------------------------------------
+
+
+\begin{document}
+
+\title{Revised Outline of Dissertation Chapters}
+\author{Michael G.\ DeCrescenzo}
+\date{Updated \today}
+\maketitle
+
+
+\section*{Rationale}
+
+This document lays out a revised chapter outline for my dissertation. My original prospectus included a proposed chapter examining whether local partisan ideology mediates the relationship between redistricting and candidate extremism in House districts. I propose that this chapter be replaced with a chapter that previews and explores a Bayesian approach to causal inference in political science, which will then be implemented in the final two empirical chapters of the thesis.
+
+I am proposing this change for two key reasons. First, the redistricting chapter presents heavy problems for a thesis that is already technically complex. In particular, if the local partisan ideology estimates are generated for district-party groups for a fixed redistricting cycle, then there are no changes in local ideology that don't occur alongside redistricting (other than edge cases such as states with only one district, which provide no leverage on the redistricting question anyway). Without creating dynamic within-decade measures of local ideology, which may not be feasible, the only way to separate the variation in districting would be to create some measure of the \emph{extent} of redistricting. This would be a technical feat befitting a separate project entirely. 
+
+Second, if the dissertation is a record of my training and original contributions field in graduate school, these are better represented by a chapter on a Bayesian approach to causal inference. I have focused much of my recent non-dissertation energy on understanding causal inference methods through a Bayesian lens, and it would be rewarding for this work to culminate as a central contribution in my dissertation.
+
+Below is an outline for the chapter-by-chapter content of the dissertation, including a lengthier discussion of the revised Chapter 3.
+
+\section{Introduction and Argument}
+
+\begin{itemize}
+  \item Discussion of popular theory of primaries, key predictions, and the theoretical and empirical tenuousness of existing studies of primary representation
+  \item Theoretical ramifications for not observing local partisan preferences; what we can and cannot conclude about the conventional wisdom
+  \item Framing the value of the causal approach and Bayesian angle
+\end{itemize}
+
+\section{Group IRT Model}
+
+\begin{itemize}
+  \item Spatial utility model that underlies the IRT model
+  \item Description of the static IRT model for policy ideology in district-party groups
+  \item Model parameterizations for efficient computation, in-depth discussion and checking of prior distributions, model testing and checking
+  \item Dynamic ideal point model extension
+  \item Data, coding, estimation details
+  \item Descriptive analysis of estimates
+\end{itemize}
+
+
+\section{Introduction to Bayesian Causal Inference}
+
+The empirical applications of new ideal points are causal queries that are unsuited to a standard regression approach. We are interested in how local partisan ideology affects primary candidate ideal points and primary election outcomes, holding constant factors such as the presidential vote in the district that are post-treatment to local ideology. As a result, the project requires methods that are more complicated than controlling for the presidential vote in a regression to identify the causal effect even under a selection-on-observables identification assumption. There isn't much precedent in political science for using these methods in a Bayesian paradigm, however, so this chapter will justify and discuss the Bayesian approach as a general matter for political science and as a specific benefit for this project. The discussion can follow these points (many similar to my working paper \href{https://github.com/mikedecr/causal-bayes/blob/master/writing/causal-bayes-paper.pdf}{here}):
+\begin{itemize}
+  \item Causal inferences are inferences about a causal \emph{parameter} (such as a treatment effect $\tau$), and so the researcher's question usually implies a posterior inference, $p(\tau \mid \mathbf{y})$, even if the researcher explicitly prefers frequentist hypothesis testing.
+  \item If we admit that causal queries are inferences about parameters given data, $p(\tau \mid \mathbf{y})$ is commonly misspecified if we give $\tau$ a flat prior. There is no one ``correct'' prior, but Bayesian methods provide methods to evaluate the robustness of an inference to the choice of prior.
+  \item The Bayesian approach to causal inference implies a more general potential outcomes model where a causal effect $\tau$ is represented with a probability distribution. An unobserved potential outcome $\tilde{y}_{i}$, being a function of the causal effect, is also represented as probability distribution that marginalizes over the posterior distribution for the causal effect: $p(\tilde{y}_{i} \mid \mathbf{y}) = \int p(\tilde{y}_{i}, \tau \mid \mathbf{y}) \mathrm{d}\tau$. This is an important contribution from \textcite{rubin:1978:bayesian} that has been almost entirely absent from causal inference in political science.
+  \item Many causal models are \emph{structural} models for parameters that require proliferated uncertainty. This is natural for Bayesian approaches, which deliver a joint posterior distribution for all model parameters.
+  \item Bayesian priors expose how model parameterization can complicate even ``agnostic'' causal estimation methods because noninformative priors may yield different prior densities depending on the chosen parameterization of otherwise equivalent likeloods. For example, in a randomized experiment with a binary treatment, estimating the mean in each group with flat (but proper) priors implies a non-flat prior on the treatment effect.\footnote{
+    For example, the probability distribution for the difference between two uniform random variables has a triangular shape.
+  }
+  This differs from a parameterization that contains a treatment effect parameter to which the researcher assigns a flat prior. Insofar as causal inference is interested in $p(\tau \mid \mathbf{y})$, the issues with parameterization are not obviated by non-Bayesian estimation, only hidden.
+  \item One attractive current in contemporary causal inference is an interest in nonparametric point estimators with fewer modeling assumptions. This current can be incorporated into a Bayesian paradigm without additional assumptions on the point estimator by specifying a hierarchical prior for the ``true'' parameter, from which the point estimate is a draw. For instance, if some mean $\bar{y}$ is nonparametrically calculated, and we can sustain an assumption that about the distribution of $\bar{y}$, such as $\bar{y} \sim \mathrm{Normal}\left(\mu, \sigma \right)$ which is required to obtain a $p$-value (but see randomization inference, \cite{keele-et-al:2012:RI}), we can use such a prior combine information from a nonparametric point estimator with extra-model information. This is essentially the approach used in \textcite{meager:2019:micro-credit}'s Bayesian meta-analysis of micro-credit expansions in development economics and in \textcite{rubin:1981:eight-schools}'s classic ``eight schools'' test prep experiment.
+  \item For this specific project, observed outcomes are a function of local ideology, which estimated only up to a posterior probability distribution (from Chapter 2). As such, our observed potential outcomes are not $y(\theta)$ so much as $y(p(\theta))$, which is to say the observed treatment status has measurement error that belongs in the model. As such, the effect of intervening on $\theta$ to calculate an unobserved potential outcome $p\left(y\left(\theta'\right)\right)$ is itself an integral over the imprecisely estimated treatment effect \emph{and} the imprecisely estimated observed treatment status. 
+\end{itemize}
+
+
+\section{Local Ideology and Primary Candidate Positioning}
+
+\begin{itemize}
+  \item Goal: estimate the effect of local partisan ideology on primary candidate positions (CF scores)
+  \item DAGs to show causal structure. We want to hold the general election environment fixed (via past presidential vote), but local partisan ideology affects primary candidate ideal and general election voting.
+  \item If presidential vote is an intermediate confounder, estimating either the natural or controlled direct effect of local partisan ideology can be done with a demediation method such as structural nested mean models, of which the sequential-$g$ method is a special case \parencite{acharya2016explaining}.
+\end{itemize}
+
+\section{Local Ideology and Primary Outcomes}
+
+\begin{itemize}
+  \item Discrete choice modeling problem: local partisan groups choose a candidate as a function of candidate features (CF score)
+  \item Effects of fixed district-level features are statistically unidentifiable, but interactions between district features and candidate features can be identified. This implies a model where the effect of candidate ideology is conditioned by the local partisan ideology.
+\end{itemize}
+
+% \newpage
+\printbibliography
+
+
+\end{document}
