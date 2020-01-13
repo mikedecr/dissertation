@@ -33,12 +33,12 @@ _left off at LKJ_
     - [x] Document-level aesthetic to-dos (some time...)
     - [ ] first references: MCMC, IRT, SPD
 - Code fixes
+    - [ ] does every parameter have a prior
     - [ ] Fix linstat runs
         - [ ] save stderr and stdout separately
         - [ ] run short background
         - [ ] mac access to linstat files
         - [ ] run long background
-    - [ ] discrimination should just be mean 0 on the log scale, not product 1
     - [ ] which params can we avoid saving (in simulation)?
     - [ ] hack to the end of the simulation exercise
     - [ ] simulation: within-district variance should be an afterthought after the distribution of averages...
