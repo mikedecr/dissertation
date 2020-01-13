@@ -6,7 +6,7 @@ ssh -Y decrescenzo@linstat.ssc.wisc.edu
 
 # --- Working in Linstat interactively
 
-zsh
+# zsh
 
 cd dissertation
 
@@ -16,7 +16,31 @@ git pull
 git log
 q
 
-R
+# R
+
+# to do
+# save out and error to different places
+# map drive to mac (KB, remote computing, map network disk space from a mac) 
+# run short, short in background, long in background
+
+# runs simulation in batch, saves output to log file
+# R < code/02-dgirt/22-sim/sim-static.R > lkj-test-2k.log --no-save &
+R < code/02-dgirt/24-estimate/241-run-static.R > lkj-real-data.log --no-save &
+# Rscript --no-save code/02-dgirt/24-estimate/241-run-static.R > lkj-real-data.log &
+# 416229 (2020-01-11, 5:20)
+
+# condor_R code/02-dgirt/22-sim/sim-static.R lkj-test-output.log &
+
+
+# log file
+vim lkj-real-data.log
+
+
+# checking open processes
+ps
+ps aux | grep decres
+
+top
 
 # if testing
 # Rscript code/02-dgirt/22-sim/long-data-sim.R
