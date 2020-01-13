@@ -228,7 +228,7 @@ icc_draws %>%
   aes(x = theta, y = pp) +
   geom_vline(xintercept = 0, color = "gray", size = 0.25) +
   geom_hline(yintercept = 0.5, color = "gray", size = 0.25) +
-  geom_line(aes(group = .draw), color = yel, size = 0.2) +
+  geom_line(aes(group = .draw), color = primary, size = 0.2) +
   geom_line(
     data = ij_level, color = "black", size = 0.35,
     aes(x = theta_i, y = pi_ij)
@@ -250,6 +250,69 @@ Figure&nbsp;\@ref(fig:plot-sim-ICCs) shows item response functions for all items
 # ggsave("~/desktop/test.pdf", height = 10, width = 8, device = cairo_pdf); beepr::beep(2)
 ```
 
+```{r}
+df_stanfit %>%
+  spread_draws(item_scales[dim], item_rho) %>% 
+  gather(key = param, value = value, contains('item_')) %>%
+  mutate(
+    param = 
+      case_when(
+        dim == 1 & param == "item_scales" ~ "sd_cut",
+        dim == 2 & param == "item_scales" ~ "sd_logdisc",
+        TRUE ~ "item_rho"
+      )
+  ) %>%
+  ggplot() +
+  aes(x = value) +
+  facet_grid(~ param, scales = "free_x") +
+  geom_ribbon(
+    data = tibble(
+      x = seq(-1, 3, .05),
+      dbeta = dbeta((x + 1) / 2, 2, 2) / 2,
+      dhalfnorm = dnorm(x) * 2
+    ) %>%
+    crossing(param = c("item_rho", "sd_cut", "sd_logdisc")) %>%
+    mutate(
+      density = case_when(
+        param == "item_rho" ~ dbeta,
+        str_detect(param, "sd") & x > 0 ~ dhalfnorm
+      ) 
+    ) %>%
+    filter(
+      (x > 0 & param != "item_rho") |
+      (x <= 1 & param == "item_rho")
+    ),
+    aes(ymax = density, ymin = 0, x = x),
+    fill = primary_light, alpha = 0.5
+  ) +
+  geom_histogram(
+    aes(y = ..density..), 
+    bins = 100,
+    fill = primary, color = NA
+  )
+```
+
+
+```{r item-scatter-posterior}
+df_stanfit %>%
+  spread_draws(dispersion[item], cutpoint[item], n = 500) %>%
+  ggplot() +
+  aes(x = cutpoint, y = dispersion) +
+  geom_mark_ellipse(
+    expand = unit(3, "mm"),
+    aes(fill = as.factor(item)
+        # , fill = as.factor(party) , color = NA
+    ),
+    color = NA,
+    alpha = 0.1,
+    label.family = font_fam,
+    label.fontface = "plain"
+  ) +
+  ggpointdensity::geom_pointdensity() +
+  viridis::scale_fill_viridis(discrete = TRUE) +
+  NULL
+
+```
 
 
 <!-- item parameters
