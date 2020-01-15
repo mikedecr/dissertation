@@ -48,7 +48,7 @@ target_paths <- source_paths %>%
 # todo: does existing data contain only symlinks?
 
 # create new folders; warnings when folders already exist
-lapply(here("data", source_folders), dir.create, recursive = TRUE)
+lapply(here(source_folders), dir.create, recursive = TRUE)
 
 # create symlinks to original source files in target dir
 file.symlink(from = source_paths, to = here(target_paths))
