@@ -2,6 +2,9 @@
 #   Knit/paper-writing assistance
 # ----------------------------------------------------
 
+# ---- knitr-specific things -----------------------
+
+
 # contains:
 # - chunks opts, graphics device (redundant with _output?)
 # - functions (include rmd, smarter_number)
@@ -21,6 +24,8 @@ knitr::opts_chunk$set(
 
 # graphics device, use PDF in LaTeX
 options(knitr.graphics.auto_pdf = TRUE)
+
+# functions for knitr
 
 # a function to read .Rmd files
 include_text <- function(input, sep = "\n\n  "){
@@ -45,12 +50,14 @@ smart_number <- function(n, ...) {
 }
 
 
+
 # ---- call other helpers -----------------------
 
 # to do: (?) 
 #  - symlink-data redundantly loads libs; eval in separate env?
 
 source(here::here("code", "helpers", "symlink-data.R"))
+source(here::here("code", "helpers", "functions.R"))
 source(here::here("code", "helpers", "graphics-helpers.R"))
 
 # ggsave("~/desktop/test.pdf", height = 4, width = 9, device = cairo_pdf); beepr::beep(2)
