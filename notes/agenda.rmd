@@ -4,8 +4,6 @@ title: Overall thesis notes
 
 # Today
 
-_left off at LKJ_
-
 - Bureaucracy:
     - [ ] New table of contents, descriptions of the chapters, circulate to the four
     - [ ] Mike meeting
@@ -33,12 +31,15 @@ _left off at LKJ_
     - [x] Document-level aesthetic to-dos (some time...)
     - [ ] first references: MCMC, IRT, SPD
 - Code fixes
+    - [ ] factors/index for groups, items, states, etc. aren't sorted 
+        - [ ] go into combine-data, create a rationalizable system
+        - [ ] rerun models for 200/100 and then 2k/1k
+        - [ ] fix any post-hoc fixed is posteriors.R (crosswalk)
+    - [ ] party-varying sigmas
     - [ ] does every parameter have a prior
     - [ ] Fix linstat runs
         - [ ] save stderr and stdout separately
-        - [ ] run short background
         - [ ] mac access to linstat files
-        - [ ] run long background
     - [ ] which params can we avoid saving (in simulation)?
     - [ ] hack to the end of the simulation exercise
     - [ ] simulation: within-district variance should be an afterthought after the distribution of averages...
@@ -47,7 +48,6 @@ _left off at LKJ_
     - [ ] fix html/latex specific cache issue (I hate waiting)
     - [ ] log1m/log1p functions for probit link
     - [ ] dir paths go into a modular file?
-    - [ ] move estimation from "combine data" into sampling file
     - [ ] offline mathjax
 - [ ] substance
     - candidates fear idiosyncratic issues

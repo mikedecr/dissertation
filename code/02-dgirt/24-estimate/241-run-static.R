@@ -47,7 +47,7 @@ stan_data <- master_data %>%
 
 lapply(stan_data, head)
 
-
+box_write(stan_data, "stan-data-list.RDS", dir_id = 88879654178)
 
 
 

@@ -174,6 +174,8 @@ master_data <- all_data %>%
   mutate_at(
     .vars = vars(region, state, district, party, group, item),
     .funs = as.factor
+    # proposal for fixing/tracking indices
+    # .funs = list(f = as.factor, `` = as.numeric)
   ) %>%
   print()
 

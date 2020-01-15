@@ -365,7 +365,7 @@ ex_iccs <- ex_item_params %>%
   crossing(theta = seq(-4, 4, .01)) %>%
   mutate(
     eta = discrimination * (theta - cutpoint), 
-    prob = plogis(eta)
+    prob = pnorm(eta)
   ) %>%
   print()
 ```

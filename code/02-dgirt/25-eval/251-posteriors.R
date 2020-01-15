@@ -14,7 +14,9 @@ library("broom")
 
 library("latex2exp")
 
+
 source(here::here("code", "helpers", "symlink-data.R"))
+source(here::here("code", "helpers", "functions.R"))
 source(here("code", "helpers", "graphics-helpers.R"))
 
 
@@ -44,12 +46,46 @@ most_recent_static <- as.character(most_recent_date) %>%
   print()
 
 # import MCMC
-mcmc <- here(mcmc_path, most_recent_static) %>%
+mcmc <- 
+  here(mcmc_path, most_recent_static) %>%
+  # here(mcmc_path, "2020-01-10-mcmc-homsk-2010s.RDS") %>% # small?
   readRDS()
 
 # tidy pre-stan data
 master_data <- 
   readRDS(here(input_path, "master-model-data.RDS")) %>%
+  print()
+
+# stan data
+stan_data <- readRDS(here(input_path, "stan-data-list.RDS"))
+lapply(stan_data, head)
+
+
+# index crosswalk (hopefully temp)
+# here's the problem:
+#   the model is run with a group-item index that is "out of order."
+#   as in, ≠ to an index you would create from scratch (group-item).
+#   this is because of a bug with the lexi-ordering of group codes (my bad).
+
+index_crosswalk <- 
+  tibble(
+    # factors come from master-data
+    group_f = master_data$group,
+    item_f = master_data$item,
+    state_f = master_data$state,
+    region_f = master_data$region,
+    district_f = master_data$district,
+    party_f = master_data$party,
+    # integers from stan (but could be coerced from master?)
+    group = stan_data$group, 
+    item = stan_data$item,
+    state = stan_data$state,
+    region = stan_data$region,
+    district = stan_data$district,
+    party = stan_data$party
+  ) %>%
+  # the "ordering" of groups as per my mistake in stan prep
+  mutate(stan_group_item = row_number()) %>%
   print()
 
 
@@ -60,11 +96,10 @@ thin_interval <- 0.5
 med_interval <- 0.9
 wide_interval <- 0.95
 
-# this looks like crap but 
-sums <- 
+# this looks like crap but need multiple interval widths
+sums <- mcmc %>%
   tidy(
-    mcmc, 
-    conf.int = TRUE, conf.level = thin_interval,
+    conf.int = TRUE, conf.level = thin_interval, 
     ess = TRUE, rhat = TRUE
   ) %>%
   rename_at(
@@ -91,21 +126,69 @@ sums <-
   select(term, par_family, ess, rhat, everything()) %>%
   print()
 
+# check param families
+sums %>%
+  count(par_family) %>%
+  print(n = nrow(.))
 
-# calculate predicted values
-# expand group, item
-# get samples wide
-# compute using indexing?
 
+# tidy frame of samples
 draws <- tidy_draws(mcmc) %>%
+  print()
+
+
+
+# sufficient parameters: theta, items, sigma_g
+theta_draws <- draws %>%
+  gather_draws(theta[group]) %>%
+  ungroup() %>%
+  select(group, .draw, theta = .value) %>%
+  print()
+
+item_draws <- draws %>%
+  spread_draws(cutpoint[item], dispersion[item]) %>%
+  select(item, cutpoint, dispersion, .draw) %>%
+  print()
+
+sigma_draws <- draws %>%
+  gather_draws(sigma_in_g) %>%
+  ungroup() %>%
+  select(.draw, sigma_in_g = .value) %>%
+  print()
+
+
+
+# calculate pprob fresh
+irt_draws <- master_data %>%
+  select(group, item) %>%
+  distinct() %>%
+  mutate_all(as.integer) %>%
+  left_join(
+    index_crosswalk %>%
+    select(group, item, stan_group_item)
+  ) %>%
+  crossing(sigma_draws) %>%
+  left_join(theta_draws) %>%
+  left_join(item_draws) %>%
+  mutate(
+    index = (theta - cutpoint) / sqrt(dispersion^2 + sigma_in_g^2),
+    p_calc = phi_approx(index)
+    # , group_item = item + ((group - 1) * max(item))
+  ) %>%
+  print()
+
+# in case we need to summarize them?
+irt_sums <- irt_draws %>%
+  group_by(stan_group_item, group, item) %>%
+  summarize(
+    p_calc_mean = mean(p_calc),
+    p_calc_median = median(p_calc)
+  ) %>% 
   print()
 
 
 # ---- initial evaluation/diagnostics -----------------------
 
-sums %>%
-  count(par_family) %>%
-  print(n = nrow(.))
 
 check_hmc_diagnostics(mcmc)
 
@@ -304,11 +387,13 @@ ggplot(theta_correlations) +
 
 ggplot(theta_correlations) +
   aes(x = cor, fill = cor_q) +
+  facet_grid(method ~ .) +
   geom_histogram(bins = 50) +
   viridis::scale_fill_viridis(discrete = TRUE, direction = -1)
 
 ggplot(theta_correlations) +
   aes(x = cor, y = cor_p, fill = cor_q) +
+  facet_grid(method ~ .) +
   geom_ribbon(aes(ymin = 0, ymax = cor_p), color = NA) +
   geom_line() +
   viridis::scale_fill_viridis(discrete = TRUE, direction = -1)
