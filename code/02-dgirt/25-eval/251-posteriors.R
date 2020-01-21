@@ -14,7 +14,6 @@ library("broom")
 
 library("latex2exp")
 
-
 source(here::here("code", "helpers", "symlink-data.R"))
 source(here::here("code", "helpers", "functions.R"))
 source(here("code", "helpers", "graphics-helpers.R"))
@@ -89,6 +88,31 @@ index_crosswalk <-
   print()
 
 
+# ---- initial evaluation/diagnostics -----------------------
+
+check_hmc_diagnostics(mcmc)
+
+stan_rhat(mcmc, binwidth = .01)
+arrange(sums, desc(rhat))
+
+stan_ac(mcmc, "mu")
+stan_ac(mcmc, "dispersion")
+stan_ac(mcmc, "cutpoint")
+stan_ac(mcmc, "item_scales")
+
+stan_trace(mcmc, "mu")
+stan_trace(mcmc, "dispersion")
+stan_trace(mcmc, "cutpoint")
+stan_trace(mcmc, "item_scales")
+
+stan_plot(mcmc, "theta")
+stan_plot(mcmc, "cutpoint")
+stan_plot(mcmc, "dispersion")
+stan_plot(mcmc, pars = "mu")
+stan_plot(mcmc, pars = "item_scales")
+
+
+
 # ---- initial preprocessing/tidy -----------------------
 
 # bind tidy frames with various intervals
@@ -136,8 +160,6 @@ sums %>%
 draws <- tidy_draws(mcmc) %>%
   print()
 
-
-
 # sufficient parameters: theta, items, sigma_g
 theta_draws <- draws %>%
   gather_draws(theta[group]) %>%
@@ -148,6 +170,7 @@ theta_draws <- draws %>%
 item_draws <- draws %>%
   spread_draws(cutpoint[item], dispersion[item]) %>%
   select(item, cutpoint, dispersion, .draw) %>%
+  ungroup() %>%
   print()
 
 sigma_draws <- draws %>%
@@ -159,6 +182,7 @@ sigma_draws <- draws %>%
 
 
 # calculate pprob fresh
+# (honestly don't run this)
 irt_draws <- master_data %>%
   select(group, item) %>%
   distinct() %>%
@@ -177,6 +201,7 @@ irt_draws <- master_data %>%
   ) %>%
   print()
 
+
 # in case we need to summarize them?
 irt_sums <- irt_draws %>%
   group_by(stan_group_item, group, item) %>%
@@ -186,30 +211,6 @@ irt_sums <- irt_draws %>%
   ) %>% 
   print()
 
-
-# ---- initial evaluation/diagnostics -----------------------
-
-
-check_hmc_diagnostics(mcmc)
-
-stan_rhat(mcmc, binwidth = .01)
-arrange(sums, desc(rhat))
-
-stan_ac(mcmc, "mu")
-stan_ac(mcmc, "dispersion")
-stan_ac(mcmc, "cutpoint")
-stan_ac(mcmc, "item_scales")
-
-stan_trace(mcmc, "mu")
-stan_trace(mcmc, "dispersion")
-stan_trace(mcmc, "cutpoint")
-stan_trace(mcmc, "item_scales")
-
-stan_plot(mcmc, "theta")
-stan_plot(mcmc, "cutpoint")
-stan_plot(mcmc, "dispersion")
-stan_plot(mcmc, pars = "mu")
-stan_plot(mcmc, pars = "item_scales")
 
 
 
@@ -271,6 +272,23 @@ ggplot(thetas) +
     y = c(-0.9, 0.5), x = c(100, 100),
     label = c("Democrats", "Republicans")
   )
+
+
+
+# histograms of groups-in-districts
+theta_draws %>%
+  left_join(index_crosswalk %>% select(group, party, district)) %>%
+  filter(district %in% sample(unique(district), 25)) %>%
+  ggplot() +
+  aes(x = theta, color = as.factor(party), fill = as.factor(party)) +
+  facet_wrap(~ district) +
+  geom_histogram(
+    boundary = 0, binwidth = .05
+  ) +
+  scale_color_manual(values = party_factor_colors) +
+  scale_fill_manual(values = party_factor_colors) +
+  theme(legend.position = "none")
+
 
 
 # ---- correlation of Ds and Rs -----------------------
@@ -397,3 +415,130 @@ ggplot(theta_correlations) +
   geom_ribbon(aes(ymin = 0, ymax = cor_p), color = NA) +
   geom_line() +
   viridis::scale_fill_viridis(discrete = TRUE, direction = -1)
+
+
+# ---- looking at item response -----------------------
+
+
+ICCs <- item_draws %>%
+  left_join(sigma_draws) %>%
+  filter(
+    item %in% sample(unique(item), 4),
+    .draw %in% sample(unique(.draw), 50)
+  ) %>%
+  crossing(
+    theta = theta_draws$theta %>% {
+      seq(min(.), max(.), .05)
+    }
+  ) %>%
+  mutate(
+    p_i = phi_approx((theta - cutpoint) / dispersion),
+    group_denominator = sqrt(dispersion^2 + sigma_in_g^2),
+    p_g = phi_approx((theta - cutpoint) / group_denominator)
+  ) %>%
+  print()
+
+denoms <- ICCs %>%
+  group_by(item) %>%
+  summarize(
+    dispersion = median(dispersion) %>% round(3),
+    denominator = median(group_denominator) %>% round(3)
+  )
+
+
+
+item_priors <- 
+  rethinking::rlkjcorr(1000, K = 2, eta = 2) %>%
+  as.data.frame() %>% # for breaking-change stability
+  as_tibble(.name_repair = "universal") %>%
+  select(rho = V2) %>%
+  mutate(
+    sd1 = rnorm(n = n(), mean = 0, sd = lkj_scale) %>% abs(),
+    sd2 = rnorm(n = n(), mean = 0, sd = lkj_scale) %>% abs(),
+    id = 1:n()
+  ) %>%
+  group_by(id) %>%
+  mutate(
+    cor_matrix = 
+      map(rho, ~ matrix(data = c(1, .x, .x, 1), nrow = 2, ncol = 2)),
+    vdiag = map2(sd1, sd2, ~ c(.x, .y) %>% diag() %>% as.matrix()),
+    vc = map2(vdiag, cor_matrix, ~ .x %*% .y %*% .x),
+    items = map(vc, 
+      ~ mvtnorm::rmvnorm(
+          n = 1, 
+          mean = c(
+            rnorm(1, mean = 0, sd = 1), 
+            rnorm(1, mean = 0, sd = 1)
+          ),
+          sigma = .x
+        ) %>% 
+        as_tibble() %>%
+        rename(cutpoint = V1, log_disc = V2)
+    )
+  ) %>%
+  ungroup() %>%
+  unnest(items) %>%
+  mutate(
+    cutpoint = cutpoint - mean(cutpoint),
+    log_disc = log_disc - mean(log_disc),
+    dispersion = 1 / exp(log_disc),
+    sigma_in_g = exp(rnorm(n(), mean = 0, sd = 1))
+  ) %>%
+  crossing(
+    theta = seq(min(ICCs$theta), max(ICCs$theta), length.out = nrow(.))
+  ) %>%
+  crossing(
+    item = ICCs$item %>% unique()
+  ) %>%
+  print()
+
+ggplot(ICCs) +
+  aes(x = theta, y = p_i) +
+  geom_line(
+    data = item_priors,
+    aes(
+      x = theta, 
+      y = phi_approx((theta - cutpoint) / sqrt(dispersion^2 + sigma_in_g^2)),
+      group = id
+    ),
+    color = "gray80", alpha = 0.5, size = 0.25
+  ) +
+  facet_wrap(~ str_glue("Item {item}")) +
+  geom_line(
+    aes(group = .draw), 
+    color = secondary_light, 
+    size = 0.25
+  ) +
+  geom_line(
+    aes(y = p_g, group = .draw),
+    color = primary,
+    size = 0.25
+  ) +
+  geom_label(
+    data = denoms,
+    aes(
+      x = -1.25, y = 0.9, 
+      label = str_glue("Item Dispersion = {dispersion}")
+    ),
+    size = 3
+  ) +
+  geom_label(
+    data = denoms,
+    aes(
+      x = -1.25, y = 0.75, 
+      label = str_glue("Total Dispersion = {denominator}")
+    ),
+    size = 3
+  ) +
+  labs(
+    x = "Ideal Point",
+    y = "Probability of Conservative Response"
+  )
+
+item_draws %>%
+  ggplot() +
+  aes(x = cutpoint, y = dispersion, color = as.factor(item)) +
+  # facet_wrap(~ item) +
+  geom_point(size = .5, shape = 1)
+
+

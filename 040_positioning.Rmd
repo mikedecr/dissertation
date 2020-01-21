@@ -1,16 +1,143 @@
 # Candidate Positioning in Primary Elections {#ch:positioning}
 
-U.S. House primary data from @pettigrew-primary-data. 
+
+```{r knitr-04-1-positioning, include = FALSE, cache = FALSE}
+source(here::here("assets-bookdown", "knitr-helpers.R"))
+```
 
 
-## Causality
+```{r packages-04-positioning, cache = FALSE}
+library("knitr")
+library("here")
+library("magrittr")
+library("tidyverse")
+library("latex2exp")
+library("scales")
+# library("patchwork")
+# library("ggforce")
+library("broom")
+library("tidybayes")
+library("boxr"); box_auth()
+library("ggdag"); 
+theme_dag <- theme_dag(base_family = font_fam)
+```
 
-DAGs
+## Candidate Positioning in Primary Elections
+
+
+
+
+## The Direct Effect of Partisan Preferences
+
+### Causal Graphs
+
+Collider bias: ideological proximity and quality both increase chances of victory. Conditioning on losers, an ideologically proximate losing candidate is more likely to be low-quality, and a high-quality losing candidate is more likely to be ideologically distant
+
+```{r problem-dag}
+problem_dag <- 
+  dagify(
+    C ~ T + P + U,
+    P ~ T + U,
+    exposure = "T",
+    outcome = "C",
+    coords = tribble(
+      ~ name,      ~ x,    ~ y,
+      "T",      0,      0,
+      "C",      2,      0,
+      "P",      1,      1,
+      "U",      2,      1
+    ),
+    labels = c(
+      "T" = "Partisan Ideology",
+      "C" = "Candidate Positioning",
+      "P" = "District Partisanship"
+    )
+  ) %>%
+  tidy_dagitty() %>%
+  # node_parents("C") %>%
+  mutate(
+    pt_label = case_when(
+      name == "T" ~ "theta[pd]",
+      name == "C" ~ "Y[cpd]",
+      name == "P" ~ "P[d]",
+      name == "U" ~ "U"
+    )
+  ) %>%
+  print()
+```
+
+
+```{r plot-problem-dag}
+ggplot(problem_dag) +
+  aes(x = x, y = y, xend = xend, yend = yend) +
+  geom_dag_edges() +
+  geom_dag_node(
+    aes(color = (name == "U"))
+  ) +
+  geom_dag_text(
+    aes(label = pt_label), 
+    parse = TRUE, 
+    family = font_fam
+  ) +
+  scale_color_manual(values = c("TRUE" = "gray50", "FALSE" = primary)) +
+  annotate(
+    geom = "text",
+    label = "District Partisanship (P) affects\nCandidate Positioning (C) but is also\naffected by District-Party Ideology (θ)",
+    x = 0.2, y = 1,
+    size = 3
+  ) +
+  theme_dag(
+    legend.position = "none"
+  ) + 
+  expand_plot(
+    expand_x = expand_scale(c(0.2, 0.2)), 
+    expand_y = expand_scale(c(0.2, 0.2))
+  ) +
+  NULL  
+```
+
+
+```{r plot-problem-dag, include = TRUE, fig.width = 5, fig.height = 3, out.width = "80%", fig.cap = "A DAG that presents district partisanship as a collider along the path from district-party preferences to candidate positioning. Controlling for district partisanship can bias the causal estimate of district-party preferences in several ways. If there is a path $\\theta \\rightarrow P \\rightarrow Y$, then the effect of $\\theta$ does not represent the total effect. In the presence of intermediate confounder $U$, controlling for district partisanship induces collider bias by unblocking the path $\\theta \\leftarrow U \\rightarrow Y$."}
+```
+
+### Modeling Direct Effects
 
 Controlled direct effect (intervene on ideology, intervene on fixed level of vote in the district):
+
+Blackwell notation: $CDE_{i}(a, a', m) = Y_{i}(a, m) - Y_{i}(a', m)$.
+
+More general _do_ notation: $p(CDE(a, a', m)) = p(y \mid do(A = a'))$ (not finished)
+
 $p(y(\mathrm{do}(\theta), \mathrm{do}(v)) - y(\mathrm{do}(\theta'), \mathrm{do}(v)))$
 
 Natural direct effect (intervene on ideology, fixing the _given_ level of vote in the direct):
 $p\left( y\left(\mathrm{do}\left(\theta\right), v\right) - y\left(\mathrm{do}\left(\theta'\right), v\right) \right)$
+
+Sequential-$g$ estimator: Joffe and Greene 2009; Vansteelandt 2009
+
+### Bayesian Considerations
+
+We observe $y_{g}\left(\theta_{g}\right)$, but we don't know $\theta_{g}$ with certainty. Instead let $p\left(\theta_{g}\right)$ be the posterior distribution of $g$'s average policy ideology as estimated from the group IRT model in Chapter&nbsp;\@ref(ch:model). Our observed outcome is a function of this unknown value, which we represent as $y_{g}\left(p\left(\theta_{g}\right)\right)$. 
+
+Thus the causal effect of setting $\theta = \theta'$ for unit $g$ is
+\begin{align}
+  \tau_g &= y_{g}\left(\theta'\right) - y_{g}\left(p\left(\theta_{g}\right)\right),
+\end{align}
+or, written as a probability distribution 
+\begin{align}
+  p\left(\tau_{g}\right) &= p\left(y_{g}\left(\theta'\right) - y_{g}\left(\theta_{g}\right)\right)
+\end{align}
+
+
+
+## Empirical Approach
+
+
+### Data
+
+U.S. House primary data from @pettigrew-primary-data. 
+
+### Model
+
 
 

@@ -1223,7 +1223,7 @@ lkj_dens_plots
 #   as.data.frame() %>% # for breaking-change stability
 #   as_tibble()
 
-sim_lkj_params <- rethinking::rlkjcorr(3000, K = 2, eta = 4) %>%
+sim_lkj_params <- rethinking::rlkjcorr(3000, K = 2, eta = 2) %>%
   as.data.frame() %>% # for breaking-change stability
   as_tibble(.name_repair = "check_unique") %>%
   select(rho = V2) %>%

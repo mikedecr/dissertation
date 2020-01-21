@@ -4,13 +4,6 @@
 
 ```{r knitr-02-1_model-sim, include = FALSE, cache = FALSE}
 source(here::here("assets-bookdown", "knitr-helpers.R"))
-
-# knitr::opts_chunk$set(
-#   cache.path = 
-#     stringr::str_glue('{knitr::opts_chunk$get("cache.path")}02-1_model-sim/'),
-#   fig.path = 
-#     stringr::str_glue('{knitr::opts_chunk$get("fig.path")}02-1_model-sim/')
-# )
 ```
 
 

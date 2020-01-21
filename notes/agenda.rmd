@@ -4,11 +4,11 @@ title: Overall thesis notes
 
 # Today
 
-- Bureaucracy:
+- **Bureaucracy**
     - [ ] New table of contents, descriptions of the chapters, circulate to the four
     - [ ] Mike meeting
     - [ ] Nadav meeting
-- Ask Alex about: 
+- **Alex**
     - [ ] remembering districts(?) we don't have a lag on the previous district value, only the geographic coefficients
     - [ ] weighting questions:
         - can we calculate weighted $s^{*}$ without going through $\bar{y}^{*}$
@@ -16,21 +16,29 @@ title: Overall thesis notes
     - [x] hierarchical priors for item parameters?
         - CW do *not* do this
         - Alex says: multivariate normal because they'll be correlated
-    - [ ] identifiability in heteroskedastic model (Londregan?)
-- Paper fixes
+        - This is how we get around incidental parameters?
+    - [ ] identifiability in heteroskedastic model
+- **Theory/Writing**
+    - [ ] candidates fear "idiosyncratic" issues
     - [ ] cite bailey for ranef approach (incidental parameters problem)
     - [ ] vector form covariates in model math section
-    - [ ] pi-bar in the group model (to show that $\neq \pi$ )
-    - [x] IRT model from formal assumptions
     - [ ] more cites in model chapter
         - Londregan
     - [ ] what's the deal with equal bill locations?
         - alpha = 0
         - beta also = 0?
         - there are also other ways to get alpha = 0 that aren't equidistant 
-    - [x] Document-level aesthetic to-dos (some time...)
     - [ ] first references: MCMC, IRT, SPD
-- Code fixes
+    - [ ] is the "zero point" the "center" of ideology
+    - [ ] mimic Stimson's dichotomization
+        - see also Ansolabehere, Rodden, Snyder
+    - [ ] where else could we do this (measurement scales)
+- **Code**
+    - [ ] LICENSE
+    - [ ] same cache path for pdf/html (less storage)
+        - look up bookdown docs on this
+        - code idea is in `knitr-helpers.R`
+    - [ ] dir paths go into a modular file?
     - [ ] factors/index for groups, items, states, etc. aren't sorted 
         - [ ] go into combine-data, create a rationalizable system
         - [ ] rerun models for 200/100 and then 2k/1k
@@ -40,19 +48,18 @@ title: Overall thesis notes
     - [ ] Fix linstat runs
         - [ ] save stderr and stdout separately
         - [ ] mac access to linstat files
-    - [ ] which params can we avoid saving (in simulation)?
+    - [ ] margin histograms for ideal points?
+    - [x] which params can we avoid saving (in simulation)?
     - [ ] hack to the end of the simulation exercise
     - [ ] simulation: within-district variance should be an afterthought after the distribution of averages...
         - variance within group should be greater than between
         - does this mean that the exercise is dumb?
-    - [ ] fix html/latex specific cache issue (I hate waiting)
-    - [ ] log1m/log1p functions for probit link
-    - [ ] dir paths go into a modular file?
+    - [x] log1m/log1p functions for probit link
+        - doesn't need this?
+    - [ ] weighted data likelihood
     - [ ] offline mathjax
-- [ ] substance
-    - candidates fear idiosyncratic issues
-    - reinterpret all questions as interview questions or news questions rather than as job talk questions
-- [ ] LICENSE?
+- **Big view**
+    - [ ] reinterpret all questions as interview questions or news questions rather than as job talk questions
 
 
 
