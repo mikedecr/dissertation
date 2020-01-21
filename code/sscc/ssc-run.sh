@@ -27,7 +27,7 @@ q
 # R < code/02-dgirt/22-sim/sim-static.R > lkj-test-2k.log --no-save &
 R < code/02-dgirt/24-estimate/241-run-static.R > lkj-real-data.log --no-save &
 # Rscript --no-save code/02-dgirt/24-estimate/241-run-static.R > lkj-real-data.log &
-# 416229 (2020-01-11, 5:20)
+# 195403 (2020-01-13, 12:55pm)
 
 # condor_R code/02-dgirt/22-sim/sim-static.R lkj-test-output.log &
 

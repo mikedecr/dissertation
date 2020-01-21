@@ -14,13 +14,16 @@
 # file stems are appended to cache and fig paths
 knitr::opts_chunk$set(
   # fig.path = here::here('_figs/')
-  # cache.path = here::here('_cache/'),
+  # cache.path = here::here("_bookdown_files", '_cache/'),
   cache = TRUE, 
   echo = FALSE, include = FALSE, 
   warning = FALSE, message = FALSE, 
   # fig device is f(pandoc_to) by default
   fig.align = "center", dpi = 300#, fig.retina = 3
 )
+
+# you could set this in each file?
+# cache.path is glued from the filename?
 
 # graphics device, use PDF in LaTeX
 options(knitr.graphics.auto_pdf = TRUE)
@@ -53,12 +56,9 @@ smart_number <- function(n, ...) {
 
 # ---- call other helpers -----------------------
 
-# to do: (?) 
-#  - symlink-data redundantly loads libs; eval in separate env?
+# these govern non-knitr R things
+source(here::here("code", "helpers", "call-R-helpers.R"))
 
-source(here::here("code", "helpers", "symlink-data.R"))
-source(here::here("code", "helpers", "functions.R"))
-source(here::here("code", "helpers", "graphics-helpers.R"))
 
 # ggsave("~/desktop/test.pdf", height = 4, width = 9, device = cairo_pdf); beepr::beep(2)
 
