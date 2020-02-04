@@ -1,0 +1,9 @@
+## Data Sources {#sec:model-data}
+
+<!-- in chapter: model -->
+
+Describe data
+
+```{r knitr-02-2_model-data, include = FALSE, cache = FALSE}
+source(here::here("assets-bookdown", "knitr-helpers.R"))
+```
