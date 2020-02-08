@@ -29,15 +29,15 @@
 \setsecnumdepth{subsubsection}
 
 % Advice: only write into subsection?
-\setsecheadstyle{\Large \raggedright \sffamily \bfseries}
-\setsubsecheadstyle{\large \raggedright \sffamily \bfseries} %\itshape
-\setsubsubsecheadstyle{\raggedright \sffamily \bfseries \itshape} 
+\setsecheadstyle{\Large \raggedright  \bfseries} % \sffamily
+\setsubsecheadstyle{\large \raggedright  \bfseries} %\itshape % \sffamily
+\setsubsubsecheadstyle{\raggedright  \bfseries \itshape}  % \sffamily
 % \setparaheadstyle{\raggedright \itshape}
 
 % document design
 % --- serif chapter styles ---
 \chapterstyle{dash} % don't want serif though
-  \renewcommand*{\chaptitlefont}{\huge\sffamily\centering\bfseries}
+  \renewcommand*{\chaptitlefont}{\huge\centering\bfseries} % \sffamily
   \renewcommand*{\chapnumfont}{\chaptitlefont}
 % \chapterstyle{dowding}
 
@@ -98,7 +98,10 @@
   \noindent Alexander M.\ Tahk \hrulefill  \\[18pt]
 
   % \rule{0.5\textwidth}{.4pt} \\ 
-  \noindent Michael W.\ Wagner (tbd) \hrulefill           
+  \noindent 
+  % Michael W.\ Wagner 
+  (tbd) 
+  \hrulefill           
 } 
 
 
