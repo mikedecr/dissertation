@@ -4,6 +4,31 @@ title: Overall thesis notes
 
 # Today
 
+- alex
+    - including the group-level means of lower-level covariates as a way of absorbing correlation?
+    - what about pooling toward something not normal?
+- APW prep
+    - organize reading
+    - prioritize reading
+        - _causal modeling_
+            - ABS: sequential-g
+            - ABS: causal mechanism treatment arms
+            - Hill: multilevel causal inference
+            - Bafumi Gelman correlated ranefs
+            - what are correlated random effects
+            - between v within estimators
+            - DAGs for fixed/random effects
+        - _covariate selection/other practices_
+            - sort through books
+            - Justify covariate adjustment w/ cites
+        - _night_: 
+            - prior-likelihood
+    - naive regressions
+    - sequential G
+- data
+    - Adler data (codebook_district_data.pdf)
+- writing plan?
+
 - **Bureaucracy**
     - [ ] New table of contents, descriptions of the chapters, circulate to the four
     - [ ] Mike meeting
@@ -35,10 +60,11 @@ title: Overall thesis notes
     - [ ] where else could we do this (measurement scales)
 - **Code**
     - [ ] LICENSE
+    - [ ] helper to grab most recent MCMC
+    - [ ] dir paths go into a modular file?
     - [ ] same cache path for pdf/html (less storage)
         - look up bookdown docs on this
         - code idea is in `knitr-helpers.R`
-    - [ ] dir paths go into a modular file?
     - [ ] factors/index for groups, items, states, etc. aren't sorted 
         - [ ] go into combine-data, create a rationalizable system
         - [ ] rerun models for 200/100 and then 2k/1k

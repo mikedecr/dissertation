@@ -22,10 +22,26 @@ library("ggdag");
 theme_dag <- theme_dag(base_family = font_fam)
 ```
 
+Introduction:
+
+- we want to see if the new measure has a unique effect on candidate positioning
+- this is a difficult causal question, since the measure most frequently used as a "proxy" is downstream from the exposure variable, and it could have distinct causal effects on candidate positioning (discussed below)
+- This chapter does the following:
+    - uses DAGs to illustrate the causal query
+    - discusses the methods and related assumptions for estimating causal quantities under the posited causal structure
+    - adapts these methods for a multilevel context such as this, where treatment and mediators exist at different levels of the data hierarchy.
+
+
+
 ## Candidate Positioning in Primary Elections
 
 
 
+
+## Descriptive Analysis
+
+  
+$\mathrm{Dime}_{ig} = \mu_{0} + \beta \theta_{g} + \alpha_{g} + \epsilon_{ig}$
 
 ## The Direct Effect of Partisan Preferences
 
@@ -104,40 +120,106 @@ ggplot(problem_dag) +
 
 Controlled direct effect (intervene on ideology, intervene on fixed level of vote in the district):
 
-Blackwell notation: $CDE_{i}(a, a', m) = Y_{i}(a, m) - Y_{i}(a', m)$.
+<!-- Blackwell notation:  -->
+Imagine intervening on the causal system on both $A$ and $M$. The controlled direct effect can be represented as follows.
+\begin{align}
+  CDE_{i}(a, a', m) &= Y_{i}(a, m) - Y_{i}(a', m)
+  (\#eq:PO-CDE)
+\end{align}
+It is the effect of setting $A = a$, compared to some $a'$, while fixing the mediator to some value $m$.
 
-More general _do_ notation: $p(CDE(a, a', m)) = p(y \mid do(A = a'))$ (not finished)
+
+<!-- More general _do_ notation: $p(CDE(a, a', m)) = p(y \mid do(A = a'))$ (not finished)
 
 $p(y(\mathrm{do}(\theta), \mathrm{do}(v)) - y(\mathrm{do}(\theta'), \mathrm{do}(v)))$
+
 
 Natural direct effect (intervene on ideology, fixing the _given_ level of vote in the direct):
 $p\left( y\left(\mathrm{do}\left(\theta\right), v\right) - y\left(\mathrm{do}\left(\theta'\right), v\right) \right)$
 
+-->
+
+
+
 Sequential-$g$ estimator: Joffe and Greene 2009; Vansteelandt 2009
+
+
 
 ### Bayesian Considerations
 
 We observe $y_{g}\left(\theta_{g}\right)$, but we don't know $\theta_{g}$ with certainty. Instead let $p\left(\theta_{g}\right)$ be the posterior distribution of $g$'s average policy ideology as estimated from the group IRT model in Chapter&nbsp;\@ref(ch:model). Our observed outcome is a function of this unknown value, which we represent as $y_{g}\left(p\left(\theta_{g}\right)\right)$. 
 
-Thus the causal effect of setting $\theta = \theta'$ for unit $g$ is
+Thus the causal effect of setting $\mathrm{do}\left(\theta\right)$, as opposed to some $\theta'$, for unit $g$ is
 \begin{align}
-  \tau_g &= y_{g}\left(\theta'\right) - y_{g}\left(p\left(\theta_{g}\right)\right),
+  \tau_g &= y_{g}\left(\theta\right) - y_{g}\left(\theta_{g}'\right),
 \end{align}
+
+The posterior distribution for this value is 
+$p\left(\tau_{g}\right) = p\left(\right)$
+
 or, written as a probability distribution 
 \begin{align}
   p\left(\tau_{g}\right) &= p\left(y_{g}\left(\theta'\right) - y_{g}\left(\theta_{g}\right)\right)
 \end{align}
 
+### Multilevel considerations
 
+For units $i$ in groups $j$, if treatment is assigned at the level of $j$, then potential outcomes are really group-level averages, $y_{j}(z_{j} = \{1, 0\})$ if SUTVA holds _across_ groups (but obviously not within group) [@Hill:2013:multilevel-causal-inf].
+
+If treatment is correlated with X _by design_(?) or otherwise(?), such as blocking along a key covariate like income, can include block-specific means of the treatment variable [@Hill:2013:multilevel-causal-inf]; Bafumi and Gelman, Raudenbush
+
+If treatment is group-level, the natural treatment effect is at the group level, but you may not get this by averaging individual units if group size is correlated with treatment assignment. So you want to average the group effects! [@Hill:2013:multilevel-causal-inf]
 
 ## Empirical Approach
 
 
 ### Data
 
-U.S. House primary data from @pettigrew-primary-data. 
+<!-- U.S. House primary data from @pettigrew-primary-data. -->
+
+Candidate positioning data from Bonica:
+
+- dynamic CF score
 
 ### Model
 
+First stage model, a causal model for the mediator.
+
+\begin{align}
+  \mathrm{Dime}_{ig} &= 
+    \mu_{1} + \tau_{1} \theta_{g} + \delta \mathrm{pvote}_{d} + 
+    \mathbf{x}^{\intercal}_{ig}\beta_{1} +
+    \mathbf{z}^{\intercal}_{ig}\gamma +
+    \alpha_{1d} + \epsilon_{ig}
+    (\#eq:med-model)
+\end{align}
+
+Blipdown function:
+\begin{align}
+  \psi_{d}\left(\theta_{g}, \mathrm{pvote}_{d}, \mathbf{x}; \delta \right) %_
+    &= 
+    \delta\left(\mathrm{pvote}_{d} - \mathrm{pvote}'_{d}\right) %_
+  (\#eq:blipdown-function)
+\end{align}
+
+Blipped-down (de-mediated) outcome:
+\begin{align}
+  \mathrm{Dime}^{*}_{ig} &=
+    \mathrm{Dime}_{ig} - \psi_{d}\left(\theta_{g}, \mathrm{pvote}_{d}, \mathbf{x}; \delta \right) %_
+  (\#eq:blipdown-outcome)
+\end{align}
+
+
+Direct effects model:
+\begin{align}
+  \mathrm{Dime}^{*}_{ig} = \mu_{2} + \tau_{2}\theta_{g} + \mathbf{x}^{\intercal}_{ig}\beta_{2} + \alpha_{2d} + u_{ig}
+\end{align}
+
+
+Missing data model for $\theta_{g}$:
+\begin{align}
+  \theta_{g} \sim \mathrm{N}\left(\bar{\theta}_{g}, \mathrm{sd}\left(\theta_{g}\right)\right)
+  (\#eq:theta-measurement-error)
+\end{align}
 
 
