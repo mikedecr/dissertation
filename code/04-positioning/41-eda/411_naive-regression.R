@@ -242,7 +242,7 @@ naive_models <- full %>%
       data, 
       ~ lmer(
         recipient_cfscore_dyn ~ 
-          theta + (1 | group) +
+          theta + (1 | district) +
           district_pres_vs + # (1 | district_num) 
           + as.factor(cycle)
           ,
@@ -253,7 +253,7 @@ naive_models <- full %>%
       data, 
       ~ lmer(
         recipient_cfscore_dyn ~ 
-          (1 | group) + 
+          (1 | district) + 
           district_pres_vs + # (1 | district_num) 
           + as.factor(cycle)
           ,
@@ -264,7 +264,7 @@ naive_models <- full %>%
       data, 
       ~ lmer(
         recipient_cfscore_dyn ~ 
-          theta + (1 | group) + 
+          theta + (1 | district) + 
           # scale(district_pres_vs) + # (1 | district_num) 
           + as.factor(cycle)
           ,
@@ -401,7 +401,7 @@ mediator_formula <- recipient_cfscore_dyn ~
     scale(I(total_receipts*total_receipts*total_receipts)) +
   theta + out_theta + 
   district_pres_vs + 
-  (1 | group) + 
+  (1 | district) + 
   as.factor(cycle)
 
 mediating <- g_data %>%
@@ -509,7 +509,7 @@ blipping %>%
 
 direct_formula <- blipdown_cfscore_dyn ~ 
   theta + 
-  (1 | group) + 
+  (1 | district) + 
   as.factor(cycle)
 
 direct_mod <- blipping %>%
