@@ -20,16 +20,30 @@ ggplot2::update_geom_defaults(geom = "label", list(family = font_fam))
 
 
 # ---- theme -----------------------
-
-ggplot2::theme_set(
-  ggthemes::theme_base(base_size = 14, base_family = font_fam) + 
-    ggplot2::theme(
+theme_mgd <- function() {
+  ggthemes::theme_base(base_size = 14, base_family = font_fam) %+replace% ggplot2::theme(
       plot.background = ggplot2::element_blank(), 
       axis.ticks = ggplot2::element_line(lineend = "square"), 
       axis.ticks.length = ggplot2::unit(0.25, "lines"), 
       axis.text = ggplot2::element_text(size = 10)
     )
-)
+}
+
+
+ggplot2::theme_set(theme_mgd())
+
+theme_mgd_dag <- function() {
+  theme_mgd() %+replace%
+  ggplot2::theme(
+    panel.border = ggplot2::element_blank(),
+    panel.background = ggplot2::element_blank(),
+    # axis.line = ggplot2::element_blank(),
+    axis.title = ggplot2::element_blank(),
+    axis.text = ggplot2::element_blank(),
+    axis.ticks = ggplot2::element_blank()
+  )
+}
+
 
 
 

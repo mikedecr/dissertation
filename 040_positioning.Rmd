@@ -13,7 +13,7 @@ library("magrittr")
 library("tidyverse")
 library("latex2exp")
 library("scales")
-# library("patchwork")
+library("patchwork")
 # library("ggforce")
 library("broom")
 library("tidybayes")
@@ -144,6 +144,119 @@ $p\left( y\left(\mathrm{do}\left(\theta\right), v\right) - y\left(\mathrm{do}\le
 Sequential-$g$ estimator: Joffe and Greene 2009; Vansteelandt 2009
 
 
+```{r create-g-dag}
+g_dag <- 
+  dagify(
+    C ~ T + V + Z + X + U1 + U2,
+    V ~ T + X + Z + U1,
+    Z ~ T + X,
+    T ~ X + U2,
+    exposure = "T", 
+    outcome = "C",
+    coords = tribble(
+      ~ name,  ~ x, ~ y,
+      "T",       1,   2,
+      "C",       3,   1,
+      "Z",       1,   0,
+      "V",       2,   0,
+      "X",       0,   1,
+      "U1",      3, 0,
+      "U2",      2,   2
+    )
+  ) %>%
+  tidy_dagitty(layout = "auto") %>%
+  mutate(
+    label = case_when(
+      name == "V" ~ "Past Presidential Vote",
+      name == "T" ~ "Partisan Ideology",
+      name == "C" ~ "Candidate Position",
+      name == "X" ~ "Pre-Treatment Confounders",
+      name == "Z" ~ "Intermediate Confounders"
+    )
+  ) %>%
+  print()
+
+```
+
+```{r g-dags}
+base_dag <- g_dag %>%
+  ggplot() +
+  aes(x = x, y = y, xend = xend, yend = yend) +
+  # geom_dag_label_repel(
+  #   aes(label = label),
+  #   segment.color = "black"
+  # ) +
+  coord_cartesian(ylim = c(-0.25, 2.25)) +
+  theme_mgd_dag() +
+  # theme_void() +
+  NULL
+
+mediator_dag <- base_dag +
+  geom_dag_node(data = filter(g_dag, name %in% c("U2", "U1") == FALSE)) +
+  geom_dag_edges(
+    data_directed = filter(g_dag, name %in% c("U2", "U1") == FALSE)
+  ) +
+  geom_dag_text(
+    data = filter(g_dag, name %in% c("U2", "U1") == FALSE), 
+    aes(label = name)
+  ) +
+  labs(title = "\nStage 1",
+       subtitle = "Mediator model\n"
+  ) +
+  NULL
+
+exposure_dag <- base_dag +
+  geom_dag_edges(
+    data_directed = g_dag %>%
+      filter(
+        (name == "X" & to %in% c("T", "C")) | 
+        (name == "T" & to == "C") | 
+        (name == "C")
+    )
+  ) +
+  geom_dag_node(
+    data = g_dag %>%
+      filter(
+        (name == "X" & to %in% c("T", "C")) | 
+        (name == "T" & to == "C") | 
+        (name == "C")
+    )
+  ) +
+  geom_dag_text(
+    data = g_dag %>%
+      filter(
+        (name == "X" & to %in% c("T", "C")) | 
+        (name == "T" & to == "C") | 
+        (name == "C")
+      ),
+    aes(label = ifelse(name == "C", "C*", name))
+  ) +
+  labs(title = "\nStage 2", subtitle = "Exposure model with\ndemediated outcome")
+  NULL
+
+confounding_dag <- base_dag +
+  geom_dag_node(aes(color = name %in% c("U2", "U1"))) +
+  geom_dag_edges() +
+  geom_dag_text(aes(label = name)) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = c("TRUE" = secondary, "FALSE" = "black")) +
+  labs(title = "Violations of Sequential\nUnconfoundedness", 
+       subtitle = "In mediator model (U1)\nand exposure model (U2)")
+```
+
+```{r plot-g-dag}
+mediator_dag + exposure_dag + confounding_dag 
+```
+
+Figure&nbsp;\@ref(fig:plot-g-dag) outlines the modeling assumptions for sequential-$g$ estimation.
+
+- stage 1
+- stage 2, deletes the paths
+
+```{r plot-g-dag, include = TRUE, fig.width = 11, fig.height = 5, out.width = "100%", fig.cap = "Directed acyclic graphs that describe the modeling problem and sequential-$g$ estimation. The stage 1 mediator model estimates the effect of the past presidential vote ($V$) on candidate positioning ($C$). The stage 2 exposure model subtracts the vote effect from candidate positions and estimates the effect of partisan group ideology ($T$) on *demediated* candidate positions ($C^{*}$). The final panel shows where unadjusted confounders violate the identification assumptions in stage 1 ($U1$) and in stage 2 ($U2$)."}
+```
+
+
 
 ### Bayesian Considerations
 
@@ -171,6 +284,11 @@ If treatment is correlated with X _by design_(?) or otherwise(?), such as blocki
 If treatment is group-level, the natural treatment effect is at the group level, but you may not get this by averaging individual units if group size is correlated with treatment assignment. So you want to average the group effects! [@Hill:2013:multilevel-causal-inf]
 
 ## Empirical Approach
+
+We care about the total effect and the (controlled) direct effect.
+
+- estimate total
+- [x] estimate CDE
 
 
 ### Data
@@ -222,4 +340,14 @@ Missing data model for $\theta_{g}$:
   (\#eq:theta-measurement-error)
 \end{align}
 
+
+
+## Algorithm
+
+- Draw a sample of $n_{\bar{\theta}}$ from posterior $p\left(\bar{\theta}\right)$
+- For each $\bar{\theta}^{*}$: 
+    - estimate mediator model
+    - extract the mediator's effect on the dependent variable. To carry uncertainty forward, do this by sampling $1$ draw from the coefficient's distribution (multinorm for all coefficients). (This results in a distribution of mediator effects that reflect posterior uncertainty over $\bar{\theta}$ and in the mediator effect)
+    - Calculate the blipdown function and use it to demediate $y$. (This creates a distribution of demediated $y$  values)
+    - Use demediated $y$ to estimate direct effect of $\bar{\theta}$. This results in a distribution of ACDEs, reflecting uncertainty in $\bar{\theta}$, $\delta$, and the ACDE.
 
