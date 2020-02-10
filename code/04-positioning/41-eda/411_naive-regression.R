@@ -6,7 +6,7 @@
 library("here")
 library("magrittr")
 library("tidyverse")
-# library("boxr"); box_auth()
+library("boxr"); box_auth()
 
 library("lme4")
 library("tidybayes")
@@ -17,33 +17,35 @@ library("latex2exp")
 
 source(here::here("code", "helpers", "call-R-helpers.R"))
 
+# source(here::here("code", "04-positioning", "41-eda", "411_naive-regression.R"), verbose = FALSE)
 
 # ---- Data sources -----------------------
 
 # import MCMC
 mcmc <- 
   here("data", "mcmc", "dgirt", "run", "samples", "2020-01-13-mcmc-homsk-2010s.RDS") %>%
-  # box_read(595206534522)
   readRDS()
 
 
 # tidy pre-stan data
 master_data <- 
-  # box_read(533627374308) %>%
   readRDS(
     here("data", "mcmc", "dgirt", "run", "input", "master-model-data.RDS")
   ) %>%
   print()
 
-
-
-
+# Bonica scores and other candidate features
 dime_all_raw <- 
   rio::import(
     here("data", "dime-v3", "full", "dime_recipients_all_1979_2018.rdata")
   ) %>%
   as_tibble() %>%
   print()
+
+
+
+
+# ---- prep data -----------------------
 
 dime <- dime_all_raw %>%
   mutate(
@@ -62,19 +64,21 @@ dime <- dime_all_raw %>%
     ) 
   ) %>%
   rename_all(str_replace_all, "[.]", "_") %>%
-  filter(seat == "federal:house") %>%
-  filter(state %in% state.abb) %>%
-  filter(is.na(district_num) == FALSE) %>%
-  filter(party %in% c(1, 2)) %>%
-  filter(between(fecyear, 2012, 2016)) %>%
-  filter(fecyear == cycle) %>%
-  filter(is.na(incumbency) == FALSE) %>%
+  filter(
+    seat == "federal:house",
+    state %in% state.abb,
+    is.na(district_num) == FALSE,
+    party %in% c(1, 2),
+    between(fecyear, 2012, 2016),
+    fecyear == cycle,
+    is.na(incumbency) == FALSE
+  ) %>%
   select(
     state_abb = state, 
     everything(),
     -c(district, Incum_Chall)
   ) %>%
-  # keep only matching state-dist 
+  # keep only matching state-dist
   semi_join(
     master_data %>%
       select(state_abb, district_num) %>%
@@ -88,7 +92,7 @@ dime %>%
   print(n = nrow(.))
 
 
-# ---- tidy -----------------------
+# ---- tidy MCMC -----------------------
 
 sums <- 
   tibble(conf = c(.5, .9) ) %>%
@@ -221,6 +225,7 @@ full %>%
       )
     ),
     color = "black",
+    fill = NA,
     size = 3
   ) +
   theme(legend.position = "none")
@@ -427,6 +432,7 @@ mediating %>%
   coord_flip() +
   facet_grid(. ~ incumbency)
 
+
 # ---- de-mediate outcome -----------------------
 
 # add a sequence of fixed mediator values
@@ -532,6 +538,313 @@ direct_mod %>%
     y = "Controlled Direct Effect of\nDistrict-Party Public Ideology"
   ) +
   theme(legend.position = "none")
+
+
+
+
+
+
+
+# ---- managing uncertainty? -----------------------
+
+# tidy frame of ALL mcmc samples
+mcmc_draws <- tidy_draws(mcmc) %>%
+  print()
+
+# do sequential g for m samples
+n_draws <- 500
+
+theta_sample <- mcmc_draws %>%
+  gather_draws(theta[group], n = n_draws) %>%
+  ungroup() %>%
+  select(group, .draw, theta = .value) %>%
+  left_join(
+    master_data %>%
+    transmute(
+      group = as.numeric(group), 
+      state, 
+      district_num,
+      party = as.numeric(party)
+    ) %>%
+    distinct()
+  ) %>%
+  print()
+
+out_theta_sample <- theta_sample %>% 
+  rename(out_theta = theta) %>%
+  mutate(
+    out_party = case_when(
+      party == 1 ~ 2,
+      party == 2 ~ 1
+    )
+  ) %>%
+  select(-party, -group) %>%
+  print() %>%
+  left_join(
+    x = theta_sample,
+    y = .,
+    by = c("state", "district_num", "party" = "out_party", ".draw")
+  ) %>%
+  left_join(
+    select(thetas, -c(term:party_rank))
+  ) %>%
+  print()
+
+
+
+
+
+g_multiverse <- out_theta_sample %>%
+  group_by(group, state, district_num, party) %>%
+  nest() %>%
+  left_join(
+    x = dime, y = .,
+    by = c("state_abb" = "state", "district_num", "party")
+  ) %>%
+  unnest(data) %>%
+  group_by(.draw, party, incumbency) %>% 
+  nest() %>%
+  print()
+
+
+# ---- mediating -----------------------
+
+mediator_name <- "district_pres_vs"
+
+mediator_formula <- recipient_cfscore_dyn ~ 
+  scale(total_receipts) + 
+    scale(I(total_receipts*total_receipts)) + 
+    scale(I(total_receipts*total_receipts*total_receipts)) +
+  theta + out_theta + 
+  district_pres_vs + 
+  (1 | district) + 
+  as.factor(cycle)
+
+# estimate a separate model for each theta
+
+multi_mediating <- g_multiverse %>%
+  mutate(mediator_model = map(data, ~ lmer(mediator_formula, data = .x))) %>%
+  print()
+
+
+# ---- de-mediate outcome -----------------------
+
+# add a sequence of fixed mediator values
+# sample mediator effect from "posterior"
+# calculate fix mediator effect, blip Y down
+
+# sample posterior of mediator effect
+# contains a variable for the number of samples
+# fixing at 1, since I don't think we want to sample within samples?
+# (rather, it probably doesn't matter but it's unnecessary?)
+n_med_samples <- 1
+med_values <- 0.5
+  # seq(from, to, by)
+
+blipping <- multi_mediating %>%
+  mutate(
+    fixed_med_value = med_values,
+    mediator_samples = map(
+      mediator_model,
+      ~ {
+        tidy_fixed_fx <- filter(tidy(.x), group == "fixed")
+        samples <- mvtnorm::rmvnorm(
+          n = n_med_samples,
+          mean = pull(tidy_fixed_fx, estimate), 
+          sigma = vcov(.x) %>% as.matrix()
+        )
+        colnames(samples) <- pull(tidy_fixed_fx, term)
+        tibble(
+          med_draw = 1:n_med_samples,
+          mediator_effect = samples[, mediator_name]
+        )
+      }
+    ),
+    blipdown_function = pmap(
+      list(data, fixed_med_value, mediator_samples),
+      ~ {
+        observed_mediator <- ..1[[mediator_name]]
+        med_star <- ..2
+        mediator_effect <- ..3$mediator_effect
+        return(mediator_effect * (observed_mediator - med_star))
+      }
+    ),
+    data = map2(
+      data, blipdown_function, 
+      ~ mutate(.x, blipdown_cfscore_dyn = recipient_cfscore_dyn - .y)
+    )
+  ) %>%
+  print()
+
+
+# hist of mediator effect samples
+blipping %>%
+  unnest(mediator_samples) %>%
+  ggplot() +
+  aes(x = mediator_effect) +
+  geom_histogram(
+    # aes(fill = as.factor(.draw)), 
+    position = "identity", alpha = 0.5,
+    show.legend = FALSE
+  ) +
+  facet_grid(party ~ incumbency)
+
+# this would be more interesting
+# if we had a vector of mediator fixes
+# blipping %>%
+#   unnest(cols = c(data, blipdown_function, mediator_samples)) %>%
+#   ggplot() +
+#   aes(
+#     x = med_draw, y = blipdown_function,
+#     color = as.factor(fixed_med_value)
+#   ) +
+#   facet_grid(party ~ incumbency) +
+#   geom_point()
+
+
+# DV vs demediated DV
+# blipping %>%
+#   unnest(cols = data) %>%
+#   ggplot() +
+#   aes(
+#     x = recipient_cfscore_dyn, y = blipdown_cfscore_dyn, 
+#     color = as.factor(party),
+#     shape = as.factor(fixed_med_value)
+#   ) +
+#   geom_point() +
+#   facet_wrap(
+#     ~ incumbency, 
+#     # scales = "free"
+#   )
+
+# hist of differences
+# add more aesthetics for med_draw, party, incumbency...
+# blipping %>%
+#   unnest(cols = c(data, mediator_samples, blipdown_function)) %>%
+#   ggplot() +
+#   aes(x = recipient_cfscore_dyn - blipdown_cfscore_dyn) +
+#   geom_histogram()
+
+
+
+# ---- direct effect -----------------------
+
+direct_formula <- blipdown_cfscore_dyn ~ 
+  theta + 
+  (1 | district) + 
+  as.factor(cycle)
+
+# fit direct effect model
+# grab tidy and posterior samples of direct effect
+n_direct_samples <- 1
+
+
+direct_mod <- blipping %>%
+  mutate(direct_model = map(data, ~ lmer(direct_formula, data = .x))) %>%
+  print()
+
+direct_effects <- direct_mod %>%
+  mutate(
+    direct_samples = map(
+      direct_model,
+      ~ {
+        tidy_fixed_fx <- filter(tidy(.x), group == "fixed")
+        samples <- mvtnorm::rmvnorm(
+          n = n_direct_samples,
+          mean = pull(tidy_fixed_fx, estimate),
+          sigma = vcov(.x) %>% as.matrix()
+        )
+        colnames(samples) <- pull(tidy_fixed_fx, term)
+        tibble(direct_draw = 1:n_direct_samples, 
+               direct_effect = samples[ , "theta"])
+      }
+    ),
+    direct_tidy = map(direct_model, ~ filter(tidy(.x), term == "theta"))
+  ) %>%
+  print()
+
+# upload all results
+box_dir_create("model-output", parent_dir_id = 88878494950) # 102973475294
+box_dir_create("04-positioning", parent_dir_id = 102973475294) # 102977578033
+
+# upload models and samples
+# (testing select...)
+direct_effects %>%
+  select(
+    -c(party, incumbency, .draw, fixed_med_value,
+    ends_with("_model"), ends_with("tidy"), ends_with("_samples"))
+  )
+
+# upload tidy
+direct_effects %>%
+  select(ends_with("_model")) %>%
+  mutate_at(.vars = vars(-group_cols()), .funs = ~ map(., tidy)) %>%
+  box_write("pos-g-models-tidy.rds", dir_id = 102977578033)
+
+# upload mediation/direct samples 
+direct_effects %>%
+  select(ends_with("_samples")) %>%
+  box_write("pos-g-samples.rds", dir_id = 102977578033)
+
+
+
+# to do: save separate tables of models, etc., 
+#   to keep separate from post-est things
+# don't need to have all output in one place
+
+# histogram of all direct fx samples
+direct_effects %>%
+  unnest(direct_samples) %>%
+  ungroup() %>%
+  mutate(
+    incumbency = str_glue("{incumbency}s")
+  ) %>%
+  ggplot() +
+  aes(x = direct_effect, fill = as.factor(party)) +
+  # geom_histogram(
+  #   position = "identity",
+  #   alpha = 0.5
+  # ) +
+  geom_density(alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_wrap(
+    ~ incumbency
+  ) +
+  theme(legend.position = "none") +
+  scale_fill_manual(values = party_factor_colors)
+
+
+# summarize direct FX  
+direct_summary <- direct_effects %>%
+  unnest(cols = c(direct_tidy, direct_samples)) %>%
+  group_by(party, incumbency, fixed_med_value) %>% 
+  summarize(
+    meta_mean = mean(estimate),
+    sample_mean = mean(direct_effect), 
+    conf.low = quantile(direct_effect, .05), 
+    conf.high = quantile(direct_effect, .95),
+    n_samples = n()
+  ) %>%
+  print()
+
+
+direct_summary %>%
+  ggplot() +
+  aes(x = incumbency, y = meta_mean, color = as.factor(party)) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.25)
+  ) +
+  scale_color_manual(values = party_factor_colors) +
+  coord_flip() +
+  labs(
+    x = NULL,
+    y = "Controlled Direct Effect of\nDistrict-Party Public Ideology"
+  )
+
+
+
+
 
 
 
