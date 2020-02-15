@@ -17,7 +17,7 @@ rmd_files:
   latex:
     - Index.Rmd 
     # - 00_dedication.Rmd
-    # - 00_abstract.Rmd
+    - 00_abstract.Rmd
     - 00_contents.Rmd
     # - 00_thanks.Rmd
     - 00_mainmatter.Rmd

@@ -1,4 +1,5 @@
-# Causal Inference from a Bayesian Perspective {#ch:causality}
+# Bayesian Approach to Causal Inference in Political Science {#ch:causality}
+
 
 I'm new!
 
@@ -19,7 +20,12 @@ library("patchwork")
 ```
 
 
-## Parameterization
+
+## The Meaning of Parameters in Design and Estimation
+
+## Rubin's Vision: Posterior Distributions for Missing Potential Outcomes
+
+## Parameterization and other Opportunities
 
 ```{r diff-means-example}
 means_data <- 
@@ -80,3 +86,9 @@ Although the treatment effect $\beta$ from Equation&nbsp;\@ref(eq:diff-means-exa
 ```
 
 - equivalent parameterizations
+
+
+## Example Case: Regression Discontinuity with a Binary Outcome
+
+## Example Case: Meta-Analysis of Nonparametric Treatment Effects
+
