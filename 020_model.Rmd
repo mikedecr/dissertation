@@ -1,4 +1,4 @@
-# Modeling the Constituency's Policy Preferences {#ch:model}
+# Modeling the Partisan Constituency's Policy Preferences {#ch:model}
 
 <!-- bold math symbol -->
 ```{block, include = knitr::is_html_output(), cache = FALSE}
@@ -348,14 +348,14 @@ item_params_2p <-
 ex_item_params <- 
   bind_rows(
     .id = "model",
-    "Ability Only: No Item Variation" = item_params_0p,
+    "Ideology Only:\nNo Item Variation" = item_params_0p,
     "Varying Item Difficulty" = item_params_1p,
-    "Varying Difficulty & Discrimination" = item_params_2p 
+    "Varying Difficulty\n& Discrimination" = item_params_2p 
   ) %>%
   mutate(
     item = 1:n(),
     model = fct_relevel(
-      model, "Ability Only: No Item Variation", "Varying Item Difficulty"
+      model, "Ideology Only:\nNo Item Variation", "Varying Item Difficulty"
     )
   ) %>%
   print()
@@ -404,7 +404,7 @@ Intuitively, the discrimination parameter captures how well a test item differen
 ]
 
 
-```{r plot-example-iccs, include = TRUE, echo = FALSE, fig.cap = "Examples of item characteristic curves under different item parameter assumptions", fig.width = 9, fig.height = 4, out.width = "100%"}
+```{r plot-example-iccs, include = TRUE, echo = FALSE, fig.cap = "Examples of item characteristic curves under different item parameter assumptions", fig.width = 7, fig.height = 3, out.width = "100%"}
 ggplot(ex_iccs) +
   aes(x = theta, y = prob) +
   facet_wrap(~ model) +
@@ -414,12 +414,11 @@ ggplot(ex_iccs) +
   scale_y_continuous(breaks = c(0, .5, 1)) +
   scale_x_continuous(
     breaks = c(-3, 0, 3), 
-    labels = c("Low", "Med", "High")
+    labels = c("Left", "Center", "Right")
   ) +
-  # scale_color_brewer(palette = "Set2") + 
   labs(
-    x = TeX("Ability/Conservatism $(\\theta_{\\mathit{i}})$"), 
-    y = "Probability of\nCorrect/Conservative Response"
+    x = TeX("Policy Ideology $(\\theta_{\\mathit{i}})$"), 
+    y = "Probability of\nConservative Response"
   ) +
   NULL
 ```
@@ -799,16 +798,16 @@ One important implementation consideration for the group IRT model is the presen
 To explain how this works in Stan, some context on Bayesian computation is helpful. It is usually sufficient for Bayesian estimation with Markov chain Monte Carlo to calculate the posterior density of model parameters only up to a proportionality constant,
 \begin{align}
   (\#eq:bayes-prop)
-  p(\theta \mid y) &\propto p(y \mid \theta)p(\theta),
+  p(\Theta \mid \mathbf{y}) &\propto p(\mathbf{y} \mid \Theta)p(\Theta),
 \end{align}
-where $\theta$ and $y$ generically represent parameters and observed data. For computational stability, especially in high dimensions where probability densities get very small, these calculations are done on the log scale.
+where $\Theta$ and $\mathbf{y}$ generically represent parameters and observed data. For computational stability, especially in high dimensions where probability densities get very small, these calculations are done on the log scale.
 \begin{align}
-  \log p(\theta \mid y) &\propto \log p(y \mid \theta) + \log p(\theta),
+  \log p(\Theta \mid \mathbf{y}) &\propto \log p(\mathbf{y} \mid \Theta) + \log p(\Theta),
   (\#eq:bayes-prop-log)
 \end{align}
 MCMC algorithms calculate the right-side of this proportionality at each iteration of the sampler to decide if proposed parameters should be accepted into the sample or rejected. In Stan, this calculation is passed to the _log density accumulator_, a variable containing the sum of the log likelihood and log prior density at every sampler iteration [@carpenter-at-al:2016:stan]. 
 
-In the current case, it is the probability of the data $\log p(y \mid \theta)$ that presents a problem. The Binomial log likelihood function as written in Stan will not accept non-integer data, so I rewrite the kernel $K(\cdot)$ of the Binomial log likelihood,
+In the current case, it is the probability of the data $\log p(\mathbf{y} \mid \Theta)$ that presents a problem. The Binomial log likelihood function as written in Stan will not accept non-integer data, so I rewrite the kernel $K(\cdot)$ of the Binomial log likelihood:
 \begin{align}
   \log K\left(p\left(s^{*}_{gj} \mid \bar{\pi}_{gj} \right)\right) 
   &=
@@ -816,37 +815,10 @@ In the current case, it is the probability of the data $\log p(y \mid \theta)$ t
     + \left(n_{gj}^{*} - s^{*}_{gj}\right) \log \left(1 -\bar{\pi}_{gj}\right)
   (\#eq:weighted-ll-raw)
 \end{align}
-where the number of trials $n_{gj}^{*}$ and the number of successes $s^{*}_{gj}$ can take non-integer values. This is the same approach that @ghitza-gelman:2013:subgroup-mrp take in a frequentist maximum likelihood context.^[
+where the weighted number of trials $n_{gj}^{*}$ and the weighted number of successes $s^{*}_{gj}$ can take non-integer values. This is the same approach that @ghitza-gelman:2013:subgroup-mrp take in a frequentist maximum likelihood context.^[
   They describe this as "simply the weighted log likelihood approach to fitting generalized linear models with weighted data" [@ghitza-gelman:2013:subgroup-mrp, 765].
 ]
-Rather than declare that $s^{*}_{gj}$ is a standard Binomial draw, I pass the results of Equation&nbsp;\@ref(eq:weighted-ll-raw) directly to the log density accumulator. This serves as the log likelihood for the response data. Other sampling statements that add prior density to the accumulator are unaffected by my approach to the log likelihood.
-
-I implement Equation&nbsp;\@ref(eq:weighted-ll-raw) using a log sum of exponentials routine, a practice for robust computational arithmetic that prevents numerical underflow [e.g. @Carpenter:2016:logsumexp].
-
-[ insert what that routine actually would be]
-
-\begin{align}
-  \eta_{gj} &= 
-    \left(
-      \frac{\bar{\theta}_{g} - \kappa_{j}}{
-            \sqrt{ \sigma_{g}^{2} + \sigma^{2}_{j}}}
-    \right) \\
-  \bar{\pi}_{gj} &= 
-    \tilde{\Phi}\left(\eta_{gj}\right) \text{ (logistic approximation to $\Phi(\cdot)$)}\\
-  &= 
-    \mathrm{logit}^{-1}\left(
-      0.07056 \eta_{gj}^{3} + 1.5976 \eta_{gj}
-    \right)
-  (\#eq:robust-likelihood)
-\end{align}
-
-To do:
-
-- does the logistic approximation fail without log-sum-exponential after the changes we've made to the model already?
-
-<!------- TO DO ---------
-- come back to this after trying the probit in the code again!
-------------------------->
+I pass the results of Equation&nbsp;\@ref(eq:weighted-ll-raw) directly to the log density accumulator. This maneuver accumulates the log probability of the response data, which Stan uses to evaluate the acceptance probability of MCMC samples. Other sampling statements that add prior density to the accumulator are unaffected by my approach to the log likelihood.
 
 
 #### Optimized IRT Model
