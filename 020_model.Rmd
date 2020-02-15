@@ -836,15 +836,13 @@ The matrix expansion trick would go here, if I did it.
 <!------- TO DO ---------
 - Does intro to Bayesian stuff more rightly go in Ch 1/Intro?
 ------------------------->
-The Bayesian modeling paradigm requires a joint prior probability distribution over the model parameters, which can be a benefit and a drawback of the approach. 
-Priors are beneficial as means to encode external information into a model. 
-This allows any analysis to move past "model fitting" and toward generalizing beyond a given dataset, since the posterior distribution represents a synthesis of external information with current data. 
-Furthermore, prior distributions are a framework for _formally_ including external information, rather than informally and invisibly using prior information as criteria for model selection.
-<!------- TO DO ---------
-- cite this burn!!!
-------------------------->
-Priors most useful for stabilizing parameter estimates and downweighting unreasonable estimates, not by upweighting a researcher's preferred narrative of the data-generating process.
-This is especially valuable in data-sparse settings when parameters are weakly identified or not identified at all, such as hierarchical models where group parameters can be imputed by estimating the distribution from which they are drawn using hyperpriors [@gelman-hill:2006:multilevel]. The drawback of Bayesian modeling is that prior specification is additional work for the researcher, which can be complicated especially in situations where a model is sensitive to the choice of prior. 
+The Bayesian modeling paradigm requires a prior probability distribution over the model parameters, which can be a benefit and a drawback of the approach. 
+The primary benefit is the ability to encode external information into a model. 
+This enables the researcher to stabilize parameter estimates and downweight unreasonable estimates, enabling the researcher to guard against overfitting and smooth estimates from similar groups. 
+This is especially valuable in data-sparse settings where parameters are unidentified or weakly identified, such as in hierarchical models where some groups contain more data than others [@gelman-hill:2006:multilevel]. 
+Bayesian estimation has fundamental computational advantages for ideal point models, since MCMC generates posterior samples of latent variables just as it would for any other model parameter. 
+This allows the researcher to escape certain pathologies of optimization algorithms in high-dimensional parameter spaces with many incidental nuisance parameters [@lancaster:2000:incidental-params, @clinton-jackman-rivers:2004:ideal].
+The drawback of Bayesian modeling is that prior specification is additional work for the researcher, which can be complicated especially in situations where a model is sensitive to the choice of prior. 
 
 This section provides describes and justifies priors used in the group ideal point model. The discussion here is more detailed than in a typical paper describing a Bayesian ideal point model for several reasons. 
 Firstly, the norms of the typical Bayesian workflow are evolving toward more rigorous checking of prior distributions and their implications [@betancourt:2018:workflow-blog; @gabry-et-al:2019:visualization]. These prior checks allow researchers to explore and demonstrate the consequences of their prior choices in transparent ways, but most Bayesian analyses in political science lack these explicit prior checks. Authors often declare their prior choices without explicitly justifying these choices, which can make prior specification feel opaque or even arbitrary to non-Bayesian readers.
@@ -859,86 +857,20 @@ Before discussing priors for the group ideal point model, it is helpful to discu
   @gelman:2017:applied-statistics holds that theoretical statistics ought to be the "theory of applied statistics," in the sense that statistical theory ought to be informed by "what we actually do" and should thus work to formalize aspects of workflow that begin merely as "good practice."
 ]
 
-This discussion of priors begins with the orientation laid out by @gelman-et-al:2017:prior-likelihood that "the prior can often only be understood in the context of the likelihood." Although prior information is generally regarded as information that a researcher has before encountering data---and therefore before making any modeling decisions---in practice it is often the case that priors are chosen with reference to a specific analysis model. For example, we may have prior expectations about the proportion of Republicans who express conservative preferences on a given policy question (e.g.&nbsp;that the proportion is most likely above 50 percent), but if we model the proportion with a probit regression model, we typically specify priors on regression coefficients rather than the proportion, which is a function of the regression coefficients. This means that researchers must consider their priors as embedded in the specific data model at hand.
+This discussion of priors begins with the orientation laid out by @gelman-et-al:2017:prior-likelihood that "the prior can often only be understood in the context of the likelihood." Although prior information is generally regarded as information that a researcher has before encountering data---and therefore before making any modeling decisions---in practice it is often the case that priors are chosen with reference to a specific analysis model. For example, we may have prior expectations about the proportion of Republicans who express conservative preferences on a given policy question (e.g.&nbsp;that the proportion is most likely above 50 percent), but if we model the proportion with a probit model, we typically specify priors on regression coefficients rather than the proportion parameter itself. This means that researchers must consider their priors as embedded in the specific data model at hand. This further implies that the _parameterization_ of a model can affect the researcher's prior for some ultimate quantity of interest, even if the parameterization does not affect the likelihood of the data given the parameters[@gelman:2004:parameterization]. The consequences of model parameterization are explored further in Chapter&nbsp;\@ref(ch:causality). 
 
-```{r diff-means-example}
-means_data <- 
-  tibble(
-    x = seq(-1, 1, .05),
-    unif = ifelse(x >= 0, dunif(x, 0, 1), NA),
-    triangle = 
-      ifelse(
-        x < 0, 
-        (2 * (x - -1)) / ((1 - -1) * (0 - -1)), 
-        (2 * (1 - x)) / ((1 - -1) * (1 - 0))
-      )
-  ) 
 
-plot_prior <- function(data, x, y) {
-  ggplot(data) +
-  aes(x = {{x}}, y = {{y}}) +
-  geom_ribbon(
-    aes(ymin = 0, ymax = {{y}}),
-    fill = primary_light
-  ) +
-  geom_line() +
-  scale_y_continuous(limits = c(0, 1.5))
-}
-```
 
-```{r plot-diff-means-example}
-plot_prior(data = means_data, x = x, y = unif) +
-  coord_cartesian(xlim = c(0, 1)) +
-  labs(
-    x = TeX("Group Mean: $\\mu_{z}$"),
-    y = "Prior Density",
-    title = "Prior Densities for Difference in Means",
-    subtitle = "If means have Uniform(0, 1) priors"
-  ) +
-plot_prior(data = means_data, x = x, y = triangle) +
-  labs(x = TeX("Treatment Effect: $\\mu_{1} - \\mu_{0}$")) +
-  theme(
-    axis.ticks.y = element_blank(),
-    axis.text.y = element_blank(),
-    axis.title.y = element_blank()
-  ) 
-```
-
-In this regard, the parameterization of a model can have a unique effect on the researcher's prior for some ultimate quantity of interest, even if the parameterization does not affect the likelihood of the data given the parameters. For instance, consider a simple experiment with a binary outcome variable $y_{i}$ and binary treatment assignment $z_{i} \in \{0, 1\}$. Suppose that the treatment effect of interest is a difference-in-means, $\bar{y}_{z = 1} - \bar{y}_{z = 0}$, estimated from a linear probability model. This linear probability model might be parameterized in two ways. First is a conventional regression setup,
-\begin{align}
-  y_{i} &= \alpha + \beta z_{i} + \epsilon_{i}
-  (\#eq:diff-means-example)
-\end{align}
-where $\alpha$ is the control group mean, $\alpha + \beta$ is the treatment group mean, $\beta$ represents the difference in means, and $\epsilon_{i}$ is a symmetric error term for unit $i$. With the model parameterized in this way, the researcher must specify priors for $\alpha$ and $\beta$. Suppose that the researcher gives $\beta$ a flat prior to represent ignorance about the treatment effect. An equivalent _likelihood model_ for the data would be to treat each observation as a function of its group mean $\mu_{z}$.
-\begin{align}
-  y_{i} &= z_{i}\mu_{1} + \left(1 - z_{i}\right)\mu_{0}  + \epsilon_{i}
-  (\#eq:separate-means-example)
-\end{align}
-Although the treatment effect $\beta$ from Equation&nbsp;\@ref(eq:diff-means-example) is equivalent to the difference in means $\mu_{1} - \mu_{0}$ from Equation&nbsp;\@ref(eq:separate-means-example), the parameterization of the model affects the implied prior for the difference in means. If the researcher gives a flat prior to both $\mu_{\mathbf{z}}$ terms, the implied prior for the difference in means will not be flat. Instead, it will be triangular, as shown in Figure&nbsp;\@ref(fig:plot-diff-means-example). The underlying mechanics of this problem are well-known in applied statistics---if we continue adding parameters, the Central Limit Theorem describes how the resulting distribution will converge to Normality---but it takes the explicit specification of priors to shine a light on the consequences of default prior choices in a particular case. In particular it shows how even flat priors, which are popularly regarded as "agnostic" priors because of their implicit connection to maximum likelihood estimators, do not necessarily imply flat priors about the researcher's key quantities of interest. Rather, flat priors can create a variety of unintended prior distributions that do not match the researcher's expectations. I return to this important idea in the discussion about setting priors for a probit model in Section&nbsp;\@ref(sec:probit-prior).
-
-```{r plot-diff-means-example, include = TRUE, fig.height = 4, fig.width = 8, out.width = "100%", fig.cap = "Model parameterization affects prior distributions for quantities of interest that are functions of multiple parameters or transformed parameters. The left panel shows that the difference between two means does not have a flat prior if the two means are given flat priors. Note that the $x$-axes are not fixed across panels."}
-```
-
-- equivalent parameterizations
 - weak information
-    - between structural and regularizing. They achieve regularization by encoding structural information, but specific to a _class_ of problems more than the specific problem
-- structure and families, less reliance on the actual prior param values
+    - between structural and regularizing. (gabry et al?) 
+    - They achieve regularization by encoding structural information, plus information befitting a _class_ of problems. Short of information tailored to a _specific_ problem
+- families of priors
+    - less reliance on the actual prior param values
+    - features of a CDF
+    - entropy in the distribution
+    - shape of the log probability (normal vs T)
+- prediction-focused (gelman et al prior/likelihood)
 
-
-
-
-<!-- theory affected by practice, formalize workflow -->
-
-<!-- Exploring the consequences of prior distributions is one of many reasons for the growing importance of model checking in applied Bayesian analysis [@betancourt:2018:workflow-blog; @gabry-et-al:2019:visualization; @gelman-et-al:2013:BDA, ch.&nbsp;6]. It also exemplifies how prior distributions are a _practical_ concern for modeling, not a theoretically abstract  -->
-
-<!-- This is not to say that parameterization is always daunting or problematic for the applied researcher.  -->
-
-
-<!-- Betancourt, Gelman, Simpson: Consider, for example, a simple binomial likelihood with n = 75 trials and some prior on the success probability, p. If you observe y = 40, then you can readily compute the posterior and consider issues of prior sensitivity and predictive performance regardless of the choice of prior. However, what if you observe y = 75? Then, suddenly you need to be more careful with the choice of prior, if you are working in a setting in which distinctions between probabilities of 0.9, 0.99, and 0.999 are of applied importance. This doesn’t imply that the prior should explicitly depend on the measured data, just that a default prior that works well in one scenario might be problematic in another. -->
-
-The data model itself provides important structure for choosing priors.
-
-This is a pragmatic view. It recognizes that priors are (1) philosophically essential for posterior inference, (2) coarse tools for regularizing and model stabilization, and (3) mere nuisance terms that are required for Bayesian updating.
 
 Subjective v. objective
 
@@ -957,6 +889,19 @@ General thoughts about priors
         - sometimes it does, like identifiability, strong regularization/separation
 - parameterization
     - normal(a, b) or a + bu, u ~ normal(0, 1)
+
+<!-- theory affected by practice, formalize workflow -->
+
+<!-- Exploring the consequences of prior distributions is one of many reasons for the growing importance of model checking in applied Bayesian analysis [@betancourt:2018:workflow-blog; @gabry-et-al:2019:visualization; @gelman-et-al:2013:BDA, ch.&nbsp;6]. It also exemplifies how prior distributions are a _practical_ concern for modeling, not a theoretically abstract  -->
+
+<!-- This is not to say that parameterization is always daunting or problematic for the applied researcher.  -->
+
+
+<!-- Betancourt, Gelman, Simpson: Consider, for example, a simple binomial likelihood with n = 75 trials and some prior on the success probability, p. If you observe y = 40, then you can readily compute the posterior and consider issues of prior sensitivity and predictive performance regardless of the choice of prior. However, what if you observe y = 75? Then, suddenly you need to be more careful with the choice of prior, if you are working in a setting in which distinctions between probabilities of 0.9, 0.99, and 0.999 are of applied importance. This doesn’t imply that the prior should explicitly depend on the measured data, just that a default prior that works well in one scenario might be problematic in another. -->
+
+Throughout this discussion is a common underpinning that the data model itself provides important structure for choosing priors. This is a pragmatic view. While many discussions of priors focus on the fact that they are philosophically essential for posterior inference, this pragmatic view emphasizes their practical implications for regularization, model stabilization, and computational efficiency and tractability.
+
+
 
 
 #### Understanding the Probit Model {#sec:probit-prior}
@@ -985,31 +930,31 @@ How Bayesian modeling with probit works:
 
 Divergence from past work
 
-- Clinton, Jackman, Rivers
-- Treier and Hillygus
+- Vague priors:
+    - Clinton, Jackman, Rivers
+    - Treier and Hillygus
+    - Tausanovitch and Warshaw
 - Caughey and Warshaw
     - noncentering
-    - lognormal
+    - lognormal parameterization (enable pooling by leveraging transformed parameters)
 
 
 
 ```{r probit-explore}
 prior_probit <- 
   tibble(
-    x = seq(-6, 6, .01),
+    x = seq(-5, 5, .01),
     Probability = pnorm(x)
   ) %>%
   print()
 ```
 
-```{r plot-valid-probit, include = TRUE, fig.width = 5, fig.height = 4, out.width = "70%", fig.cap = "The region of the probit model's linear index that maps to response probabilities between 1 and 99 percent."}
+```{r plot-valid-probit, include = TRUE, fig.width = 5, fig.height = 3.5, out.width = "60%", fig.cap = "The region of the probit model's latent index that maps to response probabilities between 1 and 99 percent."}
 ggplot(prior_probit) +
   aes(x = x, y = Probability) +
-  labs(x = "Linear Index Value", y = "Success Probability") +
-  scale_x_continuous(
-    breaks = seq(prior_probit$x %>% min(), prior_probit$x %>% max(), by = 1)
-  ) +
+  labs(x = "Latent Index Value", y = "Success Probability") +
   coord_cartesian(ylim = c(0, 1)) +
+  scale_x_continuous(breaks = seq(-4, 4, 2)) +
   # layered ribbons
   geom_ribbon(
     data = tibble(
@@ -1060,11 +1005,11 @@ ggplot(prior_probit) +
   geom_line(size = 0.75) +
   annotate(
     geom = "text", label = "Normal CDF",
-    x = -3, y = .85,
+    x = -2.5, y = .85,
     hjust = 1.1
   ) +
   annotate(
-    geom = "segment", x = -3, xend = qnorm(.85),
+    geom = "segment", x = -2.5, xend = qnorm(.85),
     y = .85, yend = .85
   ) +
   annotate(geom = "point", x = qnorm(.85), y = .85, size = 1)
@@ -1573,4 +1518,6 @@ Within-group standard deviations, as well as the scale parameters in the non-cen
 
 ### Dynamic Model {#sec:dynamic-model}
 
-TBD.
+## Testing the Model with Simulated Data
+
+## Generating and Evaluating District-Party Ideal Points
