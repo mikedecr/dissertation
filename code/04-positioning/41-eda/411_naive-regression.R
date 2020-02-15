@@ -19,6 +19,10 @@ source(here::here("code", "helpers", "call-R-helpers.R"))
 
 # source(here::here("code", "04-positioning", "41-eda", "411_naive-regression.R"), verbose = FALSE)
 
+clean_data_dir <- 103296501061
+model_output_dir <- 102977578033
+
+
 # ---- Data sources -----------------------
 
 # import MCMC
@@ -61,7 +65,8 @@ dime <- dime_all_raw %>%
       Incum.Chall == "I" ~ "Incumbent", 
       Incum.Chall == "C" ~ "Challenger", 
       Incum.Chall == "O" ~ "Open Seat"
-    ) 
+    ),
+    district.pres.vs = 1 - district.pres.vs
   ) %>%
   rename_all(str_replace_all, "[.]", "_") %>%
   filter(
@@ -92,32 +97,8 @@ dime %>%
   print(n = nrow(.))
 
 
+
 # ---- tidy MCMC -----------------------
-
-sums <- 
-  tibble(conf = c(.5, .9) ) %>%
-  group_by(conf) %>% 
-  mutate( 
-    tidy = map(
-      conf, 
-      ~ tidy(mcmc, conf.int = TRUE, conf.level = .x, rhat = TRUE, ess = TRUE)
-    ),
-    tidy = ifelse(
-      test = conf == 0.5, 
-      yes = map(tidy, 
-        ~ .x %>%
-          rename(conf.low.5 = conf.low, conf.high.5 = conf.high) %>%
-          select(contains("conf"))
-      ),
-      no = tidy
-    )
-  ) %>%
-  spread(key = conf, value = tidy) %>%
-  unnest(cols = c(`0.5`, `0.9`)) %>%
-  select(-ends_with(".5"), everything()) %>%
-  print()
-
-
 
 thetas <- master_data %>%
   select(
@@ -131,7 +112,8 @@ thetas <- master_data %>%
   ) %>%
   distinct() %>%
   full_join(
-    sums %>%
+    mcmc %>%
+      tidy() %>%
       filter(str_detect(term, "theta") == TRUE) %>%
       mutate(group = parse_number(term)) %>%
       rename(theta = estimate)
@@ -156,6 +138,14 @@ full <-
   print()
 
 
+# save raw DIME data for Rmd
+box_write(
+  full,
+  "dime-with-means.RDS",
+  dir_id = clean_data_dir
+)
+
+
 
 # estimate simple, single-level lm()
 simple_regs <- full %>%
@@ -174,6 +164,12 @@ simple_regs <- full %>%
   unnest(tidy) %>%
   filter(term != "(Intercept)") %>%
   print() 
+
+box_write(
+  select(simple_regs, -data, -lm), 
+  "simple-regs.rds",
+  dir_id = 102977578033
+)
 
 
 # ---- todo: -----------------------
@@ -229,7 +225,6 @@ full %>%
     size = 3
   ) +
   theme(legend.position = "none")
-
 
 # cycle fixed effects?
 naive_models <- full %>%
@@ -396,11 +391,14 @@ g_data %>%
 
 
 mediator_formula <- recipient_cfscore_dyn ~ 
-  scale(total_receipts) + 
-    scale(I(total_receipts*total_receipts)) + 
-    scale(I(total_receipts*total_receipts*total_receipts)) +
+  # scale(total_receipts) + 
+  #   scale(I(total_receipts*total_receipts)) + 
+  #   scale(I(total_receipts*total_receipts*total_receipts)) +
   theta + out_theta + 
   district_pres_vs + 
+  scale(prcntWhite) + scale(prcntBA) + scale(medianIncome) + 
+  scale(medianAge) + scale(gini) + scale(prcntForeignBorn) + 
+  scale(prcntUnemp) + scale(evangelical_pop) +
   (1 | district) + 
   as.factor(cycle)
 
@@ -510,7 +508,9 @@ blipping %>%
 direct_formula <- blipdown_cfscore_dyn ~ 
   theta + 
   (1 | district) + 
-  as.factor(cycle)
+  scale(prcntWhite) + scale(prcntBA) + scale(medianIncome) + 
+  scale(medianAge) + scale(gini) + scale(prcntForeignBorn) + 
+  scale(prcntUnemp) + scale(evangelical_pop) # + as.factor(cycle)
 
 direct_mod <- blipping %>%
   mutate(
@@ -552,7 +552,7 @@ mcmc_draws <- tidy_draws(mcmc) %>%
   print()
 
 # do sequential g for m samples
-n_draws <- 500
+n_draws <- 1000
 
 theta_sample <- mcmc_draws %>%
   gather_draws(theta[group], n = n_draws) %>%
@@ -612,11 +612,14 @@ g_multiverse <- out_theta_sample %>%
 mediator_name <- "district_pres_vs"
 
 mediator_formula <- recipient_cfscore_dyn ~ 
-  scale(total_receipts) + 
-    scale(I(total_receipts*total_receipts)) + 
-    scale(I(total_receipts*total_receipts*total_receipts)) +
+  # scale(total_receipts) + 
+  #   scale(I(total_receipts*total_receipts)) + 
+  #   scale(I(total_receipts*total_receipts*total_receipts)) +
   theta + out_theta + 
   district_pres_vs + 
+  scale(prcntWhite) + scale(prcntBA) + scale(medianIncome) + 
+  scale(medianAge) + scale(gini) + scale(prcntForeignBorn) + 
+  scale(prcntUnemp) + scale(evangelical_pop) +
   (1 | district) + 
   as.factor(cycle)
 
@@ -683,11 +686,13 @@ blipping %>%
   ggplot() +
   aes(x = mediator_effect) +
   geom_histogram(
-    # aes(fill = as.factor(.draw)), 
+    aes(fill = as.factor(party)), 
     position = "identity", alpha = 0.5,
     show.legend = FALSE
   ) +
-  facet_grid(party ~ incumbency)
+  facet_wrap( ~ incumbency) +
+  scale_fill_manual(values = party_factor_colors)
+
 
 # this would be more interesting
 # if we had a vector of mediator fixes
@@ -732,16 +737,31 @@ blipping %>%
 direct_formula <- blipdown_cfscore_dyn ~ 
   theta + 
   (1 | district) + 
+  scale(prcntWhite) + scale(prcntBA) + scale(medianIncome) + 
+  scale(medianAge) + scale(gini) + scale(prcntForeignBorn) + 
+  scale(prcntUnemp) + scale(evangelical_pop) # + as.factor(cycle)
+
+total_formula <- recipient_cfscore_dyn ~ 
+  theta + 
+  (1 | district) + 
+  scale(prcntWhite) + scale(prcntBA) + scale(medianIncome) + 
+  scale(medianAge) + scale(gini) + scale(prcntForeignBorn) + 
+  scale(prcntUnemp) + scale(evangelical_pop) +
   as.factor(cycle)
 
 # fit direct effect model
 # grab tidy and posterior samples of direct effect
-n_direct_samples <- 1
+n_stage2_samples <- 1
 
 
 direct_mod <- blipping %>%
-  mutate(direct_model = map(data, ~ lmer(direct_formula, data = .x))) %>%
+  mutate(
+    direct_model = map(data, ~ lmer(direct_formula, data = .x)), 
+    total_model = map(data, ~ lmer(total_formula, data = .x)) 
+  ) %>%
   print()
+
+direct_mod
 
 direct_effects <- direct_mod %>%
   mutate(
@@ -750,16 +770,31 @@ direct_effects <- direct_mod %>%
       ~ {
         tidy_fixed_fx <- filter(tidy(.x), group == "fixed")
         samples <- mvtnorm::rmvnorm(
-          n = n_direct_samples,
+          n = n_stage2_samples,
           mean = pull(tidy_fixed_fx, estimate),
           sigma = vcov(.x) %>% as.matrix()
         )
         colnames(samples) <- pull(tidy_fixed_fx, term)
-        tibble(direct_draw = 1:n_direct_samples, 
+        tibble(direct_draw = 1:n_stage2_samples, 
                direct_effect = samples[ , "theta"])
       }
     ),
-    direct_tidy = map(direct_model, ~ filter(tidy(.x), term == "theta"))
+    total_samples = map(
+      total_model,
+      ~ {
+        tidy_fixed_fx <- filter(tidy(.x), group == "fixed")
+        samples <- mvtnorm::rmvnorm(
+          n = n_stage2_samples,
+          mean = pull(tidy_fixed_fx, estimate),
+          sigma = vcov(.x) %>% as.matrix()
+        )
+        colnames(samples) <- pull(tidy_fixed_fx, term)
+        tibble(total_draw = 1:n_stage2_samples, 
+               total_effect = samples[ , "theta"])
+      }
+    ),
+    direct_tidy = map(direct_model, ~ filter(tidy(.x), term == "theta")),
+    total_tidy = map(total_model, ~ filter(tidy(.x), term == "theta"))
   ) %>%
   print()
 
@@ -792,6 +827,7 @@ direct_effects %>%
 #   to keep separate from post-est things
 # don't need to have all output in one place
 
+
 # histogram of all direct fx samples
 direct_effects %>%
   unnest(direct_samples) %>%
@@ -801,11 +837,11 @@ direct_effects %>%
   ) %>%
   ggplot() +
   aes(x = direct_effect, fill = as.factor(party)) +
-  # geom_histogram(
-  #   position = "identity",
-  #   alpha = 0.5
-  # ) +
-  geom_density(alpha = 0.5) +
+  geom_histogram(
+    position = "identity",
+    alpha = 0.5
+  ) +
+  # geom_density(alpha = 0.5) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   facet_wrap(
     ~ incumbency
@@ -814,7 +850,7 @@ direct_effects %>%
   scale_fill_manual(values = party_factor_colors)
 
 
-# summarize direct FX  
+# summarize direct FX
 direct_summary <- direct_effects %>%
   unnest(cols = c(direct_tidy, direct_samples)) %>%
   group_by(party, incumbency, fixed_med_value) %>% 
@@ -827,10 +863,38 @@ direct_summary <- direct_effects %>%
   ) %>%
   print()
 
+# same idea for total effects
+total_summary <- direct_effects %>%
+  unnest(cols = c(total_tidy, total_samples)) %>%
+  group_by(party, incumbency, fixed_med_value) %>% 
+  summarize(
+    meta_mean = mean(estimate),
+    sample_mean = mean(total_effect), 
+    conf.low = quantile(total_effect, .05), 
+    conf.high = quantile(total_effect, .95),
+    n_samples = n()
+  ) %>%
+  print()
+
+
+direct_effects %>%
+  unnest(cols = c(direct_samples, total_samples)) %>%
+  select(ends_with("_effect")) %>%
+  ungroup() %>%
+  mutate(
+    indirect_effect = total_effect - direct_effect
+  ) %>%
+  ggplot() +
+  aes(x = indirect_effect, fill = as.factor(party)) +
+  geom_histogram(position = "identity") +
+  facet_wrap(~ incumbency)
+
+
 
 direct_summary %>%
   ggplot() +
   aes(x = incumbency, y = meta_mean, color = as.factor(party)) +
+  geom_hline(yintercept = 0) +
   geom_pointrange(
     aes(ymin = conf.low, ymax = conf.high),
     position = position_dodge(width = -0.25)
@@ -841,6 +905,10 @@ direct_summary %>%
     x = NULL,
     y = "Controlled Direct Effect of\nDistrict-Party Public Ideology"
   )
+
+# ---- estimate total effect as well -----------------------
+
+# ---- extract differences -----------------------
 
 
 

@@ -13,9 +13,7 @@ title: Overall thesis notes
         - _causal modeling_
             - ABS: sequential-g
             - ABS: causal mechanism treatment arms
-            - Hill: multilevel causal inference
-            - Bafumi Gelman correlated ranefs
-            - what are correlated random effects
+            - Bafumi Gelman correlated ranefs/ what are they
             - between v within estimators
             - DAGs for fixed/random effects
         - _covariate selection/other practices_
