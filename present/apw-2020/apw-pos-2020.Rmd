@@ -1,0 +1,613 @@
+---
+title: "Do Primaries Work? Partisan Representation in Nomination Contests"
+subtitle: (Selections from Chapters 2 and 4)
+author: "Michael DeCrescenzo"
+date: "February 17, 2020"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    selfcontained: true
+    css: xaringan-themer.css
+    # seal: false
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      beforeInit: "https://platform.twitter.com/widgets.js"
+# bibliography: ../../paper-rmd/assets/voter-id-bib.bib
+# biblio-style: ../../paper-rmd/assets/apsr-leeper.bst
+---
+
+```{r inf, include = FALSE, cache = FALSE, eval = FALSE}
+xaringan::inf_mr(here::here("present", "apw-2020", "apw-pos-2020.Rmd"))
+# servr::daemon_stop(1)
+```
+
+
+```{r chunks, include = FALSE}
+# chunks:
+# hide code and messages
+# cache everything
+knitr::opts_chunk$set(
+  eval = TRUE, 
+  echo = FALSE, collapse = FALSE,
+  include = FALSE, warning = FALSE, message = FALSE,
+  cache = TRUE, 
+  dpi = 100, fig.retina = 3, 
+  fig.align = "center"
+)
+```
+
+
+
+```{r, cache = FALSE}
+# Xaringan settings
+library("xaringan")
+library("xaringanthemer")
+
+
+# theme colors
+primary <- 
+  viridis::viridis(1, alpha = 1, begin = 0.35, end = 0.35, direction = 1)
+secondary <- 
+  viridis::viridis(1, alpha = 1, begin = 0.5, end = 0.5, direction = 1)
+
+primary_light <- xaringanthemer::lighten_color(primary, 0.9)
+secondary_light <- xaringanthemer::lighten_color(secondary, 0.5)
+
+yel <- viridis::magma(1, alpha = 1, begin = 0.9, end = 0.9, direction = 1)
+purp <-  viridis::magma(1, alpha = 1, begin = 0.5, end = 0.5, direction = 1)
+
+# slide accent colors
+black <- xaringanthemer::darken_color(primary, 0.3)
+white <- primary_light
+
+
+mono_light(
+  base_color = primary,
+  header_font_google = google_font("Fira Sans"),
+  text_font_google = google_font("Source Serif Pro"), 
+  code_font_google = google_font("Inconsolata"), 
+  text_bold_color = secondary,
+  # code_inline_background_color    = "#F5F5F5", 
+  # table_row_even_background_color = "white", 
+  extra_css = list(
+    "h1, h2, h3" = list("font-weight" = "bold"),
+    ".remark-slide-content" = list("font-size" = "24px"),
+    ".remark-slide-number" = list("display" = "none"),
+    ".remark-inline-code" = list(
+      "background" = "#F5F5F5", 
+      # "background" = "#e7e8e2", # /* darker */
+      "border-radius" = "3px", 
+      "padding" = "4px"
+    ),
+    ".left-code" = list(
+      "width" = "38%", "height" = "92%", "float" = "left"
+    ),
+    ".right-plot" = list(
+      "width" = "60%", "float" = "right", "padding-left" = "1%"
+    )
+  )
+)
+```
+
+```{r packages, cache = FALSE}
+library("here")
+library("magrittr")
+library("tidyverse")
+library("ggdag")
+library("patchwork")
+filter <- dplyr::filter
+```
+
+```{r graphics-theme, cache = FALSE}
+# graphics theme
+font_fam <- "Source Sans Pro"
+
+# the two parties
+dblue <- "#179ee0"
+rred <- "#ff5d40"
+
+# for scale_color_*
+party_factor_colors <- c("1" = dblue, "2" = rred)
+party_code_colors <- c("D" = dblue, "R" = rred)
+party_colors <- c("Democrats" = dblue, "Republicans" = rred)
+
+
+theme_mgd <- function() {
+  ggthemes::theme_base(base_size = 14, base_family = font_fam) %+replace% ggplot2::theme(
+      legend.background = element_rect(fill = white),
+      legend.key = element_rect(fill = white),
+      strip.background = element_rect(fill = white),
+      panel.background = element_rect(fill = white),
+      plot.background = element_rect(fill = white, color = NA), 
+      axis.ticks = element_line(lineend = "square"), 
+      axis.ticks.length = unit(0.15, "lines")
+    )
+}
+
+
+ggplot2::theme_set(theme_mgd())
+
+theme_mgd_dag <- function() {
+  theme_mgd() %+replace%
+  ggplot2::theme(
+    panel.border = ggplot2::element_blank(),
+    panel.background = ggplot2::element_blank(),
+    # axis.line = ggplot2::element_blank(),
+    axis.title = ggplot2::element_blank(),
+    axis.text = ggplot2::element_blank(),
+    axis.ticks = ggplot2::element_blank()
+  )
+}
+
+
+update_geom_defaults(
+  "text", 
+  list(family = font_fam, size = 4, color = black)
+)
+```
+
+
+```{r}
+img_path <- file.path("present", "apw-2020", "img")
+```
+
+
+
+- Big slides
+    - how this started
+        - 
+    - contours of argument
+    - outline of the project
+    - non-academic job
+        - the purpose of the dissertation is to be a record of my education
+        - funky chapter outline
+        - I want it to be good, but I don't care about moves that make ideas more "publishable" for its own sake
+    - Argument
+        - We don't know if theory is true
+        - Plausible reasons to doubt theory
+        - Existing research doesn't operationalize or uses an inappropriate proxy
+    - Inappropriate proxy
+    - Modeling concept
+        - why do we need this?
+        - not the same as primary voters
+        - candidates lack exact knowledge of ideological selection into voting
+        - What are the groups?
+    - Model
+
+
+
+---
+
+
+```{r spatial-data}
+dd <- tibble(
+  Left = -0.9,
+  Right = 1,
+  Actor = 0.3
+) 
+
+long_dd <- dd %>%
+  gather(key = label, value = location) %>%
+  mutate(height = 0) %>%  
+  print()
+
+x_min <- -2
+x_max <- 2
+u_scale <- 2
+
+utility <- tibble(
+  x = seq(x_min, x_max, .01),
+  utility_loss = u_scale * -(x - dd$Actor)^2,
+  Right = u_scale * -(x - dd$Right)^2,
+  Left = u_scale * -(x - dd$Left)^2
+) %>%
+  print(n = nrow(.))
+
+```
+
+
+## Ideal Point Models
+
+
+Actor chooses policies as $f\left(\text{ideological proximity}\right) + \text{error}$
+
+```{r plot-space-1, out.width = "70%", fig.height = 1.25, fig.width = 5, include = TRUE}
+ggplot(long_dd) +
+  aes(x = location, y = height) +
+  geom_point() +
+  annotate(geom = "line", x = c(-2, 2), y = 0) +
+  geom_text(aes(label = label), nudge_y = 1) +
+  coord_cartesian(ylim = c(-3, 1.25)) +
+  geom_line(
+    data = utility,
+    aes(x = x, y = utility_loss)
+  ) +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks = element_blank()
+  ) +
+  annotate(geom = "linerange",
+    x = dd$Right, ymax = 0, ymin = -u_scale*(dd$Actor - dd$Right)^2,
+    linetype = "dotted"
+  ) +
+  annotate(geom = "linerange",
+    x = dd$Left, ymax = 0, ymin = -u_scale*(dd$Actor - dd$Left)^2,
+    linetype = "dotted"
+  ) +
+  geom_point() +
+  NULL
+```
+
+--
+
+.pull-left[
+$\displaystyle \mathrm{Pr}\left(y_{ij} = \mathrm{Right}\right) = \Phi\left(\frac{\left[ \theta_{i} - \kappa_{j} \right]}{\sigma_{j}} \right)$
+]
+
+.pull-right[
+
+**Ideal point** $\theta_{i}$
+
+**Item midpoint** $\kappa_{j}$
+
+**Item dispersion** $\sigma_{j}$, correlation between ideology and policy choice
+
+]
+
+
+---
+
+## Group-Level Model
+
+1. Define a **group** $g$ as the intersection of congressional district & party <br>
+( $435$ districts $d$ $\times$ $2$ parties $p$ = $870$ groups )
+
+--
+
+2. Assume individual's ideology is **Normal draw**  from group:  $\theta_{i} \sim \mathrm{Normal}\left(\bar{\theta}_{g[i]}, \sigma_{g}\right)$
+
+--
+
+3. Probability that randomly selected $y_{ij} = \mathrm{Right}$: $\qquad \displaystyle \bar{\pi}_{gj} = \Phi\left(\frac{\left[ \bar{\theta}_{g} - \kappa_{j} \right]}{ \sqrt{\sigma_{j}^{2} + \sigma_{g}^{2}} } \right)$
+
+--
+
+4. Hierarchical model for group means: $\bar{\theta}_{g} \sim \mathrm{Normal}\left(\mu_{g} = f\left(x_{d}, \beta_{p}\right), \sigma_{\bar{\theta}}\right)$
+
+???
+
+
+Hierarchical models are a huge amount of work
+
+- Non-centered parameterization to prevent MCMC problems (This is NEW to this literature)
+
+
+--
+
+5. Hierarchical model for item parameters: $\displaystyle \begin{bmatrix} \kappa_{j} \\ \log\left(\sigma_{j}^{-1}\right)\end{bmatrix} \sim \mathrm{MultiNormal}\left(0, \Sigma\right)$
+
+???
+
+
+Item model
+
+- not done in prior group models
+- parameterization of this beast is also using cutting edge practices for covariance matrix priors
+
+
+---
+
+## What you didn't read about the model
+
+???
+
+Model is a lot of work, most of it you aren't seeing in the draft
+
+--
+
+.left-code[
+
+- Weighted outcome data $\rightarrow$ custom quasilikelihood function
+
+- Parameterizations of hierarchical models for Hamiltonian Monte Carlo
+
+- Detailed look at priors (& contrast with previous work)
+
+]
+
+
+
+
+--
+
+.right-plot[
+```{r}
+prior_probit <- 
+  tibble(
+    x = seq(-5, 5, .01),
+    Probability = pnorm(x)
+  ) %>%
+  print()
+```
+
+```{r, include = TRUE, out.width = "100%", fig.width = 4.5, fig.height = 3.5}
+ggplot(prior_probit) +
+  aes(x = x, y = Probability) +
+  labs(
+    title = "Managing Prior Expectations",
+    subtitle = "for a Probit Model",
+    x = "Latent Index Value", y = "Success Probability"
+  ) +
+  coord_cartesian(ylim = c(0, 1)) +
+  scale_x_continuous(breaks = seq(-4, 4, 2)) +
+  # layered ribbons
+  geom_ribbon(
+    data = tibble(
+      x = c(qnorm(.01), qnorm(.99)),
+      ymin = -2, ymax = 2
+    ),
+    aes(ymin = ymin, ymax = ymax, y = NULL),
+    fill = secondary_light, alpha = 0.3
+  ) +
+  geom_ribbon(
+    data = tibble(
+      x = c(qnorm(.025), qnorm(.975)),
+      ymin = -2, ymax = 2
+    ),
+    aes(ymin = ymin, ymax = ymax, y = NULL),
+    fill = secondary_light, alpha = 0.5
+  ) +
+  geom_ribbon(
+    data = tibble(
+      x = c(qnorm(.05), qnorm(.95)),
+      ymin = -2, ymax = 2
+    ),
+    aes(ymin = ymin, ymax = ymax, y = NULL),
+    fill = secondary_light, alpha = 0.7
+  ) +
+  # 90%
+  annotate(geom = "text", x = 3, y = 0.5, hjust = -0.1, label = "Inner 90%") +
+  annotate(
+    geom = "segment", 
+    x = 3, xend = 0.85, y = 0.50, yend = 0.50
+  ) +
+  annotate(geom = "point", x = 0.85, y = 0.5, size = 1) +
+  # 95%
+  annotate(geom = "text", x = 3, y = 0.35, hjust = -0.1, label = "Inner 95%") +
+  annotate(
+    geom = "segment", 
+    x = 3, xend = mean(qnorm(c(.975, .95))), y = 0.35, yend = 0.35
+  ) +
+  annotate(geom = "point", x = mean(qnorm(c(.975, .95))), y = 0.35, size = 1) +
+  # 99%
+  annotate(geom = "text", x = 3, y = .20, hjust = -0.1, label = "Inner 98%") +
+  annotate(
+    geom = "segment", 
+    x = 3, xend = mean(qnorm(c(.99, .975))), y = .20, yend = .20
+  ) +
+  annotate(geom = "point", x = mean(qnorm(c(.99, .975))), y = 0.2, size = 1) +
+  # cdf
+  geom_line(size = 0.75) +
+  annotate(
+    geom = "text", label = "Normal CDF",
+    x = -2.5, y = .85,
+    hjust = 1.1
+  ) +
+  annotate(
+    geom = "segment", x = -2.5, xend = qnorm(.85),
+    y = .85, yend = .85
+  ) +
+  annotate(geom = "point", x = qnorm(.85), y = .85, size = 1)
+```
+]
+
+---
+
+class: middle
+
+```{r read-thetas}
+thetas <- read_rds(here("present", "apw-2020", "easy-data", "theta-intervals.rds"))
+```
+
+
+.left-code[
+## Group Ideal Points
+
+- ANES & CCES data, 2012–2018
+
+- Location and scale 
+
+- Tbd: post-process ideal points
+
+- Homoskedasticity assumptions
+
+- Very little correlation across parties
+
+]
+
+
+
+.right-plot[
+
+```{r theta-intervals, include = TRUE, out.width = "100%", fig.width = 5, fig.height = 4}
+ggplot(thetas) +
+  aes(x = party_rank,  y = estimate, color = as.factor(party)) +
+  geom_linerange(
+    aes(ymin = conf.low_0.95, ymax = conf.high_0.95),
+    show.legend = FALSE, size = 0.25, alpha = 0.25
+  ) +
+  geom_linerange(
+    aes(ymin = conf.low_0.9, ymax = conf.high_0.9),
+    show.legend = FALSE, alpha = 0.35
+  ) +
+  geom_linerange(
+    aes(ymin = conf.low_0.5, ymax = conf.high_0.5),
+    show.legend = FALSE
+  ) +
+  geom_point(size = 0.5, color = "black") +
+  scale_color_manual(values = party_factor_colors) +
+  # coord_flip() +
+  # scale_x_reverse() +
+  labs(
+    x = "Ideal Point Rank Within Party", 
+    y = "Estimated Policy Preferences",
+    title = "Party-Public Ideal Point Estimates",
+    subtitle = "Two Parties x 435 Districts"
+  ) + 
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  ) +
+  annotate("text", 
+    y = c(-0.7, 0.7), x = c(100, 100),
+    label = c("Democrats", "Republicans")
+  )
+```
+
+]
+
+
+---
+
+# Effect on Primary Candidate Positioning
+
+- re-contextualize why this tells us something new
+
+- Describe quantity we want
+
+- Describe confounding
+
+
+
+
+---
+
+### Sequential-_g_
+
+Special parametric case of **sequential nested mean model**
+
+```{r create-g-dag}
+g_dag <- 
+  dagify(
+    C ~ T + V + Z + X,
+    V ~ T + X + Z,
+    Z ~ T + X,
+    T ~ X,
+    exposure = "T", 
+    outcome = "C",
+    coords = tribble(
+      ~ name,  ~ x, ~ y,
+      "T",       1,   2,
+      "C",       3,   1,
+      "Z",       1,   0,
+      "V",       2,   0,
+      "X",       0,   1
+    )
+  ) %>%
+  tidy_dagitty(layout = "auto") %>%
+  mutate(
+    label = case_when(
+      name == "V" ~ "Past Presidential Vote",
+      name == "T" ~ "Partisan Ideology",
+      name == "C" ~ "Candidate Position",
+      name == "X" ~ "Pre-Treatment Confounders",
+      name == "Z" ~ "Intermediate Confounders"
+    )
+  ) %>%
+  as_tibble() %>%
+  print()
+```
+
+
+
+```{r}
+base_dag <- g_dag %>%
+  ggplot() +
+  aes(x = x, y = y, xend = xend, yend = yend) +
+  coord_cartesian(
+    ylim = c(-0.25, 2.25),
+    xlim = c(-0.25, 3.25)
+  ) +
+  # theme_dag() +
+  theme_mgd_dag() +
+  NULL
+
+mediator_dag <- base_dag +
+  geom_dag_point() +
+  geom_dag_edges() +
+  geom_dag_text(aes(label = name)) +
+  labs(title = "\nStage 1", subtitle = "Mediator-outcome model\n") +
+  NULL
+
+exposure_dag <- base_dag +
+  geom_dag_point(aes(color = name %in% c("Z", "V"))) +
+  geom_dag_edges(
+    data_directed = g_dag %>%
+    filter(
+      (name %in% c("V", "Z") & to == "C") == FALSE,
+      to %in% c("V", "Z") == FALSE
+    )
+  ) +
+  geom_dag_edges(
+    data_directed = g_dag %>%
+      filter(
+        to %in% c("Z", "V") | (name == "Z" & to == "C"), 
+        name %in% c("U1", "U2") == FALSE
+      ),
+    edge_linetype = "dashed", 
+    edge_color = "gray50"
+  ) +
+  geom_dag_text(aes(label = ifelse(name == "C", "b(C)", name))) +
+  scale_color_manual(values = c("TRUE" = primary, "FALSE" = "black")) +
+  labs(
+    title = "\nStage 2", 
+    subtitle = "Exposure-outcome model\nwith demediated outcome"
+  ) +
+  theme(legend.position = "none")
+```
+
+
+```{r include = TRUE, out.width = "100%", fig.height = 5, fig.width = 11}
+mediator_dag + exposure_dag 
+```
+
+
+
+
+
+---
+
+# Fixing the mediator value
+
+Obtain **demediation/blipdown function** from first stage
+
+--
+
+Blipdown function: 
+$\psi_{i}(\delta, v_{g[i]}, \tilde{v}) = \delta \times \left(\begin{bmatrix} v_{g[1]} \\ v_{g[2]} \\ \vdots \\ v_{g[n]} \end{bmatrix} - \tilde{v} \right)$
+
+--
+
+
+Demediate outcome: $\begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_n \end{bmatrix} - \boldsymbol{\mathbf{\psi}}(\delta, v_{g[i]}, \tilde{v}) = \begin{bmatrix} b(y_1)  \\ b(y_2) \\ \vdots \\ b(y_n) \end{bmatrix}$
+
+
+
+---
+
+# Propagating Uncertainty
+
+
+---
+
+# Average Controlled Direct Effect
+
+
+
