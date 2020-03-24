@@ -66,6 +66,9 @@ lapply(stan_data, head)
 #   as in, ≠ to an index you would create from scratch (group-item).
 #   this is because of a bug with the lexi-ordering of group codes (my bad).
 
+# fix me
+# source(here("code", "helpers", "group-crosswalk.R"))
+
 index_crosswalk <- 
   tibble(
     # factors come from master-data
@@ -239,6 +242,10 @@ thetas <- master_data %>%
   ) %>%
   print()
 
+# write_rds(
+#   thetas, 
+#   here("present", "apw-2020", "easy-data", "theta-intervals.rds")
+# )
 
 ggplot(thetas) +
   aes(x = party_rank,  y = estimate, color = as.factor(party)) +
