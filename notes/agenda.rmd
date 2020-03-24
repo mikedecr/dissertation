@@ -4,6 +4,35 @@ title: Overall thesis notes
 
 # Today
 
+Sort APW comments:
+
+- Devin:
+    - conceptual/term clarity in the beginning: who are partisans? are they primary voters or not necessarily? What is "district partisanship" and how is it different from partisan ideology?
+    - How sensitive are the ideal points to item inclusion?
+    - Discuss weighting more?
+    - Throwing around "getting preferences into government"
+    - When would primaries _not_ work? How can you reframe the question to focus energy?
+    - Improve the way I talk about "strategic" vs. "representation" using DIME scores. 
+    - Where do informal party networks enter the causal graph that I'm positing (Ch 4?)
+    - Where is incumbency in the Ch 4 graph?
+    - We care about the full effect and the direct effect.
+- Evan:
+    - who votes in primaries? ideological differences? What do we know about this?
+    - Open/Closed primaries?
+- Rochelle: 
+- Blake: 
+    - Measure the incidence of challengers within district-party over time. Are there districts that have a stronger history of challengers? What would this matter? (outward pressure?)
+- Ken:
+    - we care about the distance between parties/candidates in the same district. 
+- Dave: 
+    - simulate individual-within-district distribution to compare to the "true distribution of preferences" like Fiorina et al.
+    - Show IRFs to tell us which issues are most informative.
+    - (List of items; status quo coding? "stay the same" is a conservative coding?)
+- Ellie:
+    - who is a partisan? are we talking leaners?
+    - The uncorrelatedness is worth interrogating more (hierarchical coefficients, build MNorm prior)
+    - Power calculation (how to even think about this? stress test the simulation?)
+
 - alex
     - including the group-level means of lower-level covariates as a way of absorbing correlation?
     - what about pooling toward something not normal?

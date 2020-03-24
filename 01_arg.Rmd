@@ -38,7 +38,7 @@ library("latex2exp")
 <!-- In chapter \@ref(ch:arg), we will... -->
 
 
-<!-- Intro: PARTICIPATION
+<!-- Intro: PARTICIPATION. 
 - most people don't write letters to members, agencies
 - campaign for office
 - donate money
@@ -157,6 +157,157 @@ con:
 
 
 ## Limitations for inferring ideal points from votes
+
+
+```{r read-cces}
+cces_raw <- read_rds(here("data", "cces", "cumulative_2006_2018.Rds"))
+```
+
+```{r read-dime}
+# Bonica scores and other candidate features
+dime_cong_raw <- 
+  read_csv(
+    here("data", "dime-v3", "cong", "dime_v3_cong_elections.csv")
+  ) %>%
+  print()
+```
+
+
+```{r}
+cces <- cces_raw %>%
+  mutate_all(labelled::remove_labels) %>%
+  mutate(
+    ideo5_ch = as.character(ideo5),
+    ideo5 = as.numeric(ideo5),
+    party = case_when(
+      pid3 == 1 ~ "Democrat",
+      pid3 == 2 ~ "Republican",
+      pid3 == 3 ~ "Independent",
+      TRUE ~ "Other/DK/NA"
+    )
+  ) %>%
+  select(
+    cycle = year, state_abb = st, st_cd = cd, district_num = dist, 
+    weight, party, ideo5, ideo5_ch
+  ) %>%
+  filter(ideo5 %in% 1:5) %>%
+  na.omit() %>%
+  print()
+```
+
+```{r clean-dime}
+dime <- dime_cong_raw %>%
+  transmute(
+    cycle, state_abb = state, district, seat,
+    district_num = parse_number(district),
+    district_pres_vs = 1 - dem_pres_vs
+  ) %>%
+  filter(
+    seat == "federal:house"
+  ) %>%
+  na.omit() %>%
+  distinct() %>%
+  print()
+
+
+
+# dime <- dime_all_raw %>%
+#   mutate(
+#     cycle = parse_number(cycle),
+#     fecyear = parse_number(fecyear),
+#     district_num = parse_number(district),
+#     party = 
+#       case_when(
+#         party == 100 ~ 1,
+#         party == 200 ~ 2
+#       ),
+#     district.pres.vs = 1 - district.pres.vs
+#   ) %>%
+#   rename_all(str_replace_all, "[.]", "_") %>%
+#   filter(
+#     seat == "federal:house",
+#     state %in% state.abb,
+#     fecyear == cycle,
+#     fecyear %in% cces$cycle,
+#   ) %>%
+#   select(
+#     state_abb = state, 
+#     district_num, 
+#     cycle, 
+#     # party, 
+#     district_pres_vs
+#   ) %>%
+#   na.omit() %>%
+#   distinct() %>%
+#   print()
+```
+
+```{r}
+dime %>%
+  group_by(cycle) %>%
+  count()
+```
+
+
+
+```{r mean-ideology}
+ideo_all <- cces %>%
+  group_by(cycle, state_abb, st_cd, district_num) %>%
+  summarize(
+    mean_ideo = weighted.mean(x = ideo5, w = weight)
+  ) %>%
+  mutate(party = "All") %>%
+  ungroup() %>%
+  print()
+
+ideo_party <- cces %>%
+  group_by(cycle, state_abb, st_cd, district_num, party) %>%
+  summarize(
+    mean_ideo = weighted.mean(x = ideo5, w = weight)
+  ) %>%
+  ungroup() %>%
+  print()
+```
+
+```{r merge-dime-cces}
+ideo_merge <- 
+  bind_rows(ideo_all, ideo_party) %>%
+  left_join(dime) %>%
+  mutate(
+    party_group = case_when(
+      party == "All" ~ "All Respondents",
+      party %in% c("Democrat", "Republican") ~ "Partisans"
+    )
+  ) %>%
+  filter(cycle %% 2 == 0) %>%
+  print()
+
+# write_rds(
+#   ideo_merge, 
+#   here("present", "apw-2020", "easy-data", "ideo-vote.rds")
+# )
+
+```
+
+```{r plot-ideo-mean}
+ideo_merge %>%
+  filter(is.na(party_group) == FALSE) %>%
+  ggplot() +
+  aes(x = district_pres_vs, y = mean_ideo, color = party) +
+  geom_point(shape = 1) +
+  geom_smooth(aes(group = party), color = "black") +
+  facet_grid(party_group ~ cycle) +
+  scale_color_manual(
+    values = c("All" = "gray", "Democrat" = dblue, "Republican" = rred)
+  ) +
+  scale_y_continuous(
+    breaks = 1:5, 
+    labels = c("Very Liberal", "Liberal", "Moderate", 
+               "Conservative", "Very Conservative"),
+    limits = c(1, 5)
+  )
+```
+
 
 This section shows the limitations of inferring voter preferences from vote shares, using notation similar to @kernell:2009:districts. 
 
