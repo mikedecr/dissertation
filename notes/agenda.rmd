@@ -33,6 +33,45 @@ Sort APW comments:
     - The uncorrelatedness is worth interrogating more (hierarchical coefficients, build MNorm prior)
     - Power calculation (how to even think about this? stress test the simulation?)
 
+- Meetings:
+    - [ ] ellie
+    - [ ] Ken
+    - [ ] Alex
+    - [ ] Barry
+        - this sucks
+        - too many fucking emails
+        - been working on learning predictive modeling tricks
+            - two goals: thesis and professional
+            - something to improve the fit of the multilevel model, since it's doing a lot.
+            - Make myself more attractive to non-academic hirers.
+            - The stakes for the latter are really going up because we're careening toward recession.
+        - did some reading about choice models for the last chapter
+        - need to figure out if the data support continuous vote DV or only binary
+        - Achen and Bartels
+    - [ ] Devin (see email)
+- TOC
+    - see Barry email
+- Daron shaw thermometer dimensions
+- Barry, what's the "stated purpose" of primaries
+    - Entry point is primaries and polarization, but there could be more
+- Citizens? Not just citizens. Constituents? Put definition in chapter 1.
+- what are the Dime scores, what are the details, etc.
+- Candidate "status" vs. incumbency status
+- DIME is an acronym, maybe call them CF score
+- primary institutions
+    - timing of the primary. Things that bring people to the primary, presidential / gubernatorial primaries affecting turnout, which could have down-ballot effects
+    - Rosenstone Hansen 1993 model of timing and turnout
+- margin histogram in the rank plot
+    - ggplot
+    - Jackman who's the most liberal senator
+- Selection bias in the CFscores
+    - make an argument from the literature about where these things are going
+    - Danielle Thomsen?
+- VoteSmart data from Rogowski
+
+
+
+
 - alex
     - including the group-level means of lower-level covariates as a way of absorbing correlation?
     - what about pooling toward something not normal?
@@ -47,7 +86,7 @@ Sort APW comments:
             - DAGs for fixed/random effects
         - _covariate selection/other practices_
             - sort through books
-            - Justify covariate adjustment w/ cites
+            - Justify covariate adjustment w/ _cites
         - _night_: 
             - prior-likelihood
     - naive regressions
@@ -87,6 +126,7 @@ Sort APW comments:
     - [ ] where else could we do this (measurement scales)
 - **Code**
     - [ ] LICENSE
+    - [ ] rred and dblue from R 4.0 palette
     - [ ] helper to grab most recent MCMC
     - [ ] dir paths go into a modular file?
     - [ ] same cache path for pdf/html (less storage)
