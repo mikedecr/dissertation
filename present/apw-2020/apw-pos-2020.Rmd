@@ -66,7 +66,7 @@ white <- primary_light
 
 mono_light(
   base_color = primary,
-  header_font_google = google_font("Fira Sans"),
+  header_font_google = google_font("Source Sans Pro"),
   text_font_google = google_font("Source Serif Pro"), 
   code_font_google = google_font("Inconsolata"), 
   text_bold_color = secondary,
@@ -119,7 +119,7 @@ theme_mgd <- function() {
   ggthemes::theme_base(base_size = 14, base_family = font_fam) %+replace% ggplot2::theme(
       legend.background = element_rect(fill = white),
       legend.key = element_rect(fill = white),
-      strip.background = element_rect(fill = white),
+      strip.background = element_blank(),
       panel.background = element_rect(fill = white),
       plot.background = element_rect(fill = white, color = NA), 
       axis.ticks = element_line(lineend = "square"), 
@@ -156,6 +156,21 @@ img_path <- file.path("present", "apw-2020", "img")
 
 
 
+
+class: middle, center
+
+## Note on feedback
+
+???
+
+- defend in summer, industry
+- needs to be _defensible_
+- I want it to be good, I won't do bad work
+- My goal is for it to represent my interests and my record of contributions as a student
+- but it doesn't need to have quite the same flavor profile as a project that is aiming for the JOP
+
+???
+
 - Big slides
     - how this started
         - 
@@ -178,6 +193,210 @@ img_path <- file.path("present", "apw-2020", "img")
     - Model
 
 
+---
+
+# What do primaries do?
+
+Why so few moderate politicians (e.g. House members)? 
+
+- Polarization and the "strategic positioning dilemma" (Brady, Han, and Pope 2007)
+- Competitive districts $\rightarrow$ moderate legislators (Ansolabehere, Snyder, and Stewart 2001)
+- Presence of a primary challenger (Burden 2004)
+
+???
+
+Whither convergence?
+
+- SPD: candidates are scared of primary threat, so they take non-median positions
+    - Downs 
+- in safer districts, legislators appear "freer" to take more partisan stances
+    - Aldrich and other party incentives
+- also find that presence of primary challengers are an outward pushing force as well
+
+
+--
+
+.pull-left[
+
+Studies of primary "mechanisms" aren't clear
+
+- Information costs
+- primary turnout, primary "threat"
+- open/closed primaries
+- groups? interests?
+
+]
+
+???
+
+- If candidates are scared of ideological primary challengers in particular, the threat is that voters can detect when a candidate isn't ideologically pure enough for them. **high information costs**
+- primary turnout an indicator of the amount of competitive mobilization happening in primaries, but unrelated to candidate positioning
+- parties that are "open" to voters from all parties should encourage moderation? There's basically zero evidence demonstrating
+- Is something else going on? Are policy groups at work promoting certain candidates, and the ideological representation of partisans within the district is incidental
+
+
+--
+
+.pull-right[
+Studies of primary mechanisms are weird?
+
+- Presidential vote as ideological proxy, fixed across parties
+- **Something huge is missing**
+]
+
+???
+
+It seems like a lot of these hypotheses about how primaries affect candidate position-taking assume that voter preferences matter, but voter preferences are not measured in a way that makes sense with these theories
+
+- Presidential vote can't break the parties into separate groups. I don't know if a red district is conservative altogether or if there are just a lot of Republicans
+- Composition vs. Disposition problem
+
+
+
+---
+
+class: center
+
+## What do votes tell us about ideology?
+
+???
+
+Motivate the problem with current research and how I plan to address item
+
+--
+
+```{r}
+mean_ideo <- 
+  read_rds(here("present", "apw-2020", "easy-data", "ideo-vote.rds")) %>%
+  print()
+```
+
+```{r, include = TRUE, fig.width = 8, fig.height = 3.5, out.width = "100%"}
+outcome_year <- 2018
+
+ideo_plot_data <- mean_ideo %>%
+  filter(is.na(party_group) == FALSE) %>%
+  filter(cycle == outcome_year)
+
+ideo_plot <- 
+  ggplot(ideo_plot_data) +
+  aes(x = district_pres_vs, y = mean_ideo, color = party) +
+  facet_wrap(~ str_glue("CCES: {party_group}")) +
+  scale_color_manual(
+    values = c("All" = "gray", "Democrat" = dblue, "Republican" = rred)
+  ) +
+  scale_y_continuous(
+    breaks = 1:5, 
+    labels = c("Very Liberal", "Liberal", "Moderate", 
+               "Conservative", "Very Conservative"),
+    limits = c(1, 5)
+  ) +
+  scale_x_continuous(
+    limits = c(0, 1),
+    labels = scales::percent_format(1)
+  ) +
+  theme(legend.position = "none") +
+  labs(
+    x = str_glue("District Republican Vote Share, {outcome_year - 2}"),
+    y = str_glue("District Mean Ideological\nSelf-Placement, {outcome_year}")
+  )
+
+ideo_plot
+```
+
+???
+
+- Vertical axis: ideological self-placement, avg'd within congressional district
+- Horizontal axis: the conventionally used proxy. How did the district vote in the prior presidential election
+
+
+
+---
+
+class: center
+
+## What do votes tell us about ideology?
+
+```{r, include = TRUE, fig.width = 8, fig.height = 3.5, out.width = "100%"}
+ideo_plot + 
+  geom_point(
+    data = filter(ideo_plot_data, party_group == "All Respondents"),
+    shape = 16, alpha = 0.5, size = 2
+  ) +
+  geom_smooth(
+    data = filter(ideo_plot_data, party_group == "All Respondents"),
+    method = "lm", aes(group = party), color = "black"
+  )
+```
+
+???
+
+- Left: expect a positive relationship. But is this because red districts are more conservative? Or just more Republicans? So you break it out by party
+
+
+
+
+---
+
+class: center
+
+## What do votes tell us about ideology?
+
+```{r, include = TRUE, fig.width = 8, fig.height = 3.5, out.width = "100%"}
+ideo_plot + 
+  geom_point(
+    shape = 16, alpha = 0.5, size = 2
+  ) +
+  geom_smooth(
+    method = "lm", aes(group = party), color = "black"
+  )
+```
+
+???
+
+
+- Right: and what you see is that, within party, this relationship is much weaker.
+
+What does using the presidential vote as a proxy for ideology within parties: the ideology that's relevant to these hypotheses about primary elections? Very little. 
+
+In red districts, the Republicans aren't much more conservative on average. In blue districts, the Democrats are NO more liberal. (at least in self-categorization)
+
+**So I want to improve the way we measure constituent preferences in the study of primary elections**. The district presidential vote is important as a measure of _general election competition_, but that is only half of the "strategic positioning dilemma." The other half is the competition within the party over the ideological temperature of the nominee. And that's where I'm looking.
+
+---
+
+class: center, inverse
+
+<br><br>
+
+# Dissertation Objectives
+
+--
+
+### Model policy ideology within district-party groups
+
+???
+
+Use survey data on policy questions to model the policy conservatism of Republican partisans in every district, and Democratic partisans in every district, as separate groups.
+
+Not the same as self-placement, as we saw before. Not the same as "symbolic ideology." It's a low-dimensional summary of policy preferences.
+
+--
+
+### Does policy ideology matter for candidate positioning?
+
+???
+
+If I'm a Democratic candidate running in a district where the Democrats are more liberal, am I running on a more liberal platform? And how is that different from running in a district that is safely blue? Those things are different.
+
+--
+
+### Does policy ideology matter for voting in primaries?
+
+???
+
+Do voters pick up on it? In districts where Republicans are more conservative, is the more conservative primary candidate more likely to be nominated
+
 
 ---
 
@@ -186,7 +405,7 @@ img_path <- file.path("present", "apw-2020", "img")
 dd <- tibble(
   Left = -0.9,
   Right = 1,
-  Actor = 0.3
+  Respondent = 0.3
 ) 
 
 long_dd <- dd %>%
@@ -200,7 +419,7 @@ u_scale <- 2
 
 utility <- tibble(
   x = seq(x_min, x_max, .01),
-  utility_loss = u_scale * -(x - dd$Actor)^2,
+  utility_loss = u_scale * -(x - dd$Respondent)^2,
   Right = u_scale * -(x - dd$Right)^2,
   Left = u_scale * -(x - dd$Left)^2
 ) %>%
@@ -212,7 +431,7 @@ utility <- tibble(
 ## Ideal Point Models
 
 
-Actor chooses policies as $f\left(\text{ideological proximity}\right) + \text{error}$
+Survey respondent prefers policy alternative as $f\left(\text{ideological proximity}\right) + \text{error}$
 
 ```{r plot-space-1, out.width = "70%", fig.height = 1.25, fig.width = 5, include = TRUE}
 ggplot(long_dd) +
@@ -234,11 +453,11 @@ ggplot(long_dd) +
     axis.ticks = element_blank()
   ) +
   annotate(geom = "linerange",
-    x = dd$Right, ymax = 0, ymin = -u_scale*(dd$Actor - dd$Right)^2,
+    x = dd$Right, ymax = 0, ymin = -u_scale*(dd$Respondent - dd$Right)^2,
     linetype = "dotted"
   ) +
   annotate(geom = "linerange",
-    x = dd$Left, ymax = 0, ymin = -u_scale*(dd$Actor - dd$Left)^2,
+    x = dd$Left, ymax = 0, ymin = -u_scale*(dd$Respondent - dd$Left)^2,
     linetype = "dotted"
   ) +
   geom_point() +
@@ -253,11 +472,11 @@ $\displaystyle \mathrm{Pr}\left(y_{ij} = \mathrm{Right}\right) = \Phi\left(\frac
 
 .pull-right[
 
-**Ideal point** $\theta_{i}$
+Respondent's **ideal point** $\theta_{i}$
 
 **Item midpoint** $\kappa_{j}$
 
-**Item dispersion** $\sigma_{j}$, correlation between ideology and policy choice
+**Item dispersion** $\sigma_{j}$, how "ideological" is this policy choice
 
 ]
 
@@ -275,11 +494,11 @@ $\displaystyle \mathrm{Pr}\left(y_{ij} = \mathrm{Right}\right) = \Phi\left(\frac
 
 --
 
-3. Probability that randomly selected $y_{ij} = \mathrm{Right}$: $\qquad \displaystyle \bar{\pi}_{gj} = \Phi\left(\frac{\left[ \bar{\theta}_{g} - \kappa_{j} \right]}{ \sqrt{\sigma_{j}^{2} + \sigma_{g}^{2}} } \right)$
+3. Probability that randomly selected $y_{ij} = \mathrm{Right}$: $\quad \displaystyle \bar{\pi}_{gj} = \Phi\left(\frac{\left[ \bar{\theta}_{g} - \kappa_{j} \right]}{ \sqrt{\sigma_{j}^{2} + \sigma_{g}^{2}} } \right)$
 
 --
 
-4. Hierarchical model for group means: $\bar{\theta}_{g} \sim \mathrm{Normal}\left(\mu_{g} = f\left(x_{d}, \beta_{p}\right), \sigma_{\bar{\theta}}\right)$
+4. Hierarchical model for group means, smooth estimates across space (and eventually: time)
 
 ???
 
@@ -291,7 +510,8 @@ Hierarchical models are a huge amount of work
 
 --
 
-5. Hierarchical model for item parameters: $\displaystyle \begin{bmatrix} \kappa_{j} \\ \log\left(\sigma_{j}^{-1}\right)\end{bmatrix} \sim \mathrm{MultiNormal}\left(0, \Sigma\right)$
+5. Hierarchical model for item parameters
+
 
 ???
 
@@ -456,9 +676,9 @@ ggplot(thetas) +
   # coord_flip() +
   # scale_x_reverse() +
   labs(
-    x = "Ideal Point Rank Within Party", 
-    y = "Estimated Policy Preferences",
-    title = "Party-Public Ideal Point Estimates",
+    x = "Distric-Party Groups\nOrdered Most Liberal to Most Conservative", 
+    y = "Group Ideal Point",
+    title = "District-Party Ideal Point Estimates",
     subtitle = "Two Parties x 435 Districts"
   ) + 
   theme(
@@ -476,22 +696,101 @@ ggplot(thetas) +
 
 ---
 
-# Effect on Primary Candidate Positioning
+class: center, middle, inverse
 
-- re-contextualize why this tells us something new
+# How does group ideology affect candidate positioning?
 
-- Describe quantity we want
+???
 
-- Describe confounding
+This is a literature that is largely regression focused, a lot of selection on observables as key identifying assumptions.
 
+Given the way the estimates are constructed, I haven't yet come up with a genius way to break out of selection on observables either. In fact the way the estimates are constructed, estimates are all borrowing information from one another, so we're limited in the kind of natural experiment/RDD/instrumental variables things that you might think of.
 
+So I'm trying to do as best as I can given these constraints. I don't want to just plug things into a regression and look at a coefficient. I want to think hard about what is the estimand that we're interested in, what does the causal model/causal graph allowing me to make inferences about?
+
+So that's why I take the particular causal inference/causal graphs approach that I take even if we can't get out of selection on observables.
 
 
 ---
 
-### Sequential-_g_
+## How does group ideology affect candidate positioning?
 
-Special parametric case of **sequential nested mean model**
+.left-code[
+
+**Strategic positioning dilemma**: "primary constituency" or "district competition"?
+
+
+Effect of partisan preferences, _controlling for_ district competition
+
+Confounding problem: party median affects district median
+]
+
+
+.right-plot[
+
+```{r problem-dag, include = TRUE, fig.height = 3, fig.width = 5, out.width = "100%"}
+problem_dag <- 
+  dagify(
+    C ~ T + V + U,
+    V ~ T + U,
+    exposure = "T",
+    outcome = "C",
+    coords = tribble(
+      ~ name,      ~ x,    ~ y,
+      "T",      0,      0,
+      "C",      2,      0,
+      "V",      1,      1,
+      "U",      2,      1
+    ),
+    labels = c(
+      "T" = "Partisan Ideology",
+      "C" = "Candidate Positioning",
+      "V" = "District Voting"
+    )
+  ) %>%
+  tidy_dagitty() %>%
+  # node_parents("C") %>%
+  mutate(
+    pt_label = case_when(
+      name == "T" ~ "Group Ideology",
+      name == "C" ~ "Candidate DIME",
+      name == "V" ~ "District Vote",
+      name == "U" ~ "Confounders"
+    )
+  )
+
+ggplot(problem_dag) +
+  aes(x = x, y = y, xend = xend, yend = yend) +
+  geom_dag_edges() +
+  geom_dag_point(
+    aes(color = (name == "U")), show.legend = FALSE
+  ) +
+  geom_dag_label_repel(
+    aes(label = pt_label), 
+    family = font_fam,
+    segment.color = "black"
+  ) +
+  scale_color_manual(values = c("TRUE" = secondary, "FALSE" = "black")) +
+  theme_mgd_dag() +
+  expand_plot(
+    expand_x = expand_scale(c(0.2, 0.2)), 
+    expand_y = expand_scale(c(0.2, 0.2))
+  ) +
+  NULL  
+```
+
+]
+
+???
+
+**What are the data**
+
+
+---
+
+### Average Controlled Direct Effects using Sequential-_g_
+
+Special parametric case of **structural nested mean model**
 
 ```{r create-g-dag}
 g_dag <- 
@@ -579,12 +878,23 @@ mediator_dag + exposure_dag
 ```
 
 
+???
 
+What are the nodes
+
+What gets identified
+
+Time sequencing
+
+- one set of ideal points, multiple years of data
+- some slippage: mediation happens in reverse time
 
 
 ---
 
-# Fixing the mediator value
+## Turn up, tune in, blip down
+
+--
 
 Obtain **demediation/blipdown function** from first stage
 
@@ -604,10 +914,217 @@ Demediate outcome: $\begin{bmatrix} y_1 \\ y_2 \\ \vdots \\ y_n \end{bmatrix} - 
 
 # Propagating Uncertainty
 
+Sources of uncertainty: ideal point model, stage 1 model (demediation), stage 2 model (ACDE)
+
+--
+
+Estimation routine:
+
+- Sample **one** MCMC iteration from ideal point model.
+
+--
+
+- Estimate stage 1 model, district vote (mediator) effect. 
+
+--
+
+- Sample **one** coefficient draw of mediator effect. Demediate candidate ideal points.
+
+--
+
+- Estimate stage 2 model, group ideology (treatment) effect. Sample **one** ACDE draw.
+
+--
+
+- Repeat 1000 times and combine samples.
+
 
 ---
 
-# Average Controlled Direct Effect
+## Key findings: ACDE
+
+```{r read-g}
+g_samples <- 
+  here("data", "model-output", "04-positioning", "pos-g-samples.rds") %>%
+  read_rds() %>%
+  print()
+```
+
+```{r unnest-samples}
+mediator_samples <- g_samples %>%
+  select(party, incumbency, .draw, mediator_samples) %>%
+  unnest(cols = mediator_samples) %>%
+  ungroup() %>%
+  mutate(
+    incumbency = str_glue("{incumbency}s")
+  ) %>%
+  print()
+
+direct_samples <- g_samples %>%
+  select(party, incumbency, .draw, direct_samples) %>%
+  unnest(cols = direct_samples) %>%
+  ungroup() %>%
+  mutate(
+    incumbency = str_glue("{incumbency}s")
+  ) %>%
+  print()
+
+total_samples <- g_samples %>%
+  select(party, incumbency, .draw, direct_samples, total_samples) %>%
+  unnest(cols = c(total_samples, direct_samples)) %>%
+  ungroup() %>%
+  mutate(
+    indirect_effect = total_effect - direct_effect,
+    incumbency = str_glue("{incumbency}s")
+  ) %>%
+  print()
+```
+
+```{r g-summaries}
+mediator_summary <- mediator_samples %>%
+  group_by(party, incumbency) %>% 
+  summarize(
+    sample_mean = mean(mediator_effect), 
+    conf.low = quantile(mediator_effect, .05), 
+    conf.high = quantile(mediator_effect, .95),
+    n_samples = n()
+  ) %>%
+  print()
+
+direct_summary <- direct_samples %>%
+  group_by(party, incumbency) %>% 
+  summarize(
+    sample_mean = mean(direct_effect), 
+    conf.low = quantile(direct_effect, .05), 
+    conf.high = quantile(direct_effect, .95),
+    n_samples = n()
+  ) %>%
+  print()
+
+total_summary <- total_samples %>%
+  group_by(party, incumbency) %>% 
+  summarize(
+    sample_mean = mean(total_effect), 
+    conf.low = quantile(total_effect, .05), 
+    conf.high = quantile(total_effect, .95),
+    n_samples = n()
+  ) %>%
+  print()
+
+indirect_summary <- total_samples %>%
+  group_by(party, incumbency) %>% 
+  summarize(
+    sample_mean = mean(total_effect - direct_effect), 
+    conf.low = quantile(total_effect - direct_effect, .05), 
+    conf.high = quantile(total_effect - direct_effect, .95),
+    n_samples = n()
+  ) %>%
+  print()
+```
+
+
+```{r plot-direct, include = TRUE, fig.width = 8, fig.height = 3, out.width = "100%"}
+ggplot(direct_samples) +
+  aes(
+    x = direct_effect, y = as.factor(party), 
+    fill = as.factor(party), color = as.factor(party)
+  ) +
+  geom_vline(
+    xintercept = 0, color = "gray", size = 0.5, linetype = "dashed"
+  ) +
+  # annotate(
+  #   geom = "segment", x = 0, xend = 0, y = 0, yend = 3.25,
+  #   color = "gray"
+  # ) +
+  geom_segment(
+    data = direct_summary,
+    aes(x = conf.low, xend = conf.high, 
+        y = as.factor(party), yend = as.factor(party))
+  ) +
+  geom_point(
+    data = direct_summary, aes(x = sample_mean, y = as.factor(party))
+  ) +
+  ggridges::geom_ridgeline(
+    stat = "binline", draw_baseline = FALSE,
+    boundary = 0, bins = 40, scale = 0.4,
+    alpha = 0.25
+  ) +
+  facet_wrap(~ incumbency, nrow = 1, strip.position = "bottom") +
+  scale_color_manual(values = party_factor_colors) +
+  scale_fill_manual(values = party_factor_colors) +
+  scale_y_discrete(
+    breaks = c(1, 2), labels = c("Democrats", "Republicans")
+  ) +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.line.x = element_line(),
+    axis.ticks.y = element_blank(),
+    strip.placement = "outside",
+    # axis.text.y = element_blank()
+  ) +
+  coord_cartesian(ylim = c(1.35, 2.25)) +
+  labs(
+    title = "Effects of District-Party Ideology",
+    subtitle = "Controlled Direct Effect on Candidate Dime Score",
+    y = NULL,
+    x = NULL
+  ) +
+  NULL
+```
+
+--
+
+- Within party sd(Dime) $\approx 0.5$, within party sd( $\bar{\theta}_{g}$ ) $\approx 0.2$
+--
+
+- One sd change in district-party ideal points $\approx$ $0.2$ sd effect on Dime score
+
+???
+
+Dime sd within party is about 0.5,
+
+theta sd within party is about 0.2
+
+A ONE POINT increase in theta is ~ 1 sd effect on DIME
+
+A one-sd increase in theta is ~ a fifth sd increase on DIME, which feels big
+
+---
+
+## What's next?
+
+.pull-left[
+#### Model Chapter
+
+- Dynamic model
+
+- More data, farther back in time
+
+- Covariate adjustment
+
+]
+
+.pull-right[
+#### Candidate Positioning Chapter
+
+- Primary institutions (caucuses, conventions, openness) and effect modification
+
+- Covariate adjustment
+
+- Flatten the hierarchy
+
+]
 
 
 
+
+
+---
+
+class: center, middle, inverse
+
+# Do Primaries Work?
+
+## Partisan Representation in Nomination Contests
