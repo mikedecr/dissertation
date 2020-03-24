@@ -8,9 +8,6 @@
 library("here")
 library("magrittr")
 library("tidyverse")
-library("ggplot2")
-library("scales")
-library("labelled")
 library("broom")
 library("latex2exp")
 
@@ -30,6 +27,7 @@ congyear_cross <-
     here("data", "_identifiers", "congress-year-crosswalk.csv")
   ) %>%
   print()
+
 
 # ---- Boatright -----------------------
 
