@@ -51,8 +51,12 @@ theme_mgd_dag <- function() {
 # ---- colors -----------------------
 
 # the two parties
-dblue <- "#179ee0"
-rred <- "#ff5d40"
+# dblue <- "#179ee0"
+dblue <- "#2297E6"
+# rred <- "#ff5d40"
+rred <- "#DF536B"
+
+
 
 # for scale_color_*
 party_factor_colors <- c("1" = dblue, "2" = rred)
