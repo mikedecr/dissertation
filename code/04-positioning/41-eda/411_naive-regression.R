@@ -89,6 +89,9 @@ dime <- dime_all_raw %>%
       select(state_abb, district_num) %>%
       distinct()
   ) %>%
+  mutate(
+    recipient_cfscore_dyn = scale(recipient_cfscore_dyn)
+  ) %>%
   print()
 
 
@@ -96,6 +99,13 @@ dime %>%
   count(statedist = str_glue("{state_abb}-{district_num}")) %>%
   print(n = nrow(.))
 
+
+dime %>%
+  group_by(party) %>%
+  summarize(
+    mean = mean(recipient_cfscore_dyn, na.rm = TRUE),
+    sd = sd(recipient_cfscore_dyn, na.rm = TRUE)
+  ) 
 
 
 # ---- tidy MCMC -----------------------
@@ -123,6 +133,9 @@ thetas <- master_data %>%
     party_rank = rank(theta)
   ) %>%
   ungroup() %>%
+  mutate(
+    theta = (theta - mean(theta)) / mean(c(sd(theta[party == 1]), sd(theta[party == 2])))
+  ) %>%
   print()
 
 
@@ -567,6 +580,10 @@ theta_sample <- mcmc_draws %>%
       party = as.numeric(party)
     ) %>%
     distinct()
+  ) %>%
+  mutate(
+    original_theta = theta,
+    theta = (theta - mean(theta)) / mean(c(sd(theta[party == 1]), sd(theta[party == 2]))) 
   ) %>%
   print()
 
