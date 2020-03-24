@@ -20,12 +20,30 @@ library("patchwork")
 ```
 
 
+## General Orientation Toward Causal Inference
+
+Taboo against explicit causal inference, (Grosz, Rohrer, Thoemmes)
+
+Whatever the Hernán (2018) article says
+
+The point of causal inference isn't to shame observational studies away from making causal claims. The point is to clarify which designs and assumptions enable certain causal claims and which do not.
+
+Strictly speaking, causality is never observed. It is only inferred with the help of assumptions.
+
 
 ## The Meaning of Parameters in Design and Estimation
+
+What was I trying to say here? 
+
+The causal parameter is a feature of the _causal model_. The causal model is the model if you knew everything. When we impose assumptions for estimating, we can say under which conditions this parameter can be _estimated_. The estimator of the parameter is a different thing. 
+
+Bayesian estimation is a different _estimation_ framework given the same causal model. This is easy to see when we think about all Bayesian models (at least, MLE models) as special cases of Bayesian models with all log-likelihoods equally weighted. 
 
 ## Rubin's Vision: Posterior Distributions for Missing Potential Outcomes
 
 ## Parameterization and other Opportunities
+
+Gelman "Parameterization" paper: parameterization for convenience often reveals a new family of models. For Bayesian inference, it reveals a new family of priors. For _causal_ inference, we should pay careful attention to the way parameterization bears on the priors that we do and do not feel comfortable using, and the way that parameterization presents opportunities to improve on other work.
 
 ```{r diff-means-example}
 means_data <- 
