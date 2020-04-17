@@ -1,5 +1,20 @@
 # Bayesian Approach to Causal Inference in Political Science {#ch:causality}
 
+<!------- TO DO ---------
+- This might need to be chapter 2!!!! 
+- The model has a discussion of priors that might feel out of place
+  without first couching it in a viewpoint of Bayes for the project.
+- Is there only one viewpoint? No? 
+  The model is a "pragmatic Bayes" (MCMC for fitting, structural priors),
+  whereas the causal inf stuff is mixed in its view.
+  Sometimes its "normalizing Bayes" (information for sensitivity testing),
+  other times is merely "structural" WIPs. 
+  Maybe one thing to articulate (to myself, to others) is a position on how
+  structural priors make us think about properties of Bayes estimators.
+  (in the RDD case, the OLS model is consistent but we aren't in asymptopia.
+   How else do we evaluate the properties of the Bayes estimator
+   when we include structural information?)
+------------------------->
 
 I'm new!
 
@@ -35,11 +50,89 @@ Strictly speaking, causality is never observed. It is only inferred with the hel
 
 What was I trying to say here? 
 
-The causal parameter is a feature of the _causal model_. The causal model is the model if you knew everything. When we impose assumptions for estimating, we can say under which conditions this parameter can be _estimated_. The estimator of the parameter is a different thing. 
+The causal parameter is a feature of the _causal model_. The causal model is the model if you knew everything. When we impose assumptions for estimating, we can say under which conditions this parameter (or an average of the parameter in a finite sample) can be _estimated_. However, the estimator for the parameter is a different thing.
 
-Bayesian estimation is a different _estimation_ framework given the same causal model. This is easy to see when we think about all Bayesian models (at least, MLE models) as special cases of Bayesian models with all log-likelihoods equally weighted. 
+Bayesian estimation is a different _estimation_ framework given the same causal model. This is easy to see when we think about MLE models as special cases of Bayesian models with all log-likelihoods equally weighted. We have parameters given by some "ideal" model, but the parameters are estimated with a pragmatic penalty term.
+
+Do battle with the "implied nonparametric estimator" framework.
+
+- Causal models are manipulated to express causal _estimands_.
+- the "nonparametric estimators" are usually just averages of treatment and control group outcomes, under ignorability assumptions.
+- Parametric models for estimands are usually a byproduct of thinking within an MLE/regression framework. Many causal inf techniques don't do that. Instead they try to simply predict E[y(1) - y(0)] and don't care about the interpretability of the other RHS terms.
+- Thinking outside the "typical econometric" framework it's actually kinda easy to see how one flavor of fitting Bayesian models for causal effects. If the technology for prediction is Bayesian, you just get the prediction and the posterior distribution. You then deal with the bias/variance properties of $\hat{y}$ or $\tilde{y}$ (unobserved counterfactuals) but at least your focus is on the predictions rather than coefficients (which, from this view, who cares about those?)
+
+We can think bigger about Bayesian _inference_ for a parameter as distinct from Bayesian _estimation_ of the in-sample quantity. 
+This lets us use a nonparametric data-driven estimator for the data, but the "inference" or "generalization" still has a prior.
+For instance a sample mean estimates a population mean without a likelihood model for the data, but inference about the population mean often follows a parametric assumption from the Central Limit Theorem that the sampling distribution from the mean is asymptotically normal (but doesn't have to, c.f. bootstrapping).
+<!------- TO DO ---------
+- Read more about sharp null and an RI framework for inference, 
+  since this runs up against the idea of asymptotic normality of the means.
+------------------------->
+Even if the point estimator we use for a mean is unbiased, we can assimilate external information during the interpretation of the estimator (biasing the inference without biasing the point estimator).
+Restated: the posterior distribution is a weighted average of the raw point estimator and external information, rather than biasing the data-driven estimate directly.
+
+Even bigger: Bayesian inference about _models_ (Baldi and Shahbaba 2019). 
+This is probably where I have to start my justification for this? 
+The _entire point_ of causal inference is to make inferences about counterfactuals given data (Rubin 1978?).
+Invoking Bayesian inference is really the only way to say what we _want_ to say about causal effects: what are the plausible causal effects given the model/data. We do _not_ care about the plausibility of data given the null (as a primary QOI). 
+- Probably want to use Harrell-esque language? Draw on intuition from clinical research, or even industry. We want our best answer, not a philosophically indirect weird jumble.
+- This probably also plays into the Cox/Jeffreys/Jaynes stuff I have open on my computer.
+<!------- TO DO ---------
+- Corey Yanofsky recommended reading
+- Gelman/Shalizi philosophy of Bayes
+- Induction/Deduction in Bayes
+- etc.
+- symposium about "objective" Bayes
+- And then also Gelman/Simpson/Betancourt "context of the likelihood"
+  => we have priors about the WORLD, not about model parameters.
+------------------------->
+
+<!------- TO DO ---------
+- soul searching about a philosophy of Bayes to stake out for the project?
+- "pragmatic bayesian workflow" - priors are "just a part of the model" that need to be checked w/ prior predictive checking and so on.
+- vs. the "philosophical coherence" view.
+- damnit don't spend too much time on this because it just needs to be an orientation to stick decisions to.
+- We're already leaning in the "pragmatic" direction from the IRT model text.
+------------------------->
+
+This presumes an m-closed world(?right?), which maybe we don't like (Navarro, "Devil and Deep Blue Sea").
+<!------- TO DO ---------
+- Read Navarro CLOSELY!
+- Read ARONOW and MILLER: how to square "intra-model agonisticism" with 
+  some philosophical view of what Bayes is.
+- Maybe this is terminology I should work on! Draw some helpful lines that 
+  don't already exist for defining subtypes of agnosticism or other
+  epistemic bundles of things.
+  (there is also some paper on "types of Bayesians"?
+   mentioned in a McElreath talk)
+------------------------->
+Me debating with myself: how to think about Bayesian model selection vs "doubly robust" estimation ideas...
+Maybe some hybrid view in the "quasi-experimental" approach to causal model selection. We estimate two models from the same data—one with a treatment parameter and one where we impose no treatment effect—and compare models using some likelihoodist or Bayes factor measure of evidence.
+<!------- TO DO ---------
+ - articulate a good beef with the paper's terminology of "quasi-experimental"
+ -------------------------> 
+
+What is THIS project going to do?
+
+- Pragmatic view of priors?
+- Are we doing more flexible covariate adjustment?
+- Maybe we should decide this AFTER we experiment with Ch 4 and 5 data/methods
+<!------- TO DO ---------
+- pronouncement of project values
+------------------------->
+
+
 
 ## Rubin's Vision: Posterior Distributions for Missing Potential Outcomes
+
+Causal model: $y_{i}(1)$ and $y_{i}(0)$
+
+Observed data: $y_{i} = z_{i}y_{i}(1) + (1 - z_{i})y_{i}(0)$
+
+Unobserved data: $\tilde{y}_{i}$
+
+Inference about $\tilde{y}_{i}$: $p(\tilde{y}_{i} \mid \mathbf{y}) \propto p(\tilde{y}_{i} \mid \theta, \mathbf{y})p(\theta)$
+
 
 ## Parameterization and other Opportunities
 
@@ -106,7 +199,9 @@ Although the treatment effect $\beta$ from Equation&nbsp;\@ref(eq:diff-means-exa
 - equivalent parameterizations
 
 
-## Example Case: Regression Discontinuity with a Binary Outcome
+## Examples of Bayesian Causal Inference
 
-## Example Case: Meta-Analysis of Nonparametric Treatment Effects
+### Regression Discontinuity with a Binary Outcome
+
+### Meta-Analysis of Nonparametric Treatment Effects
 
