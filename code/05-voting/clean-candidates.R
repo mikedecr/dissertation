@@ -8,8 +8,7 @@
 library("here")
 library("magrittr")
 library("tidyverse")
-library("broom")
-library("latex2exp")
+library("labelled") # to_character() etc; labels in Boatright table
 
 
 
@@ -17,9 +16,6 @@ library("latex2exp")
 # ----------------------------------------------------
 #   Data
 # ----------------------------------------------------
-
-
-# ---- Crosswalk -----------------------
 
 # crosswalk file between congnum and cycles
 congyear_cross <- 
@@ -40,14 +36,97 @@ bc_raw <-
   print()
 
 
-# filter to House candidates
-# elections since 2012
 bc <- bc_raw %>%
-  filter(chamber == 1) %>%
-  filter(elect_year >= 2012) %>%
+  mutate_if(.predicate = is.labelled, .funs = to_character) %>%
+  filter(chamber == "House") %>%
+  # filter(elect_year >= 2012) %>%
   print()
 
-count(bc, ICPSR)
+# to do: 
+# - renaming scheme. 
+#   Many variables begin with P (primary), R (runoff), 
+#   G (general), U (general runoff), C (cycle aggregate)
+
+
+
+# to do: get an idea of the coverage / compare to others.
+# (Boatright is Bonica union Pettigrew et al., plus more?)
+# years cover 1970–2016
+count(bc, elect_year) %>% print(n = nrow(.))
+
+
+count(bc, primary_rules) 
+# we should compare this to McGhee et al. 
+# "Primary Cause of Partisanship" data
+
+
+# candidate features
+count(bc, quality)       # to do: rename "prior elective office"
+count(bc, primary_type)  # to do: rename ("candidate" type)
+# also occupation, position, 
+
+count(bc, reason_for_challenge)
+# to do: Boatright definition of "ideological"
+#        My definion of "ideological" is probably broader than Boatright
+#        Perhaps collapse categories.
+
+
+# outcome and other relevant scope
+count(bc, nominee)
+count(bc, Pwinner)
+count(bc, Pvote_total) # raw vote margin
+count(bc, Pmargin) # raw vote margin
+count(bc, Pmargin_pct) # raw vote margin
+count(bc, Pvote_share)
+count(bc, Pfract) # "fractionalization" like a concentration measure
+                  # This is basically including the DV as a covariate...
+                  # I'm not about it.
+                  # Lagging it? Maybe.
+count(bc, Penc) # "effective number of candidates"
+               # also comes from a concentration metric.
+               # Likely to have fun(ky) log-scale behavior!
+# naturally, many candidates run with ENC == 1
+ggplot(bc, aes(x = Penc)) + geom_histogram()
+ggplot(bc, aes(x = log10(Penc))) + geom_histogram()
+
+
+count(bc, nomination_type)
+# This means "how did general election candidates get here?"
+# - conventions mean "no primary" in this data, but we may get more info 
+#   by comparing to Bonica (i.e. convention "losers")
+
+
+
+# to do: is there something more updated than these?
+count(bc, tpo)
+count(bc, culture)
+
+
+
+count(bc, pf)
+count(bc, pf, state_postal) 
+# Persistent Factionalism indicator.
+# Constant w/in state over time.
+# to do: rename
+# design considerations: more competition, more variance in outcomes?
+
+# other helpful things
+select(
+  bc, 
+  district_pvi, district_dpres, district_vap,
+  Preceipts, Pdisbursements, 
+  same_day_pres, same_day_gub
+)
+# VAP for a measure of turnout (helpful for comparison to Hirano/Snyder?)
+# primary-dated campaign data (from raw Bonica?)
+#   Might re-create if Boatright has dates
+# Many of these may not be helpful for confounding though...
+#   If we only care about things that distinguish candidates, 
+#   then district-fixed features don't matter 
+#   [meaning, cancel out of choice model likelihood]
+#   UNLESS if interaction w/ candidate features.
+# other helpful timing things like month, date, odd_election_year
+
 
 
 # ---- DIME -----------------------
@@ -663,3 +742,15 @@ bc <- bc_raw %>%
 
 
 bc %>% count(cong)
+
+
+
+# ---- design exploration -----------------------
+
+# to do: 
+#   multinomial choice vs. "stacked OLS" estimation?
+#   We have either SUTVA violation or other dependency.
+#   Within district d, cand i and j votes should be negatively correlated.
+
+
+

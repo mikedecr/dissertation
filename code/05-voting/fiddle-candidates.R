@@ -1,6 +1,6 @@
 # ----------------------------------------------------
 #   Investigate pettigrew primary data (through 2010)
-#   OLD
+#   OLD (not updated to Feb 2020 APW?)
 # ----------------------------------------------------
 
 library("conflicted")
