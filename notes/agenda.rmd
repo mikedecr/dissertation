@@ -2,8 +2,6 @@
 title: Overall thesis notes
 ---
 
-# Today
-
 Sort APW comments:
 
 - Devin:
@@ -32,83 +30,67 @@ Sort APW comments:
     - who is a partisan? are we talking leaners?
     - The uncorrelatedness is worth interrogating more (hierarchical coefficients, build MNorm prior)
     - Power calculation (how to even think about this? stress test the simulation?)
+- Barry, what's the "stated purpose" of primaries
+    - Entry point is primaries and polarization, but there could be more
+    - Citizens? Not just citizens. Constituents? Put definition in chapter 1.
+    - what are the Dime scores, what are the details, etc.
+    - Candidate "status" vs. incumbency status
+    - DIME is an acronym, maybe call them CF score
+    - primary institutions
+        - timing of the primary. Things that bring people to the primary, presidential / gubernatorial primaries affecting turnout, which could have down-ballot effects
+        - Rosenstone Hansen 1993 model of timing and turnout
+    - margin histogram in the rank plot
+        - ggplot
+        - Jackman who's the most liberal senator
+    - Selection bias in the CFscores
+        - make an argument from the literature about where these things are going
+        - Danielle Thomsen?
+    - VoteSmart data from Rogowski
+
 
 - Meetings:
-    - [ ] ellie
+    - [ ] Ellie
     - [ ] Ken
     - [ ] Alex
     - [ ] Barry
-        - this sucks
-        - too many fucking emails
-        - been working on learning predictive modeling tricks
-            - two goals: thesis and professional
-            - something to improve the fit of the multilevel model, since it's doing a lot.
-            - Make myself more attractive to non-academic hirers.
-            - The stakes for the latter are really going up because we're careening toward recession.
-        - did some reading about choice models for the last chapter
-        - need to figure out if the data support continuous vote DV or only binary
-        - Achen and Bartels
-    - [ ] Devin (see email)
-- TOC
-    - see Barry email
-- Daron shaw thermometer dimensions
-- Barry, what's the "stated purpose" of primaries
-    - Entry point is primaries and polarization, but there could be more
-- Citizens? Not just citizens. Constituents? Put definition in chapter 1.
-- what are the Dime scores, what are the details, etc.
-- Candidate "status" vs. incumbency status
-- DIME is an acronym, maybe call them CF score
-- primary institutions
-    - timing of the primary. Things that bring people to the primary, presidential / gubernatorial primaries affecting turnout, which could have down-ballot effects
-    - Rosenstone Hansen 1993 model of timing and turnout
-- margin histogram in the rank plot
-    - ggplot
-    - Jackman who's the most liberal senator
-- Selection bias in the CFscores
-    - make an argument from the literature about where these things are going
-    - Danielle Thomsen?
-- VoteSmart data from Rogowski
+    - [ ] Mike 
+
+Some readings:
+
+- Achen–Bartels lit review
+- Devil email
+- Daron Shaw thermometer dimensions
+- Bafumi Gelman correlated ranefs/ what are they
+- Between/within estimators for causal inference
+- DAGs for fixefs/ranefs
+- Algorithmic covariate selection
+    - Books at home
+    - Justify covariate adjustment w/ cites
+- Bailey ranefs/incidental parameters (get this 100% right)
+
+
+Model questions:
+
+- including the group-level means of lower-level covariates as a way of absorbing correlation?
+- what about pooling toward something not normal?
+- Dynamics:
+    - biannual estimate, pool within decade
+    - each new redistricting is a new set of things
+    - Coefs remember time, districts don't
+- Weighted likelihood
+    - can we calculate weighted $s^{*}$ without going through $\bar{y}^{*}$
+- Notation questions
+    - notation for the hierarchical model and cell weights? i in some set? s[g]?
+- [ ] identifiability in heteroskedastic model
 
 
 
+Data things 
 
-- alex
-    - including the group-level means of lower-level covariates as a way of absorbing correlation?
-    - what about pooling toward something not normal?
-- APW prep
-    - organize reading
-    - prioritize reading
-        - _causal modeling_
-            - ABS: sequential-g
-            - ABS: causal mechanism treatment arms
-            - Bafumi Gelman correlated ranefs/ what are they
-            - between v within estimators
-            - DAGs for fixed/random effects
-        - _covariate selection/other practices_
-            - sort through books
-            - Justify covariate adjustment w/ _cites
-        - _night_: 
-            - prior-likelihood
-    - naive regressions
-    - sequential G
-- data
-    - Adler data (codebook_district_data.pdf)
-- writing plan?
+- Adler data (codebook_district_data.pdf)
 
-- **Bureaucracy**
-    - [ ] New table of contents, descriptions of the chapters, circulate to the four
-    - [ ] Mike meeting
-    - [ ] Nadav meeting
-- **Alex**
-    - [ ] remembering districts(?) we don't have a lag on the previous district value, only the geographic coefficients
-    - [ ] weighting questions:
-        - can we calculate weighted $s^{*}$ without going through $\bar{y}^{*}$
-        - notation for the hierarchical model and cell weights? i in some set? s[g]?
-    - [x] hierarchical priors for item parameters?
-        - CW do *not* do this
-        - Alex says: multivariate normal because they'll be correlated
-        - This is how we get around incidental parameters?
-    - [ ] identifiability in heteroskedastic model
+
+_Never did finish sending people that new table of contents._
 - **Theory/Writing**
     - [ ] candidates fear "idiosyncratic" issues
     - [ ] cite bailey for ranef approach (incidental parameters problem)
@@ -200,6 +182,9 @@ Sort APW comments:
     - how to deal with bold section/regular chapter?
     - what can you look at for inspiration?
   - [ ] integrate w/ Buckydown
+
+
+
 
 
 
