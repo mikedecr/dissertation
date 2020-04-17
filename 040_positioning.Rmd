@@ -439,6 +439,16 @@ There are functional form considerations however---biases may remain if the func
 - functional forms comment
 ------------------------->
 
+<!------- TO DO ---------
+- way bigger emphasis on the contribution of the design.
+  other analysis do this kind of observables setup, but they don't
+  deal with the causal estimand and the explication of assumptions.
+------------------------->
+
+<!------- TO DO ---------
+- Discuss potential violations of assumptions
+- Simulate violated assumptions by way of correlated error parameters?
+------------------------->
 
 
 
@@ -462,7 +472,7 @@ One important feature of this dissertation is that our causal variable of intere
 
 As discussed in Chapter&nbsp;\@ref(ch:causality), it is natural to interpret causal inference as Bayesian updating about a causal parameter using models and data. Following @rubin:1978:bayesian's Bayesian interpretation of his own work with potential outcomes, causal inference is a method for generating counterfactual estimates of an outcome variable as if they were predictive draws from the posterior distribution. Supposing that we seek the causal effect of an intervention on group ideology, $\tau$, and we observe only one potential outcome, $y_{g}(\bar{\theta}_{g})$, how do we specify the posterior distribution if we set group ideology to some other value $\theta'$? Not only do we have posterior uncertainty about $\tau$, but we are also uncertain about the actual value of $\bar{\theta}_{g}$ that we observed in the first place, since the measurement model from Chapter&nbsp;\@ref(ch:model) estimates it only up to a posterior distribution. Our posterior distribution for missing potential outcomes reflects both sources of uncertainty. Econometrics refers to this problem as "errors in variables," but it takes on a special meaning when it comes to the interpretation of causal interventions, since it stresses our understanding of what an "observed" potential outcome is.
 
-Practically, this means that we will underestimate our uncertainty about causal effects unless we can account for the uncertainty in our treatment variable on top of our uncertainty in its effect on candidate positioning. All ideal point estimates are uncertainty, but not many studies confront this uncertainty. Since the usefulness of the ideal point model in Chapter&nbsp;\@ref(ch:model) is important to explore in this dissertation, it feels appropriate not to ignore posterior uncertainty in its applications. As such, I conduct all sequential-$g$ analyses below using raw posterior samples, rather than posterior means. I describe the exact routine in Section&nbsp;\@ref(sec:pos-uncertainty).
+Practically, this means that we will underestimate our uncertainty about causal effects unless we can account for the uncertainty in our treatment variable on top of our uncertainty in its effect on candidate positioning. All ideal point estimates are uncertain, but not many studies confront this uncertainty. Since the usefulness of the ideal point model in Chapter&nbsp;\@ref(ch:model) is important to explore in this dissertation, it feels appropriate not to ignore posterior uncertainty in its applications. As such, I conduct all sequential-$g$ analyses below using raw posterior samples, rather than posterior means. I describe the exact routine in Section&nbsp;\@ref(sec:pos-uncertainty).
 
 <!-- 
 

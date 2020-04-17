@@ -1,5 +1,6 @@
 # ----------------------------------------------------
 #   implement sequential-g estimator
+#   post APW this is on the to-do list.
 # ----------------------------------------------------
 
 library("here")

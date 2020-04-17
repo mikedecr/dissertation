@@ -1,12 +1,13 @@
 # ----------------------------------------------------
 #   Relationship to candidate ideal points 
-#   (naive polmeth style)
+#   - naive polmeth style
+#   - this file also contains APW 2020 code (needs to move){}
 # ----------------------------------------------------
 
 library("here")
 library("magrittr")
 library("tidyverse")
-library("boxr"); box_auth()
+library("boxr"); box_auth() # needed?
 
 library("lme4")
 library("tidybayes")
