@@ -1,4 +1,34 @@
-# Primary Elections and Ideological Choice {#ch:arg}
+# Introduction: Primary Elections and Ideological Choice {#ch:arg}
+
+<!-- outline 
+
+What's the problem?
+
+- quick intro to SPD
+- empirical problem: we don't observe key constructs
+- theoretical problem: we don't understand how accountability would be enforced?
+- What will we do:
+    - construct a new model-based measure of intra-party preferences
+    - use it to test a voters-up mechanism for enforcement
+
+The SPD, in detail
+
+- longer articulation of theoretical problems
+
+Limitations for inferring ideal points from votes
+
+- longer articulation of empirical/measurement problem
+
+Outline for the dissertation
+
+- Theoretical orientation
+- empirical orientation
+- chapter outline
+
+-->
+
+
+
 
 <!------- TO DO ---------
 - Chunk options pre script (I hate this actually)
@@ -406,14 +436,43 @@ ggplot(data = f) +
 
 ### Representatives as Delegates vs.\ Trustees
 
-
-
 ### Proposed Model
 
 Value of directly modeling each party:
 
 - identify the actual quantities of interest
 - do parties "move together" or not? This is only possible to infer by modeling each party's hierarchy separately.
+
+
+## Empirical Orientation
+
+### Causal Inference in the Study of Representation
+
+What is the problem?
+
+- Ignorable assignment of aggregate ideology
+- Ignorable assignment of candidate ideology
+
+We actually don't have much of this here.
+
+- Few examples.
+
+What do I propose?
+
+- Many observational studies using "selection on observables" assumptions.
+- We may not be able to break out of this
+- But we can improve on the (1) declaration of the causal query, (2) examination of which assumptions are required for which queries, and (3) be more cautious about what we can and can't say using the data and research designs that we have.
+
+### Bayesian Causal Inference
+
+Where do we have to confront things
+
+- the treatment assignments themselves are imprecisely measured. We have a probability distribution of _observed_ treatment. 
+- We view NHST with skepticism
+- We aim to normalize a Bayesian interpretation of causal effects
+    - there are many possible scenarios that could explain the data that we see
+    - the posterior distribution represents the plausibility of scenarios, after seeing the data.
+
 
 
 
