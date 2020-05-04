@@ -8,7 +8,7 @@
 library("here")
 library("magrittr")
 library("tidyverse")
-library("labelled") # to_character() etc; labels in Boatright table
+
 
 
 
@@ -37,15 +37,19 @@ bc_raw <-
 
 
 bc <- bc_raw %>%
-  mutate_if(.predicate = is.labelled, .funs = to_character) %>%
+  mutate_if(
+    .predicate = haven::is.labelled, 
+    .funs = labelled::to_character
+  ) %>%
   filter(chamber == "House") %>%
   # filter(elect_year >= 2012) %>%
   print()
 
-# to do: 
-# - renaming scheme. 
+# to do: renaming scheme. 
+# - Time scope:
 #   Many variables begin with P (primary), R (runoff), 
 #   G (general), U (general runoff), C (cycle aggregate)
+# - dummy variables to is_* (e.g. is_incumbent)
 
 
 
@@ -128,6 +132,42 @@ select(
 # other helpful timing things like month, date, odd_election_year
 
 
+# -- CASE COVERAGE
+
+
+# all elect_year are even
+# to do: do we have specials?
+bc %>%
+  count(elect_year, midterm = elect_year %% 2) %>%
+  print(n = nrow(.))
+
+# year x party
+bc %>% count(elect_year, primary_party) %>% print(n = nrow(.))
+
+# two types of incumbency indicators
+bc %>% count(elect_year, incumbent, primary_type) %>% print(n = nrow(.))
+
+# to do: want to filter out no-nominee Party x Year cases
+bc %>% filter(primary_type == "No Nominee") %>% select(name)
+
+
+# OK big limitation in recency of Bonica score data
+# to do:  either merge Bonica 
+bc %>% 
+  count(elect_year, bonica = !is.na(bonica_score)) %>%
+  print(n = nrow(.)) %>%
+  ggplot(aes(x = elect_year, y = n, fill = bonica)) +
+  geom_col() +
+  labs(y = "Candidacies", x = "Year", fill = "Observed Bonica Score")
+
+
+
+
+
+
+
+
+
 
 # ---- DIME -----------------------
 
@@ -138,6 +178,8 @@ dime_all_raw <-
   ) %>%
   as_tibble() %>%
   print()
+
+
 
 dime_cong_raw <- 
   read_csv(
@@ -182,7 +224,7 @@ dime_all <- dime_all_raw %>%
   rename_all(str_replace_all, "[.]", "_") %>%
   filter(seat == "federal:house") %>%
   filter(state %in% state.abb) %>%
-  filter(between(fecyear, 2012, 2016)) %>%
+  # filter(between(fecyear, 2012, 2016)) %>%
   filter(fecyear == cycle) %>%
   print()
 
@@ -192,10 +234,11 @@ dime_cong <- dime_cong_raw %>%
   rename_all(str_replace_all, "[.]", "_") %>%
   filter(seat == "federal:house") %>%
   filter(state %in% state.abb) %>%
-  filter(between(cycle, 2012, 2016)) %>%
+  # filter(between(cycle, 2012, 2016)) %>%
   print()
 
-  # method to get unique ICPSR?
+
+# method to get unique ICPSR?
   # group_by(bonica_rid) %>%
   # filter(cycle == min(cycle)) %>%
   # select(bonica_rid, unique_icpsr = ICPSR) %>%
@@ -206,6 +249,55 @@ dime_cong <- dime_cong_raw %>%
   # rename_all(str_replace_all, "[.]", "_") %>%
   # filter(between(cycle, 2012, 2016)) %>%
   # print()
+
+
+# DV variables for Ch 5?
+# pwinner, ppct
+names(dime_cong)
+names(dime_all)
+
+
+
+# NOTE: congressional data has primary pct,
+#       "all" does not.
+dime_cong %>% count(pwinner = !is.na(pwinner), ppct = !is.na(ppct))
+dime_all %>% count(pwinner = !is.na(p_elec_stat))
+
+
+dime_cong %>% 
+  count(
+    cycle, Incum_Chall, party,
+    pwinner = !is.na(pwinner), ppct = !is.na(ppct)
+  ) %>%
+  filter(pwinner == TRUE | ppct == TRUE) %>%
+  group_by(cycle) %>%
+  mutate(
+    n_pct = n,
+    n = NULL,
+    n_win = sum(n_pct)
+  ) %>% 
+  filter(ppct == TRUE, party %in% c("D", "R")) %>%
+  print(n = nrow(.))
+
+dime_all %>% count(pwinner = !is.na(p_elec_stat))
+
+
+
+
+
+# ---- Pettigrew et al -----------------------
+
+pow_raw <- 
+  here(
+    "data", "elect-primary", "pettigrew-owen-wanless",
+    "House primary elections (1956-2010) data (pettigrew).xlsx"
+  ) %>% 
+  readxl::read_xlsx() %>%
+  print()
+
+
+pow_raw %>%
+  select(raceid, candnumber, candidate, incname)
 
 
 
