@@ -106,8 +106,12 @@ _Never did finish sending people that new table of contents._
     - [ ] mimic Stimson's dichotomization
         - see also Ansolabehere, Rodden, Snyder
     - [ ] where else could we do this (measurement scales)
+- **Data**
+    - [ ] 2016 primary data
+    - [ ] BC individual data merge
 - **Code**
     - [ ] LICENSE
+    - [ ] clean data in `data/_clean` on Box
     - [ ] rred and dblue from R 4.0 palette
     - [ ] helper to grab most recent MCMC
     - [ ] dir paths go into a modular file?
