@@ -54,6 +54,11 @@ The causal parameter is a feature of the _causal model_. The causal model is the
 
 Bayesian estimation is a different _estimation_ framework given the same causal model. This is easy to see when we think about MLE models as special cases of Bayesian models with all log-likelihoods equally weighted. We have parameters given by some "ideal" model, but the parameters are estimated with a pragmatic penalty term.
 
+Oganisian and Roy (2020) "identification" assumptions vs. "statistical" assumptions. Identification assumptions get you to a place where you can express causal effects in terms of expectations about $Y$ given treatment and confounders, integrating over confounders. "Statistical" assumptions define how we think we can build $E[Y]$
+
+- Bayesian inference _begins_ as technology for thinking about statistical assumptions.
+- It eventually becomes technology for experimenting with identification assumptions.
+
 Do battle with the "implied nonparametric estimator" framework.
 
 - Causal models are manipulated to express causal _estimands_.
@@ -134,9 +139,65 @@ Unobserved data: $\tilde{y}_{i}$
 Inference about $\tilde{y}_{i}$: $p(\tilde{y}_{i} \mid \mathbf{y}) \propto p(\tilde{y}_{i} \mid \theta, \mathbf{y})p(\theta)$
 
 
-## Parameterization and other Opportunities
+## The Issue of Priors
+
+Various roles that priors take on
+
+- merely facilitate posterior inference
+- structural information
+- weak information
+- regularization / stabilization
+- prior knowledge
+
+A general orientation toward priors in this dissertation:
+
+- Not about "stacking the deck" or hazy notions of "prior beliefs"
+- inference about the thing we care about
+- structural information when we have it
+- Causal inference: "agnosticism" is something valuable generally
+
+
+### Priors and Likelihoods
+
+
+
+
+
+
+
+### Likelihood Parameterization and the Incoherence of Flatness
+
 
 Gelman "Parameterization" paper: parameterization for convenience often reveals a new family of models. For Bayesian inference, it reveals a new family of priors. For _causal_ inference, we should pay careful attention to the way parameterization bears on the priors that we do and do not feel comfortable using, and the way that parameterization presents opportunities to improve on other work.
+
+
+Priors on the _world_, not about parameters.
+
+
+Parameters are themselves a _choice_. 
+
+- parameterization exposes some structures that are easier to specify priors for than others
+
+
+The incoherence of flatness: 
+
+- "no way to conceptualize an uninformative prior because you can always rearrange the problem through a reparameterization or transforamtion of a parameter"
+- examples of transformations having crazy implications/MLE being wild (logit).
+- Jeffreys prior: actually a very limited range of priors that satisfy an "invariance" property. My words: such that the "amount of information obtained from data about is invariant to parameterization of the likelihood, for all possible values of the parameter," or, "the only way for the posterior distribution to be exactly the same, given the same data, for all true parameter values (?), is the Jeffreys prior," or, regardless of the data, I will learn the same thing about the generative model regardless of which equivalent parameterization of the generative model is used.  
+    - is it worth it to think about the theoretical meaning of information
+    - how does flatness reflect information in nonlinear scales?
+
+
+
+Suppose we have some posterior distribution which relies on some parameter vector $\overrightarrow{\alpha}$. 
+\begin{align}
+  p\left(\overrightarrow{\alpha} \mid y\right) &\propto 
+    p(y \mid \overrightarrow{\alpha} )
+    p( \overrightarrow{\alpha} )
+\end{align}
+Consider some alternate parameterization of the likelihood parameterized by $\overrightarrow{\beta}$. 
+
+Nonlinear transformation of $\theta$ does not preserve a uniform density over parameters.
 
 ```{r diff-means-example}
 means_data <- 
@@ -192,6 +253,10 @@ where $\alpha$ is the control group mean, $\alpha + \beta$ is the treatment grou
   (\#eq:separate-means-example)
 \end{align}
 Although the treatment effect $\beta$ from Equation&nbsp;\@ref(eq:diff-means-example) is equivalent to the difference in means $\mu_{1} - \mu_{0}$ from Equation&nbsp;\@ref(eq:separate-means-example), the parameterization of the model affects the implied prior for the difference in means. If the researcher gives a flat prior to both $\mu_{\mathbf{z}}$ terms, the implied prior for the difference in means will not be flat. Instead, it will be triangular, as shown in Figure&nbsp;\@ref(fig:plot-diff-means-example). The underlying mechanics of this problem are well-known in applied statistics---if we continue adding parameters, the Central Limit Theorem describes how the resulting distribution will converge to Normality---but it takes the explicit specification of priors to shine a light on the consequences of default prior choices in a particular case. In particular it shows how even flat priors, which are popularly regarded as "agnostic" priors because of their implicit connection to maximum likelihood estimators, do not necessarily imply flat priors about the researcher's key quantities of interest. Rather, flat priors can create a variety of unintended prior distributions that do not match the researcher's expectations. I return to this important idea in the discussion about setting priors for a probit model in Section&nbsp;\@ref(sec:probit-prior).
+<!------- TO DO ---------
+- probit in the model chapter?
+- logit in this chapter?
+------------------------->
 
 ```{r plot-diff-means-example, include = TRUE, fig.height = 4, fig.width = 8, out.width = "100%", fig.cap = "Model parameterization affects prior distributions for quantities of interest that are functions of multiple parameters or transformed parameters. The left panel shows that the difference between two means does not have a flat prior if the two means are given flat priors. Note that the $x$-axes are not fixed across panels."}
 ```
@@ -199,9 +264,36 @@ Although the treatment effect $\beta$ from Equation&nbsp;\@ref(eq:diff-means-exa
 - equivalent parameterizations
 
 
+
+
+
+### Structural Priors and Weak Information
+
+Bounds, Hierarchy
+
+
+
+
+### Direct Counterfactual Comparisons
+
+ML approach
+
+More of a "priors to facilitate posteriors" approach, not a prior information view (since there is some formal data peeking involved)
+
+
+
+
 ## Examples of Bayesian Causal Inference
 
 ### Regression Discontinuity with a Binary Outcome
 
+Parameterization, structural information
+
 ### Meta-Analysis of Nonparametric Treatment Effects
+
+
+
+
+
+
 
