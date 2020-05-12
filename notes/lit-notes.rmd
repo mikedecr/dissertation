@@ -20,6 +20,37 @@ TW and CW both appear to have state party IRT estimates ready to go?
 
 
 
+# Causal Inference
+
+Ratkovic 2019: Rehabilitating the Regression
+
+- a regression method for modeling treatment and the response
+- sample 1: estimate heterogeneity in treatment as f(X).
+- sample 2: estimate covariate relationships to treatment and outcome as f(X), with heterogeneities
+- sample 3: estimate treatment effect controlling for combo of confounding and heterogeneities
+
+
+
+generalized propensity score modeling:
+
+- Consider a partial linear model $Y = θz + g(x) + e$, which is intended to represent a model where we estimate the effect of Z on Y with some "flexible" function that controls for confounders X
+- For several reasons we are worried that "even under ideal circumstances" the coefficient θ does not capture the causal effect of Z
+    - either heterogeneity in $Z | E[Z | X]$ ("regression weights", Aronow and Samii 2016)
+    - If you use regularization to estimate flexible function $g()$ this would directly confound the statistical expectation of $θ$ ("regularization induced confounding") that is worse with stronger underlying confounding in X or stronger regularization schemes in estimation of $g()$
+- Both problems suggest workarounds using propensity score models
+    - directly estimate propensity scores, calculate regression weights (Aronow and Samii)
+    - "Neyman orthogonalization" or "cross-fitting" to separately estimate g() and Y(z) using a split-sample approach. This forces an orthogonalization of Z and g() through an implicit residualization in the multistage model (controlling for the propensity in the second stage). 
+    - My treatment of interest is continuous, so binary propensity models don't work for me. 
+- Continuous propensity score modeling (Hirano and Imbens book chapter)
+    - Estimate E[Z | X], 
+    - Determine p(Z) for potentially continuous Z (example uses a parametric model)
+    - E[Y(z) | p(z)] is estimated by averaging (integrating) over the propensities within one treatment status. This is basically IPW but with a continuous treatment using the integral to generalize the weighted averaging.
+- Chernozhukov et al: Double ML
+    - Theoretical & application paper to demonstrate statistical properties of the cross-fitting method to get around the regularization induced confounding.
+    - Pretty complicated and above my reading level so I don't know how much to dig into this.
+- Carvalho et al. paper 
+
+
 
 
 # Candidates Chapter
