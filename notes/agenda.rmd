@@ -2,6 +2,21 @@
 title: Overall thesis notes
 ---
 
+
+From org-file
+- thesis:
+    - [ ] Achen critique of Miller and Stokes (Lewis and Tausanovitch)
+    - [ ] move into agenda
+    - [ ] clean agenda
+    - [ ] Barry PDF
+    - [ ] read explaining fixed effects
+    - [ ] read ranef distribution
+    - [ ] read Hall-Thompson
+    - [ ] read Bailey ranefs
+    - [x] predicted values (what did this mean?)
+    - [ ] store composite error terms? (why?)
+    - [ ] businesses want to integrate a loss function over a posterior distribution
+
 Sort APW comments:
 
 - Devin:
@@ -91,6 +106,11 @@ Data things
 
 
 _Never did finish sending people that new table of contents._
+
+
+Keep organizing this...
+
+
 - **Theory/Writing**
     - [ ] candidates fear "idiosyncratic" issues
     - [ ] cite bailey for ranef approach (incidental parameters problem)
