@@ -20,7 +20,7 @@ source(here::here("code", "helpers", "call-R-helpers.R"))
 
 # source(here::here("code", "04-positioning", "41-eda", "411_naive-regression.R"), verbose = FALSE)
 
-clean_data_dir <- 103296501061
+clean_data_dir <- 112745864917
 model_output_dir <- 102977578033
 
 
@@ -46,6 +46,14 @@ dime_all_raw <-
   ) %>%
   as_tibble() %>%
   print()
+
+
+dime_bc <- 
+  read_rds(
+    here("data", "_clean", "dime_x_bc-agg.RDS")
+  ) %>%
+  print()
+
 
 
 
