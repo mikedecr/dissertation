@@ -1,4 +1,4 @@
-# Bayesian Approach to Causal Inference in Political Science {#ch:causality}
+# A Bayesian Framework for Causal Inference  {#ch:causality}
 
 <!------- TO DO ---------
 - This might need to be chapter 2!!!! 
@@ -16,7 +16,33 @@
    when we include structural information?)
 ------------------------->
 
-I'm new!
+Before I employ the estimates of party-public ideology obtained in Chapter&nbsp;\@ref(ch:model), this chapter discusses a Bayesian framework for causal inference in political science. 
+This framework addresses two major themes in the empirical problems that I confront later in the project, among several other minor themes.
+
+First, this project views causal inference as a problem of posterior predictive inference
+Causal models are tools that enable inferences about missing data: the data that would be observed if a key independent variable could be set to a different value
+The unobserved data are "unobserved potential outcomes" in the Rubin causal framework or "counterfactual observations" in the Pearl framework.
+<!------- TO DO ---------
+- Rubin and Pearl cites
+------------------------->
+Regardless of the notational/semantic conventions employed, "Bayesian causal inference" is a modeling framework for structuring the inferences about the probability distribution of unobserved potential outcomes, having observed one set of potential outcomes
+In other words, which counterfactual data are plausible, given the observed data and a model relating the data to causal queries of interest? In this sense, the Bayesian approach to causal inference confronts our uncertainties about the "left-hand side" of our model
+
+
+Second, the Bayesian approach confronts our uncertainties about the "right-hand side" of the model as well
+Causal estimands (to use the Rubin terminology) are comparisons of potential outcomes are two hypothetical values of a treatment
+In many cases, these estimands are comparisons of a unit's outcome under an observed treatment against an unobserved treatment
+For this project, the treatment of interest---ideology in district-party-publics---is not directly observed
+It is instead only observed up to a probability distribution from a measurement model
+(To use potential outcomes notation, instead of observing $Y(\theta)$, we observe $Y(p(\theta))$)
+Bayesian probabilistic models provide machinery to describe causal queries when we have only a probabilistic understanding of the observed data as well as the unobserved data.
+
+This chapter unpacks these issues according to the following outline
+First, I provide a quick preview to the notation and terminology of two dominant approaches to causal inference in applied statistics: the "Rubin model" of potential outcomes and the "Pearl model" of _do_-calculus
+I then offer a Bayesian reinterpretation of these models, where unobserved potential outcomes/counterfactuals are characterized by probability distributions that are conditioned on the observed data
+This raises the daunting issue of prior specification for model parameters: how priors are inescapable for many causal claims, how priors can provide important structure to improve causal inferences, and practical advice for constructing and evaluating priors
+Finally, I provide examples of the Bayesian causal framework at work, highlighting how priors contribute to a causal study at different levels of abstraction.
+
 
 
 ```{r knitr-03-causality, include = FALSE, cache = FALSE}
@@ -35,15 +61,12 @@ library("patchwork")
 ```
 
 
-## General Orientation Toward Causal Inference
+## Models of Causal Inference
 
-Taboo against explicit causal inference, (Grosz, Rohrer, Thoemmes)
-
-Whatever the Hernán (2018) article says
-
-The point of causal inference isn't to shame observational studies away from making causal claims. The point is to clarify which designs and assumptions enable certain causal claims and which do not.
+Intro Rubin and Pearl models.
 
 Strictly speaking, causality is never observed. It is only inferred with the help of assumptions.
+
 
 
 ## The Meaning of Parameters in Design and Estimation
