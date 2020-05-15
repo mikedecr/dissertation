@@ -8,6 +8,8 @@
 
 
 % --- type, text, math, in/out encoding -----------------------
+
+\usepackage{parskip}
 \usepackage{microtype}
 
 % minion pro loads textcomp, MnSymbol, amsmath
@@ -15,7 +17,7 @@
 
 
 \usepackage[lf, mathtabular, minionint]{MinionPro} % serif
-\usepackage{MyriadPro}                             % sans family
+\usepackage{sourcesanspro}                             % sans family
 \usepackage[varqu, scaled = 0.95]{zi4}             % mono w/ straight quotes
 
 % if minion and/or myriad fail, load these
@@ -82,9 +84,9 @@
 \renewcommand{\abstractname}{}    % clear the title
 \renewcommand{\absnamepos}{empty} % originally center
 
-\usepackage[rm, small, sc]{titlesec}
-\titleformat*{\subsection}{\itshape}
-\titleformat*{\paragraph}{\itshape}
+\usepackage[small]{titlesec}
+% \titleformat*{\subsection}{\itshape}
+% \titleformat*{\paragraph}{\itshape}
 
 
 % --- user commands -----------------------
@@ -120,64 +122,151 @@
 
 \section*{Rationale}
 
-This document lays out a revised chapter outline for my dissertation. My original prospectus included a proposed chapter examining whether local partisan ideology mediates the relationship between redistricting and candidate extremism in House districts. I propose that this chapter be replaced with a chapter that previews and explores a Bayesian approach to causal inference in political science, which will then be implemented in the final two empirical chapters of the thesis.
+This document lays out a revised chapter outline for my dissertation
+My original prospectus included a proposed chapter examining whether local partisan ideology mediates the relationship between redistricting and candidate extremism in House districts
+I propose that this chapter be replaced with a chapter that discusses a Bayesian framework for causal inference in political science, which will then be implemented in the final two empirical chapters of the thesis
+Below is an outline for the chapter-by-chapter content of the dissertation, including a lengthier discussion of the proposed Chapter 3.
 
-I am proposing this change for two key reasons. First, the redistricting chapter presents heavy problems for a thesis that is already technically complex. In particular, if the local partisan ideology estimates are generated for district-party groups for a fixed redistricting cycle, then there are no changes in local ideology that don't occur alongside redistricting (other than edge cases such as states with only one district, which provide no leverage on the redistricting question anyway). Without creating dynamic within-decade measures of local ideology, which may not be feasible, the only way to separate the variation in districting would be to create some measure of the \emph{extent} of redistricting. This would be a technical feat befitting a separate project entirely. 
 
-Second, if the dissertation is a record of my training and original contributions field in graduate school, these are better represented by a chapter on a Bayesian approach to causal inference. I have focused much of my recent non-dissertation energy on understanding causal inference methods through a Bayesian lens, and it would be rewarding for this work to culminate as a central contribution in my dissertation.
-
-Below is an outline for the chapter-by-chapter content of the dissertation, including a lengthier discussion of the revised Chapter 3.
 
 \section{Introduction and Argument}
 
 \begin{itemize}
-  \item Discussion of popular theory of primaries, key predictions, and the theoretical and empirical tenuousness of existing studies of primary representation
-  \item Theoretical ramifications for not observing local partisan preferences; what we can and cannot conclude about the conventional wisdom
-  \item Framing the value of the causal approach and Bayesian angle
+  \item Overview literature's view of primary elections in the representation of constituency views and ideological positioning of candidates, especially thinking about primaries' role in ``non-median'' candidate positioning and partisan polarization.
+  \item Theoretical and empirical pushback against this view of primaries: characterization of primary elections as a ``strategic positioning dilemma'' for candidates makes big assumptions voters' information in intra-party contests
+  Empirically, the literature generally finds that candidate extremism is \emph{not} greatly affected by introduction of primary elections or the strictness of primary institutions in states.
+  \item Existing studies do not observe key construct for testing the positioning dilemma view of primaries: the preferences of local parties (``district-party public'' ideology).
+  \item Overview methodological contributions of the thesis: new measurement model of district-party ideology and stronger emphasis on causal assumptions in the application of the new measures.
 \end{itemize}
 
 \section{Group IRT Model}
 
 \begin{itemize}
-  \item Spatial utility model that underlies the IRT model
-  \item Description of the static IRT model for policy ideology in district-party groups
-  \item Model parameterizations for efficient computation, in-depth discussion and checking of prior distributions, model testing and checking
-  \item Dynamic ideal point model extension
-  \item Data, coding, estimation details
-  \item Descriptive analysis of estimates
+  \item Describe spatial utility model that underlies the IRT model.
+  \item Describe group IRT model for district-party public ideology.
+  \item Thorough discussion of computational implementation features that are elided from many Bayesian ideal point publications: model parameterizations to ensure valid estimation, exploration of prior distributions, simulation-based calibration of the model's precision.
+  \item Description of survey data and estimation details.
+  \item Descriptive analysis of ideal point estimates.
 \end{itemize}
 
+ 
+\section{Bayesian Framework for Causal Inference}
 
-\section{Introduction to Bayesian Causal Inference}
+The empirical applications of the new ideal points are billed as ``causal'' questions, but political science has little precedent for causal inference from a Bayesian perspective.
+The purpose of this chapter is to justify the approach used in the final empirical analyses.
+I propose to lay out a notational framework for causal inference from a Bayesian perspective, an argument for the value of such an approach to causal inference, advice for implementing Bayesian causal estimation in ways consistent with the argued advantages, and brief replications that exemplify how Bayesian approaches enhance existing causal studies.
 
-The empirical applications of new ideal points are causal queries that are unsuited to a standard regression approach. We are interested in how local partisan ideology affects primary candidate ideal points and primary election outcomes, holding constant factors such as the presidential vote in the district that are post-treatment to local ideology. As a result, the project requires methods that are more complicated than controlling for the presidential vote in a regression to identify the causal effect even under a selection-on-observables identification assumption. There isn't much precedent in political science for using these methods in a Bayesian paradigm, however, so this chapter will justify and discuss the Bayesian approach as a general matter for political science and as a specific benefit for this project. The discussion can follow these points (many similar to my working paper \href{https://github.com/mikedecr/causal-bayes/blob/master/writing/causal-bayes-paper.pdf}{here}):
+Argument:
 \begin{itemize}
-  \item Causal inferences are inferences about a causal \emph{parameter} (such as a treatment effect $\tau$), and so the researcher's question usually implies a posterior inference, $p(\tau \mid \mathbf{y})$, even if the researcher explicitly prefers frequentist hypothesis testing.
-  \item If we admit that causal queries are inferences about parameters given data, $p(\tau \mid \mathbf{y})$ is commonly misspecified if we give $\tau$ a flat prior. There is no one ``correct'' prior, but Bayesian methods provide methods to evaluate the robustness of an inference to the choice of prior.
-  \item The Bayesian approach to causal inference implies a more general potential outcomes model where a causal effect $\tau$ is represented with a probability distribution. An unobserved potential outcome $\tilde{y}_{i}$, being a function of the causal effect, is also represented as probability distribution that marginalizes over the posterior distribution for the causal effect: $p(\tilde{y}_{i} \mid \mathbf{y}) = \int p(\tilde{y}_{i}, \tau \mid \mathbf{y}) \mathrm{d}\tau$. This is an important contribution from \textcite{rubin:1978:bayesian} that has been almost entirely absent from causal inference in political science.
-  \item Many causal models are \emph{structural} models for parameters that require proliferated uncertainty. This is natural for Bayesian approaches, which deliver a joint posterior distribution for all model parameters.
-  \item Bayesian priors expose how model parameterization can complicate even ``agnostic'' causal estimation methods because noninformative priors may yield different prior densities depending on the chosen parameterization of otherwise equivalent likeloods. For example, in a randomized experiment with a binary treatment, estimating the mean in each group with flat (but proper) priors implies a non-flat prior on the treatment effect.\footnote{
-    For example, the probability distribution for the difference between two uniform random variables has a triangular shape.
+  \item Why a Bayesian approach? There are ``right-hand side'' and ``left-hand side'' arguments.
+  On the right, our key independent variable (the district-party ideal point) is observed only up to a probability distribution, not observed exactly.
+  As a result, the potential outcomes of interest (capital $Y$) don't fit a conventional causal model: we observe some $Y(p(\theta))$%
+  \footnote{
+    The notation here could be improved.
   }
-  This differs from a parameterization that contains a treatment effect parameter to which the researcher assigns a flat prior. Insofar as causal inference is interested in $p(\tau \mid \mathbf{y})$, the issues with parameterization are not obviated by non-Bayesian estimation, only hidden.
-  \item One attractive current in contemporary causal inference is an interest in nonparametric point estimators with fewer modeling assumptions. This current can be incorporated into a Bayesian paradigm without additional assumptions on the point estimator by specifying a hierarchical prior for the ``true'' parameter, from which the point estimate is a draw. For instance, if some mean $\bar{y}$ is nonparametrically calculated, and we can sustain an assumption that about the distribution of $\bar{y}$, such as $\bar{y} \sim \mathrm{Normal}\left(\mu, \sigma \right)$ which is required to obtain a $p$-value (but see randomization inference, \cite{keele-et-al:2012:RI}), we can use such a prior combine information from a nonparametric point estimator with extra-model information. This is essentially the approach used in \textcite{meager:2019:micro-credit}'s Bayesian meta-analysis of micro-credit expansions in development economics and in \textcite{rubin:1981:eight-schools}'s classic ``eight schools'' test prep experiment.
-  \item For this specific project, observed outcomes are a function of local ideology, which estimated only up to a posterior probability distribution (from Chapter 2). As such, our observed potential outcomes are not $y(\theta)$ so much as $y(p(\theta))$, which is to say the observed treatment status has measurement error that belongs in the model. As such, the effect of intervening on $\theta$ to calculate an unobserved potential outcome $p\left(y\left(\theta'\right)\right)$ is itself an integral over the imprecisely estimated treatment effect \emph{and} the imprecisely estimated observed treatment status. 
+  instead of $Y(\theta)$.
+  As a result, an individual causal effect isn't the difference $Y(\theta) - Y(\theta')$ for some counterfactual $\theta' \neq \theta$.
+  It is the \emph{distribution} that would result by pushing the distribution $p(\theta)$ through that difference: $\displaystyle \int p(Y(\theta) - Y(\theta'))d\theta$.
+  Restated: we're uncertain about the causal effect of an intervention on $\theta$ because we don't actually know which $\theta$ we observed.
+  \item On the left-hand side are the more familiar arguments in favor of a Bayesian approach.
+  The goal of a causal model is to predict counterfactuals---data that we do not observe---by way of causal estimands, notably average treatment effects.
+  The frequentist approach to null hypothesis significance testing (NHST) does not accomplish this inferential goals sufficiently because the focus of its inference is neither the causal parameter itself nor counterfactual data.
+  Instead, the target of inference is the plausibility of the \emph{observed data} given an assumed (null) causal parameter.
+  The plausibility of different a particular causal effect is not characterized directly, so the plausibility of counterfactuals is not characterized either.
+  \item There is no single modeling tradition in causal inference across disciplines, but causal inference political science is interested in \emph{agnostic} modeling: making as few modeling assumptions as possible.
+  The Bayesian approach can fit in this framework in some key ways, particularly in the use of ``nonparametric models'' where the model for the response surface uses a prior that supports any continuous function.
+  \item There are other areas where the tensions invite more confrontation, namely the hesitation from non-Bayesians that priors must be specified at all.
+  I argue that priors are an inescapable reality of any causal analyses that has some likelihood-based component, as the likelihood model is simply a special case of the Bayesian model with a very specific but impossible joint prior over the model parameters.
+  I support this argument by highlighting the issue of \emph{reparameterization}.
+  A model with likelihood function $\mathcal{L}(y; \alpha)$ parameterized in terms of $\alpha$ might have an equivalent but reparameterized likelihood function $\mathcal{L}'(y; \beta)$ in terms of $\beta$ (where $\beta \neq \alpha$).
+  One such example is a binomial likelihood function that can be equivalently parameterized by a probability parameter, an odds parameter, or a log-odds parameter.
+  Although the likelihoods may be equivalent for the same set of data, specifying flat priors over each individual parameter would not achieve equivalent posterior distributions.
+  This is because ``noninformative'' priors in one parameterization can be ``informative'' under a different parameterization \parencite{gelman-et-al:2017:prior-likelihood}.
+  For example, a flat $\mathrm{Beta}(1, 1)$ prior for the probability parameter is equal to a $\mathrm{Logistic}(0, 1)$ prior for the log-odds, although the latter would strike any onlooker as an informative prior at face value.
+  Even though the skepticism of priors in favor of ``data-driven'' inference is admirable, it is unfortunately a false hope.
+  Non-flat priors are silently at work in many causal modeling endeavors even if researchers hope to avoid them.
+  As a result, it's important to explore where prior choices can be consequential and which prior choices are sensible in context.
 \end{itemize}
 
-
-\section{Local Ideology and Primary Candidate Positioning}
-
+Notation:
 \begin{itemize}
-  \item Goal: estimate the effect of local partisan ideology on primary candidate positions (CF scores)
-  \item DAGs to show causal structure. We want to hold the general election environment fixed (via past presidential vote), but local partisan ideology affects primary candidate ideal and general election voting.
-  \item If presidential vote is an intermediate confounder, estimating either the natural or controlled direct effect of local partisan ideology can be done with a demediation method such as structural nested mean models, of which the sequential-$g$ method is a special case \parencite{acharya2016explaining}.
+  \item If causal models are models for counterfactuals, this implies a probability model for unobserved data $\tilde{Y}(\theta')$ given causal parameters $\tau$.
+  \begin{align}
+    p(\tilde{Y}(\theta')) 
+      &= \int p(\tilde{Y}(\theta'), \tau)d\tau \\
+      &= \int p(\tilde{Y}(\theta') \mid \tau)p(\tau)d\tau
+  \end{align}
+  The second line shows how the unobserved data are conditional on $\tau$, letting our prior uncertainty about $\tau$ affect our prior uncertainty about $\tilde{Y}(\theta')$ by marginalizing over $\tau$.
+  This is the ``prior predictive distribution'' for $\tilde{Y}(\theta')$, also called the prior ``pushforward'' distribution (because we are pushing prior uncertainty about $\tau$ forward through to new data $\tilde{Y}(\theta')$).
+  We generate estimates of causal parameters by fitting the model to observed data $\mathbf{Y}$.
+  Mechanically, this is Bayesian updating for the distribution of $\tau$.
+  \begin{align}
+    p(\tau \mid \mathbf{Y}) &= \frac{p(\mathbf{Y} \mid \tau)p(\tau)}{p(\mathbf{Y})}
+  \end{align}
+  By fitting the model to observed data, this also updates the probability distribution of the unobserved data.
+  \begin{align}
+    p(\tilde{Y}(\theta') \mid \mathbf{Y}) 
+      &= \int p(\tilde{Y}(\theta'), \tau \mid \mathbf{Y}) d\tau \\
+      &= \int p(\tilde{Y}(\theta') \mid \tau, \mathbf{Y})p(\tau \mid \mathbf{Y})d\tau
+  \end{align}
+  Restated: although the distribution of $\tilde{Y}(\theta')$ is conditional on $\tau$ as before, the distribution of $\tau$ is updated to reflect the information obtained from the observed data $\mathbf{Y}$.
+  This specifies the \emph{posterior} predictive distribution for the counterfactual $\tilde{Y}(\theta')$ as a function of updated model parameters.
+  This is similar to Rubin's Bayesian interpretation of his own causal model, where causal inference is merely the imputation of missing data and so fits naturally in a Bayesian framework \parencite{rubin:1978:bayesian,rubin:2005:potential-outcomes}.
+  The origins of this framework are quite old(!), but its appearance in political science has been mostly for computational convenience rather than its theoretical appeal (e.g.\ \cite{horiuchi2007designing}).
+  Other fields have taken stronger initiatives to explore Bayesian inference about causal \emph{hypotheses} \parencite{baldi-shahbaba:2019:bayesian-causality}, Bayesian \emph{estimation} of causal effects \parencite{hill:2011:bart, oganisian-roy:2020:bayes-estimation}, and Bayesian tools to rectify issues at the intersection of causal inference and machine learning  \parencite{hahn-et-al:2020:causal-bart}.
 \end{itemize}
 
-\section{Local Ideology and Primary Outcomes}
+Practical advice:
+\begin{itemize}
+  \item Responding to the above discussion of reparameterization and the issue of ``no correct prior,'' there are Bayesian workflow tools for checking the consequences of prior choices.
+  Namely prior predictive checks, evaluating the robustness of inferences to different prior choices, and so on (attempts to catalog and formalize these routines include \cite{gabry-et-al:2019:visualization} among others).
+  This expands the modeling toolkit to include routines that political science should be doing more routinely anyway, especially cross-validation to assess how priors affect out-of-sample predictive performance \parencite{vehtari-at-al:2017:loo-waic}.
+  \item Bayesian causal model enables the researcher to specify identification assumptions as priors.
+  Ignorability assumptions in multi-stage models imply uncorrelated errors from one estimation stage to the next.
+  Exclusion restrictions imply that all effects are mediated through a specific intermediary mechanism.
+  One approach to ``sensitivity testing'' these assumptions is to specify priors for the consequences of these assumptions, allowing the researcher to evaluate their causal inferences conditional on, or marginalizing over, prior values \parencite[section~5]{oganisian-roy:2020:bayes-estimation}.
+\end{itemize}
+
+Examples:
+\begin{itemize}
+  \item I have already explored Bayesian replications of regression discontinuity designs, meta-analysis of experimental findings, and structural causal models (causal mediation) in other writings.
+  The first two are features in an already-written \href{https://github.com/mikedecr/causal-bayes/blob/master/writing/causal-bayes-paper.pdf}{paper draft}, and I've experimented with a structural model for causal mediation in \href{https://mikedecr.github.io/post/bayes-mediation/}{blog posts}.
+  The causal mediation example could be augmented by sensitivity-testing the independence of errors assumption.
+  \item The RDD example in particular (replicating \cite{hall:2015:extremists}) exemplifies the issue of reparameterization mentioned earlier, since one non-Bayesian fix to the problem highlighted in the paper (logistic regression) raises questions about how best to specify the prior.
+  Specifically, while it's appealing to specify flat priors for the dependent variable at the discontinuity, this must be done with a $\mathrm{Logistic}(0, 1)$ prior for the  intercepts on the log-odds scale.
+  This highlights how ``flatness'' is only defined in reference to specific likelihood parameterization.
+  \item One other example I am considering is a simple experimental setting to show two things.
+  One, the choice to parameterize the estimation task as a difference-in-means or as a linear model with a treatment effect affects the implied prior for the treatment effect---i.e.\ even the ``simple example'' has issues that we must face.
+  Second, it can showcase how priors may be used to test the robustness of noisy experimental findings from low-powered settings.
+\end{itemize}
+
+\section{Candidate Positioning in Primary Elections}
 
 \begin{itemize}
-  \item Discrete choice modeling problem: local partisan groups choose a candidate as a function of candidate features (CF score)
-  \item Effects of fixed district-level features are statistically unidentifiable, but interactions between district features and candidate features can be identified. This implies a model where the effect of candidate ideology is conditioned by the local partisan ideology.
+  \item Goal: estimate the effect of district-party ideology on primary candidate positions (CF scores).
+  Do more ideologically polarized partisan constituencies affect the polarized positioning of primary candidates?
+  \item To demonstrate the value, compare to the effect of district partisanship (proxied in the literature with district presidential vote).
+  \item Contribution over existing literature: even though I plan to use a similar ``selection on observables'' identification strategy as other studies, my approach will go much further to examine how this assumption interacts with the assumed causal structures in the data and the modeling assumptions of the estimation method.
+  \item More specifically, I use DAGs to highlight the problematic causal structure: to demonstrate the effect of district-party ideology ``above and beyond'' district partisanship, we want to hold the presidential vote fixed.
+  However, district-party ideology should affect the district presidential vote, which makes the presidential vote an intermediate confounder with the potential of introducing post-treatment/collider bias in the estimated effect of district-party ideology.
+  
+  \item Use a structural nested mean method (sequential-$g$) to subtract the mediating effect on the outcome data (``de-mediation'') \parencite{acharya2016explaining}.
+  This is commonly done in political science using a linear regression approach, but the causal model does not require regression per se.
+  In the interest of expanding my toolkit for life after graduate school, I propose to implement this routine using Bayesian Additive Regression Trees to flexibly estimate causal effects without strict assumptions about linearity and non-interactions \parencite{hill:2011:bart, green-kern:2012:bart, hahn-et-al:2020:causal-bart}.
+  
+\end{itemize}
+
+\section{Local Ideology and Primary Candidate Choice}
+
+\begin{itemize}
+  \item Goal: estimate the effect of district-party ideology on primary election outcomes.
+  Do ideologically polarized constituencies nominate more polarized candidates over the moderate candidates?
+  \item This is a discrete choice modeling problem: we consider elections where constituencies elect candidates from a choice set of two or more candidates.
+  Standard econometric approaches use models that identify coefficients for ``choice'' features (candidate ideology) but not ``chooser'' features (ideology of the district-party).
+  I get around this by considering the interaction of local ideology and candidate ideology, which can be identified because it varies across choices within a choice set.
+  
+  \item The exact setup of this model still needs work: my attempts at this so far use linear interactions which I find undesirable and sort of nonsensical for the two-way continuous interactions being considered.
+  I am researching GAM approaches to handle this continuous interaction more flexibly, especially a Gaussian Process model that fits the Bayesian framework well and has been applied to other areas of flexible causal modeling in political science (\href{https://www.youtube.com/watch?v=6rb5upKwqB4}{for example}).
 \end{itemize}
 
 % \newpage
