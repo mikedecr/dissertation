@@ -1,8 +1,13 @@
 # ----------------------------------------------------
-#   Attempt to link candidate databases
-#   May 4.
+#   Create one database for empirical applications 
+#   Began May 4, 2020
 # ----------------------------------------------------
 
+# big points:
+# 1) link sources of candidate data
+# 2) link to IRT estimates (draws and summaries)
+
+# --- Notes on candidate data ---
 # problem: 
 # We want Bonica scores from the DIME
 # but Boatright data has a lot of helpful things:
@@ -28,22 +33,48 @@
 library("here")
 library("magrittr")
 library("tidyverse")
+# we work with the raw IRT model
+library("broom") 
+library("tidybayes")
 library("boxr"); box_auth()
 
 
+# update symlink stuff
+source(here::here("code", "helpers", "call-R-helpers.R"))
+
 # box: data/_clean
+#      for outputting linked candidate/IRT data
 box_dir_clean <- 112745864917
+
 
 
 
 # ---- data -----------------------
 
+# MCMC
+mcmc <- 
+  here("data", "mcmc", "dgirt", "run", "samples", "2020-01-13-mcmc-homsk-2010s.RDS") %>%
+  readRDS()
+
+
+# tidy pre-stan data
+pre_model_data <- 
+  readRDS(
+    here("data", "mcmc", "dgirt", "run", "input", "master-model-data.RDS")
+  ) %>%
+  print()
+
+
+# boatright candidates
 bc_raw <- 
   haven::read_dta(
     here("data", "elect-primary", "boatright", "boatright-cand-level.dta")
   ) %>%
   print()
 
+# DIME, full data
+# has DYNAMIC cfscore
+# no primary pct
 dime_all_raw <- 
   rio::import(
     here("data", "dime-v3", "full", "dime_recipients_all_1979_2018.rdata")
@@ -51,6 +82,9 @@ dime_all_raw <-
   as_tibble() %>%
   print()
 
+# DIME, congressional elections
+# STATIC cfscore only
+# contains primary pct
 dime_cong_raw <- 
   read_csv(
     here("data", "dime-v3", "cong", "dime_v3_cong_elections.csv"),
@@ -116,6 +150,7 @@ dime_cong_raw
 
 # ---- clean identifiers for merge -----------------------
 
+# filter/clean congressional DIME
 dime_cong <- dime_cong_raw %>%
   rename(state_dist = district) %>%
   mutate(
@@ -125,7 +160,25 @@ dime_cong <- dime_cong_raw %>%
   filter(cycle %in% c(2012, 2014, 2016)) %>%
   print()
 
-
+# trim ALL data to match congress.
+# keep RID for matching
+# we only care about dynamic CFscore from this dataset
+dime_all_slim <- dime_all_raw %>%
+  filter(seat == "federal:house") %>%
+  filter(cycle %in% unique(dime_cong$cycle)) %>%
+  filter(cycle == fecyear) %>%
+  filter(state %in% state.abb) %>%
+  transmute(
+    cycle, 
+    state_abb = state,
+    district_num = parse_number(district),
+    bonica_rid = bonica.rid, 
+    recipient_cfscore_dyn = recipient.cfscore.dyn
+  ) %>%
+  mutate(cycle = parse_number(cycle)) %>%
+  filter(district_num >= 1) %>%
+  distinct() %>%
+  print()
 
 
 # decide what to keep?
@@ -271,12 +324,13 @@ bc_agg_merge %>%
 #   DIME pre-merge
 # ----------------------------------------------------
 
+# merge dynamic scores from ALL
 dime <- dime_cong %>%
   rename(state_abb = state) %>%
   filter(party %in% c("D", "R")) %>%
+  tidylog::left_join(dime_all_slim) %>%
   print()
 
-dime %>% count(state_abb)
 
 # ----------------------------------------------------
 #   merge boatright and DIME
@@ -298,6 +352,12 @@ dime_bc <-
     x = dime,
     y = bc_agg_merge
   ) %>%
+  mutate(
+    party_num = case_when(
+      party == "D" ~ 1,
+      party == "R" ~ 2
+    )
+  ) %>%
   print()
 
 
@@ -315,13 +375,118 @@ dime_bc %>%
 
 
 
+
+
+
+
+
+# ----------------------------------------------------
+#   merge IRT ideal points
+# ----------------------------------------------------
+
+# summarizing IRTs should be earlier in the workflow:
+
+
+# remove redundancy in pre-model group data (i.e. remove items)
+dpt_model_data <- pre_model_data %>%
+  transmute(
+    group = as.numeric(group), 
+    state_abb, 
+    state_num = as.numeric(state), 
+    district_num,
+    party_num = as.numeric(party)
+  ) %>%
+  distinct() %>%
+  print()
+
+# full frame of tidy MCMC draws (not necessary?)
+mcmc_draws <- tidy_draws(mcmc) %>% print()
+
+n_draws <- 1000
+
+names(mcmc_draws)
+
+
+
+# can always get the quantile intervals later
+# IRT means and draws (nested) for each group
+theta_draws <- mcmc_draws %>%
+  gather_draws(theta[group], n = n_draws, seed = 20200513) %>%
+  ungroup() %>%
+  select(group, .draw, theta = .value) %>%
+  group_by(.draw) %>% 
+  mutate(
+    theta_rescale = (theta - mean(theta)) / sd(theta)
+  ) %>%
+  group_by(group) %>%
+  nest("theta_draws" = -group_vars(.)) %>%
+  mutate(
+    theta_mean = map_dbl(theta_draws, ~ mean(.x$theta)),
+    theta_mean_rescale = map_dbl(theta_draws, ~ mean(.x$theta_rescale))
+  ) %>%
+  left_join(dpt_model_data, by = "group") %>%
+  print()
+
+# compare raw and rescaled thetas
+# (rescaling in each iteration)
+ggplot(data = theta_draws, aes(x = theta_mean,  y = theta_mean_rescale)) +
+  geom_point() +
+  geom_abline()
+
+
+# ---- merge IRT summary into covariates -----------------------
+
+
+full_raw <- left_join(dime_bc, theta_draws) %>%
+  print()
+
+# only a few non-matched candidates
+# probably errors in DIME district number
+full_raw %>% 
+  filter(is.na(theta_mean)) %>%
+  print() %>%
+  count(state_abb, district_num, party) %>%
+  print(n = nrow(.))
+
+
+# ---- clean FULL data -----------------------
+
+full_data <- full_raw %>%
+  mutate(
+    incumbency = case_when(
+      Incum_Chall == "I" ~ "Incumbent", 
+      Incum_Chall == "C" ~ "Challenger", 
+      Incum_Chall == "O" ~ "Open Seat"
+    ),
+    rep_pres_vs = 1 - dem_pres_vs
+  ) %>%
+  print()
+
+
+
+
+
+
 # ----------------------------------------------------
 #   write data
 # ----------------------------------------------------
 
 # data/_clean
-box_write(dime_bc, "dime_x_bc-agg.RDS", dir_id = box_dir_clean)
+box_write(full_data, "candidates-x-irt.rds", dir_id = box_dir_clean)
 
+
+
+
+
+
+
+
+
+
+
+# ----------------------------------------------------
+#   holdover
+# ----------------------------------------------------
 
 
 
