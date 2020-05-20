@@ -301,6 +301,34 @@ pow_raw %>%
 
 
 
+
+# ----------------------------------------------------
+#   thomsen 
+# ----------------------------------------------------
+thom_raw <- 
+  here(
+    "data", "elect-primary", "thomsen_candidates", "PBdata_replication.dta"
+  ) %>%
+  haven::read_dta() %>%
+  print()
+# year, name, gender, party, state, district, 
+# cfscoresdyn, priuo, genuo, incumchall10, 
+# pripct2, priwin2, genwin2, genpct,
+# qual2, logcandreceipts, reppresvs2
+
+thom <- thom_raw %>%
+  select(-contains("dummy"), -contains("stcdyr2")) %>%
+  print()
+
+
+thom %>%
+  count(year, win = !is.na(priwin2), pct = !is.na(pripct2)) %>%
+  print(n = nrow(.))
+
+
+
+
+
 # ----------------------------------------------------
 #   Determine identifiers for merging
 # ----------------------------------------------------
