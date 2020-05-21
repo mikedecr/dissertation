@@ -26,38 +26,12 @@ model_output_dir <- 102977578033
 
 # ---- Data sources -----------------------
 
-# import MCMC
-mcmc <- 
-  here("data", "mcmc", "dgirt", "run", "samples", "2020-01-13-mcmc-homsk-2010s.RDS") %>%
-  readRDS()
-
-
-# tidy pre-stan data
-master_data <- 
-  readRDS(
-    here("data", "mcmc", "dgirt", "run", "input", "master-model-data.RDS")
-  ) %>%
-  print()
-
-
-
-# Bonica scores and other candidate features
-# do we not need this anymore if dynamic scores are in the FULL data?
-dime_all_raw <- 
-  rio::import(
-    here("data", "dime-v3", "full", "dime_recipients_all_1979_2018.rdata")
-  ) %>%
-  as_tibble() %>%
-  print()
-
-
-
 # combo of DIME (cong), BC aggregate, IRT samples
 full_data <- 
   read_rds(here("data", "_clean", "candidates-x-irt.rds")) %>%
   print()
 
-
+names(full_data)
 
 full_data %>%
   count(incumbency)
@@ -66,119 +40,114 @@ full_data %>%
 
 
 
+# ----------------------------------------------------
+#   bivariate comparisons
+# ----------------------------------------------------
+
+# ---- local ideology (Z) and vote share (M) -----------------------
+
+ggplot(full_data) +
+  aes(x = theta_mean_rescale, y = rep_pres_vs, color = party) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+ggplot(full_data) +
+  aes(x = rep_pres_vs, y = theta_mean_rescale, color = party) +
+  geom_point() +
+  geom_smooth(method = "lm")
 
 
-# ---- prep data -----------------------
+# ---- local ideology and CFscore -----------------------
+
+ggplot(full_data) +
+  aes(x = theta_mean_rescale, y = recipient_cfscore, color = party) +
+  geom_point() +
+  geom_smooth(method = "lm")  
+
+ggplot(full_data) +
+  aes(x = theta_mean_rescale, y = recipient_cfscore_dyn, color = party) +
+  geom_point() +
+  geom_smooth(method = "lm")  
 
 
-# dime <- dime_all_raw %>%
-#   mutate(
-#     cycle = parse_number(cycle),
-#     fecyear = parse_number(fecyear),
-#     district_num = parse_number(district),
-#     party = 
-#       case_when(
-#         party == 100 ~ 1,
-#         party == 200 ~ 2
-#       ),
-#     incumbency = case_when(
-#       Incum.Chall == "I" ~ "Incumbent", 
-#       Incum.Chall == "C" ~ "Challenger", 
-#       Incum.Chall == "O" ~ "Open Seat"
-#     ),
-#     district.pres.vs = 1 - district.pres.vs
-#   ) %>%
-#   rename_all(str_replace_all, "[.]", "_") %>%
-#   filter(
-#     seat == "federal:house",
-#     state %in% state.abb,
-#     is.na(district_num) == FALSE,
-#     party %in% c(1, 2),
-#     between(fecyear, 2012, 2016),
-#     fecyear == cycle,
-#     is.na(incumbency) == FALSE
-#   ) %>%
-#   select(
-#     state_abb = state, 
-#     everything(),
-#     -c(district, Incum_Chall)
-#   ) %>%
-#   # keep only matching state-dist
-#   semi_join(
-#     master_data %>%
-#       select(state_abb, district_num) %>%
-#       distinct()
-#   ) %>%
-#   mutate(
-#     recipient_cfscore_dyn = scale(recipient_cfscore_dyn)
-#   ) %>%
-#   print()
+# ---- vote share and CFscore -----------------------
+
+ggplot(full_data) +
+  aes(x = rep_pres_vs, y = recipient_cfscore, color = party) +
+  geom_point() +
+  geom_smooth(method = "lm")  
+
+ggplot(full_data) +
+  aes(x = rep_pres_vs, y = recipient_cfscore_dyn, color = party) +
+  geom_point() +
+  geom_smooth(method = "lm")  
 
 
-# dime %>% 
-#   count(statedist = str_glue("{state_abb}-{district_num}")) %>%
-#   print(n = nrow(.))
+
+# ---- local ideology and NOMINATE -----------------------
+
+ggplot(full_data) +
+  aes(x = theta_mean_rescale, y = dwnom1, color = party) +
+  geom_point() +
+  facet_wrap(~ incumbency) +
+  geom_smooth(method = "lm")
 
 
-# dime %>%
-#   group_by(party) %>%
-#   summarize(
-#     mean = mean(recipient_cfscore_dyn, na.rm = TRUE),
-#     sd = sd(recipient_cfscore_dyn, na.rm = TRUE)
-#   ) 
+# ---- nominate and CFscore -----------------------
 
+ggplot(full_data) +
+  aes(x = recipient_cfscore, y = dwnom1, color = party) +
+  geom_point() +
+  geom_smooth(method = "lm")  
 
-# # ---- tidy MCMC -----------------------
-
-# thetas <- master_data %>%
-#   select(
-#     region, state, district_num, district, group, party,
-#     prcntWhite:prcntUnemp,
-#     evangelical_pop:incomepcap
-#   ) %>%
-#   mutate(
-#     group = as.numeric(as.factor(group)),
-#     party = as.numeric(as.factor(party))
-#   ) %>%
-#   distinct() %>%
-#   full_join(
-#     mcmc %>%
-#       tidy() %>%
-#       filter(str_detect(term, "theta") == TRUE) %>%
-#       mutate(group = parse_number(term)) %>%
-#       rename(theta = estimate)
-#   ) %>%
-#   group_by(party) %>%
-#   mutate(
-#     party_rank = rank(theta)
-#   ) %>%
-#   ungroup() %>%
-#   mutate(
-#     theta = (theta - mean(theta)) / 
-#       sd(theta)
-#       # mean(c(sd(theta[party == 1]), sd(theta[party == 2])))
-#   ) %>%
-#   print()
+ggplot(full_data) +
+  aes(x = recipient_cfscore_dyn, y = dwnom1, color = party) +
+  geom_point() +
+  geom_smooth(method = "lm")  
 
 
 
 
-# # ---- join DIME and THETA -----------------------
+# ---- vote share and nominate -----------------------
 
-# full <- 
-#   left_join(
-#     dime, thetas, 
-#     by = c("state_abb" = "state", "district_num", "party")
-#   ) %>%
-#   print()
+ggplot(full_data) +
+  aes(x = rep_pres_vs, y = dwnom1, color = party) +
+  geom_point() +
+  geom_smooth(method = "lm")
 
 
-# # save raw DIME data for Rmd
-# box_write(
-#   full,
-#   "dime-with-means.RDS",
-#   dir_id = clean_data_dir
-# )
+# average ideal point, party x year x primary rules
+full_data %>%
+  group_by(primary_rules, cycle) %>%
+  nest() %>%
+  mutate(
+    model = map(
+      .x = data, 
+      .f = ~ {
+        try(
+          lm(recipient_cfscore_dyn ~ 0 + party, data = .x) %>% 
+          tidy(conf.int = TRUE)
+        )
+      }
+    )
+  ) %>%
+  filter(map_chr(model, ~ class(.x)[1]) != "try-error") %>%
+  unnest(model) %>%
+  ggplot(
+    aes(x = primary_rules, y = estimate, color = as.factor(cycle))
+  ) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.25)
+  )
+
+
+
+
+
+
+
+
 
 
 
@@ -210,7 +179,7 @@ box_write(
 
 
 
-?BART::wbart
+BART::wbart
 
 
 
@@ -270,7 +239,7 @@ full_data %>%
 
 
 # cycle fixed effects?
-naive_models <- full %>%
+naive_models <- full_data %>%
   # group_by(party) %>%
   group_by(party, incumbency) %>%
   # group_by(party, incumbency, cycle) %>%
@@ -280,8 +249,8 @@ naive_models <- full %>%
       data, 
       ~ lmer(
         recipient_cfscore_dyn ~ 
-          theta + (1 | district) +
-          district_pres_vs + # (1 | district_num) 
+          theta_mean_rescale + (1 | state_dist)
+          + rep_pres_vs 
           + as.factor(cycle)
           ,
         data = .x
@@ -291,8 +260,8 @@ naive_models <- full %>%
       data, 
       ~ lmer(
         recipient_cfscore_dyn ~ 
-          (1 | district) + 
-          district_pres_vs + # (1 | district_num) 
+          (1 | state_dist)
+          + rep_pres_vs
           + as.factor(cycle)
           ,
         data = .x
@@ -302,8 +271,8 @@ naive_models <- full %>%
       data, 
       ~ lmer(
         recipient_cfscore_dyn ~ 
-          theta + (1 | district) + 
-          # scale(district_pres_vs) + # (1 | district_num) 
+          theta_mean_rescale + (1 | state_dist)
+          # + scale(rep_pres_vs) + # (1 | district_num) 
           + as.factor(cycle)
           ,
         data = .x
@@ -311,6 +280,9 @@ naive_models <- full %>%
     )
   ) %>%
   print()
+
+
+
 
 naive_coefs <- naive_models %>%
   gather(key = spec, value = model, ends_with("model")) %>%
@@ -326,13 +298,13 @@ naive_coefs <- naive_models %>%
   mutate(
     term = case_when(
       str_detect(term, "theta") ~ "Partisan Base",
-      str_detect(term, "district_pres_vs") ~ "District\nPres. Vote"
+      str_detect(term, "rep_pres_vs") ~ "District\nPres. Vote"
     ) 
   ) %>%
   ungroup() %>%
   # filter(spec == "full_model") %>%
   mutate(
-    party = ifelse(party == 1, "Democrats", "Republicans")
+    party = ifelse(party == "D", "Democrats", "Republicans")
   ) %>%
   print(n = nrow(.))
 

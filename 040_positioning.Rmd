@@ -23,6 +23,10 @@ theme_dag <- theme_dag(base_family = font_fam)
 ```
 
 
+```{r}
+knit_exit()
+```
+
 Do primary elections effectively transmit citizens' policy preferences into government? For this to be true, we should expect that the policy ideology with a partisan constituency to affect the ideological positioning of candidates who run for that party's nomination. This chapter explores the effect of district-party public ideology on the candidates who run to represent that district-party.
 
 It is important to distinguish the influence of the district-party public from the influence of district _partisanship_. Does Senator Susan Collins (R-ME) have a reputation as a moderate Republican senator because the balance of a close numerical balance of Republican and Democratic voters in Maine? Or is it because her Republican constituency in Maine is relatively moderate compared to the Republican constituencies in other states represented by more conservative Senators? Although past research has been interested in the threat of primary challenges as a cause of ideological divergence between partisan legislators [for example @boatright:2013:getting-primaried; @hill:2015:nominating-institution; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems], many of these studies lacked the capability to observe the preferences within local partisan groups as a district construct from aggregate voting patterns. This chapter uses my new measures of district-party ideology to investigate this question in ways that previous research projects could not. 
@@ -44,13 +48,13 @@ Lit review:
 
 
 ```{r read-dime}
-dime <- read_rds(here("data", "clean", "dime-with-means.rds"))
+dime <- read_rds(here("data", "_clean", "dime-with-means.rds"))
 ```
 
 
 ```{r simple-regs}
 simple_regs <- 
-  read_rds(here("data", "model-output", "04-positioning", "simple-regs.rds"))
+  read_rds(here("data", "_model-output", "04-positioning", "simple-regs.rds"))
 ```
 
 
@@ -61,9 +65,13 @@ dime %>%
     is.na(theta) == FALSE
   ) %>%
   ggplot() +
-  aes(x = theta, y = recipient_cfscore_dyn) +
-  facet_grid(
-    str_glue("{cycle} Campaign") ~ fct_relevel(incumbency, "Incumbent")) +
+  aes(x = scale(theta), y = recipient_cfscore_dyn) +
+  # facet_grid(
+  #   str_glue("{cycle} Campaign") ~ fct_relevel(incumbency, "Incumbent")
+  # ) +
+  facet_wrap(
+    ~ str_glue("{cycle} Campaign")
+  ) +
   geom_point(
     aes(color = as.factor(party)), 
     size = 1, shape = 1, alpha = 0.5
@@ -89,12 +97,12 @@ dime %>%
     ),
     aes(label = text)
   ) +
-  geom_label(
-    data = simple_regs,
-    aes(x = (party - 2), y = -5 * (party - 1.5), 
-        label = str_glue("r = {number(sqrt(r.squared), accuracy = .01)}\nb = {number(estimate, accuracy = .01)}\nn = {df + df.residual}")),
-    color = "black", size = 3
-  ) +
+  # geom_label(
+  #   data = simple_regs,
+  #   aes(x = (party - 1.5), y = -5 * (party - 1.5), 
+  #       label = str_glue("r = {number(sqrt(r.squared), accuracy = .01)}\nb = {number(estimate, accuracy = .01)}\nn = {df + df.residual}")),
+  #   color = "black", size = 3
+  # ) +
   theme(legend.position = "none")
 ```
 
@@ -497,7 +505,7 @@ or, written as a probability distribution
 
 ```{r read-g}
 g_samples <- 
-  here("data", "model-output", "04-positioning", "pos-g-samples.rds") %>%
+  here("data", "_model-output", "04-positioning", "pos-g-samples.rds") %>%
   read_rds() %>%
   print()
 ```
