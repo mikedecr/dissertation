@@ -10,6 +10,12 @@
 #   https://www.ncsl.org/documents/Elections/Primary_Types_Table_2017.pdf
 #   as of 2016-06 (same data though, by my eyeball)
 
+# having done this halfway through:
+# NCSL it isn't clear if "closedness" refers to the legal landscape
+#   (i.e. the permissiveness that parties have to make their own rules)
+#   or to the party rules themselves.
+# Need to move from former to latter.
+
 library("here")
 library("magrittr")
 library("tidyverse")
