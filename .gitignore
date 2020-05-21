@@ -6,8 +6,11 @@
 # replications/
 # data/cces-cdf
 
-# start by hiding data to be safe
+# Hide data but not the readme.
+# This doesn't prevent real files from showing up in the folder.
+# wanted: a way to hide symlinks but not real files.
 data/*
+!data/README.md
 
 # set up a script to get data folders
 # !data/sim-dgirt/
@@ -199,7 +202,6 @@ render*.rds
 *.utf8.md
 tmp-pdfcrop-86118.tex
 Barry-ch-2.pdf
-revised-toc.pdf
 replications (decrescenzo@wisc.edu)
 tmp-pdfcrop-42213.tex
 present/apw-2020/apw-pos-2020_cache
@@ -208,3 +210,4 @@ present/apw-2020/libs
 apw-pos-2020.html
 xaringan-themer.css
 present/apw-2020/easy-data
+9999-bart.html
