@@ -299,7 +299,7 @@ ideo_party <- cces %>%
   print()
 ```
 
-```{r merge-dime-cces}
+```{r merge-dime-cces, eval = FALSE}
 ideo_merge <- 
   bind_rows(ideo_all, ideo_party) %>%
   left_join(dime) %>%
@@ -319,7 +319,7 @@ ideo_merge <-
 
 ```
 
-```{r plot-ideo-mean}
+```{r plot-ideo-mean, eval = FALSE}
 ideo_merge %>%
   filter(is.na(party_group) == FALSE) %>%
   ggplot() +
@@ -463,6 +463,8 @@ What do I propose?
 - We may not be able to break out of this
 - But we can improve on the (1) declaration of the causal query, (2) examination of which assumptions are required for which queries, and (3) be more cautious about what we can and can't say using the data and research designs that we have.
 
+
+
 ### Bayesian Causal Inference
 
 Where do we have to confront things
@@ -473,6 +475,14 @@ Where do we have to confront things
     - there are many possible scenarios that could explain the data that we see
     - the posterior distribution represents the plausibility of scenarios, after seeing the data.
 
+
+### Pragmatic Orientation Toward Causal Inference
+
+Taboo against explicit causal inference, (Grosz, Rohrer, Thoemmes)
+
+Whatever the Hernán (2018) article says
+
+The point of causal inference isn't to shame observational studies away from making causal claims. The point is to clarify which designs and assumptions enable certain causal claims and which do not.
 
 
 

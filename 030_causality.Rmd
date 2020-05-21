@@ -180,27 +180,166 @@ A general orientation toward priors in this dissertation:
 - Causal inference: "agnosticism" is something valuable generally
 
 
-### Priors and Likelihoods
+### The Inescapable Choice of Parameterization
+
+Priors are defined with respect to a model of the data (the likelihood). 
+<!------- TO DO ---------
+- discuss Betancourt, Simpson, Gelman
+------------------------->
+We may have priors about the way the world works, but we rarely have priors about model parameters. This is because parameters are an invention in the model. They are mathematical abstractions similar to points and lines, so they only exist when we translate the world into a mathematical language.
+
+One example of equivalent reparameterization arises with the different possible ways to write a linear regression model. The first form specifies $y_{i}$ for unit $i$ as a linear function of $x_{i}$ with a random error that is mean $0$ and standard deviation $\sigma$.
+\begin{align}
+  (\#eq:ols-noncenter)
+  y_{i} &= \alpha + \beta x_{i} + \varepsilon_{i}, & \text{where } \varepsilon_{i} &\sim \mathrm{Normal}\left(0, \sigma \right)
+\end{align}
+The second form, more common when viewing linear regression in the framework of generalized linear models, is to express $y_{i}$ directly as the random variable, with a conditional mean defined by the regression function and standard deviation $\sigma$.
+\begin{align}
+  (\#eq:ols-center)
+  y_{i} &\sim \mathrm{Normal}\left( \alpha + \beta x_{i},\sigma\right)
+\end{align}
+Algebraically, these two models are identical. The difference is only a matter of which component has the distributional assumption. In Equation&nbsp;\@ref(eq:ols-noncenter), the distribution is assigned to $\varepsilon_{i}$, so $y_{i}$ is a random variable only by way of $\varepsilon_{i}$. In Equation&nbsp;\@ref(eq:ols-center), we assign the distributional assumption directly to $y_{i}$, bringing the regression function into the mean rather than "factoring it out" of the distribution.
+
+```{r normal-factoring}
+normal_n <- 500
+normal_mu <- 4
+normal_sd <- 2
+```
+
+```{r plot-normal-factoring, include = TRUE, fig.cap = "Demonstration of centered and non-centered parameterizations for a Normal distribution. The non-centered parameterization is statistically equivalent, but the location and scale are factored out of the distribution."}
+set.seed(0987)
+tibble(
+  y1 = rnorm(n = normal_n, mean = normal_mu, sd = normal_sd),
+  y2 = normal_mu + normal_sd * rnorm(n = normal_n, mean = 0, sd = 1)
+) %>%
+  pivot_longer(
+    cols = everything()
+  ) %>%
+  ggplot() +
+  aes(x = value, color = name) +
+  # geom_vline(
+  #   xintercept = c(2, 4, 6),
+  #   color = "gray"
+  # ) +
+  # geom_hline(
+  #   yintercept = c(pnorm(-1), pnorm(0), pnorm(1)),
+  #   color = "gray"
+  # ) +
+  stat_ecdf(size = 1) +
+  coord_cartesian(
+    xlim = c(normal_mu - 2 * normal_sd, normal_mu + 2 * normal_sd)
+  ) +
+  scale_x_continuous(
+    breaks = seq(-10, 10, normal_sd)
+  ) +
+  labs(
+    title = str_glue(
+      "Empirical CDF of Normal({normal_mu}, {normal_sd}) Samples"
+    ),
+    subtitle = str_glue(
+      "{normal_n} Draws from Centered and Non-Centered Distributions"
+    ),
+    x = TeX("Random Variable $\\nu$"),
+    y = "ECDF"
+  ) +
+  scale_color_manual(values = c(primary, secondary)) +
+  theme(legend.position = "none")
+```
+
+The linear regression context is one context where the choice of parameterization appears. These two parameterizations are typically called the "centered" and "non-centered" parameterization for a Normal distribution. In the centered parameterization, the random variable is drawn from a distribution "centered" on a systematic component, whereas the non-centered distribution factors out any location and scale information from the distribution, such that the only remaining random variable is a standardized variate. The equations below describe a Normal variable $\nu$ with mean $`r normal_mu`$ and standard deviation $`r normal_sd`$.
+\begin{align}
+  \text{Centered Parameterization:} && \nu &\sim \mathrm{Normal}(`r normal_mu`, `r normal_sd`) \\
+  \text{Non-Centered Parameterization:} && \nu &= `r normal_mu` + `r normal_sd`z, & \text{where } z &\sim \mathrm{Normal}(0, 1)
+\end{align}
+To demonstrate that these parameterizations are equivalent, I simulate $`r normal_n`$ simulations from each parameterization and plot their empirical cumulative distribution functions alongside each other in Figure&nbsp;\@ref(fig:plot-normal-factoring). Because the distributions are the same, the empirical CDFs are identical except for random sampling error. 
+
+```{r, include = TRUE, fig.width = 10, fig.height = 2, out.width = "100%", fig.cap = "A spectrum of attitudes toward priors. "}
+tibble(
+  x = c(0.5, 2, 3.5),
+  y = 1,
+  label_head = c(
+    "Minimalist Prior",
+    "Pragmatic Prior",
+    "Principled Prior"
+  ),
+  label_body = c(
+    "Priors are nuisances,\nmerely facilitate inference/MCMC",
+    "Priors are helpful:\nstructural info, regularization",
+    "Priors ensure coherence,\nencode beliefs & hypotheses"
+  )
+) %>%
+  ggplot() +
+  aes(x = x, y= y) +
+  geom_text(
+    aes(y = 0.75, label = label_head),
+    vjust = 0,
+    fontface = "bold"
+  ) +
+  geom_text(
+    aes(y = 0.75, label = label_body),
+    vjust = 1.5
+  ) +
+  annotate(
+    geom = "segment",
+    arrow = arrow(
+      angle = 30, length = unit(0.25, "inches"), ends = "both", type = "open"
+    ),
+    x = 0, xend = 4, y = 1, yend = 1
+  ) +
+  annotate(
+    geom = "text",
+    x = 0, y = 1, hjust = 1.1,
+    label = "Less Informative"
+  ) +
+  annotate(
+    geom = "text",
+    x = 4, y = 1, hjust = -0.1,
+    label = "More Informative"
+  ) +
+  coord_cartesian(ylim = c(0.25, 1.25), xlim = c(-1, 5)) +
+  theme_void()
+```
+
+Problems of beliefs:
+
+- No degree of belief.
+- Parameterization makes this too challenging.
+- Prior might change depending on what I ate for lunch. 
+
+
+Problems of nuisance prior
+
+- parameterization gets you again
+- the MLEs are unstable, overfit
+- make the regularization argument in-sample
+
+
+Pragmatic view of priors
+
+- we're between full information and nuisance prior
+- Weak information: structure, regularization, identification
+- Structural information about parameters
+- regularization toward zero (L1, L2), learning by pooling
+- stabilizing weakly identified parameters, separation, etc.
+
+
+Parameters are a _choice_. 
+
+- They are part of the _rhetoric_ of a model. Sometimes we make pragmatic choices (something is easy to give an independent prior to, but independence isn't always valuable per se). Sometimes we make principled choices (normality, laplace, etc). 
+- They deserve scrutiny (else just "excrete your posterior") and are a part of the model that you should check and diagnose. 
+- They aren't merely a nuisance because we can use them to our benefit, 
+- sometimes when we parameterize a problem to reveal easier things to place convenient priors on
+<!------- TO DO ---------
+- Gelman "Parameterization" paper: parameterization for convenience often reveals a new family of models. For Bayesian inference, it reveals a new family of priors. For _causal_ inference, we should pay careful attention to the way parameterization bears on the priors that we do and do not feel comfortable using, and the way that parameterization presents opportunities to improve on other work.
+------------------------->
 
 
 
 
 
+### Parameterization Highlights the Incoherence of Flat Priors
 
-
-### Likelihood Parameterization and the Incoherence of Flatness
-
-
-Gelman "Parameterization" paper: parameterization for convenience often reveals a new family of models. For Bayesian inference, it reveals a new family of priors. For _causal_ inference, we should pay careful attention to the way parameterization bears on the priors that we do and do not feel comfortable using, and the way that parameterization presents opportunities to improve on other work.
-
-
-Priors on the _world_, not about parameters.
-
-
-Parameters are themselves a _choice_. 
-
-- parameterization exposes some structures that are easier to specify priors for than others
-
+The primary philosophical resistance to Bayesian inference is the need to set a prior. Often researchers wish to sidestep this choice altogether, preferring a "flat" prior that prefers all parameters equally.
 
 The incoherence of flatness: 
 
@@ -290,9 +429,9 @@ Although the treatment effect $\beta$ from Equation&nbsp;\@ref(eq:diff-means-exa
 
 
 
-### Structural Priors and Weak Information
+### Pragmatic Priors for Causal Inference
 
-Bounds, Hierarchy
+Structure (bounds), regularization (L1, L2), hierarchy
 
 
 
