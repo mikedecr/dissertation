@@ -1,0 +1,115 @@
+---
+title: What is BART
+author: Michael G. DeCrescenzo
+date: | 
+  `r format(Sys.time(), '%B %d, %Y')` 
+bibliography: assets-bookdown/thesis.bib
+---
+
+```{r eval = FALSE, include = FALSE}
+rmarkdown::render("9999-bart.Rmd", output_format = "bookdown::html_document2")
+```
+
+$\newcommand{\ind}[0]{\perp \!\!\! \perp}$
+
+
+
+# Machine Learning in Causal Inference
+
+Causal inference in political science is often associated with efforts to "simplify" a modeling problem by eliminating confounding variables through _research design_ (e.g. experiments, instrumental variables, regression discontinuity, difference-in-differences). For this reason, the use of machine learning methods can seem like unnecessary technology that won't solve fundamental problems of confounding and research design.
+
+This may be true for some circumstances, but in the general case of confounding, machine learning methods can be a valuable resource for researchers whose estimation requires the estimation of unknown functions. For instance, consider a case where outcome $Y$ is a function of treatment $Z$, but variables $X$ confound the causal relationship of $Z \rightarrow Y$. In a situation like this, the causal effect of setting $Z$ to $z$ vs. some counterfactual $z'$ is _nonparametrically identified_ if we condition on $X$.
+\begin{align}
+  (\#eq:PO-CATE)
+  Y(z), Y(z') \ind Z \mid X
+\end{align}
+How do we condition on $X$? It is common in political science to view "conditioning" as nearly synonymous as "controlling for in a regression," but this is not implied at all by Equation&nbsp;\@ref(eq:PO-CATE). In fact, recent work has suggested that regression is a fragile tool for causal modeling even when circumstances are favorable for its performance [@aronow-samii:2016:regression]. In turn, researchers have turned to machine learning methods in order to adjust for the confounding influence of $X$ without requiring the researcher to assume a fragile functional relationship between $X$ and $Z$. 
+
+Some hesitation about the use of machine learning for causal inference focuses on the "prediction–interpretation trade-off." This trade-off states that as a model's predictions become better and better, the model's internals are more and more difficult to understand. While it is important to understand _why_ a model works and to understand a variable's contribution to the model, interpreting the exact functional form by eyeballing a regression equation is in no way required for Equation&nbsp;\@ref(eq:PO-CATE) to hold. As a result, some political scientists have embraced machine learning to address the _prediction problems_ in causal inference as being more proximal concerns than _interpretation problems_ in e.g. a treatment propensity model. 
+
+# What is BART?
+
+Suppose we have some general model of outcome data $y_{i}$ that is specified in terms of predictive variables $\mathbf{x}_{i}$ and error $\varepsilon_{i}$,
+\begin{align}
+  (\#eq:yfx)
+  y_{i} &= f(\mathbf{x}_{i}) + \varepsilon_{i}, & \varepsilon &\sim N(0, \sigma),
+\end{align}
+where $\mathbf{x}_{i}$ contains $P$ many variables. 
+
+Linear regression estimates $f(\mathbf{x}_{i})$ by specifying an estimated $\hat{f}\left(\mathbf{x}_{i}\right)$ as an additive combination the $\mathbf{x}_{i}$ elements, each weighted by an associated coefficient $\gamma_{p}$.
+\begin{align}
+  y_{i} &= \hat{f}(\mathbf{x}_{i}) + e_{i} \\
+  y_{i} &= \sum\limits_{p = 1}^{P}x_{p[i]}\hat{\gamma}_{p} + e_{i}
+\end{align}
+I include the last line to make it clear that linear regression is simply a weighted average of $\mathcal{x}_{i}$, with each element $p$ given an estimated weight $\hat{\gamma}_{p}$.
+
+This assumption that the regression estimator is simply a weighted average of the predictors brings associated difficulties in a modeling workflow. Namely, while the predictors can contain nonlinear transformations of predictors and interactions among predictors, those features are entirely the responsibility of the researcher to specify. For the causal inference case, we often find it more useful to generate a good prediction even if we sacrifice the interpretation of its components. Bayesian Additive Regression Trees (BART) is a method for flexibly modeling the outcome $y_{i}$ to avoid these difficult specification decisions.
+
+Bart begins the baseline established in Equation&nbsp;\@ref(eq:yfx), but $f(\cdot)$ is estimated by (1) averaging the predictions of many tree-based predictions, and (2) designing those trees using regularization to prevent overfitting.
+
+
+## Tree Models
+
+I find a tree model to be easiest to explain by beginning with the intuition of a $K$-nearest-neighbor (KNN) model. KNN regression is a method for predicting some $y_{i}$ as an average of other $y_{j \neq i}$ observations in a neighborhood surrounding $i$. 
+
+- We want to predict $y_{i}$ for unit $i$. We observe covariates $x_{i}$.
+- Identify the $K$-many observations (for some pre-specified $K$) whose $x$ values are most similar to $x_{i}$.
+- Find the average $y$ value of these "neighbor" observations. Use this average as your prediction for $y_{i}$.
+
+In sum, KNN regression consists of (1) cutting a covariate space into a bunch of small "neighborhoods", and then (2) using the outcome data in each neighborhood as predictions for a new observation that belongs to that neighborhood. Models are regularized (or "tuned") by testing the predictive accuracy of different values $K$ to optimize a bias-variance trade-off. Big values of $K$ (big neighborhoods) generate predictions that are biased toward the mean of the observed data, but these predictions are lower variance, whereas smaller $K$ (smaller neighborhoods) generate noisy predictions that are less biased in expectation.
+
+BART works similarly by cutting the covariate space into small segments and then using the response data in each segment to make a prediction for a new data point that would fall into that segment. It differs from KNN in the methods used for cutting the covariate space and in the tools available to tune the model's regularizing behavior. 
+
+BART cuts the covariate space using a method called "recursive splitting," meaning that splits of the data happen within earlier splits. For example, see the image [here](https://i.imgur.com/6HhbRVL.png), which represents a covariate space of _height_ and _weight_ to predict some $Y$. Looking at the right side of the figure: the first split creates two subsets of data at $\mathtt{height} < 1.85$, and then subsequent splits of the data happen within the subsets created by the first split. Recursive splitting creates the "decision tree," which is simply a set of decision rules that sort an observation into a particular cut of the data (see the left-side graphic, which is merely another diagram of the same splitting action). At the end of a tree is a set of "leaves," a.k.a. the terminal cuts. In each leaf, we estimate the mean of the dependent variable. 
+
+**How BART makes predictions**. Suppose I have some new data point. I have a decision tree that classifies which "leaf" this data point belongs to in terms of its covariates. Once the data point is sorted into a leaf, my prediction for that data point is the average of the other data within that leaf.
+
+**Does a data point affect its own predictions?** Not usually. Ordinarily we don't want to predict $y_i$ _and_ train the tree model using $y_{i}$. This double-dips the data and overfits the predictions as a result. With models like this, the workflow ordinarily involves fitting a model on one set of data (the "training set"), and then making predictions using another set of data (the "test set") to evaluate the model's accuracy at predicting never-before-seen data. This means that 
+
+
+**Nonlinearity and interactions.** 
+By cutting the covariate space into several leaves and simply estimating the mean of $y$ in each leaf, this model imposes no linearity restrictions or constant effects of covariates. 
+Instead, the response "surface" is allowed to by highly irregular, depending only on the boundaries of the leaf and the data in the leaf used to predict the outcome. 
+See this figure [here](https://slideplayer.com/slide/14061095/86/images/49/Response+Surface+for+Regression+Tree.jpg), which relates the tree structure to a graphic that plots the mean of $y$ in each leaf of a covariate space. 
+Because leaves are not aware of the data in surrounding leaves, BART can generate predictions that exhibit nonlinearities and interactions with no additional specification by the researcher. 
+I find it helpful to describe the predictions from a tree as a "coarsened approximation to any arbitrary function," where the coarsening is due to the fact that the predicted outcome is fixed within any given leaf.
+
+
+
+## The "Sum of Trees"
+
+BART generates predictions for new observations by averaging the predictions of many tree models. Whereas a prediction from a single tree is likely to be high variance, averaging many trees lets the prediction for a new observation be represented by a "consensus of many trees," reducing the variance of predictions from the individual trees, which tend to overfit predictions to the particular leaves created by the specific splitting rules used for that tree. The structure of a single tree is also regularized to prevent overfitting, which brings us to...
+
+
+## What's "Bayesian" About BART?
+
+There are two components of BART that bring it into a Bayesian paradigm. First, there is a prior on the tree structure, which is intended to penalize overly complex trees and prevent overfitting. The second is a prior on the response within each leaf as well, which pool's every leaf's prediction toward a global average of the data. 
+
+First, the decision tree is created by a successful of random splits of the covariate space. These splits are determined by (1) a uniformly random choice of covariate on which to cut the space, and (2) a uniformly random choice of where to cut the space along the support of that covariate. This structure is prevented from growing too complex, and the predictions in the leaves from growing too specific, by placing a regularizing prior on the tree growth. This prior says that a node at depth $d$ will terminate the tree branch with probability $1 - \alpha(1 + d)^{-\beta}$, for $\alpha \in (0, 1)$ and $\beta \in [0, \infty]$. Larger values of $\alpha$ and $\beta$ increase the probability of node termination, leading to shallower trees that have less complex structure and more regularization.
+
+Second, the estimate in each leaf is given a prior. If $\mu_{ij}$ is a parameter estimated in node $i$ of tree $j$, it is given the prior $\mu_{ij} \sim N(\mu_{\mu}, \sigma_{\mu})$. In other words, rather than naively impute the mean of the response in each leaf to be the prediction for that leaf, the estimate in each leaf is regularized toward a global average. Like "random effects" in a hierarchical model, this pools estimates from noisy leaves (due to high variance or few observations) toward an average. Leaves with cleaner signals are regularized less.
+
+Because we have these priors, we can actually generate tree estimates for a dataset without fitting the tree model to any data at all. The distribution of estimates will merely reflect the priors on the tree structure and the leaves. If we fit the model, of course, the estimates for all of the leaves will update from the data, and the "sum of trees" will be a set of MCMC samples generated from exploring the space of tree structures and leaf values.
+
+
+# References
+
+
+<!-- 
+why ML things for PREDICTION rather than EXPLANATION
+
+- how does this method solve the bigger question?
+- Why would we NOT want to explain?
+- It feels like we're giving up agency
+- "At a high level, trees and forests can be thought of as nearest neighbor methods with an adaptive neighborhood metric." Athey/Wager (2018)
+
+
+What things should we investigate:
+
+- Check out Carvalho work on BART: maybe they have a way to save this.
+- Bayesian Neural Net, the middle ground? 
+- ABC + BART for the missing element: innovative but a headache it sounds like
+
+http://brunaw.com/slides/seminars/bart/presentation.html#26
+-->
+

@@ -1,0 +1,33 @@
+---
+title: What is a Bayesian Neural Network
+author: Michael G. DeCrescenzo
+date: | 
+  `r format(Sys.time(), '%B %d, %Y')` 
+bibliography: assets-bookdown/thesis.bib
+---
+
+```{r eval = FALSE, include = FALSE}
+rmarkdown::render("9999-BNN.Rmd", output_format = "bookdown::html_document2")
+```
+
+$\newcommand{\ind}[0]{\perp \!\!\! \perp}$
+
+Network structure
+
+- Input "neurons": right-hand data
+- Output "neurons": left-hand side data
+- "hidden layers": a network of nodes that "light up" to connect signals from the input to the output
+    - A network structure that estimates relationships between input data and output data during model fitting
+    - model predictions rely on the estimated relationships to generate predictions from new input data (not used for training)
+
+The functional form of the network structure
+
+- every neuron is a weighted sum of the previous neural layer
+    - every vector of neurons connects to another vector of neurons by a weight matrix. 
+    - This is basically a system of logistic regressions that connect each node to every other node.
+    - The ultimate prediction is simply an aggregation of all of the logistic regressions, which is basically a weighted sum of the prior functions.
+
+
+
+
+
