@@ -11,7 +11,7 @@
 
 # ---- text family -----------------------
 
-font_fam <- "Fira Sans"
+font_fam <- "Source Sans Pro"
 
 ggplot2::update_geom_defaults(geom = "text", list(family = font_fam))
 ggplot2::update_geom_defaults(geom = "label", list(family = font_fam))
