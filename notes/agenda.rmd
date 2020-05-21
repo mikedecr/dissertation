@@ -17,6 +17,19 @@ From org-file
     - [ ] store composite error terms? (why?)
     - [ ] businesses want to integrate a loss function over a posterior distribution
 
+
+NOW:
+
+- Hirano and Snyder, Langella and Rogowski
+- Find primary rules data 2016
+- Send Ellie model chapter excerpt
+- Fix 2010s poll data
+- Gather 2000s poll data
+- Conditional choice models
+- Bayesian Neural Nets (might solve choice model problem)
+
+
+
 Sort APW comments:
 
 - Devin:
