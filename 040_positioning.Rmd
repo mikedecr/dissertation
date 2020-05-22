@@ -23,9 +23,6 @@ theme_dag <- theme_dag(base_family = font_fam)
 ```
 
 
-```{r}
-knit_exit()
-```
 
 Do primary elections effectively transmit citizens' policy preferences into government? For this to be true, we should expect that the policy ideology with a partisan constituency to affect the ideological positioning of candidates who run for that party's nomination. This chapter explores the effect of district-party public ideology on the candidates who run to represent that district-party.
 
@@ -48,7 +45,7 @@ Lit review:
 
 
 ```{r read-dime}
-dime <- read_rds(here("data", "_clean", "dime-with-means.rds"))
+dime <- read_rds(here("data", "_clean", "candidates-x-irt.rds"))
 ```
 
 
@@ -57,6 +54,10 @@ simple_regs <-
   read_rds(here("data", "_model-output", "04-positioning", "simple-regs.rds"))
 ```
 
+
+```{r, cache = FALSE}
+knit_exit()
+```
 
 ```{r plot-first-look}
 dime %>%
@@ -551,6 +552,15 @@ For my independent variable, I use my own district-party ideology estimates gene
 ]
 
 Control variables are measured primarily at the congressional district level and are drawn primarily from @foster-molina:2016:data. These covariates include racial, educational, religious, and economic features of districts, which I revisit below. Currently I do not have data on primary institutions included in the routine, which limits what I can say about effect modification in primaries vs. caucuses or as a function of primary openness. This is an important part of the story to include in the future. 
+
+
+### Primary Rules
+
+General comment: very difficult to code these.
+
+- law vs. party rules
+- for some organizations "open" means there's ANY openness, which can include the McGhee "semi-closed" definition
+- most states have the same system for both parties, but some state laws leave it open to parties to modify their rules in the months leading up to the election. 
 
 
 

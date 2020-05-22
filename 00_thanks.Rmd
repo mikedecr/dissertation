@@ -8,7 +8,7 @@ Many people supported this me through this project. Thanks to...
 
 - Members in the department who provided institutional support: the Election Research Center, Scott Straus, Deb McFarlane and others in the department administration, the "Beasts of Burden" roundtable group, and members of the Fall 2016 prospectus workshop course.
 
-- Faculty and students at other universities who shared data or provided advice: Robert Boatright, Devin Caughey, David Doherty, Seth Hill, Georgia Kernell, Shiro Kuriwaku, Rachel Porter, Andrew Reeves, Michael Ting, and Sarah Treul.
+- Faculty and students at other universities who shared data or provided advice: Robert Boatright, Devin Caughey, David Doherty, Andrew Hall, Seth Hill, Georgia Kernell, Shiro Kuriwaku, Rachel Porter, Andrew Reeves, Michael Ting, and Sarah Treul.
 
 - Software developers and users, whose tools and supporting community helped bring the project to life in my computer: Mara Averick, Jenny Bryan, Andrew Heiss, Matthew Kay, Mike Kearney, TJ Mahr, Thomas Lin Pederson, and Kara Woo.
 <!------- TO DO ---------
@@ -24,7 +24,7 @@ Many people supported this me through this project. Thanks to...
 
 - Cafes and their staff, especially Black Locust Cafe and Johnson Public House.
 
-- People who provided feedback in workshops: Devin, Evan, Rochelle, Blake, David, (more?)
+- People who provided feedback in workshops: Devin, Evan, Rochelle, Blake, David C, Marcy, 
 
 <!------- TO DO ---------
 - others

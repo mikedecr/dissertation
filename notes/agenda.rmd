@@ -3,42 +3,63 @@ title: Overall thesis notes
 ---
 
 
-From org-file
-- thesis:
-    - [ ] Achen critique of Miller and Stokes (Lewis and Tausanovitch)
-    - [ ] move into agenda
-    - [ ] clean agenda
-    - [ ] Barry PDF
-    - [ ] read explaining fixed effects
-    - [ ] read ranef distribution
-    - [ ] read Hall-Thompson
-    - [ ] read Bailey ranefs
-    - [x] predicted values (what did this mean?)
-    - [ ] store composite error terms? (why?)
-    - [ ] businesses want to integrate a loss function over a posterior distribution
+Reading for design:
+
+- [ ] Achen–Bartels (Realists) lit review
+- [ ] Achen critique of Miller and Stokes (Lewis and Tausanovitch)
+- [ ] read Hall-Thompson
+- [ ] Hirano and Snyder
+- [ ] Langella and Rogowski
+- [ ] Hill
+- [ ] Thomsen
+- [ ] Snyder team old papers
 
 
-NOW:
+Reading for thinking:
 
-- Hirano and Snyder, Langella and Rogowski
-- Find primary rules data 2016
-- Send Ellie model chapter excerpt
-- Fix 2010s poll data
-- Gather 2000s poll data
+- [ ] read Bailey ranefs
+- [ ] ranef distribution misspecification
+- [ ] read explaining fixed effects
+- [ ] Kubinec fixed effects
 - Conditional choice models
 - Bayesian Neural Nets (might solve choice model problem)
+
+Writing to-dos:
+
+- [ ] incorporate earlier Barry edits (symlinked)
+- [ ] causal inference: integrate a loss function over a posterior distribution
+- [ ] conceptual/term clarity in the beginning
+    - who are partisans? 
+    - are they primary voters or not necessarily? 
+    - What is "district partisanship" and how is it different from partisan ideology?
+    - Throwing around "getting preferences into government"
+    - When would primaries _not_ work? How can you reframe the question to focus energy?
+    - Improve the way I talk about "strategic" vs. "representation" using DIME scores. 
+    - 
+
+Data:
+
+- [ ] clean/consolidate primary rules data 2016
+- [ ] Fix 2010s poll data (multinomial response, midpoints, **barry**)
+- Gather 2000s poll data
+- How sensitive are the ideal points to item inclusion?
+- Discuss weighting more?
+
+Project:
+
+- [ ] clean agenda
+- [ ] Model excerpt to Ellie
+- [ ] Wagner
+
+
+
+
 
 
 
 Sort APW comments:
 
 - Devin:
-    - conceptual/term clarity in the beginning: who are partisans? are they primary voters or not necessarily? What is "district partisanship" and how is it different from partisan ideology?
-    - How sensitive are the ideal points to item inclusion?
-    - Discuss weighting more?
-    - Throwing around "getting preferences into government"
-    - When would primaries _not_ work? How can you reframe the question to focus energy?
-    - Improve the way I talk about "strategic" vs. "representation" using DIME scores. 
     - Where do informal party networks enter the causal graph that I'm positing (Ch 4?)
     - Where is incumbency in the Ch 4 graph?
     - We care about the full effect and the direct effect.
@@ -76,17 +97,12 @@ Sort APW comments:
     - VoteSmart data from Rogowski
 
 
-- Meetings:
-    - [ ] Ellie
-    - [ ] Ken
-    - [ ] Alex
-    - [ ] Barry
-    - [ ] Mike 
+
+
 
 Some readings:
 
-- Achen–Bartels lit review
-- Devil email
+- Devin email
 - Daron Shaw thermometer dimensions
 - Bafumi Gelman correlated ranefs/ what are they
 - Between/within estimators for causal inference
