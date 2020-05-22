@@ -16,6 +16,23 @@
 #   or to the party rules themselves.
 # Need to move from former to latter.
 
+# NCSL cites this a lot:
+# https://www.openprimaries.org/
+# https://www.openprimaries.org/primary_type_definitions
+
+# McGhee et al coding:
+# closed: no crossover
+# semi-closed: independents can vote
+# semi-open: ballot-wide crossovers allowed but public
+# open: ballot-wide crossovers allowed and private
+# nonpartisan: race-by-race crossovers (blanket or top two)
+
+# Hill 2015: 
+# dichotomize the McGhee et al. coding into more/less closed
+# (not a bad idea for me)
+
+
+
 library("here")
 library("magrittr")
 library("tidyverse")
@@ -23,6 +40,9 @@ library("boxr"); box_auth()
 
 
 # comes from the main table
+# this is very confusing because the classifications avg. across both parties
+# and in some cases describe a legal environment more than party rules.
+# this is why I revise codings underneath
 ncsl_classifications <- list(
   "closed" = c(
     "Delaware", "Maryland", "New York", "Florida", "Nevada", 
@@ -54,67 +74,88 @@ ncsl_classifications <- list(
 
 
 # by party
-tribble(
-  ~ state_name,            ~ R,            ~ D,
-  "Alabama", "open", "open",
-  "Alaska", "partially closed", "open"
-  "Arizona"
-  "Arkansas"
-  "California"
-  "Colorado"
-  "Connecticut"
-  "Delaware"
-  "Florida"
-  "Georgia"
-  "Hawaii"
-  "Idaho"
-  "Illinois"
-  "Indiana"
-  "Iowa"
-  "Kansas"
-  "Kentucky"
-  "Louisiana"
-  "Maine"
-  "Maryland"
-  "Massachusetts"
-  "Michigan"
-  "Minnesota"
-  "Mississippi"
-  "Missouri"
-  "Montana"
-  "Nebraska"
-  "Nevada"
-  "New Hampshire"
-  "New Jersey"
-  "New Mexico"
-  "New York"
-  "North Carolina"
-  "North Dakota"
-  "Ohio"
-  "Oklahoma"
-  "Oregon"
-  "Pennsylvania"
-  "Rhode Island"
-  "South Carolina"
-  "South Dakota"
-  "Tennessee"
-  "Texas"
-  "Utah"
-  "Vermont"
-  "Virginia"
-  "Washington"
-  "West Virginia"
-  "Wisconsin"
-  "Wyoming"
-)
+hand_code <- 
+  tribble(
+    ~ state_name     , ~ Republican  , ~ Democrat    ,
+    "Alabama"        , "open"        , "open"        ,
+    "Alaska"         , "closed"      , "open"        ,
+    "Arizona"        , "semi-closed" , "semi-closed" ,
+    "Arkansas"       , "open"        , "open"        ,
+    "California"     , "top-two"     , "top-two"     ,
+    "Colorado"       , "semi-closed" , "semi-closed" ,
+    "Connecticut"    , "semi-closed" , "semi-closed" ,
+    "Delaware"       , "closed"      , "closed"      ,
+    "Florida"        , "closed"      , "closed"      ,
+    "Georgia"        , "open"        , "open"        ,
+    "Hawaii"         , "open"        , "open"        ,
+    "Idaho"          , "semi-closed" , "semi-closed" ,
+    "Illinois"       , "semi-open"   , "semi-open"   ,
+    "Indiana"        , "semi-open"   , "semi-open"   ,
+    "Iowa"           , "semi-open"   , "semi-open"   ,
+    "Kansas"         , "closed"      , "semi-open"   ,
+    "Kentucky"       , "closed"      , "closed"      ,
+    "Louisiana"      , "top-two"     , "top-two"     ,
+    "Maine"          , "semi-closed" , "semi-closed" ,
+    "Maryland"       , "closed"      , "closed"      ,
+    "Massachusetts"  , "semi-closed" , "semi-closed" ,
+    "Michigan"       , "open"        , "open"        ,
+    "Minnesota"      , "open"        , "open"        ,
+    "Mississippi"    , "open"        , "open"        ,
+    "Missouri"       , "open"        , "open"        ,
+    "Montana"        , "open"        , "open"        ,
+    "Nebraska"       , "open"        , "open"        ,
+    "Nevada"         , "closed"      , "closed"      ,
+    "New Hampshire"  , "semi-closed" , "semi-closed" ,
+    "New Jersey"     , "semi-closed" , "semi-closed" ,
+    "New Mexico"     , "closed"      , "closed"      ,
+    "New York"       , "closed"      , "closed"      ,
+    "North Carolina" , "semi-closed" , "semi-closed" ,
+    "North Dakota"   , "open"        , "open"        ,
+    "Ohio"           , "semi-open"   , "semi-open"   ,
+    "Oklahoma"       , "closed"      , "semi-closed" ,
+    "Oregon"         , "closed"      , "closed"      ,
+    "Pennsylvania"   , "closed"      , "closed"      ,
+    "Rhode Island"   , "semi-closed" , "semi-closed" ,
+    "South Carolina" , "open"        , "open"        ,
+    "South Dakota"   , "closed"      , "semi-closed" ,
+    "Tennessee"      , "semi-open"   , "semi-open"   ,
+    "Texas"          , "open"        , "open"        ,
+    "Utah"           , "closed"      , "semi-closed" ,
+    "Vermont"        , "open"        , "open"        ,
+    "Virginia"       , "open"        , "open"        ,
+    "Washington"     , "top-two"     , "top-two"     ,
+    "West Virginia"  , "semi-closed" , "semi-closed" ,
+    "Wisconsin"      , "open"        , "open"        ,
+    "Wyoming"        , "semi-open"   , "semi-open"
+  ) %>%
+  pivot_longer(
+    cols = c(Republican, Democrat),
+    names_to = "primary_party",
+    values_to = "ncsl_primary_rules"
+  ) %>%
+  mutate(
+    elect_year = 2016,
+    ncsl = 1,
+    primary_rules = case_when(
+      ncsl_primary_rules == "top-two" ~ "blanket",
+      TRUE ~ ncsl_primary_rules
+    )
+  ) %>%
+  left_join(tibble(state_name = state.name, state_postal = state.abb)) %>%
+  print()
+
+
+# has convention:
+# CO
+# has caucus: 
+# KS
 
 
 
 
+# ---- boatright data -----------------------
 
-
-
-
+# presumably blanket == nonpartisan
 bd_raw <-
   here("data", "elect-primary", "boatright", "boatright-dist-level.dta") %>%
   haven::read_dta() %>%
@@ -123,42 +164,43 @@ bd_raw <-
   mutate(ncsl = 0) %>%
   print()
 
-count(bd_raw, state_postal, elect_year, primary_rules) %>%
-  arrange(desc(elect_year)) %>%
-  print(n = 150)
-
-
-
-# ---- clean and recode NCSL list -----------------------
-
-ncsl_frame <- ncsl_classifications %>%
-  lapply(as_tibble) %>%
-  bind_rows(.id = "primary_rules") %>%
-  rename(state_name = value) %>%
-  inner_join(
-    tibble(state_name = state.name, state_postal = state.abb)
-  ) %>%
-  arrange(state_name) %>%
-  mutate(
-    elect_year = 2016,
-    ncsl = 1
-  ) %>%
+count(bd_raw, state_postal, elect_year, primary_party, primary_rules) %>%
+  arrange(state_postal, desc(elect_year)) %>%
+  filter(elect_year >= 2012) %>%
   print(n = nrow(.))
 
+count(bd_raw, primary_rules)
 
-bd_raw %>%
+
+
+# ---- compare my data to boatright data -----------------------
+
+mergey <- bd_raw %>%
   mutate(
     primary_rules = labelled::to_character(primary_rules),
     primary_party = labelled::to_character(primary_party)
   ) %>%
   select(state_name, state_postal, elect_year, primary_party, primary_rules, ncsl) %>%
   distinct() %>%
-  filter(elect_year %in% c(2012, 2014)) %>% 
-  bind_rows(ncsl_frame) %>%
-  arrange(state_postal, desc(elect_year)) %>%
+  filter(elect_year != 2016) %>% 
+  bind_rows(select(hand_code, -ncsl_primary_rules)) %>%
+  arrange(state_postal, primary_party, elect_year) %>%
+  print()
+
+mergey %>%
   split(.$state_name) %>%
   print(n = nrow(.))
 
+
+# states where I see differences
+mergey %>%
+  group_by(state_postal, primary_party) %>%
+  mutate(laggy = lag(primary_rules)) %>%
+  ungroup() %>%
+  filter(elect_year == 2016) %>%
+  filter(primary_rules != laggy) %>%
+  count(state_name, state_postal) %>%
+  print(n = nrow(.))
 
 # ---- save for later merging -----------------------
 
