@@ -1,4 +1,4 @@
-# A Bayesian Framework for Causal Inference  {#ch:causality}
+# Bayesian Causal Inference in Political Science  {#ch:causality}
 
 <!------- TO DO ---------
 - This might need to be chapter 2!!!! 
@@ -14,6 +14,12 @@
   (in the RDD case, the OLS model is consistent but we aren't in asymptopia.
    How else do we evaluate the properties of the Bayes estimator
    when we include structural information?)
+------------------------->
+
+<!------- TO DO ---------
+- is the intro too specific?
+- Have an abstract and then an outline of the chapter?
+- missing right now: connect to political science!
 ------------------------->
 
 Before I employ the estimates of party-public ideology obtained in Chapter&nbsp;\@ref(ch:model), this chapter discusses a Bayesian framework for causal inference in political science. 
@@ -162,6 +168,11 @@ Unobserved data: $\tilde{y}_{i}$
 Inference about $\tilde{y}_{i}$: $p(\tilde{y}_{i} \mid \mathbf{y}) \propto p(\tilde{y}_{i} \mid \theta, \mathbf{y})p(\theta)$
 
 
+
+
+
+
+
 ## The Issue of Priors
 
 Various roles that priors take on
@@ -175,18 +186,49 @@ Various roles that priors take on
 A general orientation toward priors in this dissertation:
 
 - Not about "stacking the deck" or hazy notions of "prior beliefs"
-- inference about the thing we care about
+- information, not belief
+- inference about the thing we care about (counterfactuals)
 - structural information when we have it
 - Causal inference: "agnosticism" is something valuable generally
 
 
 ### The Inescapable Choice of Parameterization
 
+<!------- TO DO ---------
+- this needs reverse outline
+------------------------->
+
 Priors are defined with respect to a model of the data (the likelihood). 
 <!------- TO DO ---------
 - discuss Betancourt, Simpson, Gelman
 ------------------------->
-We may have priors about the way the world works, but we rarely have priors about model parameters. This is because parameters are an invention in the model. They are mathematical abstractions similar to points and lines, so they only exist when we translate the world into a mathematical language.
+We may have priors about the way the world works, but we rarely have priors about model parameters. This is because parameters are an invention in the model. They are mathematical abstractions similar to points and lines, so they only exist when we translate the world into a mathematical language. This means that the mathematical representation of the world is in direct dialog with the choices available to a researcher about how to encode prior information. In the real world, the prior information that I have about the world isn't affected by a mathematical representation of the world. As a researcher, the way I encode prior information depends on the choices I make about that mathematical representation.
+
+One essential feature for understanding prior choices in practice is the _parameterization_ of the data model, $p(y \mid \phi)$, for some generic parameter $\phi$.^[
+  Bayesian practitioners sometimes refer to the data model as the "likelihood." 
+  This can be confusing because the "likelihood function" more traditionally refers to the _product_ of the data probabilities under the data model.
+  References to the "parameterization of the likelihood" should be understood as interchangeable with "parameterization of the data model," since the former is determined entirely by the latter. 
+]
+We say that a data model has an "equivalent reparameterization" if for some transformed parameter $\psi = f(\phi)$, the function that defines the data model can be rewritten in terms of $\psi$ and return an equivalent likelihood of the data. More formally, the parameterization is equivalent if $p(y \mid \phi) = p(y \mid \psi)$ for all possible $y$.
+
+In a maximum likelihood framework, equivalent parameterizations are a more benign feature of the modeling framework. Reparameterization may result in likelihood surfaces that have easier geometries for optimization algorithms to explore, but the _value_ of the likelihood function is unaffected by the algebraic definition or parameterization of the likelihood function. For instance, a Normally distributed variable $x$ with mean $\mu$ could be parameterized in terms of standard deviation $\sigma$ or in terms of precision $\tau = \frac{1}{\sigma^{2}}$, but the resulting density is unaffected.
+\begin{align}
+  \frac{1}{\sigma\sqrt{2\pi}}e^{-\left(\frac{x - \mu}{2\sigma}\right)^{2}}
+  &=
+  \sqrt{\frac{\tau}{2\pi}}e^{-\frac{\tau\left(x - \mu\right)^{2}}{2}}
+  (\#eq:normal-sigma-equal-tau)
+\end{align}
+The consequence for Bayesian analysis, however, is that the parameterization of the data model determines the set of parameters and their functional relationship to the data.
+
+
+
+
+
+
+<!------- TO DO ---------
+- decide if centering is worth it to discuss here
+------------------------->
+
 
 One example of equivalent reparameterization arises with the different possible ways to write a linear regression model. The first form specifies $y_{i}$ for unit $i$ as a linear function of $x_{i}$ with a random error that is mean $0$ and standard deviation $\sigma$.
 \begin{align}
@@ -300,6 +342,10 @@ tibble(
   theme_void()
 ```
 
+
+
+
+
 Problems of beliefs:
 
 - No degree of belief.
@@ -337,18 +383,33 @@ Parameters are a _choice_.
 
 
 
-### Parameterization Highlights the Incoherence of Flat Priors
+### Parameterization and the Impossibility of Flat Priors
 
-The primary philosophical resistance to Bayesian inference is the need to set a prior. Often researchers wish to sidestep this choice altogether, preferring a "flat" prior that prefers all parameters equally.
+<!------- TO DO ---------
+- does this go in previous section?
+------------------------->
+
+The primary resistance to Bayesian inference in applied research is the need to set a prior at all. To many researchers, the prior distribution is an additional assumptions that is never feels justified because it is external to the data. Often researchers wish to sidestep this choice altogether, preferring a "flat" prior that prefers all parameters equally.
+
+We have seen so far that the parameterization of a model has consequences for prior specification. Reparameterization may result in an algebraically equivalent likelihood
+<!------- TO DO ---------
+- define "equivalent reparameterization"
+------------------------->
+
 
 The incoherence of flatness: 
 
-- "no way to conceptualize an uninformative prior because you can always rearrange the problem through a reparameterization or transforamtion of a parameter"
+- no universally valid strategy for specifying flat priors because it is always possible to rearrange the data model either by transforming a parameter or otherwise rearranging the likelihood. 
+
+Consider an experiment with a binary treatment $Z$ and a binary outcome variable $Y$. We want to determine the effect of $Z$ by comparing the success probability in the treatment group, $\pi_{1}$, to the success probability in the control group, $\pi_{0}$.
+
+
+
+- "no way to conceptualize an uninformative prior because you can always rearrange the problem through a reparameterization or transformation of a parameter"
 - examples of transformations having crazy implications/MLE being wild (logit).
 - Jeffreys prior: actually a very limited range of priors that satisfy an "invariance" property. My words: such that the "amount of information obtained from data about is invariant to parameterization of the likelihood, for all possible values of the parameter," or, "the only way for the posterior distribution to be exactly the same, given the same data, for all true parameter values (?), is the Jeffreys prior," or, regardless of the data, I will learn the same thing about the generative model regardless of which equivalent parameterization of the generative model is used.  
     - is it worth it to think about the theoretical meaning of information
     - how does flatness reflect information in nonlinear scales?
-
 
 
 Suppose we have some posterior distribution which relies on some parameter vector $\overrightarrow{\alpha}$. 
@@ -360,6 +421,81 @@ Suppose we have some posterior distribution which relies on some parameter vecto
 Consider some alternate parameterization of the likelihood parameterized by $\overrightarrow{\beta}$. 
 
 Nonlinear transformation of $\theta$ does not preserve a uniform density over parameters.
+
+
+
+
+
+
+
+#### Parameterization 
+
+
+
+
+<!------- TO DO ---------
+- figure this out
+DATA FALSIFICATION digression
+------------------------->
+Data falsification versus unavoidable choice:
+imagine a study with a posterior distribution $p(\mu \mid \mathbf{y})$ that is proportional to the likelihood times the prior. 
+  \begin{align}
+    (\#eq:propto)
+    p(\mu \mid \mathbf{y}) &\propto p(\mathbf{y} \mid \mu)p(\mu)
+  \end{align}
+Rewrite the right side in product notation for $n$ observations of $y_{i}$ for units indexed by $i$, letting $l(y_{i}) = p(y_{i} \mid \mu)$
+  \begin{align}
+    p(\mu \mid \mathbf{y}) &\propto \prod\limits_{i = 1}^{n}l(y_{i})p(\mu)
+    (\#eq:propto-index)
+  \end{align}
+Suppose that we express this proportionality on the log scale, where the log posterior is proportional to the log likelihood plus the log posterior.
+  \begin{align}
+    \begin{split}
+      \log p(\mu \mid \mathbf{y}) 
+        &\propto \sum\limits_{i = 1}^{n} \log l(y_{i}) 
+          + \sum\limits_{i = 1}^{n} \log p(\mu) \\[12pt]
+        &\propto \log l(y_{1}) + \log p(\mu)
+                 + \log l(y_{2}) + \log p(\mu)
+                 + \ldots
+                 + \log l(y_{n}) + \log p(\mu)
+    \end{split}
+  (\#eq:log-propto-index)
+  \end{align}
+
+
+The setup in \@ref(eq:log-propto-index) highlights a few appealing intuitions.
+First, it shows how each observation "adds information" to the log posterior distribution.
+Data that are more likely to be observed given the parameter (larger $l(y_{i})$ values) increase the posterior probability that parameter. 
+We also see that the prior probability "adds information" to the posterior in the same way data add information, captured by the addition of each $p(\mu)$ term. 
+Parameters that are more probable in the prior are more probable in the posterior.
+
+The proportionality \@ref(eq:log-propto-index) also reveals how the posterior "learns" from flat priors.
+A flat priors implies that prior probability $p(\mu)$ is constant for all potential values of $\mu$.
+Because \@ref(eq:log-propto-index) is a proportionality, this lets us disregard $p(\mu)$ entirely by factoring it out of the proportionality, leaving us with an expression that the log posterior is proportional to the likelihood of the data only if the prior is flat.
+\begin{align}
+  \log p(\mu \mid \mathbf{y}) 
+        &\propto
+        \log l(y_{1}) + \log l(y_{2}) + \ldots + \log l(y_{n})
+  (\#eq:log-propto-flat)
+\end{align}
+If $p(\mu)$ is not flat, however, and $p(\mu)$ varies across values of $\mu$, we can no longer ignore $p(\mu)$ in \@ref(eq:log-propto-index) shows that $p(\mu)$ varies across values $\mu$.
+Not only does this prevent us from dropping $p(\mu)$ from the proportionality, but it also reveals how the prior "adds information" to the posterior by the same mechanism that observations do: adding to the log posterior distribution. 
+This general expression where both data and priors contribute to the posterior distribution has led some researchers to argue the Bayesian inference with non-flat priors is analytically indistinguishable from data falsification [@garcia-perez:2019:bayes-data-falsification].
+We can highlight this behavior by obscuring each $p(\mu)$ term with a square $\square$.
+\begin{align}
+  \log p(\mu \mid \mathbf{y}) 
+        &\propto
+        \log l(y_{1}) + \square + \log l(y_{2}) + \square \ldots + \log l(y_{n}) + \square
+  (\#eq:log-propto-falsification)
+\end{align}
+Behind each square is _some contribution_ to the log posterior.
+The fact that it adds information to the log posterior is unaffected by whether the hidden term is the probability of an additional observation $l(y_{i})$ or the prior probability of a parameter value $p(\mu)$.
+<!------- TO DO ---------
+- END FALSIFICATION
+------------------------->
+
+
+
 
 ```{r diff-means-example}
 means_data <- 
@@ -403,6 +539,10 @@ plot_prior(data = means_data, x = x, y = triangle) +
     axis.title.y = element_blank()
   ) 
 ```
+
+
+
+
 
 For instance, consider a simple experiment with a binary outcome variable $y_{i}$ and binary treatment assignment $z_{i} \in \{0, 1\}$. Suppose that the treatment effect of interest is a difference-in-means, $\bar{y}_{z = 1} - \bar{y}_{z = 0}$, estimated from a linear probability model. This linear probability model might be parameterized in two ways. First is a conventional regression setup,
 \begin{align}
