@@ -563,6 +563,11 @@ General comment: very difficult to code these.
 - most states have the same system for both parties, but some state laws leave it open to parties to modify their rules in the months leading up to the election. 
 
 
+I take data from Boatright on primaries. 
+
+- 2016: combination of NCSL, Ballotpedia, and OpenPrimaries.org, as of 2020-05-27.
+
+
 
 
 ### Model

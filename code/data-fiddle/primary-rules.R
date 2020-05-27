@@ -1,14 +1,15 @@
 # ----------------------------------------------------
 #   Primary Rules Data
 #   Clean up rules data for merging to supplement other data sources
+#   modified as recently as May 26, 2020
 # ----------------------------------------------------
 
 # problem: Boatright has primary rules EXCLUDING 2016
 # solution: I have primary rules data from NCSL
 #   https://www.ncsl.org/research/elections-and-campaigns/primary-types.aspx
-#   as of 2020-05-20
+#   visited 2020-05-20
 #   https://www.ncsl.org/documents/Elections/Primary_Types_Table_2017.pdf
-#   as of 2016-06 (same data though, by my eyeball)
+#   updated 2016-06 (same data though, by my eyeball)
 
 # having done this halfway through:
 # NCSL it isn't clear if "closedness" refers to the legal landscape
@@ -27,6 +28,8 @@
 # open: ballot-wide crossovers allowed and private
 # nonpartisan: race-by-race crossovers (blanket or top two)
 
+# also consulted some ballotpedia and state elections websites in ambiguous cases
+
 # Hill 2015: 
 # dichotomize the McGhee et al. coding into more/less closed
 # (not a bad idea for me)
@@ -38,10 +41,20 @@ library("magrittr")
 library("tidyverse")
 library("boxr"); box_auth()
 
+box_dir_primary <- 114160620102
 
-# comes from the main table
+# crosswalk
+state_tab <- 
+  tibble(
+    state_name = state.name, 
+    state_postal = state.abb 
+  ) %>%
+  print()
+
+
+# comes from the main table in the NCSL PDF.
 # this is very confusing because the classifications avg. across both parties
-# and in some cases describe a legal environment more than party rules.
+# and in some cases describe a legal environment more than party rules?
 # this is why I revise codings underneath
 ncsl_classifications <- list(
   "closed" = c(
@@ -83,7 +96,7 @@ hand_code <-
     "Arkansas"       , "open"        , "open"        ,
     "California"     , "top-two"     , "top-two"     ,
     "Colorado"       , "semi-closed" , "semi-closed" ,
-    "Connecticut"    , "semi-closed" , "semi-closed" ,
+    "Connecticut"    , "closed"      , "closed"      ,
     "Delaware"       , "closed"      , "closed"      ,
     "Florida"        , "closed"      , "closed"      ,
     "Georgia"        , "open"        , "open"        ,
@@ -92,7 +105,7 @@ hand_code <-
     "Illinois"       , "semi-open"   , "semi-open"   ,
     "Indiana"        , "semi-open"   , "semi-open"   ,
     "Iowa"           , "semi-open"   , "semi-open"   ,
-    "Kansas"         , "closed"      , "semi-open"   ,
+    "Kansas"         , "semi-closed" , "semi-closed" ,
     "Kentucky"       , "closed"      , "closed"      ,
     "Louisiana"      , "top-two"     , "top-two"     ,
     "Maine"          , "semi-closed" , "semi-closed" ,
@@ -103,7 +116,7 @@ hand_code <-
     "Mississippi"    , "open"        , "open"        ,
     "Missouri"       , "open"        , "open"        ,
     "Montana"        , "open"        , "open"        ,
-    "Nebraska"       , "open"        , "open"        ,
+    "Nebraska"       , "semi-closed" , "semi-closed" ,
     "Nevada"         , "closed"      , "closed"      ,
     "New Hampshire"  , "semi-closed" , "semi-closed" ,
     "New Jersey"     , "semi-closed" , "semi-closed" ,
@@ -131,25 +144,35 @@ hand_code <-
   pivot_longer(
     cols = c(Republican, Democrat),
     names_to = "primary_party",
-    values_to = "ncsl_primary_rules"
+    values_to = "raw_primary_rules"
   ) %>%
   mutate(
     elect_year = 2016,
-    ncsl = 1,
     primary_rules = case_when(
-      ncsl_primary_rules == "top-two" ~ "blanket",
-      TRUE ~ ncsl_primary_rules
+      raw_primary_rules == "top-two" ~ "blanket",
+      TRUE ~ raw_primary_rules
     )
   ) %>%
-  left_join(tibble(state_name = state.name, state_postal = state.abb)) %>%
+  left_join(state_tab, by = "state_name") %>%
+  select(starts_with("state"), everything()) %>%
   print()
 
 
 # has convention:
-# CO
+# - CO
+# - can't rule out others
 # has caucus: 
-# KS
-
+# - KS
+# - can't rule out others
+# potentially outdated data in Boatright: 
+# - AK
+# - MA
+# - can't rule out others...
+# Runoffs
+# - Texas
+# - Mississippi?
+# - AL?
+# - LA?
 
 
 
@@ -183,11 +206,13 @@ mergey <- bd_raw %>%
   select(state_name, state_postal, elect_year, primary_party, primary_rules, ncsl) %>%
   distinct() %>%
   filter(elect_year != 2016) %>% 
-  bind_rows(select(hand_code, -ncsl_primary_rules)) %>%
+  bind_rows(select(hand_code, -raw_primary_rules)) %>%
   arrange(state_postal, primary_party, elect_year) %>%
   print()
 
 mergey %>%
+  filter(elect_year >= 2012) %>%
+  arrange(primary_party, elect_year) %>%
   split(.$state_name) %>%
   print(n = nrow(.))
 
@@ -202,9 +227,15 @@ mergey %>%
   count(state_name, state_postal) %>%
   print(n = nrow(.))
 
+
+
 # ---- save for later merging -----------------------
 
-
+box_write(
+  hand_code, 
+  file_name = "primary-rules-2016.rds",
+  dir_id = box_dir_primary
+)
 
 
 # boatright-cand-level.dta
