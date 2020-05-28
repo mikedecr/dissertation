@@ -37,6 +37,7 @@ library("tidyverse")
 library("broom") 
 library("tidybayes")
 library("boxr"); box_auth()
+# uses {labelled}, {haven}, {rio} but not attached
 
 
 # update symlink stuff
@@ -54,12 +55,12 @@ box_dir_clean <- 112745864917
 # MCMC
 mcmc <- 
   here("data", "mcmc", "dgirt", "run", "samples", "2020-01-13-mcmc-homsk-2010s.RDS") %>%
-  readRDS()
+  read_rds()
 
 
 # tidy pre-stan data
 pre_model_data <- 
-  readRDS(
+  read_rds(
     here("data", "mcmc", "dgirt", "run", "input", "master-model-data.RDS")
   ) %>%
   print()
@@ -70,6 +71,20 @@ bc_raw <-
   haven::read_dta(
     here("data", "elect-primary", "boatright", "boatright-cand-level.dta")
   ) %>%
+  print()
+
+# extra primary rules data
+rules_16_raw <- 
+  read_rds(
+    here("data", "elect-primary", "primary-rules", "primary-rules-2016.rds")
+  ) %>%
+  mutate(
+    primary_party = case_when(
+      primary_party == "Democrat" ~ 1,
+      primary_party == "Republican" ~ 2
+    )
+  ) %>%
+  rename(rules_2016 = primary_rules) %>%
   print()
 
 # DIME, full data
@@ -181,7 +196,11 @@ dime_all_slim <- dime_all_raw %>%
   print()
 
 
+
+
+
 # decide what to keep?
+# add primary 2016 rules
 bc <- bc_raw %>%
   mutate_all(labelled::remove_labels) %>%
   mutate(
@@ -190,13 +209,28 @@ bc <- bc_raw %>%
       is.na(unique_icpsr) | unique_icpsr == "" ~ cand_id,
       TRUE ~ icpsr_ch
     ),
-    bc_case = 1
+    bc_case = 1,
+    primary_rules = case_when(
+      primary_rules == 1 ~ "open",
+      primary_rules == 2 ~ "closed",
+      primary_rules == 3 ~ "semi-open",
+      primary_rules == 4 ~ "semi-closed",
+      primary_rules == 5 ~ "blanket"
+    )
   ) %>%
   filter(elect_year %in% c(2012, 2014, 2016)) %>%
   filter(chamber == 1, office_id == 2) %>%
+  tidylog::left_join(rules_16_raw) %>%
+  mutate(
+    primary_rules = case_when(
+      elect_year == 2016 ~ rules_2016,
+      TRUE ~ primary_rules
+    )
+  ) %>%
   select(
     # -c(office_id),
-    -contains("dummy")
+    -contains("dummy"),
+    -rules_2016
   ) %>%
   print()
 
@@ -274,7 +308,6 @@ bc_agg_vars %>%
     )
   ) %>%
   pull(data)
-
 
 
 

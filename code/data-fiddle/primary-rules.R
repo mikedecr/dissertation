@@ -146,13 +146,7 @@ hand_code <-
     names_to = "primary_party",
     values_to = "raw_primary_rules"
   ) %>%
-  mutate(
-    elect_year = 2016,
-    primary_rules = case_when(
-      raw_primary_rules == "top-two" ~ "blanket",
-      TRUE ~ raw_primary_rules
-    )
-  ) %>%
+  mutate(elect_year = 2016) %>%
   left_join(state_tab, by = "state_name") %>%
   select(starts_with("state"), everything()) %>%
   print()
