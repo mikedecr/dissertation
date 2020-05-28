@@ -2,11 +2,24 @@
 title: Overall thesis notes
 ---
 
+Meeting agenda:
+
+- Alex:
+    - how to understand "BART is a prior" ?
+    - BNN is chained logistic-ish regressions
+        - Why do they compress the space with that transformation?
+        - Why logistic?
+        - Is it unidentified in the non-Bayes world as well?
+- Barry:
+    - check primary candidate quality
+    - possible to scrape candidate quality for primary candidates from: Ballotpedia, FEC, Open Secrets
+
 
 Reading for design:
 
 - [ ] Achen–Bartels (Realists) lit review
 - [ ] Achen critique of Miller and Stokes (Lewis and Tausanovitch)
+- [ ] alvarez nagler
 - [ ] read Hall-Thompson
 - [ ] Hirano and Snyder
 - [ ] Langella and Rogowski
@@ -17,6 +30,7 @@ Reading for design:
 
 Reading for thinking:
 
+- [ ] read Grimmer's VI paper
 - [ ] read Bailey ranefs
 - [ ] ranef distribution misspecification
 - [ ] read explaining fixed effects
@@ -35,7 +49,12 @@ Writing to-dos:
     - Throwing around "getting preferences into government"
     - When would primaries _not_ work? How can you reframe the question to focus energy?
     - Improve the way I talk about "strategic" vs. "representation" using DIME scores. 
-    - 
+
+Analysis:
+
+- Ch 4 BART
+    - justify BART w/ RMSE in predicting treatment/mediator (also in vs. out)
+    - decide if we should do two stages for each analysis
 
 Data:
 

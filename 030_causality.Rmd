@@ -67,11 +67,17 @@ library("patchwork")
 ```
 
 
-## Models of Causal Inference
+
+## Essential Concepts
+
+### Bayesian Inference
+
+### Causal Models
 
 Intro Rubin and Pearl models.
 
 Strictly speaking, causality is never observed. It is only inferred with the help of assumptions.
+
 
 
 
@@ -94,6 +100,9 @@ Do battle with the "implied nonparametric estimator" framework.
 - the "nonparametric estimators" are usually just averages of treatment and control group outcomes, under ignorability assumptions.
 - Parametric models for estimands are usually a byproduct of thinking within an MLE/regression framework. Many causal inf techniques don't do that. Instead they try to simply predict E[y(1) - y(0)] and don't care about the interpretability of the other RHS terms.
 - Thinking outside the "typical econometric" framework it's actually kinda easy to see how one flavor of fitting Bayesian models for causal effects. If the technology for prediction is Bayesian, you just get the prediction and the posterior distribution. You then deal with the bias/variance properties of $\hat{y}$ or $\tilde{y}$ (unobserved counterfactuals) but at least your focus is on the predictions rather than coefficients (which, from this view, who cares about those?)
+- This actually fits quite nicely with the machine learning approach to causal inference
+
+
 
 We can think bigger about Bayesian _inference_ for a parameter as distinct from Bayesian _estimation_ of the in-sample quantity. 
 This lets us use a nonparametric data-driven estimator for the data, but the "inference" or "generalization" still has a prior.
@@ -168,6 +177,16 @@ Unobserved data: $\tilde{y}_{i}$
 Inference about $\tilde{y}_{i}$: $p(\tilde{y}_{i} \mid \mathbf{y}) \propto p(\tilde{y}_{i} \mid \theta, \mathbf{y})p(\theta)$
 
 
+This fits an ML approach:
+
+- ML approach to causal inference recasts the problem as a prediction problem for the treatment assignment.
+- Treatment effects are then integrated over the uncertainty in the propensity
+- This propagates uncertainty using the exact model machinery, rather than a post-hoc computational workaround like bootstrapping
+    - Bootstrapping does have an appealing feature that it isn't making a parametric assumption about errors in the model. It simply uses the "sampling uncertainty" intuition to build intuitive bounds on effect uncertainty.
+    - However in many real-world cases the data we have cannot be resampled, so the framework for inference under bootstrapping doesn't make theoretical sense without appealing to a "superpopulation" philosophy. 
+    - Bayes naturally deals with this by assigning a probability distribution to the unmodeled features, which mechanistically follows a similar assumption as a parametric assumption about errors in any typical regression case: the prior isn't really extra. 
+    - If this assumption isn't something you want, it is possible to generalize the model by specifying an overdispersion parameter and letting the data inform what which model estimates can be rationalized against plausible overdispersion parameters. For example, Kruske's BEST approach to difference-in-means testing. 
+- In a Bayesian framework, we have posterior More of a "priors to facilitate posteriors" approach, not a prior information view (since there is some formal data peeking involved)
 
 
 
@@ -221,13 +240,12 @@ In a maximum likelihood framework, equivalent parameterizations are a more benig
 The consequence for Bayesian analysis, however, is that the parameterization of the data model determines the set of parameters and their functional relationship to the data.
 
 
-
-
-
-
 <!------- TO DO ---------
-- decide if centering is worth it to discuss here
+- linear reparameterization: easy to understand
+- decide if non-centering is worth it to discuss here
+- nonlinear reparameterization: a much bigger problem
 ------------------------->
+
 
 
 One example of equivalent reparameterization arises with the different possible ways to write a linear regression model. The first form specifies $y_{i}$ for unit $i$ as a linear function of $x_{i}$ with a random error that is mean $0$ and standard deviation $\sigma$.
@@ -426,10 +444,16 @@ Nonlinear transformation of $\theta$ does not preserve a uniform density over pa
 
 
 
+Alex meeting takeaways:
+
+- every prior has a "covariant" prior in a different parameterization
+- the posteriors will be covariant as well.
+- The way you get between them is by transforming the parameter and doing the appropriate Jacobian transformation to the density.
+- Jeffrey's priors are a special case of this where the prior is proportional to the determinant of the information matrix. This has the beneficial property of "optimal learning" from the data. For example, flat Beta prior doesn't "hedge toward 50" in quite the same way.
+
 
 
 #### Parameterization 
-
 
 
 
@@ -569,18 +593,19 @@ Although the treatment effect $\beta$ from Equation&nbsp;\@ref(eq:diff-means-exa
 
 
 
-### Pragmatic Priors for Causal Inference
+## Guidance for Pragmatic Causal Inference
+
+### Parameterization is a Choice
+
+### Weakly Informative Priors
 
 Structure (bounds), regularization (L1, L2), hierarchy
 
+### Regularization-Induced Confounding
 
+### Toward "Agnostic" Causal Inference
 
-
-### Direct Counterfactual Comparisons
-
-ML approach
-
-More of a "priors to facilitate posteriors" approach, not a prior information view (since there is some formal data peeking involved)
+Sidestepping priors
 
 
 
@@ -589,11 +614,20 @@ More of a "priors to facilitate posteriors" approach, not a prior information vi
 
 ### Regression Discontinuity with a Binary Outcome
 
+
+
 Parameterization, structural information
 
 ### Meta-Analysis of Nonparametric Treatment Effects
 
 
+## Beyond Estimation: Inferences About Models and Hypotheses
+
+Inherit material from earlier section
+
+## Unresolved Issues
+
+### Agnostic Causal Inference
 
 
 
