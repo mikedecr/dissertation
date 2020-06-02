@@ -30,4 +30,9 @@ The functional form of the network structure
 
 
 
+# Let me see if I've got this right
+
+Regression: $y \sim g\left(X\beta\right)$
+
+Deep Learning: $y \sim g\left(h\left(X\beta\right)\alpha\right)$
 
