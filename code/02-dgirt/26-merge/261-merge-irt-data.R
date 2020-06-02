@@ -27,6 +27,23 @@
 
 
 
+# agenda:
+
+# get Foster-Molina data in here?
+
+# Mediator controls (lagged, prior election):
+# - Gcontested
+# - fundraising for/against party
+# - party of president
+# - district demographics
+# - out theta
+
+# Exposure controls (not laggeded)
+# - current demographics
+# - older measures: fractionalization? TPO?
+# - out theta
+
+
 
 # ---- packages and options -----------------------
 
@@ -201,6 +218,7 @@ dime_all_slim <- dime_all_raw %>%
 
 # decide what to keep?
 # add primary 2016 rules
+# collapsed primary codings
 bc <- bc_raw %>%
   mutate_all(labelled::remove_labels) %>%
   mutate(
@@ -225,6 +243,15 @@ bc <- bc_raw %>%
     primary_rules = case_when(
       elect_year == 2016 ~ rules_2016,
       TRUE ~ primary_rules
+    ),
+    primary_rules_cso = case_when(
+      str_detect(primary_rules, "semi") ~ "semi",
+      str_detect(primary_rules, "blanket") ~ "open",
+      TRUE ~ primary_rules
+    ),
+    primary_rules_co = case_when(
+      primary_rules %in% c("open", "blanket", "semi-open") ~ "open",
+      primary_rules %in% c("closed", "semi-closed") ~ "closed"
     )
   ) %>%
   select(
@@ -272,7 +299,7 @@ bc_agg_vars <- bc %>%
     state_icpsr, region_icpsr,
     Pelection_slug,
     # primary rules, timing
-    primary_rules, Pelect_date, primary_season, starts_with("same_day"),
+    starts_with("primary_rules"), Pelect_date, primary_season, starts_with("same_day"),
     filing_deadline, Pfiling_timing,
     # primary circumstances 
     contains("cases"), 
