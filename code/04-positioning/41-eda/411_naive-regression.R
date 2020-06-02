@@ -26,30 +26,28 @@ model_output_dir <- 102977578033
 
 # ---- Data sources -----------------------
 
-# import MCMC
-mcmc <- 
-  here("data", "mcmc", "dgirt", "run", "samples", "2020-01-13-mcmc-homsk-2010s.RDS") %>%
-  readRDS()
+# hiding these data sources because I think they're obsolete now?
 
+# Model MCMC samples
+# mcmc <- 
+#   here("data", "mcmc", "dgirt", "run", "samples", "2020-01-13-mcmc-homsk-2010s.RDS") %>%
+#   readRDS()
 
-# tidy pre-stan data
-master_data <- 
-  readRDS(
-    here("data", "mcmc", "dgirt", "run", "input", "master-model-data.RDS")
-  ) %>%
-  print()
-
-
+# tidy pre-stan data (for matching to group numbers, parties etc)
+# master_data <- 
+#   readRDS(
+#     here("data", "mcmc", "dgirt", "run", "input", "master-model-data.RDS")
+#   ) %>%
+#   print()
 
 # Bonica scores and other candidate features
 # do we not need this anymore if dynamic scores are in the FULL data?
-dime_all_raw <- 
-  rio::import(
-    here("data", "dime-v3", "full", "dime_recipients_all_1979_2018.rdata")
-  ) %>%
-  as_tibble() %>%
-  print()
-
+# dime_all_raw <- 
+#   rio::import(
+#     here("data", "dime-v3", "full", "dime_recipients_all_1979_2018.rdata")
+#   ) %>%
+#   as_tibble() %>%
+#   print()
 
 
 # combo of DIME (cong), BC aggregate, IRT samples
@@ -59,8 +57,10 @@ full_data <-
 
 
 
-full_data %>%
-  count(incumbency)
+count(full_data, incumbency, cycle)
+
+# to do: why are there any NAs here?
+count(full_data, primary_rules)
 
 
 
@@ -182,6 +182,56 @@ full_data %>%
 
 
 
+
+
+# ----------------------------------------------------
+#   initial scatterplots
+# ----------------------------------------------------
+
+# overall
+ggplot(full_data) +
+  aes(x = theta_mean_rescale, y = recipient_cfscore_dyn, 
+      color = party, fill = party) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm", color = "black") +
+  scale_color_manual(values = party_code_colors) +
+  scale_fill_manual(values = party_code_colors)
+
+# primary 3-code
+ggplot(full_data) +
+  aes(x = theta_mean_rescale, y = recipient_cfscore_dyn, 
+      color = party, fill = party, linetype = primary_rules_cso) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm", color = "black") +
+  scale_color_manual(values = party_code_colors) +
+  scale_fill_manual(values = party_code_colors)
+
+
+# primary binary
+ggplot(full_data) +
+  aes(x = theta_mean_rescale, y = recipient_cfscore_dyn, 
+      color = party, fill = party, linetype = primary_rules_co) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm", color = "black") +
+  scale_color_manual(values = party_code_colors) +
+  scale_fill_manual(values = party_code_colors)
+
+
+
+# primary binary x incumbency
+ggplot(full_data) +
+  aes(x = theta_mean_rescale, y = recipient_cfscore_dyn, 
+      color = party, fill = party, linetype = primary_rules_co) +
+  geom_point(alpha = 0.2) +
+  facet_grid(. ~ fct_relevel(incumbency, "Incumbent")) +
+  geom_smooth(method = "lm", color = "black") +
+  scale_color_manual(values = party_code_colors) +
+  scale_fill_manual(values = party_code_colors)
+
+
+
+
+
 # estimate simple, single-level lm()
 simple_regs <- full_data %>%
   group_by(party, incumbency, cycle) %>%
@@ -201,16 +251,299 @@ simple_regs <- full_data %>%
   print() 
 
 
+# might want to change what you save here:
+# box_write(
+#   select(simple_regs, -data, -lm), 
+#   "simple-regs.rds",
+#   dir_id = 102977578033
+# )
 
-box_write(
-  select(simple_regs, -data, -lm), 
-  "simple-regs.rds",
-  dir_id = 102977578033
-)
+
+
+# ----------------------------------------------------
+#   BART for dummies
+# ----------------------------------------------------
+
+# test_prob <- 0.1
+blip_value <- 0.5
+
+# using demographic data from BC instead of Foster Molina?
+bart_data <- full_data %>%
+  transmute(
+    party,
+    recipient_cfscore_dyn, # outcome
+    theta_mean_rescale, # treatment model
+    primary_open = 
+      as.numeric(primary_rules %in% c("open", "blanket")),
+    primary_semi = 
+      as.numeric(primary_rules %in% c("semi-open", "semi-closed")),
+    cycle_2014 = as.numeric(cycle == 2014),
+    cycle_2016 = as.numeric(cycle == 2016),
+    district_nonwhite,
+    district_college_educ,
+    district_blue_collar,
+    district_foreign_born,
+    district_latino,
+    district_median_income,
+    district_over_65,
+    district_pop_density,
+    district_veteran,
+    rep_pres_vs_centered = rep_pres_vs - blip_value, # mediator model
+    district_dpres_lagged
+  ) %>%
+  drop_na() %>%
+  print()
+
+
+# ---- do a sample split workflow to start -----------------------
+
+# and fix it later
+bart_frame <- bart_data %>%
+  group_by(party) %>% 
+  mutate(fold = sample(1:5, size = n(), replace = TRUE)) %>%
+  nest() %>%
+  crossing(grp = 1:5) %>%
+  # filter(grp %in% c(1, 2)) %>% # delete later
+  print()
+
+# fit bart, test data already "demediated"
+bart_mediator <- bart_frame %>% 
+  group_by(party, grp) %>% 
+  # create mediator data & fit
+  mutate(
+    test_mediator = map2(.x = data, .y = grp, .f = ~ filter(.x, fold == .y)),
+    train_mediator = map2(.x = data, .y = test_mediator, .f = anti_join),
+    bart_mediator = map2(
+      .x = train_mediator,
+      .y = test_mediator,
+      .f = ~ {
+        BART::wbart(
+          x.train = .x %>%
+            select(-recipient_cfscore_dyn, -fold) %>% 
+            as.data.frame(),
+          y.train = pull(.x, recipient_cfscore_dyn),
+          x.test = .y %>% 
+            select(-recipient_cfscore_dyn, -fold) %>% 
+            mutate(rep_pres_vs_centered = 0) %>%
+            as.data.frame()
+        )
+      }
+    )
+  ) %>%
+  print()
+
+
+# create blipped dataset with demediated outcome
+blipdown_table <- bart_mediator %>%
+  mutate(
+    blip_data = map2(
+      .x = test_mediator,
+      .y = bart_mediator,
+      .f = ~ {
+        .x %>%
+        mutate(y_blip = .y$yhat.test.mean)
+      }
+    )
+  ) %>%
+  ungroup() %>%
+  select(party, blip_data) %>%
+  unnest(blip_data) %>%
+  print()
+
+
+# predicted vs actual cfscore ~ f(pvote)
+ggplot(blipdown_table) +
+  aes(y = recipient_cfscore_dyn, x = y_blip) +
+  geom_point() +
+  geom_smooth(aes(color = party))
+
+
+# ---- estimate final model, create test data at means ---------------
+
+bart_treatment <- blipdown_table %>%
+  group_by(party) %>%
+  mutate(fold = sample(x = 1:5, size = n(), replace = TRUE)) %>%
+  nest() %>%
+  crossing(grp = 1:5) %>%
+  mutate(
+    test_treatment = map2(.x = data, .y = grp, .f = ~ filter(.x, fold == .y)),
+    train_treatment = map2(.x = data, .y = test_treatment, .f = anti_join),
+    bart_treatment = map2(
+      .x = train_treatment,
+      .y = test_treatment,
+      .f = ~ {
+        BART::wbart(
+          x.train = .x %>%
+            select(-y_blip, -fold) %>% 
+            as.data.frame(),
+          y.train = pull(.x, y_blip),
+          x.test = .y %>%
+            select(-recipient_cfscore_dyn, -fold) %>% 
+            as.data.frame()
+        )
+      }
+    )
+  ) %>%
+  print()
+
+
+# ---- predict outcome data, given the test RHS as is ----------
+
+outcome_predictions <- bart_treatment %>%
+  mutate(
+    outcome_predictions = map2(
+      .x = test_treatment,
+      .y = bart_treatment,
+      .f = ~ {
+        .x %>%
+        mutate(cfscore_hat = .y$yhat.test.mean)
+      }
+    )
+  ) %>%
+  ungroup() %>%
+  select(party, outcome_predictions) %>%
+  unnest(outcome_predictions) %>%
+  print()
+
+ggplot(outcome_predictions) +
+  aes(x = y_blip, y = cfscore_hat) +
+  geom_point() +
+  geom_smooth(method = "lm", aes(color = party))
 
 
 
-?BART::wbart
+
+
+# ---- calculate CDE for various theta values -----------------------
+
+ggplot(bart_data) +
+  aes(x = theta_mean_rescale) +
+  geom_histogram()
+
+
+# replace in-sample theta with a counterfactual
+# then get predictions for every data point
+cdes <- bart_treatment %>%
+  crossing(counterfactual_theta = seq(-1.5, 1.5, 0.5)) %>%
+  filter(
+    (party == "D" & counterfactual_theta < 0) |
+    (party == "R" & counterfactual_theta > 0)
+  ) %>%
+  group_by(party, grp, counterfactual_theta) %>% 
+  mutate(
+    cde_data = map2(
+      .x = test_treatment, 
+      .y = counterfactual_theta,
+      .f = ~ {
+        .x %>%
+        mutate(
+          theta_mean_rescale = .y
+        )
+      }
+    ),
+    cde_prediction = map2(
+      .x = bart_treatment,
+      .y = cde_data,
+      .f = ~ {
+        .y %>%
+        select(-c(fold, y_blip, recipient_cfscore_dyn)) %>%
+        summarize_all(mean) %>%
+        as.data.frame() %>%
+        predict(.x, newdata = .) %>%
+        apply(MARGIN = 1, mean) %>%
+        as_tibble()
+      }
+    )
+  ) %>%
+  print()
+
+
+
+# ---- scatter against theta -----------------------
+
+
+cdes %>%
+  unnest(cde_prediction) %>%
+  pivot_wider(
+    names_from = "counterfactual_theta",
+    values_from = "value"
+  )
+
+beepr::beep()
+
+
+cdes %>%
+  unnest(cde_prediction) %>%
+  ggplot() +
+  aes(x = counterfactual_theta, y = value) +
+  geom_jitter()
+
+
+
+cdes %>%
+  unnest(cde_prediction) %>%
+  mutate(
+    party_name = case_when(
+      party == "D" ~ "Democratic Candidates",
+      party == "R" ~ "Republican Candidates"
+    )
+  ) %>%
+  ggplot() +
+  aes(
+    x = value, y = as.factor(counterfactual_theta), fill = party
+  ) +
+  ggridges::geom_density_ridges(
+    draw_baseline = FALSE,
+    boundary = 0, binwidth = .05
+  ) +
+  facet_wrap(~ party_name, scales = "free") +
+  labs(
+    x = TeX("$E\\[CFscore | do(\\theta), \\bar{X}\\]$"),
+    y = TeX("Counterfactual District-Party Ideology ($\\theta$)"),
+    title = "Posterior Distribution of CFscores",
+    subtitle = "Controls held at means"
+  ) +
+  scale_fill_manual(values = c(dblue, rred)) +
+  theme(legend.position = "none")
+
+
+
+
+  mutate(test_case = fold) %>%
+  group_by(fold) %>%
+  nest() %>%
+
+
+
+test_bart_mediator <- 
+  BART::wbart(
+    x.train = bart_data %>%
+              filter(test_case == 0) %>% 
+              as.data.frame(),
+    y.train = bart_data %>%
+              filter(test_case == 0) %>% 
+              pull(recipient_cfscore_dyn),
+    x.test = bart_data %>%
+              filter(test_case == 1) %>% 
+              as.data.frame()
+  )
+
+
+
+predict(test_bart_mediator, newdata = .)
+
+
+# understanding priors for trees
+# big A, shallower tree
+# higher B, steeper convergence toward terminal nodes in d
+tibble(d = 1:5) %>%
+  crossing(a = seq(.1, .9, .25), b = c(0, 1, 2, 10)) %>%
+  mutate(
+    terminal = 1 - (a * (1 + d)^(-b))
+  ) %>%
+  ggplot(aes(x = d, y = log(terminal))) +
+  geom_line(aes(color = as.factor(a), linetype = as.factor(b))) +
+  facet_wrap(~ b)
 
 
 
@@ -241,7 +574,7 @@ full_data %>%
   scale_fill_manual(values = party_code_colors) +
   labs(
     x = "Party-Public Ideal Point",
-    y = "Candidate CF Score"
+    y = "Candidate CF Score (Dynamic)"
   ) +
   theme(panel.grid = element_line(color = "gray90")) +
   geom_text(
@@ -269,8 +602,10 @@ full_data %>%
   theme(legend.position = "none")
 
 
+
+
 # cycle fixed effects?
-naive_models <- full %>%
+naive_models <- full_data %>%
   # group_by(party) %>%
   group_by(party, incumbency) %>%
   # group_by(party, incumbency, cycle) %>%
