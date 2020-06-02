@@ -231,9 +231,16 @@ ggplot(dime) +
 
 
 
-## The Direct Effect of Partisan Preferences
+## How Partisan Preferences Affect Candidates
 
 
+### Naive regression
+
+- what is the relationship
+- let's control for the thing
+- what does this imply?
+
+### The Direct Effect of District-Party Ideology
 
 ```{r problem-dag}
 problem_dag <- 
@@ -504,6 +511,28 @@ or, written as a probability distribution
 
 ## Data and Empirical Approach
 
+### Data
+
+
+#### Primary Rules
+
+General comment: very difficult to code these.
+
+- law vs. party rules
+- for some organizations "open" means there's ANY openness, which can include the McGhee "semi-closed" definition
+- most states have the same system for both parties, but some state laws leave it open to parties to modify their rules in the months leading up to the election. 
+
+
+I take data from Boatright on primaries. 
+
+- 2016: combination of NCSL, Ballotpedia, and OpenPrimaries.org, as of 2020-05-27.
+
+
+### Sequential-G Estimation
+
+### Machine Learning Methods for Causal Inference
+
+
 ```{r read-g}
 g_samples <- 
   here("data", "_model-output", "04-positioning", "pos-g-samples.rds") %>%
@@ -554,21 +583,15 @@ For my independent variable, I use my own district-party ideology estimates gene
 Control variables are measured primarily at the congressional district level and are drawn primarily from @foster-molina:2016:data. These covariates include racial, educational, religious, and economic features of districts, which I revisit below. Currently I do not have data on primary institutions included in the routine, which limits what I can say about effect modification in primaries vs. caucuses or as a function of primary openness. This is an important part of the story to include in the future. 
 
 
-### Primary Rules
-
-General comment: very difficult to code these.
-
-- law vs. party rules
-- for some organizations "open" means there's ANY openness, which can include the McGhee "semi-closed" definition
-- most states have the same system for both parties, but some state laws leave it open to parties to modify their rules in the months leading up to the election. 
-
-
-I take data from Boatright on primaries. 
-
-- 2016: combination of NCSL, Ballotpedia, and OpenPrimaries.org, as of 2020-05-27.
 
 
 
+
+### Bayesian Estimation
+
+
+
+### BART for Causal Inference
 
 ### Model
 

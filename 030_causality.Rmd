@@ -72,6 +72,28 @@ library("patchwork")
 
 ### Bayesian Inference
 
+Conventional:
+\begin{align}
+  p(\theta \mid \mathbf{y}) &= \frac{p(\mathbf{y} \mid \theta)p(\theta)}{p(\mathbf{y})} \\
+  p(\theta \mid \mathbf{y}) &\propto p(\mathbf{y} \mid \theta)p(\theta)
+\end{align}
+
+Implied:
+\begin{align}
+  p(\theta \mid \mathbf{y}, \mathcal{H}) &= \frac{p(\mathbf{y} \mid \theta, \mathcal{H})p(\theta \mid \mathcal{H})}{p(\mathbf{y} \mid \mathcal{H})}
+\end{align}
+
+
+
+Joint model of the system:
+
+- likelihood :: prior
+- Lampinen Vehtari 2001: likelihood as "prior for the data" is the basis for all generalization from any finite model
+<!-- Describing the prior information explicitly distinguishes the Bayesian approach from the maximum likelihood (ML) methods. It is important to notice, however, that the role of prior knowledge is equally important in any other approach, including the ML. Basically, all generalization is based on the prior knowledge, as discussed in Lemm (1996, 1999); the training samples provide information only at those points, and the prior knowledge provides the necessary link between the training samples and the not yet measured future samples.  -->
+
+
+
+
 ### Causal Models
 
 Intro Rubin and Pearl models.
@@ -81,7 +103,9 @@ Strictly speaking, causality is never observed. It is only inferred with the hel
 
 
 
-## The Meaning of Parameters in Design and Estimation
+## Bayesian Causal Inference on Theoretical Grounds
+
+### What are "Parameters" in Design and Estimation
 
 What was I trying to say here? 
 
@@ -166,7 +190,7 @@ What is THIS project going to do?
 
 
 
-## Rubin's Vision: Posterior Distributions for Missing Potential Outcomes
+### Rubin's Vision: Posterior Distributions for Missing Potential Outcomes
 
 Causal model: $y_{i}(1)$ and $y_{i}(0)$
 
@@ -192,26 +216,10 @@ This fits an ML approach:
 
 
 
-## The Issue of Priors
-
-Various roles that priors take on
-
-- merely facilitate posterior inference
-- structural information
-- weak information
-- regularization / stabilization
-- prior knowledge
-
-A general orientation toward priors in this dissertation:
-
-- Not about "stacking the deck" or hazy notions of "prior beliefs"
-- information, not belief
-- inference about the thing we care about (counterfactuals)
-- structural information when we have it
-- Causal inference: "agnosticism" is something valuable generally
 
 
-### The Inescapable Choice of Parameterization
+
+### Priors and the Parameterization of the Likelihood
 
 <!------- TO DO ---------
 - this needs reverse outline
@@ -369,6 +377,7 @@ Problems of beliefs:
 - No degree of belief.
 - Parameterization makes this too challenging.
 - Prior might change depending on what I ate for lunch. 
+- "Elicitation" of priors satisfying the wrong audience, or at the very least can be easily misused. We don't want to elicit priors about arcane model parameters. We want to elicit priors about the _world_ (Gill Walker)d
 
 
 Problems of nuisance prior
@@ -376,6 +385,8 @@ Problems of nuisance prior
 - parameterization gets you again
 - the MLEs are unstable, overfit
 - make the regularization argument in-sample
+
+
 
 
 Pragmatic view of priors
@@ -401,59 +412,7 @@ Parameters are a _choice_.
 
 
 
-### Parameterization and the Impossibility of Flat Priors
-
-<!------- TO DO ---------
-- does this go in previous section?
-------------------------->
-
-The primary resistance to Bayesian inference in applied research is the need to set a prior at all. To many researchers, the prior distribution is an additional assumptions that is never feels justified because it is external to the data. Often researchers wish to sidestep this choice altogether, preferring a "flat" prior that prefers all parameters equally.
-
-We have seen so far that the parameterization of a model has consequences for prior specification. Reparameterization may result in an algebraically equivalent likelihood
-<!------- TO DO ---------
-- define "equivalent reparameterization"
-------------------------->
-
-
-The incoherence of flatness: 
-
-- no universally valid strategy for specifying flat priors because it is always possible to rearrange the data model either by transforming a parameter or otherwise rearranging the likelihood. 
-
-Consider an experiment with a binary treatment $Z$ and a binary outcome variable $Y$. We want to determine the effect of $Z$ by comparing the success probability in the treatment group, $\pi_{1}$, to the success probability in the control group, $\pi_{0}$.
-
-
-
-- "no way to conceptualize an uninformative prior because you can always rearrange the problem through a reparameterization or transformation of a parameter"
-- examples of transformations having crazy implications/MLE being wild (logit).
-- Jeffreys prior: actually a very limited range of priors that satisfy an "invariance" property. My words: such that the "amount of information obtained from data about is invariant to parameterization of the likelihood, for all possible values of the parameter," or, "the only way for the posterior distribution to be exactly the same, given the same data, for all true parameter values (?), is the Jeffreys prior," or, regardless of the data, I will learn the same thing about the generative model regardless of which equivalent parameterization of the generative model is used.  
-    - is it worth it to think about the theoretical meaning of information
-    - how does flatness reflect information in nonlinear scales?
-
-
-Suppose we have some posterior distribution which relies on some parameter vector $\overrightarrow{\alpha}$. 
-\begin{align}
-  p\left(\overrightarrow{\alpha} \mid y\right) &\propto 
-    p(y \mid \overrightarrow{\alpha} )
-    p( \overrightarrow{\alpha} )
-\end{align}
-Consider some alternate parameterization of the likelihood parameterized by $\overrightarrow{\beta}$. 
-
-Nonlinear transformation of $\theta$ does not preserve a uniform density over parameters.
-
-
-
-
-
-Alex meeting takeaways:
-
-- every prior has a "covariant" prior in a different parameterization
-- the posteriors will be covariant as well.
-- The way you get between them is by transforming the parameter and doing the appropriate Jacobian transformation to the density.
-- Jeffrey's priors are a special case of this where the prior is proportional to the determinant of the information matrix. This has the beneficial property of "optimal learning" from the data. For example, flat Beta prior doesn't "hedge toward 50" in quite the same way.
-
-
-
-#### Parameterization 
+#### Data Falsification
 
 
 
@@ -520,6 +479,100 @@ The fact that it adds information to the log posterior is unaffected by whether 
 
 
 
+#### Flatness is a Relative, Not an Absolute, Property of Priors
+
+<!------- TO DO ---------
+- does this go in previous section?
+------------------------->
+
+The primary resistance to Bayesian inference in applied research is the need to set a prior at all. To many researchers, the prior distribution is an additional assumptions that is never feels justified because it is external to the data. Often researchers wish to sidestep this choice altogether, preferring a "flat" prior that prefers all parameters equally.
+
+We have seen so far that the parameterization of a model has consequences for prior specification. Reparameterization may result in an algebraically equivalent likelihood
+<!------- TO DO ---------
+- define "equivalent reparameterization"
+------------------------->
+
+
+The incoherence of flatness: 
+
+- no universally valid strategy for specifying flat priors because it is always possible to rearrange the data model either by transforming a parameter or otherwise rearranging the likelihood. 
+
+Consider an experiment with a binary treatment $Z$ and a binary outcome variable $Y$. We want to determine the effect of $Z$ by comparing the success probability in the treatment group, $\pi_{1}$, to the success probability in the control group, $\pi_{0}$.
+
+
+
+- "no way to conceptualize an uninformative prior because you can always rearrange the problem through a reparameterization or transformation of a parameter"
+- examples of transformations having crazy implications/MLE being wild (logit).
+- Jeffreys prior: actually a very limited range of priors that satisfy an "invariance" property. My words: such that the "amount of information obtained from data about is invariant to parameterization of the likelihood, for all possible values of the parameter," or, "the only way for the posterior distribution to be exactly the same, given the same data, for all true parameter values (?), is the Jeffreys prior," or, regardless of the data, I will learn the same thing about the generative model regardless of which equivalent parameterization of the generative model is used.  
+    - is it worth it to think about the theoretical meaning of information
+    - how does flatness reflect information in nonlinear scales?
+
+
+Suppose we have some posterior distribution which relies on some parameter vector $\overrightarrow{\alpha}$. 
+\begin{align}
+  p\left(\overrightarrow{\alpha} \mid y\right) &\propto 
+    p(y \mid \overrightarrow{\alpha} )
+    p( \overrightarrow{\alpha} )
+\end{align}
+Consider some alternate parameterization of the likelihood parameterized by $\overrightarrow{\beta}$. 
+
+Nonlinear transformation of $\theta$ does not preserve a uniform density over parameters.
+
+
+
+
+
+Alex meeting takeaways:
+
+- every prior has a "covariant" prior in a different parameterization
+- the posteriors will be covariant as well.
+- The way you get between them is by transforming the parameter and doing the appropriate Jacobian transformation to the density.
+- Jeffrey's priors are a special case of this where the prior is proportional to the determinant of the information matrix. This has the beneficial property of "optimal learning" from the data. For example, flat Beta prior doesn't "hedge toward 50" in quite the same way.
+
+
+
+
+### Priors on Models and "No-Free-Lunch" Theorems
+
+Models (likelihoods) are priors
+
+Identification assumptions are priors
+
+Generalization to any population is a prior
+
+We are always doing violence, but the framework lets us build out more and more general models to structure our uncertainties
+
+
+
+## Bayesian Causal Inference in Practice
+
+### Orientations Toward Prior Distributions
+
+Various roles that priors take on
+
+- merely facilitate posterior inference
+- structural information
+- weak information
+- regularization / stabilization
+- prior knowledge
+
+A general orientation toward priors in this dissertation:
+
+- Not about "stacking the deck" or hazy notions of "prior beliefs"
+- information, not belief
+- inference about the thing we care about (counterfactuals)
+- structural information when we have it
+- Causal inference: "agnosticism" is something valuable generally
+
+
+### Principled Approaches to Model Parameterization
+
+Models are a tool, set it up so that it works.
+
+
+
+
+
 
 ```{r diff-means-example}
 means_data <- 
@@ -566,8 +619,6 @@ plot_prior(data = means_data, x = x, y = triangle) +
 
 
 
-
-
 For instance, consider a simple experiment with a binary outcome variable $y_{i}$ and binary treatment assignment $z_{i} \in \{0, 1\}$. Suppose that the treatment effect of interest is a difference-in-means, $\bar{y}_{z = 1} - \bar{y}_{z = 0}$, estimated from a linear probability model. This linear probability model might be parameterized in two ways. First is a conventional regression setup,
 \begin{align}
   y_{i} &= \alpha + \beta z_{i} + \epsilon_{i}
@@ -588,20 +639,36 @@ Although the treatment effect $\beta$ from Equation&nbsp;\@ref(eq:diff-means-exa
 ```
 
 - equivalent parameterizations
-
-
-
-
-
-## Guidance for Pragmatic Causal Inference
-
-### Parameterization is a Choice
-
-### Weakly Informative Priors
+### Structural Priors and Weak Information
 
 Structure (bounds), regularization (L1, L2), hierarchy
 
+
+### Understanding Log Prior _Shape_
+
+This is low-key pretty big
+
+
 ### Regularization-Induced Confounding
+
+
+
+### Full Posterior Uncertainty
+
+Multi-stage models
+
+- propensity models
+- structural models
+
+Predictive models
+
+Multiple comparisons and regularization
+
+
+### Identification Assumptions as Priors
+
+Relatedly: priors over models
+
 
 ### Toward "Agnostic" Causal Inference
 
@@ -614,18 +681,22 @@ Sidestepping priors
 
 ### Regression Discontinuity with a Binary Outcome
 
-
-
 Parameterization, structural information
 
 ### Meta-Analysis of Nonparametric Treatment Effects
 
 
-## Beyond Estimation: Inferences About Models and Hypotheses
+## Other Frontiers of Bayesian Causal Inference 
+
+
+
+### Beyond Estimation: Inferences About Models and Hypotheses
 
 Inherit material from earlier section
 
-## Unresolved Issues
+### Priors are the Basis for all Generalization
+
+No-Free-Lunch theorems
 
 ### Agnostic Causal Inference
 

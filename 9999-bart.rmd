@@ -113,3 +113,31 @@ What things should we investigate:
 http://brunaw.com/slides/seminars/bart/presentation.html#26
 -->
 
+
+
+<!-- 
+notes from re-read
+
+- this prior learns from the data:
+- Fewer trees require more complex single tree components, 
+  so these priors may update more aggressively
+- defaults a = .95 and b = 2 keep most trees in the 2 or 3 terminal node range
+
+- leaf parameters are 1/m E(y|x), for m trees. 
+- So summing over m recovers E(y|x).
+- leafs ~ normal(mean of leaves, sigma^2 mean of leaves)
+- which implies E=(y|x) ~ normal(m(mean(leaves)), m(sigma^2(leaves)))
+
+- Y is centered and scaled to achieve 
+- E(y|x) ~ normal(0, sigma^2) sugh that k\sqrt(m)\sigma = max(y).
+- It's sensible to fix m, set k = 2, and solve for \sigma
+
+- prior on residual standard deviation can be done by 
+  concentrating sigma beneath the sample sd of the data 
+  or the sd of a naive regression on X (should be greater than BART).
+- Precision in residual sigma induces some overfitting
+  (growing trees to rationalize smaller variances)
+  so putting thought into this is a GOOD idea
+- they do with inv(chisq) with df between 3 and 10
+  and a scale parameter set by how much mass is below naive sigma estimate
+-->
