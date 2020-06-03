@@ -1,4 +1,4 @@
-# Bayesian Causal Inference in Political Science  {#ch:causality}
+# A Bayesian Framework for Causal Inference in Political Science {#ch:causality}
 
 <!------- TO DO ---------
 - This might need to be chapter 2!!!! 
@@ -92,6 +92,7 @@ Joint model of the system:
 <!-- Describing the prior information explicitly distinguishes the Bayesian approach from the maximum likelihood (ML) methods. It is important to notice, however, that the role of prior knowledge is equally important in any other approach, including the ML. Basically, all generalization is based on the prior knowledge, as discussed in Lemm (1996, 1999); the training samples provide information only at those points, and the prior knowledge provides the necessary link between the training samples and the not yet measured future samples.  -->
 
 
+Better parameters with priors (reduce variance)
 
 
 ### Causal Models
@@ -100,12 +101,41 @@ Intro Rubin and Pearl models.
 
 Strictly speaking, causality is never observed. It is only inferred with the help of assumptions.
 
+Better parameters "by design" (reduce bias)
+
+Not _inherently_ the same as "agnostic" inference though we fux with both.
+
+
+### Shared Goals, Different Tactics
 
 
 
-## Bayesian Causal Inference on Theoretical Grounds
+## Modeling Potential Outcomes with Posterior Distributions
 
-### What are "Parameters" in Design and Estimation
+Causal model: $y_{i}(1)$ and $y_{i}(0)$
+
+Observed data: $y_{i} = z_{i}y_{i}(1) + (1 - z_{i})y_{i}(0)$
+
+Unobserved data: $\tilde{y}_{i}$
+
+Inference about $\tilde{y}_{i}$: $p(\tilde{y}_{i} \mid \mathbf{y}) \propto p(\tilde{y}_{i} \mid \theta, \mathbf{y})p(\theta)$
+
+
+This fits an ML approach:
+
+- ML approach to causal inference recasts the problem as a prediction problem for the treatment assignment.
+- Treatment effects are then integrated over the uncertainty in the propensity
+- This propagates uncertainty using the exact model machinery, rather than a post-hoc computational workaround like bootstrapping
+    - Bootstrapping does have an appealing feature that it isn't making a parametric assumption about errors in the model. It simply uses the "sampling uncertainty" intuition to build intuitive bounds on effect uncertainty.
+    - However in many real-world cases the data we have cannot be resampled, so the framework for inference under bootstrapping doesn't make theoretical sense without appealing to a "superpopulation" philosophy. 
+    - Bayes naturally deals with this by assigning a probability distribution to the unmodeled features, which mechanistically follows a similar assumption as a parametric assumption about errors in any typical regression case: the prior isn't really extra. 
+    - If this assumption isn't something you want, it is possible to generalize the model by specifying an overdispersion parameter and letting the data inform what which model estimates can be rationalized against plausible overdispersion parameters. For example, Kruske's BEST approach to difference-in-means testing. 
+- In a Bayesian framework, we have posterior More of a "priors to facilitate posteriors" approach, not a prior information view (since there is some formal data peeking involved)
+
+
+
+
+### What "Parameters" Mean in Modeling and Estimation
 
 What was I trying to say here? 
 
@@ -190,36 +220,9 @@ What is THIS project going to do?
 
 
 
-### Rubin's Vision: Posterior Distributions for Missing Potential Outcomes
+## Exposing Hidden Assumptions
 
-Causal model: $y_{i}(1)$ and $y_{i}(0)$
-
-Observed data: $y_{i} = z_{i}y_{i}(1) + (1 - z_{i})y_{i}(0)$
-
-Unobserved data: $\tilde{y}_{i}$
-
-Inference about $\tilde{y}_{i}$: $p(\tilde{y}_{i} \mid \mathbf{y}) \propto p(\tilde{y}_{i} \mid \theta, \mathbf{y})p(\theta)$
-
-
-This fits an ML approach:
-
-- ML approach to causal inference recasts the problem as a prediction problem for the treatment assignment.
-- Treatment effects are then integrated over the uncertainty in the propensity
-- This propagates uncertainty using the exact model machinery, rather than a post-hoc computational workaround like bootstrapping
-    - Bootstrapping does have an appealing feature that it isn't making a parametric assumption about errors in the model. It simply uses the "sampling uncertainty" intuition to build intuitive bounds on effect uncertainty.
-    - However in many real-world cases the data we have cannot be resampled, so the framework for inference under bootstrapping doesn't make theoretical sense without appealing to a "superpopulation" philosophy. 
-    - Bayes naturally deals with this by assigning a probability distribution to the unmodeled features, which mechanistically follows a similar assumption as a parametric assumption about errors in any typical regression case: the prior isn't really extra. 
-    - If this assumption isn't something you want, it is possible to generalize the model by specifying an overdispersion parameter and letting the data inform what which model estimates can be rationalized against plausible overdispersion parameters. For example, Kruske's BEST approach to difference-in-means testing. 
-- In a Bayesian framework, we have posterior More of a "priors to facilitate posteriors" approach, not a prior information view (since there is some formal data peeking involved)
-
-
-
-
-
-
-
-
-### Priors and the Parameterization of the Likelihood
+### Priors and Model Parameterization
 
 <!------- TO DO ---------
 - this needs reverse outline
@@ -412,7 +415,7 @@ Parameters are a _choice_.
 
 
 
-#### Data Falsification
+### Priors as Data Falsification
 
 
 
@@ -420,6 +423,7 @@ Parameters are a _choice_.
 - figure this out
 DATA FALSIFICATION digression
 ------------------------->
+
 Data falsification versus unavoidable choice:
 imagine a study with a posterior distribution $p(\mu \mid \mathbf{y})$ that is proportional to the likelihood times the prior. 
   \begin{align}
@@ -478,8 +482,13 @@ The fact that it adds information to the log posterior is unaffected by whether 
 ------------------------->
 
 
+<!------- TO DO ---------
+- but where was I going with this?
+------------------------->
 
-#### Flatness is a Relative, Not an Absolute, Property of Priors
+
+
+### Flatness is a Relative, Not an Absolute, Property of Priors
 
 <!------- TO DO ---------
 - does this go in previous section?
@@ -543,8 +552,7 @@ Generalization to any population is a prior
 We are always doing violence, but the framework lets us build out more and more general models to structure our uncertainties
 
 
-
-## Bayesian Causal Inference in Practice
+## Pragmatic Bayesian Modeling
 
 ### Orientations Toward Prior Distributions
 
@@ -563,6 +571,28 @@ A general orientation toward priors in this dissertation:
 - inference about the thing we care about (counterfactuals)
 - structural information when we have it
 - Causal inference: "agnosticism" is something valuable generally
+
+Priors are not de-confounders
+
+- downweighting, not upweighting
+
+
+
+### Modeling Cultures in Political Science: Complexity and Agnosticism
+
+Sidestepping priors
+
+complexity of bayes vs. parsimony of causal inference NOT A RULE
+
+Causal don't mean nonparametric
+
+Bayesian don't mean Complex
+
+At any rate: 
+
+- stabilizing model-heavy designs (but priors in high dimensions are scary!)
+    - that hierarchical conjoint thing
+- sensitivity testing for noisy circumstances
 
 
 ### Principled Approaches to Model Parameterization
@@ -653,16 +683,26 @@ This is low-key pretty big
 
 
 
+
+
+
+
+## Bayesian Opportunities
+
+
+
 ### Full Posterior Uncertainty
 
 Multi-stage models
 
 - propensity models
 - structural models
+- to bootstrap or not to bootstrap?
 
 Predictive models
 
 Multiple comparisons and regularization
+
 
 
 ### Identification Assumptions as Priors
@@ -670,20 +710,17 @@ Multiple comparisons and regularization
 Relatedly: priors over models
 
 
-### Toward "Agnostic" Causal Inference
 
-Sidestepping priors
-
-
-
-
-## Examples of Bayesian Causal Inference
 
 ### Regression Discontinuity with a Binary Outcome
 
 Parameterization, structural information
 
+
 ### Meta-Analysis of Nonparametric Treatment Effects
+
+
+
 
 
 ## Other Frontiers of Bayesian Causal Inference 

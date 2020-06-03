@@ -252,7 +252,7 @@ The final manipulation is to simplify the terms above, which results in a conven
 This results in the "discrimination parameter" $\iota_{j} = 2\left(R_{j} - L_{j}\right)$, the "midpoint" or "cutpoint" parameter $\kappa_{j} = \dfrac{R_{j} + L_{j}}{2}$, and a joint error term $\epsilon_{ij} = u^{\mathtt{L}}_{ij} - u^{\mathtt{R}}_{ij}$.^[
   The names for these parameters are adapted from item-response theory (IRT), an area of psychometrics that is similarly interested in inferring latent traits from observed response data. I discuss the connection between this model and the IRT model in the next section.
 ]
-Parameterizing the model in this way expresses the utility comparison in a simpler, linear form. Similar to Equation&nbsp;\@ref(eq:factor-item-params) above, $\theta_{i} - \kappa_{j}$ shows how far the Actor is from the midpoint between Left and Right, and $\iota_{j}$ captures behaves as a "slope" on this distance: the distance from the midpoint has a _stronger influence_ when the policy alternatives are farther from one another, since more utility is lost over larger spatial distances. I explore the intuitions of this functional form more thoroughly in the following section.
+Parameterizing the model in this way expresses the utility comparison in a simpler, linear form. Similar to Equation&nbsp;\@ref(eq:factor-item-params) above, $\theta_{i} - \kappa_{j}$ shows how far the Actor is from the midpoint between Left and Right, and $\iota_{j}$ behaves as a "slope" on this distance: the distance from the midpoint has a _stronger influence_ when the policy alternatives are farther from one another, since more utility is lost over larger spatial distances. I explore the intuitions of this functional form more thoroughly in the following section.
 
 A complete statistical model is obtained by making a parametric assumption for the distribution of $\epsilon_{ij}$. Assuming that $\epsilon_{ij}$ is a draw from a standard Normal distribution,^[
   This implies that $\mathrm{E}\left(u^{\mathtt{L}}_{ij}\right) = \mathrm{E}\left(u^{\mathtt{R}}_{ij}\right)$ and that $\mathrm{Var}\left(u^{\mathtt{L}}_{ij} - u^{\mathtt{R}}_{ij}\right) = 1$. 
@@ -288,11 +288,11 @@ As I show below, the probit model facilitates the group-level model much more ea
 
 
 
-### The "Item Response Theory" Approach to Survey Response
+## Item Response Theory
 
 Scholars of ideal point models have noted their similarity to models developed under item response theory (IRT) in psychometrics [for example, @londregan:1999:ideal-pts]. IRT models have a similar mission as ideal point models: measuring latent features in the data given individuals' response patterns to various stimuli. The canonical psychometric example is in education testing, where a series of test questions is used to measure a student's latent academic "ability" level. This section connects ideal point models to IRT in order to explain their important theoretical and mathematical intuitions.
 
-#### Latent Traits
+### Latent Traits
 
 The first important feature to note about IRT models is that they are *measurement models*. The goal of a measurement model is to use observed data $\mathbf{y}$ to estimate some construct of theoretical interest $\bm{\theta}$, supposing that there is a distinction between the two. The observed data $\mathbf{y}$ are affected by $\bm{\theta}$, but there is no guarantee of a one-to-one correspondence between the two because $\bm{\theta}$ is not directly observed. We can represent a measurement model with general notation $\mathbf{y} = f(\bm{\theta}, \bm{\sigma})$, where $\bm{\sigma}$ represents some vector of auxiliary model parameters to be estimated in addition to $\bm{\theta}$ by fitting the model to observed data.
 
@@ -308,7 +308,7 @@ In this way, measurement models *relax* the assumptions of simpler measurement s
 - "traits"
 ------------------------->
 
-#### Item Characteristics and Item Parameters
+### Item Characteristics and Item Parameters
 
 
 ```{r example-icc-data}
@@ -426,7 +426,7 @@ ggplot(ex_iccs) +
 Figure&nbsp;\@ref(fig:plot-example-iccs) shows how response probabilities are affected by the parameterization of item effects. Each panel plots how increases in subject ability or conservatism (the horizontal axis) result in increased response probability (the vertical axis), where the shape of the curve is set by values of the item parameters. These curves are commonly referred to as *item characteristic curves* (ICCs) or *item response functions* (IRFs). The leftmost panel shows a model with no item effects whatsoever; any item is theorized to behave identically to any other item, and response probabilities are affected only by the subject's ability (ideology). The middle panel shows a one-parameter model where item difficulties (cutpoints) are allowed to vary systematically at the item level. Difficulty parameters behave as intercept shifts, so they convey which value of $\theta$ yields a correct response with probability $0.5$, but they do not affect the *elasticity* of the item response function to changes in $\theta$. The final panel shows item response functions from the two-parameter IRT model, where item difficulties (intercepts) and discriminations (slopes) are allowed to vary across items.
 
 <!-- IRT model parameters -->
-#### IRT Interpretation of the Ideal Point Model
+### IRT Interpretation of the Ideal Point Model
 
 How do we interpret our statistical model of ideal points in light of item response theory? Recall the statistical model that we derived from the utility model above. An Actor $i$ faces policy question $j$, with a Right alternative located at $R_{j}$ and a Left alternative located at $L_{j}$. The Actor chooses the alternative closest to her ideal point $\theta_{i}$, subject to idiosyncratic utility shocks summarized by $\epsilon_{ij}$. Letting $y_{ij}$ indicate the outcome that Actor $i$ chooses the Right position on policy question $j$, the probability that $y_{ij} = 1$ is given by the two-parameter model in Equation&nbsp;\@ref(eq:2p-ogive) (or \@ref(eq:choice-2p) above).
 
@@ -451,7 +451,7 @@ In a special case that Right and Left alternatives are located in exactly the sa
 
 
 
-### Applications of the IRT Approach
+### IRT in Political Science
 
 A section reviewing IRT in political science:
 
@@ -467,7 +467,7 @@ A section reviewing IRT in political science:
 
 ## Modeling Party-Public Ideology in Congressional Districts
 
-This section outlines my group-level ideal point model for party publics. It begins by describing the connection between the individual-level IRT model and the group-level model and its implication for the parameterization of the model (Section&nbsp;\@ref(sec:how-to-group)). I then lay out the hierarchical model for party-public ideal points in its static form (Section&nbsp;\@ref(sec:geographic-model)) and its dynamic form (Section&nbsp;\@ref(sec:dynamic-model)). I discuss technical features of model implementation, including choices for model parameterization,
+This section outlines my group-level ideal point model for party publics. It begins by describing the connection between the individual-level IRT model and the group-level model and its implication for the parameterization of the model. I then lay out the hierarchical model for party-public ideal points in its static form (Section&nbsp;\@ref(sec:geographic-model)) and its dynamic form (Section&nbsp;\@ref(sec:dynamic-model)). I discuss technical features of model implementation, including choices for model parameterization,
 model identification, 
 prior distributions, 
 and model testing methods such as prior predictive checks and posterior predictive checks.
@@ -476,9 +476,6 @@ and model testing methods such as prior predictive checks and posterior predicti
 
 
 <!-- ### Static Model -->
-
-
-### Group-Level IRT Model {#sec:how-to-group}
 
 <!------- TO DO ---------
 - clean this up
@@ -613,6 +610,10 @@ for Census regions indexed $r$, which is a modeled mean-zero effect to capture c
 \end{align}
 
 
+## Dynamic Model {#sec:dynamic-model}
+
+lol tbd
+
 ### Identification Restrictions {#sec:identification-restrictions}
 
 Ideal point models, as with all latent space models, are unidentified without restrictions on the policy space. The model as written can rationalize many possible estimates for the unknown parameters, with no prior basis for deciding which estimates are best.
@@ -714,7 +715,7 @@ It is likely that many values of $n^{*}_{gj}$ and $s^{*}_{gj}$ will be non-integ
 
 
 
-### Bayesian Estimation and Computational Implementation {#sec:stan-setup}
+## Bayesian Estimation and Computation {#sec:stan-setup}
 
 <!-- ### Model Implementation in Stan  -->
 
@@ -730,12 +731,16 @@ I implement the model using Stan, a programming language for high-performance Ba
 These contributions should be highlighted here because they are crucial to ensuring valid inferences and are substantive improvements on previous software implementations of group-level IRT models.
 
 <!------- TO DO ---------
+- hierarchy of this stuff!
+------------------------->
+
+<!------- TO DO ---------
 - intro to Bayesian computation?
     - Hamiltonian Monte Carlo
     - log probability 
 -->
 
-#### Non-Centered Parameterization {#sec:noncentering}
+### Non-Centered Parameterization {#sec:noncentering}
 
 <!-- Non-Centered Parameterization -->
 <!-- Many common MCMC algorithms have  -->
@@ -791,7 +796,7 @@ Where $X_{g}$ and $Z_{sp}$ are the same group- and state-level covariates as the
 ------------------------->
 
 
-#### Log Likelihood for Weighted Data {#sec:logp-accumulator}
+### Log Likelihood for Weighted Data {#sec:logp-accumulator}
 
 One important implementation consideration for the group IRT model is the presence of weighted, non-integer response data. As described in Section&nbsp;\@ref(sec:model-weights), grouped data require reweighting to account for nonrepresentative sample designs and repeated observations within individual members of a group. The resulting data are likely to take non-integer values, which would cause the built-in Binomial likelihood function to fail. Whereas @caughey-warshaw:2015:DGIRT round their data to conform to Stan's Binomial likelihood function, my approach rewrites the likelihood function to accept non-integer data. This allows me to maintain the precision in the underlying data while still correcting the issue at hand.
 
@@ -821,7 +826,7 @@ where the weighted number of trials $n_{gj}^{*}$ and the weighted number of succ
 I pass the results of Equation&nbsp;\@ref(eq:weighted-ll-raw) directly to the log density accumulator. This maneuver accumulates the log probability of the response data, which Stan uses to evaluate the acceptance probability of MCMC samples. Other sampling statements that add prior density to the accumulator are unaffected by my approach to the log likelihood.
 
 
-#### Optimized IRT Model
+### Optimized IRT Model
 
 The matrix expansion trick would go here, if I did it.
 
@@ -831,11 +836,12 @@ The matrix expansion trick would go here, if I did it.
 
 
 
-### Prior Distributions and Prior Checks {#sec:priors}
+### Prior Distribution {#sec:priors}
 
 <!------- TO DO ---------
 - Does intro to Bayesian stuff more rightly go in Ch 1/Intro?
 ------------------------->
+
 The Bayesian modeling paradigm requires a prior probability distribution over the model parameters, which can be a benefit and a drawback of the approach. 
 The primary benefit is the ability to encode external information into a model. 
 This enables the researcher to stabilize parameter estimates and downweight unreasonable estimates, enabling the researcher to guard against overfitting and smooth estimates from similar groups. 
@@ -849,9 +855,6 @@ Firstly, the norms of the typical Bayesian workflow are evolving toward more rig
 Secondly, and more specifically to this project, the nonlinearities introduced by a probit model present particular challenges for specifying priors. Some of my choices depart from those in previous Bayesian ideal point models for important theoretical and practical reasons that I explain below.
 Thirdly, model parameterization is important for effective Bayesian computation (see Section&nbsp;\@ref(sec:noncentering)), and although reparameterization does not affect the likelihood of data given the parameters, parameterization naturally affects the choice of priors.
 This exploration of priors is a crucial component of the model-building process for this project and is uncommon in other Bayesian works in political science, so it is important to justify these choices with sufficient detail.
-
-
-#### General Approach to Prior Distributions
 
 Before discussing priors for the group ideal point model, it is helpful to discuss some general principles for working with prior distributions. They are not _universal_ principles, but they are _theoretical_ in the sense that they provide a pre-data orientation for prior distributions. They are heuristic principals in the sense that they provide powerful shortcuts to good analysis decisions based on lightweight signals about the problem at hand.^[
   @gelman:2017:applied-statistics holds that theoretical statistics ought to be the "theory of applied statistics," in the sense that statistical theory ought to be informed by "what we actually do" and should thus work to formalize aspects of workflow that begin merely as "good practice."
@@ -904,7 +907,7 @@ Throughout this discussion is a common underpinning that the data model itself p
 
 
 
-#### Understanding the Probit Model {#sec:probit-prior}
+### Understanding the Probit Model {#sec:probit-prior}
 
 
 - priors and likelihoods
@@ -1049,7 +1052,7 @@ treier %>%
     )
 ```
 
-#### Item Parameters
+### Item Parameters
 
 
 
@@ -1296,7 +1299,7 @@ ggplot(normal_priors) +
 -->
 
 
-#### Ideal Point Parameters
+### Ideal Point Parameters
 
 ```{r joint-prior, eval = FALSE}
 n_norm_sim <- 5000
@@ -1516,8 +1519,17 @@ Within-group standard deviations, as well as the scale parameters in the non-cen
 - ------------------------->
 
 
-### Dynamic Model {#sec:dynamic-model}
 
 ## Testing the Model with Simulated Data
 
-## Generating and Evaluating District-Party Ideal Points
+<!-- other file -->
+
+## Ideal Point Estimates for District-Party Publics
+
+### Data
+
+<!-- other file -->
+
+### Posterior Analysis
+
+<!-- another file? -->
