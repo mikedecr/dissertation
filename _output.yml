@@ -20,16 +20,17 @@ bookdown::gitbook:
         <li><a href="./index.html">Do Primaries Work?</a></li>
 
 # tufte doesn't work
-# bookdown::tufte_book2:
-#   number_sections: true
-#   fig_caption: true
-#   dev: cairo_pdf
-#   # dev: png
-#   toc: false
-#   keep_tex: true
-#   includes: 
-#     in_header: 
-#       - assets-bookdown/thesis-preamble.tex
+bookdown::tufte_book2:
+  number_sections: true
+  fig_caption: true
+  dev: cairo_pdf
+  # dev: png
+  toc: false
+  keep_tex: true
+  includes: 
+    in_header: 
+      - assets-bookdown/preamble-main.tex
+      - assets-bookdown/preamble-tufte.tex
 
 bookdown::pdf_book:
   number_sections: true
@@ -40,7 +41,9 @@ bookdown::pdf_book:
   keep_tex: true
   includes: 
     in_header: 
-      - assets-bookdown/thesis-preamble.tex
+      - assets-bookdown/preamble-main.tex
+      - assets-bookdown/preamble-title.tex
+      - assets-bookdown/preamble-memoir.tex
 
 # eventually: 
 # oggdown::thesis_pdf:

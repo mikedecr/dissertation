@@ -2,17 +2,19 @@
 # for reference:
 # - Mahr: <https://github.com/tjmahr/dissertation/blob/master/index.Rmd>
 
-title: "Do Primaries Work?"
-subtitle: "Nomination Politics and the Representation of Local Partisan Preferences" 
+# title: "Do Primaries Work?"
+# subtitle: "Nomination Politics and the Representation of Local Partisan Preferences" 
+title: Bayesian Causal Models of Partisan Ideology and Primary Elections
 author: "Michael G. DeCrescenzo"
 date: |
-  | `r if (knitr::is_latex_output()) "IDK yet" else if (knitr::is_html_output()) stringr::str_glue("Compiled {format(Sys.time(), '%B %d, %Y: %H:%M')}")`
+  | `r if (knitr::is_latex_output()) "September 1, 2020" else if (knitr::is_html_output()) stringr::str_glue("Compiled {format(Sys.time(), '%B %d, %Y: %H:%M')}")`
 #  `r format(Sys.time(), "%B %d, %Y: %H:%M")` 
 site: "bookdown::bookdown_site"
 github-repo: "mikedecr/dissertation"
 
 # annoying top-level LaTeX control
 documentclass: memoir
+classoption: oneside
 fontsize: 11pt
 geometry: "left = 1.25in, right = 1.25in, top = 1.25in, bottom = 1.25in"
 bibliography: assets-bookdown/thesis.bib
@@ -28,11 +30,10 @@ source(here::here("assets-bookdown", "knitr-helpers.R"))
 <!-- BEGIN FRONTMATTER CONTENT -->
 
 <!-- HTML abstract -->
-`r if (knitr::is_html_output()) include_text("00_abstract.rmd")`
+
 
 <!-- TeX: roman numbering, not on title page -->
-`r if (knitr::is_latex_output()) include_text("00_frontmatter.rmd")`
-
+<!-- `r if (knitr::is_latex_output()) include_text("00_frontmatter.rmd")` -->
 
 
 
@@ -70,6 +71,9 @@ servr::daemon_stop()
 bookdown::render_book("Index.Rmd", "bookdown::pdf_book")
 ```
 
+```{r render-tufte, eval = FALSE, cache = FALSE, include = FALSE}
+bookdown::render_book("Index.Rmd", "bookdown::tufte_book2")
+```
 
 
 ```{r render-HTML, eval = FALSE, cache = FALSE, include = FALSE}

@@ -1,0 +1,46 @@
+\makeatletter
+\renewcommand{\maketitlepage}{%
+\begingroup%
+\setlength{\parindent}{0pt}
+
+{\raggedright
+{\fontsize{36}{36}\selectfont\@title\par}
+}
+
+\vspace{36pt}{\fontsize{18}{54}\selectfont\textit{\@author}\par}
+
+\vspace{42pt}{
+  \fontsize{14}{14}\selectfont
+  \textsf{\smallcaps{Dissertation submitted in partial fulfillment of}} \par 
+  \textsf{\smallcaps{the requirements for the degree of}} \par
+}
+
+\vspace{18pt}{
+  \fontsize{16}{16}\selectfont
+  \textsc{Doctor of Philosophy} \par
+  \textsc{Political Science} \par
+  \textsc{University of Wisconsin--Madison} \par
+  \textsc{2020}
+}
+
+
+
+\vfill{\fontsize{14}{14}\selectfont\textsf{\smallcaps{Oral defense approved \@date}}\par}
+
+\vspace{18pt}{\fontsize{14}{14}\selectfont
+  \setlength{\parindent}{18pt}
+  \sffamily 
+  \indent \smallcaps{Barry C.\ Burden (Chair), Political Science} \\
+  \indent \smallcaps{Kenneth R.\ Mayer, Political Science} \\
+  \indent \smallcaps{Eleanor Neff Powell, Political Science} \\
+  \indent \smallcaps{Alexander M.\ Tahk, Political Science} \\
+  \indent \smallcaps{Michael W.\ Wagner, Journalism and Mass Comm.} 
+\par}
+
+
+% \vfill{\fontsize{14}{14}\selectfont\textit{\@publisher}\par}
+
+\thispagestyle{empty}
+\endgroup
+}
+\makeatother

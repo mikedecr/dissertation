@@ -1,0 +1,21 @@
+% document design
+% --- serif chapter styles ---
+\chapterstyle{dash} % don't want serif though
+  \renewcommand*{\chaptitlefont}{\huge\centering\bfseries} % \sffamily
+  \renewcommand*{\chapnumfont}{\chaptitlefont}
+% \chapterstyle{dowding}
+
+% --- sans serif chapter designs ---
+% \chapterstyle{ell}
+% \chapterstyle{komalike}
+%       \renewcommand*{\afterchapternum}{\newline}
+% \chapterstyle{dash}
+% \chapterstyle{lyhne}
+\pagestyle{simple}
+
+% change page nums on chapter title page 
+\copypagestyle{chapter}{simple}
+\makeoddhead{chapter}{}{}{\thepage}
+\makeevenhead{chapter}{}{}{\thepage}
+\makeoddfoot{chapter}{}{}{}
+\makeevenfoot{chapter}{}{}{}

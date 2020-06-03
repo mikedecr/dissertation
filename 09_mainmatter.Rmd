@@ -1,6 +1,7 @@
 ```{block, include = knitr:::pandoc_to() == "latex"}
 
 \mainmatter
+\pagenumbering{arabic}
 
 \DoubleSpacing
 

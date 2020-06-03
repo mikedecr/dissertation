@@ -1,0 +1,47 @@
+% !TEX root = ../_book/MGD-thesis.tex
+
+% ----------------------------------------------------
+%   Preamble for PDF build of thesis
+%   
+%   - don't do anything that compromises the HTML version!
+% ----------------------------------------------------
+
+% if this doesn't work in HTML, maybe don't bother
+% \usepackage{todonotes}
+% \presetkeys{todonotes}{color = violet!30}{}
+
+
+\usepackage[varqu, scaled = 0.95]{zi4}
+\usepackage[lf, mathtabular, minionint]{MinionPro}
+\usepackage[scaled = 0.9]{FiraSans}
+
+% replace epsilon glyph (a Minion problem...)
+\AtBeginDocument{\let\epsilon\varepsilon}
+
+% \usepackage{bm} 
+% this fails, too many math alphabets. Workaround...
+\newcommand{\bm}[1]{\boldsymbol{\mathbf{#1}}} 
+
+% teletype math using zi4?
+\renewcommand{\mathtt}[1]{\text{\texttt{#1}}}
+
+% \usepackage{xpatch}
+% \DeclareMathVersion{ttmath}
+%   \SetSymbolFont{letters}{ttmath}{OT1}{\ttdefault}{m}{n}
+% \xapptocmd{\ttfamily}{\mathversion{ttmath}}{}{}
+
+
+
+% --- counter  -----------------------
+
+% \setcounter{secnumdepth}{2}
+
+
+
+
+
+
+
+
+
+

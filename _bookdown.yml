@@ -13,32 +13,32 @@ new_session: yes # knit, then merge
 #   (for use in graphics theme? or just pkg::fun)
 # - also graphics theme?
 delete_merged_file: true
-rmd_files: 
-  latex:
-    - Index.Rmd 
-    # - 00_dedication.Rmd
-    - 00_abstract.Rmd
-    - 00_contents.Rmd
-    # - 00_thanks.Rmd
-    - 00_mainmatter.Rmd
-    - 01_arg.Rmd
-    - 020_model.Rmd
-    # - 021_model-sim.Rmd
-    - 030_causality.Rmd
-    - 040_positioning.Rmd
-    - 050_voting.Rmd
-    - 90_backmatter.Rmd
-    - 99_references.Rmd
-  html: 
-    - Index.Rmd 
-    # - 00-abstract.Rmd # tried and failed to get abstract on page 1
-    - 01_arg.Rmd
-    - 020_model.Rmd
-    # - 021_model-sim.Rmd
-    - 030_causality.Rmd
-    - 040_positioning.Rmd
-    - 050_voting.Rmd
-    - 99_references.Rmd
+# rmd_files: 
+#   latex:
+#     - Index.Rmd 
+#     # - 01_dedication.Rmd
+#     - 02_abstract.Rmd
+#     - 03_contents.Rmd
+#     # - 04_thanks.Rmd
+#     - 09_mainmatter.Rmd
+#     - 10_arg.Rmd
+#     - 20_model.Rmd
+#     # - 21_model-sim.Rmd
+#     - 30_causality.Rmd
+#     # - 40_positioning.Rmd
+#     # - 50_voting.Rmd
+#     - 90_backmatter.Rmd
+#     - 99_references.Rmd
+#   html: 
+#     - Index.Rmd 
+#     - 02_abstract.Rmd # tried and failed to get abstract on page 1
+#     - 10_arg.Rmd
+#     - 20_model.Rmd
+#     # - 21_model-sim.Rmd
+#     - 30_causality.Rmd
+#     # - 40_positioning.Rmd
+#     # - 50_voting.Rmd
+#     - 99_references.Rmd
   # what's in the original PDF?
   # - title
   # - git

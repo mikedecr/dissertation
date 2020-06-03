@@ -6,6 +6,9 @@
 source(here::here("assets-bookdown", "knitr-helpers.R"))
 ```
 
+```{r, cache = FALSE}
+knitr::knit_exit()
+```
 
 ```{r r-02-1_model-sim, cache = FALSE}
 library("here")
