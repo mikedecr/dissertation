@@ -2,12 +2,12 @@
 # for reference:
 # - Mahr: <https://github.com/tjmahr/dissertation/blob/master/index.Rmd>
 
-# title: "Do Primaries Work?"
-# subtitle: "Nomination Politics and the Representation of Local Partisan Preferences" 
-title: Bayesian Causal Models of Partisan Ideology and Primary Elections
+title: "Do Primaries Work?"
+subtitle: "Bayesian Causal Models of Partisan Ideology and Congressional Nominations" 
+# title: Bayesian Causal Models of Partisan Ideology and Primary Elections
 author: "Michael G. DeCrescenzo"
 date: |
-  | `r if (knitr::is_latex_output()) "September 1, 2020" else if (knitr::is_html_output()) stringr::str_glue("Compiled {format(Sys.time(), '%B %d, %Y: %H:%M')}")`
+  | `r if (knitr::is_latex_output()) "TBD" else if (knitr::is_html_output()) stringr::str_glue("Compiled {format(Sys.time(), '%B %d, %Y: %H:%M')}")`
 #  `r format(Sys.time(), "%B %d, %Y: %H:%M")` 
 site: "bookdown::bookdown_site"
 github-repo: "mikedecr/dissertation"
