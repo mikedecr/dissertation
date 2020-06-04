@@ -3,7 +3,66 @@ title: thesis - literature notes
 ---
 
 
-# Model chapter
+# To read:
+
+- Gerber Morton 2001
+- primary reform:
+    - Fiorina, Abrams, Pope (2006)
+    - Mann and Ornstein (2012)
+- primary voters:
+    - Geer 1988
+    - Norrander 1989
+    - Sides et al. 2017
+
+
+
+# 1. Theory
+
+
+## Primary causes of polarization
+
+- Voters are polarized:
+    - Evidence in favor:
+        - Hill (2015)
+    - Evidence against:
+        - Sides(?), Vavreck, Warshaw
+    - tbd: 
+        - Geer 1988
+        - Norrander 1989
+        - Sides et al. 2017
+    - background:
+        - sorting? Is this good evidence?
+        - or "conflict extension" 
+        - or "ideological polarization"
+        - or "affective polarization"/"negative partisanship"
+- Closedness:
+    - Evidence against: 
+        - McGhee et al (2014); 
+        - Rogowski and Langella (2015)
+        - Ahler et al. (2016) top two CA
+        - Kousser et al. (2016) top two CA
+        - Hill (2015)
+    - For? Gerber and Morton (2001)?
+- Low turnout / more active partisan involvement?
+    - should be worse in more closed primaries
+    - No obvious relationship:
+        - Thomsen (2017 WP; update) no clear pattern with what pops
+        - Hirano et al (2010) Senate
+
+## Non-primary reasons for intra-party extremism:
+
+- Extremism is a loss-minimization tactic for legislators:
+    - McCarty et al: Geography, Uncertainty, Polarization:
+        - in a moderate district, we have less info about the location of the median voter, so weak incentive to offer moderate policy platform
+        - more heterogeneous voters -> more polarized legislators
+    - Broockman: Approaches to policy representation
+        - voter "extremism" is usually consistency. Moderation is "crazy uncle"
+        - legislative polarization is how they "bet the average"
+
+
+
+
+# 2. Model
 
 models: 
 
@@ -20,7 +79,7 @@ TW and CW both appear to have state party IRT estimates ready to go?
 
 
 
-# Causal Inference
+# 3. Bayesian Causality
 
 Ratkovic 2019: Rehabilitating the Regression
 
@@ -53,7 +112,7 @@ generalized propensity score modeling:
 
 
 
-# Candidates Chapter
+# 4. Positioning
 
 Snyder & Ting 2002: informational party brands
 
@@ -149,7 +208,12 @@ Ting, Snyder, Hirano 2018: Primaries and public goods
 
 
 
-# Choice chapter
+# 5. Choice
+
+
+
+
+
 
 
 
@@ -157,10 +221,6 @@ Ting, Snyder, Hirano 2018: Primaries and public goods
 
 McCarty et al, geography, uncertainty, and polarization
 
-- "moderate" districts are internally polarized
-- formal model:
-  + less information about the location of the median voter
-  + weaker incentive to offer moderate policy
 - empirically:
   + R and D legislators vote more differently in districts with similar medians but more inter-party differences
   + heterogeneous preferences measured by ideal point variance within district?
@@ -195,51 +255,30 @@ Mccarty et al. Gerrymandering
   + they can only pull apart over-time trends because they compare congresses with and without reapportionment between them
 
 
-# Ideas
 
-Do primary challenges increase when the incumbent performed weakly in the previous cycle
+# Problems to address
 
-- Clinton Republicans in California
+## Is Ideology Meaningful?
 
-Unified model of Congress
+Marble and Tyler: trusting ideal points from surveys
 
-- dv: vote in November
-- iv: district mean 
-- national environment plus district offsets
-- national environment is latent
-  + generic ballot
-  + special elections
-- district environment
-  + past elections
-
-
-# Marble and Tyler: trusting ideal points from surveys
-
-Model:
-
-- multinomial logit
-- $Pr(y_ij = k) = XB_{k} / sum_k(XB_k)$
-
-
-Cross-validation:
-
-- maybe not respecting the item parameters?
-
-
-
-Language:
-
-- "First, it is not ambitious to expect an estimate based on 20 to 30 policy questions to have some kind of correlation with an issue as polarizing as presidential vote choice."
-  + that covers me a little bit
-  + even if not good at predicting the very next issue, should still be related to voting, no?
+- multinomial logit 
+- Cross-validation: maybe not respecting the item parameters?
+- Find decent relationship to presidential vote 
+    - that covers me a little bit: even if theta not good at predicting held-out issue, should still be related to voting, no?
+- Groups are more precise than individuals
+    - fewer parameters, less individual noise
+    - just need to know that partisans _on average_ have meaningful relationships
 
 
  
 
-concerns with my own model:
+# Ideas
 
-- groups mean way fewer parameters! We don't estimate individuals, we just assume that they're normal draws on the linear index
-- check: 
-  + extremism -> lower levels of presidential defection?
-  + lower levels of punishment for extreme candidates? (presuming that the Hall/Thompson effect is what's happening, depressing within-party turnout)
-  + outliers could be making relationships stronger even if most don't matter
+Does poor incumbent performance (X) increase future primary challenges (Y)
+
+- Clinton Republicans in California
+- RDD: barely winning -> more challengers
+
+
+Does extremism of party-publics decrease the between-year-swing?

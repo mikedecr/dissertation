@@ -6,20 +6,19 @@ Meeting agenda:
 
 - Alex:
     - how to understand "BART is a prior" ?
-    - BNN is chained logistic-ish regressions
-        - Why do they compress the space with that transformation?
-        - Why logistic?
-        - Is it unidentified in the non-Bayes world as well?
+    - Check notebook
 - Barry:
     - check primary candidate quality
     - possible to scrape candidate quality for primary candidates from: Ballotpedia, FEC, Open Secrets
+- Ellie:
+    - send ch 2
 
 
 Reading for design:
 
 - [ ] Achen–Bartels (Realists) lit review
 - [ ] Achen critique of Miller and Stokes (Lewis and Tausanovitch)
-- [ ] alvarez nagler
+- [ ] alvarez nagler (conditional/multinom choice)
 - [ ] read Hall-Thompson
 - [ ] Hirano and Snyder
 - [ ] Langella and Rogowski
