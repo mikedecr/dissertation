@@ -11,6 +11,10 @@ library("broom")
 library("boxr"); box_auth()
 library("survival") # mlogit()
 
+library("rstan")
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+library("tidybayes") 
 
 # update symlink stuff
 source(here::here("code", "helpers", "call-R-helpers.R"))
@@ -30,7 +34,10 @@ cands_raw <-
 
 
 
-
+# recoding:
+# - who wins
+# - how many in choice set
+# - candidate extremism level w/in group choice set
 cands <- cands_raw %>%
   mutate(
     pwinner = case_when(
@@ -41,27 +48,38 @@ cands <- cands_raw %>%
   group_by(group, cycle) %>%
   mutate(
     n_in_group = n(),
-    cf_rank = case_when(
-      n_in_group > 1 ~ rank(recipient_cfscore, na.last = "keep")
-    )
+    cf_extremism_level = case_when(
+      n_in_group > 1 & party == "R" ~ 
+        rank(recipient_cfscore_dyn, na.last = "keep"),
+      n_in_group > 1 & party == "D" ~ 
+        rank(-1 * recipient_cfscore_dyn, na.last = "keep"),
+      n_in_group <= 1 ~ 0
+    ),
+    choice_set = str_glue("{group}-{party}-{cycle}") %>% as.character()
   ) %>%
+  filter(sum(pwinner) == 1) %>%
+  filter(n_in_group > 1) %>%
   ungroup() %>%
   print()
 
 
 
-# what's the deal with half-ranks
+# what's the deal with half-ranks?
+# We get half ranks because some candidates have the same ideal point?
 cands %>%
   filter(
-    cf_rank %% 1 != 0
+    cf_extremism_level %% 1 != 0
   ) %>%
-  select(group, cycle, cf_rank, recipient_cfscore, Name) %>%
+  select(group, cycle, cf_extremism_level, recipient_cfscore_dyn, Name) %>%
   semi_join(x = cands, by = c("group", "cycle")) %>%
   select(
     state_abb, district_num, party, cycle, group,
-    cf_rank, recipient_cfscore, Name
+    cf_extremism_level, recipient_cfscore, Name
   ) %>%
   arrange(cycle, group)
+
+
+# why was I ranking
 
 
 # ----------------------------------------------------
@@ -69,6 +87,8 @@ cands %>%
 # ----------------------------------------------------
 
 # ideas: split the world into districts with a clear "moderate and extreme"
+# Is this why I was ranking?
+# Indicate who the "extremist" is?
 cands %>%
   group_by(group, cycle) %>%
   count() %>%
@@ -80,16 +100,17 @@ cands %>%
 
 cands %>%
   filter(n_in_group > 1) %>%
-  ggplot(aes(x = cf_rank, y = recipient_cfscore)) +
+  ggplot(aes(x = cf_extremism_level, y = recipient_cfscore_dyn)) +
   geom_point(aes(color = party)) 
 
 
 
+# ppct ~ ranked extremism
 cands %>%
   group_by(group, cycle) %>%
-  filter(n_in_group %in% c(2, 3, 4)) %>%
+  filter(n_in_group %in% c(2:6)) %>%
   ggplot() +
-  aes(x = cf_rank, y = ppct) +
+  aes(x = cf_extremism_level, y = ppct) +
   facet_grid(party ~ n_in_group) +
   geom_point() +
   geom_smooth()
@@ -108,19 +129,6 @@ cands %>%
 #   try multinomial logit
 # ----------------------------------------------------
 
-dmod <- clogit(
-  pwinner ~ 
-    theta_mean_rescale*recipient_cfscore + strata(group), 
-  data = cands,
-  subset = party == "D"
-)
-
-
-rmod <- clogit(
-  pwinner ~ 0 + theta_mean_rescale*recipient_cfscore + strata(group), 
-  data = cands,
-  subset = party == "R"
-)
 
 
 # this shows us the linear interaction but I hate it!
@@ -152,3 +160,179 @@ cands %>%
 # gaussian process for continuous interaction???
 
 
+
+
+# ----------------------------------------------------
+#   stan conditional logit
+# ----------------------------------------------------
+
+# push this higher up?
+# - keep only variables we want
+# - drop NA
+# - calculate set sizes
+# - only sets with 1 winner
+choice_data <- cands %>%
+  transmute(
+    group, cycle, party, 
+    g_code = as.numeric(as.factor(choice_set)), 
+    y = pwinner, theta_mean_rescale, recipient_cfscore_dyn
+  ) %>%
+  na.omit() %>%
+  arrange(g_code) %>%
+  group_by(g_code) %>%
+  mutate(n_g = n()) %>%
+  filter(sum(y) == 1) %>%
+  ungroup() %>%
+  filter(n_g > 1) %>%
+  print()
+
+
+set_sizes <- choice_data %>%
+  group_by(party, g_code) %>%
+  summarize(
+    n = n()
+  ) %>%
+  ungroup() %>%
+  print()
+
+R_set_size <- set_sizes %>%
+  filter(party == "R") %>%
+  pull(n) 
+
+D_set_size <- set_sizes %>%
+  filter(party == "D") %>%
+  pull(n)
+
+
+choice_data_R <- choice_data %>%
+  filter(party == "R") %$%
+  list(
+    n = nrow(.),
+    g_code = g_code,
+    G = n_distinct(g_code),
+    n_g = R_set_size,
+    y = y,
+    X = data.frame(
+      recipient_cfscore_dyn,
+      recipient_cfscore_dyn * theta_mean_rescale
+    )
+  ) %>% 
+  c(p = ncol(.$X), prior_sd = 10)
+
+
+choice_data_D <- choice_data %>%
+  filter(party == "D") %$%
+  list(
+    n = nrow(.),
+    g_code = g_code,
+    G = n_distinct(g_code),
+    n_g = D_set_size,
+    y = y,
+    X = data.frame(
+      recipient_cfscore_dyn,
+      recipient_cfscore_dyn * theta_mean_rescale
+    )
+  ) %>% 
+  c(p = ncol(.$X), prior_sd = 10) 
+
+
+
+lapply(choice_data_R, head)
+lapply(choice_data_D, head)
+
+
+
+simple_choice <- stan_model(
+  file = here("code", "05-voting", "stan", "simple-choice.stan"), 
+  verbose = TRUE
+)
+
+beepr::beep(2)
+
+dumb_R_stan <- 
+  sampling(
+    object = simple_choice, 
+    data = choice_data_R, 
+    iter = 2000, 
+    chains = parallel::detectCores()
+    # , thin = 1,
+    # , include = FALSE,
+    # pars = c()
+  )
+
+dumb_D_stan <- 
+  sampling(
+    object = simple_choice, 
+    data = choice_data_D, 
+    iter = 2000, 
+    chains = parallel::detectCores()
+    # , thin = 1,
+    # , include = FALSE,
+    # pars = c()
+  )
+
+
+rmod <- clogit(
+  y ~ 0 + theta_mean_rescale*recipient_cfscore_dyn + strata(g_code), 
+  data = choice_data,
+  subset = party == "R"
+)  %>%
+  print()
+
+
+
+dmod <- clogit(
+  y ~ 
+    theta_mean_rescale*recipient_cfscore_dyn + strata(g_code), 
+  data = choice_data,
+  subset = party == "D"
+) %>%
+  print()
+
+
+  bind_rows(
+  "R" = 
+    bind_rows(
+      "survival" = tidy(rmod, conf.int = TRUE), 
+      "bayes" = tidy(dumb_R_stan, conf.int = TRUE),
+      .id = "model"
+    ) %>%
+    mutate(party = "R"),
+  "D" = 
+    bind_rows(
+      "survival" = tidy(dmod, conf.int = TRUE), 
+      "bayes" = tidy(dumb_D_stan, conf.int = TRUE),
+      .id = "model"
+    ) %>%
+    mutate(party = "D")
+  ) %>%
+  mutate(
+    term = case_when(
+      term %in% c("coefs[1]", "recipient_cfscore_dyn") ~ "CF",
+      TRUE ~ "Interaction"
+    )
+  ) %>%
+  ggplot(aes(x = term, y = estimate, color = party, shape = model)) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.25)
+  ) +
+  facet_wrap(~ party) +
+  coord_flip() +
+  geom_hline(yintercept = 0) +
+  NULL
+
+
+
+tidy(rmod)
+tidy(dumb_R_stan)
+
+tidy(dmod)
+tidy(dumb_D_stan)
+
+beepr::beep(2)
+
+stan_trace(dumb_D_stan)
+stan_trace(dumb_R_stan)
+stan_ac(dumb_D_stan)
+stan_ac(dumb_R_stan)
