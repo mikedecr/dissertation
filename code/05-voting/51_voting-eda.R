@@ -336,3 +336,43 @@ stan_trace(dumb_D_stan)
 stan_trace(dumb_R_stan)
 stan_ac(dumb_D_stan)
 stan_ac(dumb_R_stan)
+
+
+# ----------------------------------------------------
+#   neural network choice model
+# ----------------------------------------------------
+
+
+net_choice <- stan_model(
+  file = here("code", "05-voting", "stan", "choice-net.stan"), 
+  verbose = TRUE
+)
+
+
+
+n_nodes <- 3
+choice_data_R <- c(choice_data_R, n_nodes = n_nodes)
+choice_data_D <- c(choice_data_D, n_nodes = n_nodes)
+
+
+stan_net_R <- 
+  sampling(
+    object = net_choice, 
+    data = choice_data_R, 
+    iter = 2000, 
+    chains = parallel::detectCores()
+    # , thin = 1,
+    # , include = FALSE,
+    # pars = c()
+  )
+
+stan_net_D <- 
+  sampling(
+    object = net_choice, 
+    data = choice_data_D, 
+    iter = 2000, 
+    chains = parallel::detectCores()
+    # , thin = 1,
+    # , include = FALSE,
+    # pars = c()
+  )
