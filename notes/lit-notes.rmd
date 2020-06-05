@@ -21,6 +21,11 @@ title: thesis - literature notes
 
 ## Primary causes of polarization
 
+- Candidate supply
+    - Who runs/drops out
+        - more experienced candidates drop out (Thomsen 2019)
+        - dropping out increasing in campaign cost (secular and w/r/t particular race)
+        - fewer women run in the GOP
 - Voters are polarized:
     - Evidence in favor:
         - Hill (2015)

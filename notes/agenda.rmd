@@ -7,6 +7,15 @@ Meeting agenda:
 - Alex:
     - how to understand "BART is a prior" ?
     - Check notebook
+    - conditional logit:
+        - is this the right direction to go?
+        - All predictors are differences from baseline, or no? just the SUM of one utility is normalized?
+        - can size of choice set vary across sets?
+        - can the choices themselves be different across sets (have different sets of features)? Doesn't seem like it has to, it's just that I'm imposing fixed coefficients
+        - what's the deal with IIA? Choice utility (or probability) ratios are unaffected by presence of additional choices?
+        - making it in stan:
+            - <https://github.com/stan-dev/rstanarm/blob/master/src/stan_files/functions/bernoulli_likelihoods.stan>
+            - <https://github.com/stan-dev/rstanarm/blob/master/src/stan_files/bernoulli.stan>
 - Barry:
     - check primary candidate quality
     - possible to scrape candidate quality for primary candidates from: Ballotpedia, FEC, Open Secrets
@@ -37,31 +46,62 @@ Reading for thinking:
 - Conditional choice models
 - Bayesian Neural Nets (might solve choice model problem)
 
-Writing to-dos:
 
-- [ ] incorporate earlier Barry edits (symlinked)
-- [ ] causal inference: integrate a loss function over a posterior distribution
-- [ ] conceptual/term clarity in the beginning
-    - who are partisans? 
-    - are they primary voters or not necessarily? 
-    - What is "district partisanship" and how is it different from partisan ideology?
-    - Throwing around "getting preferences into government"
-    - When would primaries _not_ work? How can you reframe the question to focus energy?
-    - Improve the way I talk about "strategic" vs. "representation" using DIME scores. 
+Writing:
+
+- 1. Theory
+    - conceptual/term clarity in the beginning
+        - who are "partisans" in my groups? (primary voters?)
+        - What is "district partisanship" vs. policy ideology?
+    - Definition of representation 
+        - I only have ideology, not a 1-1 measure of candidate issue congruence or government policy congruence
+    - Big view:
+        - When would primaries _not_ work? How can you reframe the question to focus energy?
+- 2. Model
+    - incorporate earlier Barry edits (symlinked)
+- 3. Causal Inference 
+    - arguments in favor: integrating a loss function over a posterior distribution
+    - lots you can read in the Aronow/Miller book!
+- 4. Positioning
+    - "strategic" vs. sincere "representation" with DIME scores
+
 
 Analysis:
 
-- Ch 4 BART
-    - justify BART w/ RMSE in predicting treatment/mediator (also in vs. out)
-    - decide if we should do two stages for each analysis
+- Ch 4;
+    - Justify ML in theory:
+        - Two-stage modeling for selection
+            - regression weights
+            - regularization-induced confounding
+        - Functional form
+            - we don't know the relationships between covariates
+            - we can actually get around more difficult LIKELIHOOD assumptions with sufficient functional agnosticism w/r/t covariates
+    - Empirical demo of problems?
+        - Justify ML using RMSE in predicting an exposure?
+        - In vs. out of sample performance
+    - Decide about two-stage modeling
+    - Covariates
+        - include other district
+        - more polarization in parties -> what does this do to positioning?
 
 Data:
 
-- [ ] clean/consolidate primary rules data 2016
-- [ ] Fix 2010s poll data (multinomial response, midpoints, **barry**)
+- Thomsen primaries data
+- Fix 2010s poll data (multinomial response, midpoints, **barry**)
+    - see Stimson notes
+    - also Ansolabahere, Rodden, Stewart public IRT
 - Gather 2000s poll data
-- How sensitive are the ideal points to item inclusion?
+- How sensitive are the ideal points to item inclusion? (cross-validate?)
 - Discuss weighting more?
+- Secondary data:
+    - party nationalization
+    - hill/tausanovitch
+    - seth hill individual ideal points
+- Stimson and thermostat model
+    - how he deals w/ multiple polls, missing data
+    - also dichotomization
+
+
 
 Project:
 
@@ -326,10 +366,8 @@ Goals for next week:
 
 - Roper and Lax/Phillips, Caughey and Warshaw
  + good to find out the scope
-- Boatright data reconciliation
-- think about multidimensionality
 - think about missing data across firm
-  + is Stimson a model for dealing with missing data across polls
+    + is Stimson a model for dealing with missing data across polls
 - vote smart or VoteView or Shor scores for linking giving patterns to policy content
   + more survey cleaning (A.S.S. paper)
 
@@ -348,60 +386,7 @@ What to do with the Hopkins/Sniderman theory
   + *make falsification*
 
 
-*don't forget about Vox*
 
-
-
-
-Threads
-
-- Data
- + secondary Thetas
-  * nationalization
-  * Seth hill primaries
-  * Hill and Tausanovitch
- + primary elections
-- lit
- + brady han pope
- + hirano qjps
- + rogowski and langella
-
-
-Data problems:
-
-- districts
-  + figure out how to match districts across time? district IDs?
-  + is this handled by incumbency? Does voteview take care of it?
-
-
-
-# Meeting June 22, 2018 (Barry)
-
-Agenda:
-
-1. What I have
-2. Where to go
-    - Roper API
-      + workflow: 
-      + API to download the data
-      + write some code that accepts (1) dataset name (2) list of item responses (3) weight variable
-      + as long as I know the variable names, I hit the go button and it should pluck everything out 
-    - Design-focused reading
-      + (1) Candidate positioning as f(district)
-      + (2) Voter choice as f(district - candidate)
-      + (3) Candidate positioning and voter choice as f(delta(district))
-3. Bigger problems
-    - progress
-    - motivation
-    - use of skills and creativity
-      + do I have alternatives
-    - broader career concerns
-      + is publication stupid?
-
-
-1. mess with the priors
-2. CCES 
-3. Making it grow over time
 
 
 
