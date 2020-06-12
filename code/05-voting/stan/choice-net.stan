@@ -1,5 +1,5 @@
-// still need to identify better
-
+// Conditional logit
+// layer-1 neural net
 
 data {
  
@@ -16,10 +16,9 @@ data {
   // int<lower = 1, upper = G> g_index[n]; // group/set INDEX (1:G)
 
   // user-supplied parameters
-  // neuron density? (eventually)
-  int<lower = 1> n_nodes;
-  // variable priors
-  real prior_sd;
+  int<lower = 1> n_nodes; // neuron density
+  real hidden_prior_scale;          // coef scale
+  real act_prior_scale;          // coef scale
 
 }
 
@@ -32,25 +31,20 @@ parameters {
 
 }
 
-transformed parameters {
-  
-  // latent utility ( we want to save this )
-  vector[n] util = tanh(X * hidden_wt) * act_wt;
-
-}
 
 model {
 
-  vector[n] pprob; // softmax utility (unidentified)
+  vector[n] util;  // latent utility
+  vector[n] pprob; // softmax utility
   int pos = 1;     // for segmenting
+
+  util = tanh(X * hidden_wt) * act_wt;
   
-  // from stan: walk along long vectors, cutting into short bits
+  // from stan manual ("ragged data structures"):l
+  // calculate choice probs in each choice set: segment(v, start, length)
   for (g in 1:G) {
-    // e.g. if pos = 1 and n_g = 3, 
-    // probs[1:3] gets segment of util, start at 1, length 3 
-    pprob[pos:(pos - 1) + n_g[g]] = softmax(segment(util, pos, n_g[g])); 
     
-    // increment placeholder 
+    pprob[pos:(pos - 1) + n_g[g]] = softmax(segment(util, pos, n_g[g]));
     pos = pos + n_g[g];
 
   }
