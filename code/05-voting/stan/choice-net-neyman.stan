@@ -56,12 +56,12 @@ transformed data {
 
 parameters {
  
-  matrix[P_select, nodes_select] hid_select_raw;
-  vector[nodes_select] act_select_raw;
+  matrix[P_select, nodes_select] hid_select;
+  vector[nodes_select] act_select;
   real<lower = 0> sigma_select;
 
-  matrix[P_outcome, nodes_select] hid_outcome_raw;
-  vector[nodes_select] act_outcome_raw;
+  matrix[P_outcome, nodes_select] hid_outcome;
+  vector[nodes_select] act_outcome;
 
 }
 
@@ -88,12 +88,12 @@ model {
   // ----- model algebra -----
   
   // predicted and residual treatment
-  expected_int = tanh(X_select * hid_select) * act_select_raw;
+  expected_int = tanh(X_select * hid_select) * act_select;
   resid = theta_x_cf - expected_int; 
   X_outcome = append_col(resid, X); 
 
   // future goal: "shrink to homogeneity"
-  util = tanh(X_outcome * hid_outcome_raw) * act_outcome_raw;
+  util = tanh(X_outcome * hid_outcome) * act_outcome;
   
   // choice probs in ragged choice sets: segment(v, start, length)
   for (g in 1:G) {
@@ -109,15 +109,15 @@ model {
 
   // ----- selection model -----
 
-  to_vector(hid_select_raw) ~ normal(0, hid_prior_select);
-  act_select_raw ~ normal(0, act_prior_select);
+  to_vector(hid_select) ~ normal(0, hid_prior_select);
+  act_select ~ normal(0, act_prior_select);
   sigma_select ~ normal(0, 1);
 
 
   // ----- choice model -----
 
-  to_vector(hid_outcome_raw) ~ normal(0, hid_prior_outcome);
-  act_outcome_raw ~ normal(0, act_prior_outcome);
+  to_vector(hid_outcome) ~ normal(0, hid_prior_outcome);
+  act_outcome ~ normal(0, act_prior_outcome);
 
 
 }
