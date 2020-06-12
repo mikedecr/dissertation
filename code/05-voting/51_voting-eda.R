@@ -536,6 +536,11 @@ neyman_net <- stan_model(
   verbose = TRUE
 )
 
+constrained_neyman <- stan_model(
+  file = here("code", "05-voting", "stan", "constrained-neyman.stan"), 
+  verbose = TRUE
+)
+
 beepr::beep(2)
 
 
@@ -554,7 +559,7 @@ neyman_data <- cands %>%
     y = pwinner, 
     scale_theta = scale(theta_mean_rescale)[,1], 
     scale_cf = scale(recipient_cfscore_dyn)[,1],
-    scale_total_receipts = scale(total_receipts)[,1], 
+    scale_total_receipts = scale(log(total_receipts + 1))[,1], 
     scale_district_white = scale(district_white)[,1],
     woman = as.numeric(cand_gender == "F"), 
     incumbent = as.numeric(Incum_Chall == "I")
@@ -568,7 +573,7 @@ neyman_data <- cands %>%
   filter(n_g > 1) %>%
   print()
 
-   
+ggplot(neyman_data, aes(x = scale_total_receipts)) + geom_histogram()   
 
 set_sizes <- neyman_data %>%
   group_by(party, g_code) %>%
@@ -583,10 +588,10 @@ set_sizes <- neyman_data %>%
 nodes_select <- 3
 nodes_outcome <- 3
 
-hidden_scale_select <- 1
-act_scale_select <- 2
-hidden_scale_outcome <- 1
-act_scale_outcome <- 1
+hid_prior_select <- 1
+act_prior_select <- 2
+hid_prior_outcome <- 1
+act_prior_outcome <- 1
 
 neyman_data_R <- neyman_data %>%
   filter(party == "R") %$%
@@ -601,13 +606,13 @@ neyman_data_R <- neyman_data %>%
     G = n_distinct(g_code),
     n_g = set_sizes$R
   ) %>% 
-  c(p = ncol(.$X), 
+  c(P = ncol(.$X), 
     nodes_select = nodes_select,
     nodes_outcome = nodes_outcome,
-    hidden_scale_select = hidden_scale_select,
-    act_scale_select = act_scale_select,
-    hidden_scale_outcome = hidden_scale_outcome,
-    act_scale_outcome = act_scale_outcome)
+    hid_prior_select = hid_prior_select,
+    act_prior_select = act_prior_select,
+    hid_prior_outcome = hid_prior_outcome,
+    act_prior_outcome = act_prior_outcome)
 
 neyman_data_D <- neyman_data %>%
   filter(party == "D") %$%
@@ -622,13 +627,13 @@ neyman_data_D <- neyman_data %>%
     G = n_distinct(g_code),
     n_g = set_sizes$D
   ) %>% 
-  c(p = ncol(.$X), 
+  c(P = ncol(.$X), 
     nodes_select = nodes_select,
     nodes_outcome = nodes_outcome,
-    hidden_scale_select = hidden_scale_select,
-    act_scale_select = act_scale_select,
-    hidden_scale_outcome = hidden_scale_outcome,
-    act_scale_outcome = act_scale_outcome)
+    hid_prior_select = hid_prior_select,
+    act_prior_select = act_prior_select,
+    hid_prior_outcome = hid_prior_outcome,
+    act_prior_outcome = act_prior_outcome)
 
 
 
@@ -654,7 +659,12 @@ stan_neyman_D <- sampling(
 beepr::beep(2)
 
 
-stan_trace(stan_neyman_R, pars = "hidden_outcome")
-stan_trace(stan_neyman_R, pars = "hidden_select")
+
+stan_trace(stan_neyman_R, pars = "hid_select_raw")
+stan_trace(stan_neyman_R, pars = "hid_max_select")
+stan_trace(stan_neyman_R, pars = "hid_slice_select")
+stan_trace(stan_neyman_R, pars = "hid_select")
+stan_plot(stan_neyman_R, pars = c("hid_select", "hid_select_raw"))
+
 stan_trace(stan_neyman_D, pars = "hidden_outcome")
 stan_trace(stan_neyman_D, pars = "hidden_select")
