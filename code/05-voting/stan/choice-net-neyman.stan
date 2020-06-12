@@ -82,8 +82,28 @@ model {
   int pos = 1;     // for segmenting
 
   
-  // ----- selection model -----
+  // ----- selection algebra -----
+  
   expected_int = tanh(X_select * hidden_select) * act_select;
+
+
+  // ----- outcome algebra -----
+
+  // residualize treatment
+  resid = theta_x_cf - expected_int; 
+  X_outcome = append_col(resid, X); 
+
+  // future goal: "shrink to homogeneity"
+  util = tanh(X_outcome * hidden_outcome) * act_outcome;
+  
+  // choice probs in ragged choice sets: segment(v, start, length)
+  for (g in 1:G) {
+    pprob[pos:(pos - 1) + n_g[g]] = softmax(segment(util, pos, n_g[g]));
+    pos = pos + n_g[g];
+  }
+
+
+  // ----- selection model -----
 
   theta_x_cf ~ normal(expected_int, sigma_select); // student_t?
   to_vector(hidden_select) ~ normal(0, hidden_scale_select);
@@ -91,26 +111,8 @@ model {
   sigma_select ~ normal(0, 1);
 
 
-  // ----- outcome model -----
-  
-  // residualize treatment, add to predictors
-  resid = theta_x_cf - expected_int;
-  X_outcome = append_col(resid, X);
+  // ----- choice model -----
 
-  // future: "shrink to homogeneity"
-  util = tanh(X_outcome * hidden_outcome) * act_outcome;
-  
-  // from stan manual ("ragged data structures"):
-  // calculate choice probs in each choice set: segment(v, start, length)
-  for (g in 1:G) {
-    
-    pprob[pos:(pos - 1) + n_g[g]] = softmax(segment(util, pos, n_g[g]));
-    pos = pos + n_g[g];
-
-  }
-
-
-  // choice model
   // sums log probability for successes only
   // <https://khakieconomics.github.io/2019/03/17/The-logit-choice-model.html>
   target += y' * log(pprob);

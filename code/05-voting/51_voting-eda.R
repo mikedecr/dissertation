@@ -12,7 +12,8 @@ library("boxr"); box_auth()
 library("survival") # mlogit()
 
 library("rstan")
-options(mc.cores = parallel::detectCores())
+mc_cores <- min(5, parallel::detectCores())
+options(mc.cores = mc_cores)
 rstan_options(auto_write = TRUE)
 library("tidybayes") 
 
@@ -27,6 +28,9 @@ box_dir_model_output <- 112969122838
 # ----------------------------------------------------
 #   import cleaned data
 # ----------------------------------------------------
+
+# box_search("candidates-x-irt.rds")
+# box_dl({id_goes_here}, here("data", "_clean"))
 
 cands_raw <- 
   read_rds(here("data", "_clean", "candidates-x-irt.rds")) %>%
@@ -270,7 +274,7 @@ simple_R_stan <-
     object = simple_choice, 
     data = simple_choice_data_R, 
     iter = 2000, 
-    chains = parallel::detectCores()
+    chains = mc_cores
     # , thin = 1,
     # , include = FALSE,
     # pars = c()
@@ -281,7 +285,7 @@ simple_D_stan <-
     object = simple_choice, 
     data = simple_choice_data_D, 
     iter = 2000, 
-    chains = parallel::detectCores()
+    chains = mc_cores
     # , thin = 1,
     # , include = FALSE,
     # pars = c()
@@ -294,7 +298,7 @@ lkj_R_stan <-
     object = lkj_choice, 
     data = simple_choice_data_R, 
     iter = 2000, 
-    chains = parallel::detectCores()
+    chains = mc_cores
     # , thin = 1,
     # , include = FALSE,
     # pars = c()
@@ -305,7 +309,7 @@ lkj_D_stan <-
     object = lkj_choice, 
     data = simple_choice_data_D, 
     iter = 2000, 
-    chains = parallel::detectCores()
+    chains = mc_cores
     # , thin = 1,
     # , include = FALSE,
     # pars = c()
@@ -432,7 +436,7 @@ stan_net_R <-
     object = net_choice, 
     data = net_data_R, 
     iter = 2000, 
-    chains = parallel::detectCores()
+    chains = mc_cores
     # , thin = 1, , include = FALSE, pars = c()
   )
 
@@ -441,7 +445,7 @@ stan_net_D <-
     object = net_choice, 
     data = net_data_D, 
     iter = 2000, 
-    chains = parallel::detectCores()
+    chains = mc_cores
     # , thin = 1, , include = FALSE, pars = c()
   )
 
@@ -452,7 +456,7 @@ lkj_net_R <-
     object = net_lkj, 
     data = net_data_R, 
     iter = 2000, 
-    chains = parallel::detectCores()
+    chains = mc_cores
     # , thin = 1, , include = FALSE, pars = c()
   )
 
@@ -461,7 +465,7 @@ lkj_net_D <-
     object = net_lkj, 
     data = net_data_D, 
     iter = 2000, 
-    chains = parallel::detectCores()
+    chains = mc_cores
     # , thin = 1, , include = FALSE, pars = c()
   )
 
@@ -534,6 +538,8 @@ neyman_net <- stan_model(
 
 beepr::beep(2)
 
+
+
 # ---- data -----------------------
 
 # push this higher up?
@@ -545,8 +551,11 @@ neyman_data <- cands %>%
   transmute(
     group, cycle, party,
     g_code = as.numeric(as.factor(choice_set)),
-    y = pwinner, theta_mean_rescale, recipient_cfscore_dyn,
-    total_receipts, district_white,
+    y = pwinner, 
+    scale_theta = scale(theta_mean_rescale)[,1], 
+    scale_cf = scale(recipient_cfscore_dyn)[,1],
+    scale_total_receipts = scale(total_receipts)[,1], 
+    scale_district_white = scale(district_white)[,1],
     woman = as.numeric(cand_gender == "F"), 
     incumbent = as.numeric(Incum_Chall == "I")
   ) %>%
@@ -584,10 +593,10 @@ neyman_data_R <- neyman_data %>%
   list(
     n = nrow(.),
     y = y,
-    theta = theta_mean_rescale,
-    cf_score = recipient_cfscore_dyn,
+    theta = scale_theta,
+    cf_score = scale_cf,
     X = data.frame(
-      total_receipts, district_white, woman, incumbent
+      scale_total_receipts, scale_district_white, woman, incumbent
     ),
     G = n_distinct(g_code),
     n_g = set_sizes$R
@@ -605,10 +614,10 @@ neyman_data_D <- neyman_data %>%
   list(
     n = nrow(.),
     y = y,
-    theta = theta_mean_rescale,
-    cf_score = recipient_cfscore_dyn,
+    theta = scale_theta,
+    cf_score = scale_cf,
     X = data.frame(
-      total_receipts, district_white, woman, incumbent
+      scale_total_receipts, scale_district_white, woman, incumbent
     ),
     G = n_distinct(g_code),
     n_g = set_sizes$D
@@ -630,16 +639,22 @@ n_iter <- 2000
 
 stan_neyman_R <- sampling(
   object = neyman_net, data = neyman_data_R,
-  iter = n_iter, refresh = max(n_iter / 50, 1), 
-  chains = parallel::detectCores()
+  iter = n_iter, refresh = max(n_iter / 20, 1), 
+  chains = mc_cores
   # , thin = 1, , include = FALSE, pars = c()
 )
 
 stan_neyman_D <- sampling(
   object = neyman_net, data = neyman_data_D,
-  iter = n_iter, refresh = max(n_iter / 50, 1), 
-  chains = parallel::detectCores()
+  iter = n_iter, refresh = max(n_iter / 20, 1), 
+  chains = mc_cores
   # , thin = 1, , include = FALSE, pars = c()
 )
 
 beepr::beep(2)
+
+
+stan_trace(stan_neyman_R, pars = "hidden_outcome")
+stan_trace(stan_neyman_R, pars = "hidden_select")
+stan_trace(stan_neyman_D, pars = "hidden_outcome")
+stan_trace(stan_neyman_D, pars = "hidden_select")
