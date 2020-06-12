@@ -514,3 +514,132 @@ ggplot(stan_utilities_R) +
 # right now it looks like this is model dependent
 # most of the "pow" comes at CF == 0
 
+
+
+# ----------------------------------------------------
+#   neyman orthogonalization
+# ----------------------------------------------------
+
+# likelihood question
+cands %>%
+  ggplot(aes(x = theta_mean_rescale * recipient_cfscore_dyn)) +
+  geom_histogram() +
+  facet_wrap(~ party)
+
+
+neyman_net <- stan_model(
+  file = here("code", "05-voting", "stan", "choice-net-neyman.stan"), 
+  verbose = TRUE
+)
+
+beepr::beep(2)
+
+# ---- data -----------------------
+
+# push this higher up?
+# - keep only variables we want
+# - drop NA
+# - calculate set sizes
+# - only sets with 1 winner
+neyman_data <- cands %>%
+  transmute(
+    group, cycle, party,
+    g_code = as.numeric(as.factor(choice_set)),
+    y = pwinner, theta_mean_rescale, recipient_cfscore_dyn,
+    total_receipts, district_white,
+    woman = as.numeric(cand_gender == "F"), 
+    incumbent = as.numeric(Incum_Chall == "I")
+  ) %>%
+  na.omit() %>%
+  arrange(g_code) %>%
+  group_by(g_code) %>%
+  mutate(n_g = n()) %>%
+  filter(sum(y) == 1) %>%
+  ungroup() %>%
+  filter(n_g > 1) %>%
+  print()
+
+   
+
+set_sizes <- neyman_data %>%
+  group_by(party, g_code) %>%
+  summarize(
+    n = n()
+  ) %>%
+  ungroup() %>%
+  split(.$party) %>%
+  lapply(pull, n) %>%
+  print() 
+
+nodes_select <- 3
+nodes_outcome <- 3
+
+hidden_scale_select <- 1
+act_scale_select <- 2
+hidden_scale_outcome <- 1
+act_scale_outcome <- 1
+
+neyman_data_R <- neyman_data %>%
+  filter(party == "R") %$%
+  list(
+    n = nrow(.),
+    y = y,
+    theta = theta_mean_rescale,
+    cf_score = recipient_cfscore_dyn,
+    X = data.frame(
+      total_receipts, district_white, woman, incumbent
+    ),
+    G = n_distinct(g_code),
+    n_g = set_sizes$R
+  ) %>% 
+  c(p = ncol(.$X), 
+    nodes_select = nodes_select,
+    nodes_outcome = nodes_outcome,
+    hidden_scale_select = hidden_scale_select,
+    act_scale_select = act_scale_select,
+    hidden_scale_outcome = hidden_scale_outcome,
+    act_scale_outcome = act_scale_outcome)
+
+neyman_data_D <- neyman_data %>%
+  filter(party == "D") %$%
+  list(
+    n = nrow(.),
+    y = y,
+    theta = theta_mean_rescale,
+    cf_score = recipient_cfscore_dyn,
+    X = data.frame(
+      total_receipts, district_white, woman, incumbent
+    ),
+    G = n_distinct(g_code),
+    n_g = set_sizes$D
+  ) %>% 
+  c(p = ncol(.$X), 
+    nodes_select = nodes_select,
+    nodes_outcome = nodes_outcome,
+    hidden_scale_select = hidden_scale_select,
+    act_scale_select = act_scale_select,
+    hidden_scale_outcome = hidden_scale_outcome,
+    act_scale_outcome = act_scale_outcome)
+
+
+
+lapply(neyman_data_R, head)
+lapply(neyman_data_D, head)
+
+n_iter <- 2000
+
+stan_neyman_R <- sampling(
+  object = neyman_net, data = neyman_data_R,
+  iter = n_iter, refresh = max(n_iter / 50, 1), 
+  chains = parallel::detectCores()
+  # , thin = 1, , include = FALSE, pars = c()
+)
+
+stan_neyman_D <- sampling(
+  object = neyman_net, data = neyman_data_D,
+  iter = n_iter, refresh = max(n_iter / 50, 1), 
+  chains = parallel::detectCores()
+  # , thin = 1, , include = FALSE, pars = c()
+)
+
+beepr::beep(2)

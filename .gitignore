@@ -217,3 +217,4 @@ _assets-gitbook
 simple-net.rds
 simple-choice.rds
 choice-net.rds
+code/*/stan/*.rds
