@@ -83,7 +83,11 @@ bookdown::render_book("Index.Rmd", "bookdown::html_book")
 
 
 ```{r render-preview-CHAPTER, eval = FALSE, cache = FALSE, include = FALSE}
-bookdown::preview_chapter('020_model.Rmd')
+bookdown::preview_chapter('30_causality.Rmd')
+```
+
+```{r live-chapter, eval = FALSE, cache = FALSE, include = FALSE}
+xaringan::inf_mr("30_causality.Rmd")
 ```
 
 ```{r render-interactive, eval = FALSE, cache = FALSE, include = FALSE}

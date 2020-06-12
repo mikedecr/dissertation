@@ -1,11 +1,32 @@
 # A Bayesian Framework for Causal Inference in Political Science {#ch:causality}
 
+```{r knitr-03-causality, include = FALSE, cache = FALSE}
+source(here::here("assets-bookdown", "knitr-helpers.R"))
+```
+
+<!-- bold math symbol -->
+$\newcommand{\bm}[1]{\boldsymbol{\mathbf{#1}}}$
+
+<!-- do operator -->
+$\newcommand{\do}[1]{\mathit{do}\left(#1\right)}$
+
+<!-- derivative diff -->
+$\newcommand{\diff}[1]{\, \mathrm{d}#1}$
+
+<!-- independence -->
+$\newcommand{\ind}[0]{\perp \!\!\! \perp}$
+
+<!-- expectation -->
+$\newcommand{\E}[1]{\mathbb{E}\left[#1\right]}$
+
+
 <!------- TO DO ---------
-- This might need to be chapter 2!!!! 
+This might need to be chapter 2!!!! 
+
 - The model has a discussion of priors that might feel out of place
   without first couching it in a viewpoint of Bayes for the project.
 - Is there only one viewpoint? No? 
-  The model is a "pragmatic Bayes" (MCMC for fitting, structural priors),
+- The model is a "pragmatic Bayes" (MCMC for fitting, structural priors),
   whereas the causal inf stuff is mixed in its view.
   Sometimes its "normalizing Bayes" (information for sensitivity testing),
   other times is merely "structural" WIPs. 
@@ -16,6 +37,7 @@
    when we include structural information?)
 ------------------------->
 
+
 <!------- TO DO ---------
 - is the intro too specific?
 - Have an abstract and then an outline of the chapter?
@@ -25,39 +47,39 @@
 Before I employ the estimates of party-public ideology obtained in Chapter&nbsp;\@ref(ch:model), this chapter discusses a Bayesian framework for causal inference in political science. 
 This framework addresses two major themes in the empirical problems that I confront later in the project, among several other minor themes.
 
-First, this project views causal inference as a problem of posterior predictive inference
-Causal models are tools that enable inferences about missing data: the data that would be observed if a key independent variable could be set to a different value
+First, this project views causal inference as a problem of posterior predictive inference.
+Causal models are tools that enable inferences about missing data: the data that would be observed if a key independent variable could be set to a different value. 
 The unobserved data are "unobserved potential outcomes" in the Rubin causal framework or "counterfactual observations" in the Pearl framework.
 <!------- TO DO ---------
 - Rubin and Pearl cites
 ------------------------->
-Regardless of the notational/semantic conventions employed, "Bayesian causal inference" is a modeling framework for structuring the inferences about the probability distribution of unobserved potential outcomes, having observed one set of potential outcomes
-In other words, which counterfactual data are plausible, given the observed data and a model relating the data to causal queries of interest? In this sense, the Bayesian approach to causal inference confronts our uncertainties about the "left-hand side" of our model
+Regardless of the notational/semantic conventions employed, "Bayesian causal inference" is a modeling framework for structuring the inferences about the probability distribution of unobserved potential outcomes, having observed one set of potential outcomes.
+In other words, which counterfactual data are plausible, given the observed data and a model relating the data to causal queries of interest? In this sense, the Bayesian approach to causal inference confronts our uncertainties about the "left-hand side" of our model.
 
 
-Second, the Bayesian approach confronts our uncertainties about the "right-hand side" of the model as well
-Causal estimands (to use the Rubin terminology) are comparisons of potential outcomes are two hypothetical values of a treatment
-In many cases, these estimands are comparisons of a unit's outcome under an observed treatment against an unobserved treatment
-For this project, the treatment of interest---ideology in district-party-publics---is not directly observed
-It is instead only observed up to a probability distribution from a measurement model
-(To use potential outcomes notation, instead of observing $Y(\theta)$, we observe $Y(p(\theta))$)
+Second, the Bayesian approach confronts our uncertainties about the "right-hand side" of the model as well.
+Causal estimands (to use the Rubin terminology) are comparisons of potential outcomes are two hypothetical values of a treatment.
+In many cases, these estimands are comparisons of a unit's outcome under an observed treatment against an unobserved treatment.
+For this project, the treatment of interest---ideology in district-party-publics---is not directly observed.
+It is instead only observed up to a probability distribution from a measurement model.
+(To use potential outcomes notation, instead of observing $Y(\theta)$, we observe $Y(p(\theta))$).
 Bayesian probabilistic models provide machinery to describe causal queries when we have only a probabilistic understanding of the observed data as well as the unobserved data.
 
-This chapter unpacks these issues according to the following outline
-First, I provide a quick preview to the notation and terminology of two dominant approaches to causal inference in applied statistics: the "Rubin model" of potential outcomes and the "Pearl model" of _do_-calculus
-I then offer a Bayesian reinterpretation of these models, where unobserved potential outcomes/counterfactuals are characterized by probability distributions that are conditioned on the observed data
-This raises the daunting issue of prior specification for model parameters: how priors are inescapable for many causal claims, how priors can provide important structure to improve causal inferences, and practical advice for constructing and evaluating priors
-Finally, I provide examples of the Bayesian causal framework at work, highlighting how priors contribute to a causal study at different levels of abstraction.
+This chapter unpacks these issues according to the following outline.
+First, I review the notation and terminology for causal modeling in empirical research, where data and causal estimands are posed in terms of "potential outcomes" or "counterfactual" observations. 
+I then describe a Bayesian reinterpretation of these models, which uses probability distributions to quantify uncertainty about causal effects and counterfactual data, conditional on the observed data. 
+Because Bayesian modeling remains largely foreign to political science,
+I confront several issues surrounding prior distributions for causal models.
+I discuss how priors are inescapable for many causal claims, how priors can provide important structure to improve causal inferences, and practical advice for constructing and evaluating priors.
+Finally, I provide examples of the Bayesian causal framework at work, highlighting how priors add value to causal inference at different levels of abstraction.
 
 
 
-```{r knitr-03-causality, include = FALSE, cache = FALSE}
-source(here::here("assets-bookdown", "knitr-helpers.R"))
-```
 
 ```{r r-03-causality, cache = FALSE}
 library("knitr")
 library("here")
+library("ggdag")
 library("magrittr")
 library("tidyverse")
 library("extrafont")
@@ -68,7 +90,161 @@ library("patchwork")
 
 
 
-## Essential Concepts
+## Overview of Key Concepts
+
+
+### Causal Models
+
+As an area of scientific development, _causal inference_ refers to the formal modeling of causal effects, the assumptions required to identify causal effects, and research designs that make these assumptions plausible.
+The rigorous accounting of the causal model and identifying assumptions distinguishes causal inference from informal, verbal discussions of causal effects.
+
+The current movement in causal inference spans several fields, most notably in statistics, biostatistics, epidemiology, computer science, and economics.
+The dominant modeling approach to causal inference in political science is rooted in a notation of _potential outcomes_ [@rubin:1974:potential-outcomes; @rubin:2005:potential-outcomes].
+The potential outcomes model formalizes the concept of a causal effect by defining an outcome variable $Y$ for unit $i$ as a function of a treatment variable $A$.
+For a binary treatment assignment where $A = 1$ represents treatment and $A = 0$ represents control, unit $i$'s outcome under treatment is represented as $Y_{i}(A = 1)$ or $Y_{i}(1)$, and the outcome under control would be $Y_{i}(A = 0)$ or $Y_{i}(0)$.
+The benefit of expressing $Y$ in terms of hypothetical values of $A$ allows the causal model to describe, with formal exactitude, the entire space of possible outcomes that result from treatment assignment.
+If $Y_{i}(A = 1)$ is different from $Y_{i}(A = 0)$, then the treatment has a nonzero causal effect on unit $i$, denoted $\tau_{i}$.
+\begin{align}
+  (\#eq:tau-i)
+  \tau_{i} &= Y_{i}(A = 1) - Y_{i}(A = 0)
+\end{align}
+In this way, the causal model provides an exact definition of what a causal effect means.
+The exact structure allows researchers to derive exact implications of causal models by manipulating equations that follow from the setup of a causal model.
+A causal model may describe a more complex system of variables that affects $Y$—its value, whether it is observed at all, and so on—but the unifying feature of potential outcomes models is the definition of $Y$ as a function of other variables in the causal model.
+
+Formalizing the causal model as such conveys other important insights about causal inference in empirical research.
+Fundamentally, although the model defines potential outcomes for every possible treatment assignment $A = a$, only one potential outcome is observed for a given unit.
+This implies that the individual causal effect ($\tau_{i}$), while a valid feature of the hypothetical causal model, is never actually observed be for any unit.
+This "fundamental problem of causal inference" is the foundational philosophical problem in causal inference; the researcher can never make any claims about causal effects based only on what they can observe, since the researcher never observes the same unit under a counterfactual treatment assignment [@holland:1986:causal-inf].
+Claims about causal effects are enabled only by imposing assumptions on the data that allow effects to be _identified_ from observed data [@keele:2015:causal-inf].
+A related feature of causal models is that the causal effect $\tau_{i}$ is defined at the unit level, so it can be different for each unit.
+This low-level causal heterogeneity is often an important feature of research designs, since the identifiable causal quantities will depend on which assumptions the researcher is willing to make about the structure of that heterogeneity.
+The body of work that we call "causal inference" focuses on which causal quantities are derivable from a causal model, the assumptions required to identify those quantities in observed data, research designs that encode these assumptions, and the properties of statistical estimators for those causal quantities.
+
+A separate approach to causal modeling focuses on _structural causal models_ or "SCMs" [@pearl:1995:causal-diagrams; @pearl:2009:causality] that describe networks of causally related variables.
+Some treatment $A$ causally affects the outcome $Y$ if the treatment is a component of the function that assigns values to the outcome: $Y_{i} := f(A_{i}, \ldots)$.
+The notion of _assignment_ is important to distinguish from _equality_, since it distinguishes a directional causal effect from a bidirectional correlation.
+This is a central feature of the SCM approach, which is premised on the difference between _observing_ relationships as they appear in the world and _obtaining_ relationships by intervening on the world.
+We can observe a relationship between outcome $Y$ and treatment $A$ by observing that the distribution of $Y$ given $A$, $P(Y \mid A = a)$, changes as $A$ takes different values, but we would observe a different relationship by intervening on the world to set the value of $A$ ourselves.
+\begin{align}
+  \begin{split}
+    \text{Observational Distribution:} &\; & p(Y \mid A = a) \\
+    \text{Interventional Distribution:} &\; & p(Y \mid \do{A = a}) 
+  \end{split}
+  (\#eq:obs-int-distributions)
+\end{align}
+Like the potential outcomes model, $A$ has a causal effect on $Y$ if it changes at least one unit's $Y$ value, since it only takes one unit to change $P(Y \mid \do{A = a})$.
+The SCM framework comes to life by implementing _do_-calculus [@pearl:1995:causal-diagrams], rules for conditioning on variables in the causal system to nonparametrically identify causal effects.
+This approach is important for this dissertation because its use of probability distributions to convey causal effects lends itself to Bayesian modeling more readily than the potential outcomes notation.
+
+```{r confounding-dag}
+problem_dag <- 
+  dagify(
+    Y ~ A + U,
+    A ~ U,
+    exposure = "X",
+    outcome = "Y",
+    coords = tribble(
+      ~ name,      ~ x,    ~ y,
+      "Y", 1, 0,
+      "A", 0, 0,
+      "U", 0, 1
+    )
+  ) %>%
+  tidy_dagitty() %>%
+  # node_parents("C") %>%
+  print()
+```
+
+```{r plot-confounding-dag}
+ggplot(problem_dag) +
+  aes(x = x, y = y, xend = xend, yend = yend) +
+  geom_dag_edges() +
+  geom_dag_point(aes(color = (name == "U"))) +
+  geom_dag_text(
+    aes(label = name), 
+    parse = TRUE, 
+    family = font_fam
+  ) +
+  scale_color_manual(values = c("TRUE" = secondary, "FALSE" = "black")) +
+  annotate(
+    geom = "text",
+    label = "Effect of treatment (A → Y) is identified\nconditioning on confounder (U)",
+    x = 0.1, y = 1.2,
+    size = 3,
+    hjust = 0
+  ) +
+  theme_dag(legend.position = "none") +
+  expand_plot(
+    expand_x = expand_scale(c(0.2, 0.2)), 
+    expand_y = expand_scale(c(0.2, 0.2))
+  ) +
+  NULL  
+```
+
+The most recognizable feature of the SCM framework is that every structural model can be visualized as a graphical model, where nodes represent variables and directed edges represent causal relationships. Many researchers refer to these graphs as "directed acyclic graphs," but I refer to them simply as "causal graphs."^[
+  This is an effort to reduce jargon. 
+  DAGs can be used to represent many systems that have nothing to do with causal inference, since "directed" and "acyclic" refer only to the mathematical properties of a graph.
+  Formally, any graph is a DAG if two nodes can only be first-order connected by just one directed edge, and no path through the graph begins and ends with the same node.
+  This entails that nodes cannot be immediately connected by multiple edges, undirected edges, or bidirectional edges.
+  Furthermore, the graph contains no "loops": edges that connect a node to itself.
+]
+These graphs are valuable because they reveal which variables must be adjusted for in order to satisfy certain identification criteria in _do_-calculus.
+Most notably, the _back-door criterion_ states that a causal effect is identified by "blocking any back-door paths" between treatment $A$ and outcome $Y$—paths between $A$ and $Z$ that contain arrows into $A$.
+For instance, Figure&nbsp;\@ref(fig:plot-confounding-dag) shows a causal system where the effect of $A$ on $Y$ is not identified because we can trace the back-door path $A \rightarrow U \rightarrow Y$.
+This means that $U$ confounds the relationship between $A$ and $Y$, but we can identify the relationship by conditioning on $U$ and "blocking" the back-door path.
+Graphs are valuable for this project because I use them to convey important identification assumptions in later chapters.
+
+```{r plot-confounding-dag, include = TRUE, fig.width = 5, fig.height = 2,out.width = "70%", fig.cap = "A causal graph where the effect of $A$ on $Y$ is confounded by $U$."}
+```
+
+<!-- 
+\begin{align}
+  P(Y = y \mid \do{A = a}) &= \int\limits_{\mathcal{U}}P(Y \mid A = a, U = u)P(U = u) \diff{u}
+  (\#eq:adjustment-formula)
+\end{align} -->
+
+<!-- how each expresses confounding, correlation ≠ causation, and identification by conditioning -->
+
+
+As with the potential outcomes framework, _do_-calculus (and causal graphs in turn) describe minimally sufficient conditions for _nonparametric_ causal identification. There is no guarantee that linear regression models, or any parametric models, adequately control for confounders and isolate identifying variation in the treatment. For this reason, it can be helpful to lay out a hierarchy of modeling concerns for any causal inference problem.
+
+1. Causal modeling: the definition of potential outcomes or structural equations that define the space of causal effects, and the declaration of relevant causal estimands.
+2. Identification assumptions: the assumptions required to identify causal estimands using only the observed data. 
+These assumptions are usually posed as statements about expectations of $Y$ and when we can ignore the fact that counterfactuals are unobserved.
+For instance, conditioning on a confounder $U$ identifies the conditional causal effect of $A$ because it satisfies an assumption that $A$ is independent of the potential outcomes after conditioning on $U$.
+\begin{align}
+  Y_{i}(A = 1), \, Y_{i}(A = 0) \ind A_{i} \mid U_{i} = u
+  (\#eq:conditional-independence)
+\end{align}
+Conditional independence between treatment and potential outcomes lets the researcher make inferences about potential outcomes, which are entities in the hypothetical causal model, having only observed the real-world data.
+\begin{align}
+  \begin{split}
+    \E{Y_{i} \mid A_{i} = a, U_{i} = u} 
+      &= \E{Y_{i}(A = a) \mid A_{i} = a, U_{i} = u} \\
+      &= \E{Y_{i}(A = a)} \mid U_{i} = u
+  \end{split}
+  (\#eq:CIA-implication)
+\end{align}
+In other words, conditional independence lets us conclude that, in expectation, the observed data on $Y$ given observed $A$ and $U$ (the left-hand side of Equation&nbsp;\@ref(eq:CIA-implication)) is equal in expectation to the potential outcomes $Y(A)$ that we ought to observe, given $U_{i} = u$. 
+3. Statistical assumptions: What estimators are we using to estimate $\E{Y_{i} \mid A_{i}, U_{i}}$, and do they introduce additional assumptions that interfere with causal inference? 
+Do they suffer additional biases due to misspecification, functional form assumptions, that jeopardize key identification assumptions?
+
+This hierarchy is helpful for two reasons highlighted here. 
+First, it clarifies why researchers use certain research designs or statistical approaches to overcome certain problems with their data.
+Because statistical assumptions can undermine identification assumptions, causal inference tends to promote estimation strategies that rely on as few additional assumptions as possible [@keele:2015:causal-inf].
+One way to avoid these assumptions is to use research designs that "design away" potential sources of confounding, such as randomized experiments, instrumental variables, regression discontinuity, and difference-in-differences [for instance, @angrist-pischke:2008:mostly-harmless].
+If researchers cannot design away these difficult assumptions, other methods are available to adjust for confounders without as many strict assumptions about the functional form of the causal model.
+Causal inference is not synonymous with the new "agnostic statistics" [@aronow-miller:2019:agnostic-statistics], but it is animated by a similar motivation to implement statistical methods that relies on fewer fragile assumptions.
+For causal inference problems, these methods include matching, propensity score weighting, and even machine learning methods for estimating flexible conditional expectation functions [@sekhon:2009:opiates; @aronow-samii:2016:regression; @hill:2011:bart; @green-kern:2012:bart; @samii-et-al:2016:retrospective-causal-inference-ML].
+This dissertation will use machine learning methods, in particular Bayesian neural networks (BNNs), to estimate flexible expectation functions without relying on strict assumptions about unknown functional forms. 
+
+Second, this hierarchy clarifies where my contributions around Bayesian causal estimation will be focused.
+As I discuss below, a Bayesian view changes the interpretation of the causal model (1) by invoking a _probability distribution_ over the space of potential outcomes.
+A Bayesian view of causal inference also has the potential to extend the meaning of identification assumptions (2) by construing them also as probability distributions rather than fixed features of a model. 
+Finally, and most practically, the Bayesian framework offers a greater variety of statistical tools (3) that can be mobilized to estimate causal effects.
+
+
 
 ### Bayesian Inference
 
@@ -95,18 +271,15 @@ Joint model of the system:
 Better parameters with priors (reduce variance)
 
 
-### Causal Models
-
-Intro Rubin and Pearl models.
-
-Strictly speaking, causality is never observed. It is only inferred with the help of assumptions.
-
-Better parameters "by design" (reduce bias)
-
-Not _inherently_ the same as "agnostic" inference though we fux with both.
 
 
 ### Shared Goals, Different Tactics
+
+
+
+Better parameters "by design" (reduce design-based bias)
+
+Not _inherently_ the same as "agnostic" inference though we fux with both.
 
 
 
@@ -699,7 +872,7 @@ This is low-key pretty big
 
 ### Regularization-Induced Confounding
 
-
+This is a huge, underappreciated problem in the broad ML-for-causal-inference world
 
 
 
