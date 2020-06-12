@@ -63,6 +63,8 @@ model {
 
   // priors
   coefs ~ multi_normal(coef_hypermeans, coef_vc);
+
+  // multivariate prior
   coef_hypermeans ~ std_normal();
   coef_corr ~ lkj_corr(2);    // coef off-diagonal corrs
   coef_scales ~ normal(0, prior_sd); // coef scale components
