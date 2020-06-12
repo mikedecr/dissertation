@@ -217,7 +217,8 @@ choice_data_R <- choice_data %>%
       recipient_cfscore_dyn * theta_mean_rescale
     )
   ) %>% 
-  c(p = ncol(.$X), prior_sd = 10)
+  c(p = ncol(.$X))
+
 
 
 choice_data_D <- choice_data %>%
@@ -233,12 +234,19 @@ choice_data_D <- choice_data %>%
       recipient_cfscore_dyn * theta_mean_rescale
     )
   ) %>% 
-  c(p = ncol(.$X), prior_sd = 10) 
+  c(p = ncol(.$X)) 
+
+
+simple_choice_data_R <- 
+  c(choice_data_R, prior_sd = 1)
+
+simple_choice_data_D <- 
+  c(choice_data_D, prior_sd = 1)
 
 
 
-lapply(choice_data_R, head)
-lapply(choice_data_D, head)
+lapply(simple_choice_data_R, head)
+lapply(simple_choice_data_D, head)
 
 
 
@@ -247,12 +255,20 @@ simple_choice <- stan_model(
   verbose = TRUE
 )
 
+
+lkj_choice <- stan_model(
+  file = here("code", "05-voting", "stan", "simple-lkj-choice.stan"), 
+  verbose = TRUE
+)
+
 beepr::beep(2)
 
-dumb_R_stan <- 
+
+
+simple_R_stan <- 
   sampling(
     object = simple_choice, 
-    data = choice_data_R, 
+    data = simple_choice_data_R, 
     iter = 2000, 
     chains = parallel::detectCores()
     # , thin = 1,
@@ -260,16 +276,43 @@ dumb_R_stan <-
     # pars = c()
   )
 
-dumb_D_stan <- 
+simple_D_stan <- 
   sampling(
     object = simple_choice, 
-    data = choice_data_D, 
+    data = simple_choice_data_D, 
     iter = 2000, 
     chains = parallel::detectCores()
     # , thin = 1,
     # , include = FALSE,
     # pars = c()
   )
+
+
+
+lkj_R_stan <- 
+  sampling(
+    object = lkj_choice, 
+    data = simple_choice_data_R, 
+    iter = 2000, 
+    chains = parallel::detectCores()
+    # , thin = 1,
+    # , include = FALSE,
+    # pars = c()
+  )
+
+lkj_D_stan <- 
+  sampling(
+    object = lkj_choice, 
+    data = simple_choice_data_D, 
+    iter = 2000, 
+    chains = parallel::detectCores()
+    # , thin = 1,
+    # , include = FALSE,
+    # pars = c()
+  )
+
+
+beepr::beep(2)
 
 
 rmod <- clogit(
@@ -294,14 +337,16 @@ dmod <- clogit(
   "R" = 
     bind_rows(
       "survival" = tidy(rmod, conf.int = TRUE), 
-      "bayes" = tidy(dumb_R_stan, conf.int = TRUE),
+      "simple_bayes" = tidy(simple_R_stan, conf.int = TRUE),
+      "simple_lkj" = tidy(lkj_R_stan, conf.int = TRUE),
       .id = "model"
     ) %>%
     mutate(party = "R"),
   "D" = 
     bind_rows(
       "survival" = tidy(dmod, conf.int = TRUE), 
-      "bayes" = tidy(dumb_D_stan, conf.int = TRUE),
+      "simple_bayes" = tidy(simple_D_stan, conf.int = TRUE),
+      "simple_lkj" = tidy(lkj_D_stan, conf.int = TRUE),
       .id = "model"
     ) %>%
     mutate(party = "D")
@@ -309,9 +354,11 @@ dmod <- clogit(
   mutate(
     term = case_when(
       term %in% c("coefs[1]", "recipient_cfscore_dyn") ~ "CF",
-      TRUE ~ "Interaction"
+      term %in% c("coefs[2]", "theta_mean_rescale:recipient_cfscore_dyn") ~ 
+        "Interaction"
     )
   ) %>%
+  filter(is.na(term) == FALSE) %>%
   ggplot(aes(x = term, y = estimate, color = party, shape = model)) +
   geom_pointrange(
     aes(ymin = conf.low, ymax = conf.high),
@@ -321,6 +368,10 @@ dmod <- clogit(
   coord_flip() +
   geom_hline(yintercept = 0) +
   NULL
+
+
+
+
 
 
 
@@ -348,31 +399,118 @@ net_choice <- stan_model(
   verbose = TRUE
 )
 
+net_lkj <- stan_model(
+  file = here("code", "05-voting", "stan", "choice-net-lkj.stan"), 
+  verbose = TRUE
+)
+
 
 
 n_nodes <- 3
-choice_data_R <- c(choice_data_R, n_nodes = n_nodes)
-choice_data_D <- c(choice_data_D, n_nodes = n_nodes)
+hidden_prior_scale <- 1
+act_prior_scale <- 0.5
+
+net_data_R <- c(
+  choice_data_R, 
+  n_nodes = n_nodes, 
+  hidden_prior_scale = hidden_prior_scale, 
+  act_prior_scale = act_prior_scale
+)
+
+net_data_D <- c(
+  choice_data_D, 
+  n_nodes = n_nodes, 
+  hidden_prior_scale = hidden_prior_scale, 
+  act_prior_scale = act_prior_scale
+)
 
 
+
+# simple neural nets: no LKJ
 stan_net_R <- 
   sampling(
     object = net_choice, 
-    data = choice_data_R, 
+    data = net_data_R, 
     iter = 2000, 
     chains = parallel::detectCores()
-    # , thin = 1,
-    # , include = FALSE,
-    # pars = c()
+    # , thin = 1, , include = FALSE, pars = c()
   )
 
 stan_net_D <- 
   sampling(
     object = net_choice, 
-    data = choice_data_D, 
+    data = net_data_D, 
     iter = 2000, 
     chains = parallel::detectCores()
-    # , thin = 1,
-    # , include = FALSE,
-    # pars = c()
+    # , thin = 1, , include = FALSE, pars = c()
   )
+
+
+# LKJ neural net
+lkj_net_R <- 
+  sampling(
+    object = net_lkj, 
+    data = net_data_R, 
+    iter = 2000, 
+    chains = parallel::detectCores()
+    # , thin = 1, , include = FALSE, pars = c()
+  )
+
+lkj_net_D <- 
+  sampling(
+    object = net_lkj, 
+    data = net_data_D, 
+    iter = 2000, 
+    chains = parallel::detectCores()
+    # , thin = 1, , include = FALSE, pars = c()
+  )
+
+
+
+
+shinystan::shiny_stanfit(lkj_D_stan)
+
+# compare coefs
+bind_rows(
+  "stan_net_R" = tidy(stan_net_R, conf.int = TRUE),
+  "stan_net_D" = tidy(stan_net_D, conf.int = TRUE),
+  "lkj_net_R" = tidy(lkj_net_R, conf.int = TRUE),
+  "lkj_net_D" = tidy(lkj_net_D, conf.int = TRUE),
+  .id = "model"
+) %>%
+  filter(str_detect(term, "wt")) %>%
+  ggplot() +
+  aes(x = term, y = estimate,
+      color = str_detect(model, "_D"),
+      shape = str_detect(model, "lkj_")
+  ) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.25)
+  ) +
+  coord_flip()
+
+
+
+
+stan_utilities_R <- stan_net_R %>%
+  tidy_draws() %>%
+  gather_draws(util[case], n = 200) %>%
+  right_join(
+    choice_data %>% 
+    filter(party == "R") %>%
+    mutate(case = row_number())
+  ) %>%
+  print()
+
+
+
+ggplot(stan_utilities_R) +
+  aes(x = theta_mean_rescale, y = recipient_cfscore_dyn, color = .value) +
+  geom_jitter(width = .035, height = .15, alpha = 0.2) +
+  scale_color_viridis_c() +
+  geom_hline(yintercept = 0)
+
+# right now it looks like this is model dependent
+# most of the "pow" comes at CF == 0
+
