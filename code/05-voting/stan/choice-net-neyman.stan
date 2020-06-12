@@ -13,8 +13,8 @@ data {
   vector[n] cf_score;      // candidate CFscores
   
   // confounders
-  int<lower = 1> p;       // number of confounders
-  matrix[n, p] X;         // design matrix of covariates, no leading 1s
+  int<lower = 1> P;       // number of confounders
+  matrix[n, P] X;         // design matrix of covariates, no leading 1s
 
 
   // Choice set info
@@ -24,26 +24,28 @@ data {
                                  // not here: group INDEX[G] = ( 1:G )
 
   // user-supplied parameters
-  int<lower = 1> nodes_select;   // neuron density, selection step
-  int<lower = 1> nodes_outcome;  // neuron density, covariate function
-  // int<lower = 1> nodes_theta; // neuron density, theta function
-  real hidden_scale_select;       // coef scale
-  real act_scale_select;          // coef scale
-  real hidden_scale_outcome;       // coef scale
-  real act_scale_outcome;          // coef scale
+  int<lower = 1> nodes_select;  // neuron density, selection step
+  int<lower = 1> nodes_outcome; // neuron density, covariate function
+                                
+                                // future: neurons for treatment
+  
+  real hid_prior_select;        // coef scale
+  real act_prior_select;        // coef scale
+  real hid_prior_outcome;       // coef scale
+  real act_prior_outcome;       // coef scale
 
 }
 
 transformed data {
   
   // covariate matrices and dimensions
-  int<lower = 1> p_outcome = p + 1; // add 1s to X
-  int<lower = 1> p_select = p + 1;  // add resid to X (for now)
+  int<lower = 1> P_outcome = P + 1; // add 1s to X
+  int<lower = 1> P_select = P + 1;  // add resid to X (for now)
   vector[n] theta_x_cf = theta .* cf_score;
   
   // X_outcome happens after residualizing
   // should CF be in the X?
-  matrix[n, p_select] X_select;
+  matrix[n, P_select] X_select;
   
   // add 1s to covariates
   X_select = append_col(rep_vector(1, n), X);
@@ -54,19 +56,20 @@ transformed data {
 
 parameters {
  
-  matrix[p_select, nodes_select] hidden_select;
-  vector[nodes_select] act_select;
+  matrix[P_select, nodes_select] hid_select_raw;
+  vector[nodes_select] act_select_raw;
   real<lower = 0> sigma_select;
 
-  matrix[p_outcome, nodes_select] hidden_outcome;
-  vector[nodes_select] act_outcome;
+  matrix[P_outcome, nodes_select] hid_outcome_raw;
+  vector[nodes_select] act_outcome_raw;
 
 }
 
 transformed parameters {
   
-  // int<lower = 1, upper = n_samples> sample_column = rng...
-  // vector[n] theta = col(theta_matrix, sample_column);
+  // extract theta?
+    // int<lower = 1, upper = n_samples> sample_column = rng...
+    // vector[n] theta = col(theta_matrix, sample_column);
 
 }
 
@@ -76,25 +79,21 @@ model {
   vector[n] expected_int; // E[treatment | x]
   vector[n] resid;    // treatment - E[treatment | x]
 
-  matrix[n, p_outcome] X_outcome;
+  matrix[n, P_outcome] X_outcome;
   vector[n] util;  // latent utility
   vector[n] pprob; // softmax utility
   int pos = 1;     // for segmenting
 
   
-  // ----- selection algebra -----
+  // ----- model algebra -----
   
-  expected_int = tanh(X_select * hidden_select) * act_select;
-
-
-  // ----- outcome algebra -----
-
-  // residualize treatment
+  // predicted and residual treatment
+  expected_int = tanh(X_select * hid_select) * act_select_raw;
   resid = theta_x_cf - expected_int; 
   X_outcome = append_col(resid, X); 
 
   // future goal: "shrink to homogeneity"
-  util = tanh(X_outcome * hidden_outcome) * act_outcome;
+  util = tanh(X_outcome * hid_outcome_raw) * act_outcome_raw;
   
   // choice probs in ragged choice sets: segment(v, start, length)
   for (g in 1:G) {
@@ -102,23 +101,24 @@ model {
     pos = pos + n_g[g];
   }
 
+  // likelihoods
+  theta_x_cf ~ normal(expected_int, sigma_select); // student_t?
+  target += y' * log(pprob);
+  // <https://khakieconomics.github.io/2019/03/17/The-logit-choice-model.html>
+
 
   // ----- selection model -----
 
-  theta_x_cf ~ normal(expected_int, sigma_select); // student_t?
-  to_vector(hidden_select) ~ normal(0, hidden_scale_select);
-  act_select ~ normal(0, act_scale_select);
+  to_vector(hid_select_raw) ~ normal(0, hid_prior_select);
+  act_select_raw ~ normal(0, act_prior_select);
   sigma_select ~ normal(0, 1);
 
 
   // ----- choice model -----
 
-  // sums log probability for successes only
-  // <https://khakieconomics.github.io/2019/03/17/The-logit-choice-model.html>
-  target += y' * log(pprob);
+  to_vector(hid_outcome_raw) ~ normal(0, hid_prior_outcome);
+  act_outcome_raw ~ normal(0, act_prior_outcome);
 
-  to_vector(hidden_outcome) ~ normal(0, hidden_scale_outcome);
-  act_outcome ~ normal(0, act_scale_outcome);
 
 }
 
