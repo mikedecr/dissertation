@@ -12,12 +12,12 @@ data {
   // Choice set info
   int<lower = 1> G;                     // number of distinct groups/sets
   int<lower = 1> n_g[G];                // size of each choice set
-  int<lower = 1> g_code[n];             // group/set code for each unit (R)
+  // int<lower = 1> g_code[n];             // group/set code for each unit (R)
   // int<lower = 1, upper = G> g_index[n]; // group/set INDEX (1:G)
 
   // user-supplied parameters
   int<lower = 1> n_nodes; // neuron density
-  real hidden_prior_scale;          // coef scale
+  real hid_prior_scale;          // coef scale
   real act_prior_scale;          // coef scale
 
 }
@@ -26,19 +26,22 @@ data {
 
 parameters {
  
-  matrix[p, n_nodes] hidden_wt;
+  matrix[p, n_nodes] hid_wt;
   vector[n_nodes] act_wt;
 
 }
 
+transformed parameters {
+  
+  vector[n] util = tanh(X * hid_wt) * act_wt; // latent utility
+
+}
 
 model {
 
-  vector[n] util;  // latent utility
   vector[n] pprob; // softmax utility
   int pos = 1;     // for segmenting
 
-  util = tanh(X * hidden_wt) * act_wt;
   
   // from stan manual ("ragged data structures"):l
   // calculate choice probs in each choice set: segment(v, start, length)
@@ -54,8 +57,8 @@ model {
   target += y' * log(pprob);
 
   // priors
-  to_vector(hidden_wt) ~ normal(0, prior_sd);
-  act_wt ~ normal(0, 1);
+  to_vector(hid_wt) ~ normal(0, hid_prior_scale);
+  act_wt ~ normal(0, act_prior_scale);
 
 }
 
