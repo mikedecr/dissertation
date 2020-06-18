@@ -20,13 +20,31 @@ ggplot2::update_geom_defaults(geom = "label", list(family = font_fam))
 
 
 # ---- theme -----------------------
+# theme_mgd <- function() {
+#   ggthemes::theme_base(base_size = 14, base_family = font_fam) %+replace% ggplot2::theme(
+#       plot.background = ggplot2::element_blank(), 
+#       axis.ticks = ggplot2::element_line(lineend = "square"), 
+#       axis.ticks.length = ggplot2::unit(0.25, "lines"), 
+#       axis.text = ggplot2::element_text(size = 10)
+#     )
+# }
+
 theme_mgd <- function() {
-  ggthemes::theme_base(base_size = 14, base_family = font_fam) %+replace% ggplot2::theme(
-      plot.background = ggplot2::element_blank(), 
-      axis.ticks = ggplot2::element_line(lineend = "square"), 
-      axis.ticks.length = ggplot2::unit(0.25, "lines"), 
-      axis.text = ggplot2::element_text(size = 10)
-    )
+  hrbrthemes::theme_ipsum(base_family = "Source Sans Pro") %+replace%
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "gray90"),
+    axis.title.x.bottom = element_text(
+      margin = margin(t = 0.35, unit = "cm"),
+      size = rel(1.5)
+    ),
+    axis.title.y.left = element_text(
+      margin = margin(r = 0.35, unit = "cm"),
+      size = rel(1.5)
+    ),
+    plot.margin = margin(t = 1, r = 1, b = 1, l = 1, unit = "cm"),
+    plot.background = element_rect(fill = NA, color = NA)
+  )
 }
 
 

@@ -20,6 +20,7 @@ knitr::opts_chunk$set(
   warning = FALSE, message = FALSE, 
   fig.height = 4, fig.width = 6, 
   out.width = "80%",
+  dev = "png",
   # fig device is f(pandoc_to) by default
   fig.align = "center", dpi = 300#, fig.retina = 3
 )
