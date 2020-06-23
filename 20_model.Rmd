@@ -1,10 +1,5 @@
 # Modeling the Partisan Constituency's Policy Preferences {#ch:model}
 
-<!-- bold math symbol -->
-```{block, include = knitr::is_html_output(), cache = FALSE}
-$\newcommand{\bm}[1]{\boldsymbol{\mathbf{#1}}}$
-```
-
 
 
 ```{r knitr-02-model, include = FALSE, cache = FALSE}

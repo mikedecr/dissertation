@@ -4,8 +4,6 @@
 source(here::here("assets-bookdown", "knitr-helpers.R"))
 ```
 
-<!-- bold math symbol -->
-$\newcommand{\bm}[1]{\boldsymbol{\mathbf{#1}}}$
 
 <!-- do operator -->
 $\newcommand{\do}[1]{\mathit{do}\left(#1\right)}$
