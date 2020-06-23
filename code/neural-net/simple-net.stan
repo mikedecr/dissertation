@@ -2,7 +2,7 @@
 
 data {
  
-  int<lower = 1> n_neurons; 
+  int<lower = 1> n_nodes; 
   int<lower = 1> n;               
   int<lower = 1> p; // number of "inputs"
   matrix[n, p] X;   // predictors
@@ -12,15 +12,15 @@ data {
 
 parameters {
 
-  matrix[p, n_neurons] hidden_wt;
-  vector[n_neurons] act_wt;
+  matrix[p, n_nodes] hidden_wt;
+  vector[n_nodes] act_wt;
   real<lower = 0> sigma;
   
 }
 
 transformed parameters {
 
-  matrix[n, n_neurons] neurons;
+  matrix[n, n_nodes] neurons;
   vector[n] net_output;
   neurons = tanh(X * hidden_wt);  // NxP*PxJ -> NxJ*Jx1
   net_output = (neurons - mean(neurons)) * act_wt;  // NxJ*Jx1 -> Nx1

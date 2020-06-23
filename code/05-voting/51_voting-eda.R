@@ -42,29 +42,49 @@ cands_raw <-
 # - who wins
 # - how many in choice set
 # - candidate extremism level w/in group choice set
+# filtering:
+# - drop NA on key data
+# - ONLY THEN: 
+# - each set must be n > 1, only 1 winner
 cands <- cands_raw %>%
-  mutate(
-    pwinner = case_when(
+  transmute(
+    Name, bonica_rid, recipient_fecid, state_abb, district_num, 
+    group, cycle, party,
+    choice_set_ID = str_glue("{group}-{party}-{cycle}") %>% as.character(),
+    g_code = as.numeric(as.factor(choice_set_ID)), 
+    win_primary = case_when(
       pwinner == "W" ~ 1,
       pwinner == "L" ~ 0
-    )
+    ),
+    theta_mean_rescale, recipient_cfscore_dyn
   ) %>%
+  na.omit() %>%
   group_by(group, cycle) %>%
   mutate(
-    n_in_group = n(),
+    n_group = n(),
     cf_extremism_level = case_when(
-      n_in_group > 1 & party == "R" ~ 
+      n_group > 1 & party == "R" ~ 
         rank(recipient_cfscore_dyn, na.last = "keep"),
-      n_in_group > 1 & party == "D" ~ 
+      n_group > 1 & party == "D" ~ 
         rank(-1 * recipient_cfscore_dyn, na.last = "keep"),
-      n_in_group <= 1 ~ 0
-    ),
-    choice_set = str_glue("{group}-{party}-{cycle}") %>% as.character()
+      n_group <= 1 ~ 0
+    )
   ) %>%
-  filter(sum(pwinner) == 1) %>%
-  filter(n_in_group > 1) %>%
+  filter(sum(win_primary) == 1) %>%
   ungroup() %>%
+  filter(n_group > 1) %>%
   print()
+
+
+# n and cases
+cands %>%
+  group_by(party) %>%
+  print() %>%
+  summarize(
+    sets = n_distinct(choice_set_ID),
+    cases = n()
+  ) 
+
 
 
 
@@ -77,8 +97,8 @@ cands %>%
   select(group, cycle, cf_extremism_level, recipient_cfscore_dyn, Name) %>%
   semi_join(x = cands, by = c("group", "cycle")) %>%
   select(
-    state_abb, district_num, party, cycle, group,
-    cf_extremism_level, recipient_cfscore, Name
+     Name, state_abb, district_num, party, cycle, group,
+    cf_extremism_level, recipient_cfscore_dyn,
   ) %>%
   arrange(cycle, group)
 
@@ -130,8 +150,29 @@ cands %>%
 
 
 # ----------------------------------------------------
-#   try multinomial logit
+#   MLE conditional logit
 # ----------------------------------------------------
+
+rmod <- clogit(
+  y ~ 0 
+  # + theta_mean_rescale*recipient_cfscore_dyn
+  + recipient_cfscore_dyn
+  + strata(g_code), 
+  data = choice_data,
+  subset = party == "R"
+)  %>%
+  print()
+
+
+dmod <- clogit(
+  y ~ 0 
+  # + theta_mean_rescale*recipient_cfscore_dyn
+  + recipient_cfscore_dyn
+  + strata(g_code),
+  data = choice_data,
+  subset = party == "D"
+) %>%
+  print()
 
 
 
@@ -170,25 +211,7 @@ cands %>%
 #   stan conditional logit
 # ----------------------------------------------------
 
-# push this higher up?
-# - keep only variables we want
-# - drop NA
-# - calculate set sizes
-# - only sets with 1 winner
-choice_data <- cands %>%
-  transmute(
-    group, cycle, party, 
-    g_code = as.numeric(as.factor(choice_set)), 
-    y = pwinner, theta_mean_rescale, recipient_cfscore_dyn
-  ) %>%
-  na.omit() %>%
-  arrange(g_code) %>%
-  group_by(g_code) %>%
-  mutate(n_g = n()) %>%
-  filter(sum(y) == 1) %>%
-  ungroup() %>%
-  filter(n_g > 1) %>%
-  print()
+
 
 
 set_sizes <- choice_data %>%
@@ -318,23 +341,6 @@ lkj_D_stan <-
 
 beepr::beep(2)
 
-
-rmod <- clogit(
-  y ~ 0 + theta_mean_rescale*recipient_cfscore_dyn + strata(g_code), 
-  data = choice_data,
-  subset = party == "R"
-)  %>%
-  print()
-
-
-
-dmod <- clogit(
-  y ~ 
-    theta_mean_rescale*recipient_cfscore_dyn + strata(g_code), 
-  data = choice_data,
-  subset = party == "D"
-) %>%
-  print()
 
 
   bind_rows(
@@ -656,14 +662,40 @@ stan_neyman_D <- sampling(
   # , thin = 1, , include = FALSE, pars = c()
 )
 
+stan_constrained_R <- sampling(
+  object = constrained_neyman, data = neyman_data_R,
+  iter = n_iter, refresh = max(n_iter / 20, 1), 
+  chains = mc_cores
+  # , thin = 1, , include = FALSE, pars = c()
+)
+
+stan_constrained_D <- sampling(
+  object = constrained_neyman, data = neyman_data_D,
+  iter = n_iter, refresh = max(n_iter / 20, 1), 
+  chains = mc_cores
+  # , thin = 1, , include = FALSE, pars = c()
+)
+
+
+tidy(stan_neyman_R, conf.int = TRUE, ess = TRUE, rhat = TRUE) %>% print(n = nrow(.))
+tidy(stan_neyman_D, conf.int = TRUE, ess = TRUE, rhat = TRUE) %>% print(n = nrow(.))
+tidy(stan_constrained_R, conf.int = TRUE, ess = TRUE, rhat = TRUE) %>% print(n = nrow(.))
+tidy(stan_constrained_D, conf.int = TRUE, ess = TRUE, rhat = TRUE) %>% print(n = nrow(.))
+
 beepr::beep(2)
 
 
+stan_plot(stan_neyman_R, pars = c("hid_outcome", "hid_select"))
+stan_plot(stan_constrained_R, pars = c("hid_outcome", "hid_select"))
+stan_plot(stan_neyman_D, pars = c("hid_outcome", "hid_select"))
+stan_plot(stan_constrained_D, pars = c("hid_outcome", "hid_select"))
+
 
 stan_trace(stan_neyman_R, pars = "hid_select_raw")
-stan_trace(stan_neyman_R, pars = "hid_max_select")
-stan_trace(stan_neyman_R, pars = "hid_slice_select")
+stan_trace(stan_neyman_R, pars = "bias_max_select")
+stan_trace(stan_neyman_R, pars = "bias_slice_select")
 stan_trace(stan_neyman_R, pars = "hid_select")
+
 stan_plot(stan_neyman_R, pars = c("hid_select", "hid_select_raw"))
 
 stan_trace(stan_neyman_D, pars = "hidden_outcome")

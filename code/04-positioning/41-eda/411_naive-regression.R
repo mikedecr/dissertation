@@ -20,8 +20,10 @@ source(here::here("code", "helpers", "call-R-helpers.R"))
 
 # source(here::here("code", "04-positioning", "41-eda", "411_naive-regression.R"), verbose = FALSE)
 
-clean_data_dir <- 112745864917
+# box: data/_model-output/04-positioning
+#      estimates for voting models
 model_output_dir <- 102977578033
+# clean_data_dir <- 112745864917
 
 
 # ---- Data sources -----------------------

@@ -3,11 +3,11 @@ title: What is a Bayesian Neural Network
 author: Michael G. DeCrescenzo
 date: | 
   `r format(Sys.time(), '%B %d, %Y')` 
-bibliography: assets-bookdown/thesis.bib
+# bibliography: assets-bookdown/thesis.bib
 ---
 
 ```{r eval = FALSE, include = FALSE}
-rmarkdown::render("9999-BNN.Rmd", output_format = "bookdown::html_document2")
+rmarkdown::render("code/guides/9999-BNN.Rmd", output_format = "bookdown::html_document2")
 ```
 
 $\newcommand{\ind}[0]{\perp \!\!\! \perp}$
@@ -28,6 +28,11 @@ The functional form of the network structure
     - The ultimate prediction is simply an aggregation of all of the logistic regressions, which is basically a weighted sum of the prior functions.
 
 
+Terminology:
+
+- "neural network"
+- "multilayer perceptron" (MPT)
+- stacked regressions + chaining transformation for nonlinear and interactive effects
 
 
 # Let me see if I've got this right
@@ -35,4 +40,157 @@ The functional form of the network structure
 Regression: $y \sim g\left(X\beta\right)$
 
 Deep Learning: $y \sim g\left(h\left(X\beta\right)\alpha\right)$
+
+
+# Neural Network Model
+
+This specific setup is the "multilayer perceptron" (MPT) model, but I use a special case with only one hidden layer. This hidden layer contains "nodes" indexed $j \in \{1, 2, \ldots, J\}$.
+
+The algebra of the model is written as follows:
+
+\begin{align}
+  y_{i} &= \mathrm{E}\left[y \mid x\right] + \epsilon_{i} \\
+  y_{i} &= \text{tanh}(\mathbf{x}^{\intercal}_{i}\Omega)\boldsymbol{\alpha} + \epsilon_{i}
+\end{align}
+where $\mathbf{x}_{i}$ is a column-vector containing $P$ attributes for unit $i$ (so its transpose is a row-vector), $\Omega$ is a $P \times J$ matrix of "hidden weights" (one $P$-vector of coefficients for each "node" $j$), and $\boldsymbol{\alpha}$ is a $J$-vector of "activation weights" (coefficients for each node). 
+
+This implies a more efficient matrix-form expression,
+\begin{align}
+  \mathbf{y} &= \text{tanh}\left(X\Omega\right)\boldsymbol{\alpha} + \boldsymbol{\epsilon}
+\end{align}
+where $X$ is an $n \times P$ matrix of data.
+
+To understand the algebra of the network, the expanded version of this equation is...
+\begin{align}
+  \begin{bmatrix}
+    y_{1} \\ y_{2} \\ \vdots \\ y_{n}
+  \end{bmatrix}
+   &=
+  \text{tanh}\left( 
+    \begin{bmatrix}
+      1 & x_{11} & x_{12} & \ldots & x_{1P} \\ 
+      1 & x_{21} & x_{22} & \ldots & x_{2P} \\ 
+      \vdots \\
+      1 & x_{n1} & x_{n2} & \ldots & x_{nP}
+    \end{bmatrix}
+    \begin{bmatrix}
+      \omega_{01} & \omega_{02} & \cdots & \omega_{0J} \\ 
+      \omega_{11} & \omega_{12} & \cdots & \omega_{1J} \\ 
+      \vdots \\
+      \omega_{P1} & \omega_{P2} & \cdots & \omega_{PJ}
+    \end{bmatrix}
+  \right)
+  \begin{bmatrix}
+    \alpha_{1} \\ 
+    \alpha_{2} \\ 
+    \vdots \\ 
+    \alpha_{J}
+  \end{bmatrix} +
+  \begin{bmatrix}
+    \epsilon_{1} \\ \epsilon_{2} \\ \vdots \\ \epsilon_{n}
+  \end{bmatrix}
+\end{align}
+Where the first column of $X$ is $1$s. This interprets any hidden "bias" parameters to be nothing more than constants as we multiply through. When we multiply, $\text{tanh}\left(X\Omega\right)$ is an $n \times J$ matrix of linear combinations...
+
+\begin{align}
+  \begin{bmatrix}
+    y_{1} \\ y_{2} \\ \vdots \\ y_{n}
+  \end{bmatrix}
+  &=
+  \tanh \left(
+    \begin{bmatrix}
+      \mathbf{x}^{\intercal}_{1}\boldsymbol{\omega}_{1} & 
+        \mathbf{x}^{\intercal}_{1}\boldsymbol{\omega}_{2} & 
+        \cdots & \mathbf{x}^{\intercal}_{1}\boldsymbol{\omega}_{J} \\ 
+      \mathbf{x}^{\intercal}_{2}\boldsymbol{\omega}_{1} & 
+        \mathbf{x}^{\intercal}_{2}\boldsymbol{\omega}_{2} & 
+        \cdots & \mathbf{x}^{\intercal}_{2}\boldsymbol{\omega}_{J} \\ 
+       &  & \ddots &  \\ 
+      \mathbf{x}^{\intercal}_{n}\boldsymbol{\omega}_{1} & 
+        \mathbf{x}^{\intercal}_{n}\boldsymbol{\omega}_{2} & 
+        \cdots & \mathbf{x}^{\intercal}_{n}\boldsymbol{\omega}_{J}
+    \end{bmatrix}
+  \right)  
+  \begin{bmatrix}
+    \alpha_{1} \\ 
+    \alpha_{2} \\ 
+    \vdots \\ 
+    \alpha_{J}
+  \end{bmatrix} +
+  \begin{bmatrix}
+    \epsilon_{1} \\ \epsilon_{2} \\ \vdots \\ \epsilon_{n}
+  \end{bmatrix}
+\end{align}
+
+where each $\boldsymbol{\omega}_{j}$ is a $P$-column of coefficients. We can also express this by taking $\tanh(\cdot)$ elementwise.
+
+\begin{align}
+  \begin{bmatrix}
+    y_{1} \\ y_{2} \\ \vdots \\ y_{n}
+  \end{bmatrix}
+   &=
+  \begin{bmatrix}
+    \tanh(\mathbf{x}^{\intercal}_{1}\boldsymbol{\omega}_{1}) & 
+      \tanh(\mathbf{x}^{\intercal}_{1}\boldsymbol{\omega}_{2}) & 
+      \cdots & \tanh(\mathbf{x}^{\intercal}_{1}\boldsymbol{\omega}_{J}) \\ 
+    \tanh(\mathbf{x}^{\intercal}_{2}\boldsymbol{\omega}_{1}) & 
+      \tanh(\mathbf{x}^{\intercal}_{2}\boldsymbol{\omega}_{2}) & 
+      \cdots & \tanh(\mathbf{x}^{\intercal}_{2}\boldsymbol{\omega}_{J}) \\ 
+     &  & \ddots &  \\ 
+    \tanh(\mathbf{x}^{\intercal}_{n}\boldsymbol{\omega}_{1}) & 
+      \tanh(\mathbf{x}^{\intercal}_{n}\boldsymbol{\omega}_{2}) & 
+      \cdots & \tanh(\mathbf{x}^{\intercal}_{n}\boldsymbol{\omega}_{J})
+  \end{bmatrix}
+  \begin{bmatrix}
+    \alpha_{1} \\ 
+    \alpha_{2} \\ 
+    \vdots \\ 
+    \alpha_{J}
+  \end{bmatrix} +
+  \begin{bmatrix}
+    \epsilon_{1} \\ \epsilon_{2} \\ \vdots \\ \epsilon_{n}
+  \end{bmatrix}
+\end{align}
+
+We take this $n \times J$ matrix and multiply by the $J \times 1$ vector of activation weights, returning an $n \times 1$ vector of linear combinations of data, hidden weights, and activation weights...
+
+\begin{align}
+  \begin{bmatrix}
+    y_{1} \\ y_{2} \\ \vdots \\ y_{n}
+  \end{bmatrix}
+   &=
+  \begin{bmatrix}
+    \tanh(\mathbf{x}^{\intercal}_{1}\boldsymbol{\omega}_{1})\alpha_{1} + 
+      \tanh(\mathbf{x}^{\intercal}_{1}\boldsymbol{\omega}_{2})\alpha_{2} + 
+      \cdots + \tanh(\mathbf{x}^{\intercal}_{1}\boldsymbol{\omega}_{J})\alpha_{J} \\ 
+    \tanh(\mathbf{x}^{\intercal}_{2}\boldsymbol{\omega}_{1})\alpha_{1} + 
+      \tanh(\mathbf{x}^{\intercal}_{2}\boldsymbol{\omega}_{2})\alpha_{2} + 
+      \cdots + \tanh(\mathbf{x}^{\intercal}_{2}\boldsymbol{\omega}_{J})\alpha_{J} \\ 
+    \vdots \\
+    \tanh(\mathbf{x}^{\intercal}_{n}\boldsymbol{\omega}_{1})\alpha_{1} + 
+      \tanh(\mathbf{x}^{\intercal}_{n}\boldsymbol{\omega}_{2})\alpha_{2} + 
+      \cdots + \tanh(\mathbf{x}^{\intercal}_{n}\boldsymbol{\omega}_{J})\alpha_{J}
+  \end{bmatrix} +
+  \begin{bmatrix}
+    \epsilon_{1} \\ \epsilon_{2} \\ \vdots \\ \epsilon_{n}
+  \end{bmatrix}
+\end{align}
+
+which we can further simplify by writing the data as $P$-vectors for each unit $i$. 
+
+\begin{align}
+  \begin{bmatrix}
+    y_{1} \\ y_{2} \\ \vdots \\ y_{n}
+  \end{bmatrix}
+   &=
+  \begin{bmatrix}
+    \tanh(\mathbf{x}^{\intercal}_{1}\Omega)\boldsymbol{\alpha} \\ 
+    \tanh(\mathbf{x}^{\intercal}_{2}\Omega)\boldsymbol{\alpha} \\ 
+    \vdots \\
+    \tanh(\mathbf{x}^{\intercal}_{n}\Omega)\boldsymbol{\alpha}
+  \end{bmatrix} +
+  \begin{bmatrix}
+    \epsilon_{1} \\ \epsilon_{2} \\ \vdots \\ \epsilon_{n}
+  \end{bmatrix}
+\end{align}
 
