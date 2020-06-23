@@ -289,7 +289,7 @@ Scholars of ideal point models have noted their similarity to models developed u
 
 ### Latent Traits
 
-The first important feature to note about IRT models is that they are *measurement models*. The goal of a measurement model is to use observed data $\mathbf{y}$ to estimate some construct of theoretical interest $\bm{\theta}$, supposing that there is a distinction between the two. The observed data $\mathbf{y}$ are affected by $\bm{\theta}$, but there is no guarantee of a one-to-one correspondence between the two because $\bm{\theta}$ is not directly observed. We can represent a measurement model with general notation $\mathbf{y} = f(\bm{\theta}, \bm{\sigma})$, where $\bm{\sigma}$ represents some vector of auxiliary model parameters to be estimated in addition to $\bm{\theta}$ by fitting the model to observed data.
+The first important feature to note about IRT models is that they are *measurement models*. The goal of a measurement model is to use observed data $\mathbf{y}$ to estimate some construct of theoretical interest $\boldsymbol{\theta}$, supposing that there is a distinction between the two. The observed data $\mathbf{y}$ are affected by $\boldsymbol{\theta}$, but there is no guarantee of a one-to-one correspondence between the two because $\boldsymbol{\theta}$ is not directly observed. We can represent a measurement model with general notation $\mathbf{y} = f(\boldsymbol{\theta}, \boldsymbol{\sigma})$, where $\boldsymbol{\sigma}$ represents some vector of auxiliary model parameters to be estimated in addition to $\boldsymbol{\theta}$ by fitting the model to observed data.
 
 In an educational testing context, students take standardized tests intended to measure their academic "ability" levels. Analysts who score the tests cannot observe a student's ability directly---it is unclear how that would be possible. They do, however, observe the student's answers to known test questions. IRT models provides a structure to infer abilities from the student's pattern of test answers. The context of policy choice is similar. It is impossible to observe any individual's political ideology directly, but we theorize that it affects their responses to survey items about policy choices. The IRT setup lets us summarize an individual's policy preferences by analyzing the structure of their responses to various policy choices.
 
@@ -1062,19 +1062,19 @@ I specify priors on the unscaled cutpoint and discrimination parameters that are
     \mathrm{log}\left(\tilde{\iota}_{j}\right)
   \end{bmatrix}
   &\sim 
-  \mathrm{Normal}\left(\bm{\mu}, \bm{\Sigma}\right)
+  \mathrm{Normal}\left(\boldsymbol{\mu}, \boldsymbol{\Sigma}\right)
 \end{align}
-where $\bm{\mu}$ is a $2$-vector of means and $\bm{\Sigma}$ is a $2 \times 2$ variance-covariance matrix. 
+where $\boldsymbol{\mu}$ is a $2$-vector of means and $\boldsymbol{\Sigma}$ is a $2 \times 2$ variance-covariance matrix. 
 Whereas @caughey-warshaw:2015:DGIRT specify independent priors for all item cutpoint and discrimination parameters separately, my hierarchical model partially pools the item parameters toward a common distribution. 
 This allows estimates to borrow precision from one another rather than "forgetting" the information learned from one item when updating the prior for the next item.
 The discrimination parameter, which has a product of $1$ when scaled, is logged so that it has a mean of $0$ on the log scale. 
-This simplifies the prior specification of the mean vector $\bm{\mu}$, which is a standard multivariate Normal with no off-diagonal elements.^[
+This simplifies the prior specification of the mean vector $\boldsymbol{\mu}$, which is a standard multivariate Normal with no off-diagonal elements.^[
   Although I use a joint prior, the assumptions about the parameters' marginal distributions are similar to @caughey-warshaw:2015:DGIRT. 
   Their choice to restrict discrimination parameter to have a product of $1$ and a LogNormal distribution is identical to my choice to restrict log discrimination parameters to have a sum of $0$ and a Normal prior.
   The benefit of my parameterization is that, by specifying the Normal family directly on the logged discrimination parameter, it is much simpler to build the joint hierarchical prior for all item parameters simultaneously.
 ]
 \begin{align}
-  \bm{\mu} &\sim 
+  \boldsymbol{\mu} &\sim 
     \mathrm{Normal}\left( 
       \begin{bmatrix} 0 \\ 0 \end{bmatrix}, 
       \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} 
@@ -1218,9 +1218,9 @@ lkj_dens_plots  / lkj_item_sim
 - two panels: discrimination and inv(discrimination)
 ------------------------->
 
-I build a prior for the variance-covariance matrix $\bm{\Sigma}$ by decomposing it into a diagonal matrix of scale terms and a correlation matrix. First I factor out the scale components.
+I build a prior for the variance-covariance matrix $\boldsymbol{\Sigma}$ by decomposing it into a diagonal matrix of scale terms and a correlation matrix. First I factor out the scale components.
 \begin{align}
-  \bm{\Sigma} &= 
+  \boldsymbol{\Sigma} &= 
   \begin{bmatrix}
     \sigma^{2}_{\tilde{\kappa}} & 
       \rho \sigma_{\tilde{\kappa}} \sigma_{\tilde{\iota}} \\
@@ -1233,32 +1233,32 @@ I build a prior for the variance-covariance matrix $\bm{\Sigma}$ by decomposing 
       \sigma_{\tilde{\kappa}} & 0 \\
       0 & \sigma_{\tilde{\iota}}
     \end{bmatrix}
-    \bm{S} 
+    \boldsymbol{S} 
     \begin{bmatrix} 
       \sigma_{\tilde{\kappa}} & 0 \\
       0 & \sigma_{\tilde{\iota}}
     \end{bmatrix}
 \end{align}
-The resulting matrix $\bm{S}$ is a $2 \times 2$ correlation matrix, meaning it has a unit diagonal and off-diagonal correlation terms (denoted $\rho$).
+The resulting matrix $\boldsymbol{S}$ is a $2 \times 2$ correlation matrix, meaning it has a unit diagonal and off-diagonal correlation terms (denoted $\rho$).
 \begin{align}
-  \bm{S} &=
+  \boldsymbol{S} &=
     \begin{bmatrix}
       1 & \rho \\
       \rho & 1
     \end{bmatrix}
 \end{align}
-I then specify priors for the scale terms, $\sigma_{\tilde{\kappa}}$ and $\sigma_{\tilde{\iota}}$, and the correlation matrix $\bm{S}$ separately. This approach is also known as a "separation strategy" for covariance matrix priors [@barnard-mcculloch-meng:2000:covariance-separation].^[
+I then specify priors for the scale terms, $\sigma_{\tilde{\kappa}}$ and $\sigma_{\tilde{\iota}}$, and the correlation matrix $\boldsymbol{S}$ separately. This approach is also known as a "separation strategy" for covariance matrix priors [@barnard-mcculloch-meng:2000:covariance-separation].^[
   Although inverse-Wishart priors are often chosen for covariance matrices because they ensure conjugacy of the multivariate Normal distribution, recent work by Bayesian statisticians suggests that the separation strategy for covariance matrices is superior. The inverse-Wishart distribution has certain restrictive properties such as prior dependency between scales and correlations (large and small scales imply large and small correlations, respectively) that many Bayesian statisticians find undesirable compared to priors specified using the more flexible separation strategy [@alvarez-niemi-simpson:2014:covariance-prior; @akinc-vandebroek:2018:covariance-prior]. Furthermore, the conjugacy of the inverse-Wishart is irrelevant for this model because conjugacy does not provide the same computational benefit for Hamiltonian Monte Carlo samplers as it does for Gibbs samplers or analytic posterior computation.
 ]
-The scale terms $\sigma_{\tilde{\kappa}}$ and $\sigma_{\tilde{\iota}}$ are given weakly informative $\text{Half-Normal}\left(0, 1\right)$ priors, which provide weak regularization toward zero but whose scale is wide enough that the data are likely to dominate the prior. I give $\bm{S}$ a prior from the LKJ distribution, which is a generalization of the Beta distribution defined over the space of symmetric, positive-definite, unit-diagonal matrices, such as a correlation matrix [@LKJ:2009:correlation-matrices].^[
-  For a matrix $\bm{S}$ that follows an LKJ distribution with shape parameter $\eta$, the density of $\bm{S}$ is a function of its determinant: $\mathrm{LKJcorr}(\bm{S} \mid \eta) = c \times \mathrm{det}\left(\bm{S}\right)^{\eta - 1}$ with proportionality constant $c$ that depends on the dimensionality of $\bm{S}$.
+The scale terms $\sigma_{\tilde{\kappa}}$ and $\sigma_{\tilde{\iota}}$ are given weakly informative $\text{Half-Normal}\left(0, 1\right)$ priors, which provide weak regularization toward zero but whose scale is wide enough that the data are likely to dominate the prior. I give $\boldsymbol{S}$ a prior from the LKJ distribution, which is a generalization of the Beta distribution defined over the space of symmetric, positive-definite, unit-diagonal matrices, such as a correlation matrix [@LKJ:2009:correlation-matrices].^[
+  For a matrix $\boldsymbol{S}$ that follows an LKJ distribution with shape parameter $\eta$, the density of $\boldsymbol{S}$ is a function of its determinant: $\mathrm{LKJcorr}(\boldsymbol{S} \mid \eta) = c \times \mathrm{det}\left(\boldsymbol{S}\right)^{\eta - 1}$ with proportionality constant $c$ that depends on the dimensionality of $\boldsymbol{S}$.
 ]
 \begin{align}
-  \bm{S} &\sim \mathrm{LKJcorr}(\eta = 2)
+  \boldsymbol{S} &\sim \mathrm{LKJcorr}(\eta = 2)
 \end{align}
-The LKJ distribution has one shape parameter $\eta$, which can be interpreted like a shape parameter for a symmetric Beta distribution. Setting $\eta = 1$ yields a flat prior over all correlation matrices, where increasing values of $\eta1$ concentrate prior density toward the mode, which is an identity matrix. The chosen value of $\eta = 2$ provides weak regularization against extreme correlations near $-1$ and $+1$. Although it would have been sufficient to specify a prior for $\rho$ instead of the entire matrix $\bm{S}$, this convenience only arises in small (in this case, $2 \times 2$) correlation matrices. Larger matrices (such as those that would result from a more complex IRT model specification) would require explicit priors for a larger number of off-diagonal parameters. The LKJ prior can be generally applied to larger correlation matrices, so I choose it for the sake of building a more flexible and extensible model.
+The LKJ distribution has one shape parameter $\eta$, which can be interpreted like a shape parameter for a symmetric Beta distribution. Setting $\eta = 1$ yields a flat prior over all correlation matrices, where increasing values of $\eta1$ concentrate prior density toward the mode, which is an identity matrix. The chosen value of $\eta = 2$ provides weak regularization against extreme correlations near $-1$ and $+1$. Although it would have been sufficient to specify a prior for $\rho$ instead of the entire matrix $\boldsymbol{S}$, this convenience only arises in small (in this case, $2 \times 2$) correlation matrices. Larger matrices (such as those that would result from a more complex IRT model specification) would require explicit priors for a larger number of off-diagonal parameters. The LKJ prior can be generally applied to larger correlation matrices, so I choose it for the sake of building a more flexible and extensible model.
 
-Figure&nbsp;\@ref(fig:plot-lkj) plots several details of the item prior. The top row shows the prior densities for the terms in the decomposed variance-covariance matrix $\bm{\Sigma}$. The left panel shows the Half-Normal prior density for the scale terms. The right panel shows the marginal distribution of $\rho$, the off-diagonal parameter in the matrix $\bm{S}$ that controls the covariance of items in the joint prior, generated from the LKJ correlation matrix prior. The bottom panel shows the distribution of item parameter values simulated from the multivariate Normal distribution implied by the joint hierarchical prior. Each point represents a simulated item as a combination of cutpoint values (on the horizontal axis) and log-discrimination values (on the vertical axis). Points are colored according to the number of nearby points, which informally conveys the prior density of items with particular cutpoint and discrimination values.
+Figure&nbsp;\@ref(fig:plot-lkj) plots several details of the item prior. The top row shows the prior densities for the terms in the decomposed variance-covariance matrix $\boldsymbol{\Sigma}$. The left panel shows the Half-Normal prior density for the scale terms. The right panel shows the marginal distribution of $\rho$, the off-diagonal parameter in the matrix $\boldsymbol{S}$ that controls the covariance of items in the joint prior, generated from the LKJ correlation matrix prior. The bottom panel shows the distribution of item parameter values simulated from the multivariate Normal distribution implied by the joint hierarchical prior. Each point represents a simulated item as a combination of cutpoint values (on the horizontal axis) and log-discrimination values (on the vertical axis). Points are colored according to the number of nearby points, which informally conveys the prior density of items with particular cutpoint and discrimination values.
 
 ```{r plot-lkj, include = TRUE, fig.height = 6.5, fig.width = 6, out.width = "80%", fig.cap = "Components of the joint hierarchical prior for the unscaled item parameters. Top row shows prior densities for the parameters of the decomposed variance-covariance matrix, including the standard deviation terms (left) and the item correlation from the LKJ distribution (right). The bottom row shows prior values for unscaled items simulated from the joint prior."}
 ```
