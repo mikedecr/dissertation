@@ -3,7 +3,7 @@
 \mainmatter
 \pagenumbering{arabic}
 
-\DoubleSpacing
+<!-- \DoubleSpacing -->
 
 <!-- figures count within chapter w/ decimal points -->
   <!-- this doesn't work though? -->

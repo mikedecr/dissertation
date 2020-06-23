@@ -2,11 +2,43 @@
 title: Overall thesis notes
 ---
 
-Meeting agenda:
+# Meetings
+
+Urgent methods reading agenda
+
+- ratkovic/tingley, direct estimation
+- design uncertainty
+- bayesian causal inf (oganisian, etc)
+- two stage bayes
+- neural nets
+- choice models
+- neural net + choice
+- other cool hypothesis reframing stuff
+    - TOST equivalence test of assumptions
+    - Caughey NPC, beyond sharp null
+- tree models for p.s. (montgomery et al)
+
 
 - Alex:
-    - how to understand "BART is a prior" ?
-    - Check notebook
+    - relating arithmetic mean to beta-binomial model:
+        - the arithmetic mean the same as the MAP under...beta(1, 1) prior?
+        - how does the beta(.5, .5) prior relate to nonparametric estimation of the proportion?
+    - posterior ideal points
+        - estimate MVnormal for ideal points
+    - identifiability
+        - identifiability paper
+        - run for longer, with thinning
+        - simulate fake data to see that predictions work even if the parameters look bad
+    - two stage
+        - send alex paper
+    - _Check notebook_
+    - identifiability/comparing chains in NN
+        - particle filter/genetic algorithm thing to resample chains according to relative posterior probability? 
+        - get a marginal likelihood for each chain (harmonic mean estimator, kind of problematic (newton-raftery)), supposed to be 1 number across chains, but you can hack it by looking across chains.
+        - or bridge sampling for "approximately correct" marginal likelihood estimator
+        - estimate a separate model for different assumptions, use marginal likelihood to reweight estimates
+    - how to understand "BART is a prior"?
+        - is it just to say that all models are priors for (new) data?
     - conditional logit:
         - is this the right direction to go?
         - All predictors are differences from baseline, or no? just the SUM of one utility is normalized?
@@ -16,6 +48,11 @@ Meeting agenda:
         - making it in stan:
             - <https://github.com/stan-dev/rstanarm/blob/master/src/stan_files/functions/bernoulli_likelihoods.stan>
             - <https://github.com/stan-dev/rstanarm/blob/master/src/stan_files/bernoulli.stan>
+    - Regularization-induced confounding in a neural net?
+    - How to think about cross-validation in Bayes context?
+        - how to even think about regularization in a neural net?
+        - do I fit several models and only predict for units not in the model?
+        - _weird how this is probably how things should **always** be done?_
 - Barry:
     - check primary candidate quality
     - possible to scrape candidate quality for primary candidates from: Ballotpedia, FEC, Open Secrets
@@ -23,7 +60,9 @@ Meeting agenda:
     - send ch 2
 
 
-Reading for design:
+# Reading
+
+## For design
 
 - [ ] Achen–Bartels (Realists) lit review
 - [ ] Achen critique of Miller and Stokes (Lewis and Tausanovitch)
@@ -36,7 +75,7 @@ Reading for design:
 - [ ] Snyder team old papers
 
 
-Reading for thinking:
+## for thinking
 
 - [ ] read Grimmer's VI paper
 - [ ] read Bailey ranefs
@@ -47,7 +86,7 @@ Reading for thinking:
 - Bayesian Neural Nets (might solve choice model problem)
 
 
-Writing:
+## for writing
 
 - 1. Theory
     - conceptual/term clarity in the beginning
@@ -66,7 +105,7 @@ Writing:
     - "strategic" vs. sincere "representation" with DIME scores
 
 
-Analysis:
+## for analysis
 
 - Ch 4;
     - Justify ML in theory:
@@ -84,7 +123,7 @@ Analysis:
         - include other district
         - more polarization in parties -> what does this do to positioning?
 
-Data:
+## for data
 
 - Thomsen primaries data
 - Fix 2010s poll data (multinomial response, midpoints, **barry**)
@@ -103,7 +142,7 @@ Data:
 
 
 
-Project:
+# Project-level tasks
 
 - [ ] clean agenda
 - [ ] Model excerpt to Ellie
@@ -115,7 +154,7 @@ Project:
 
 
 
-Sort APW comments:
+# Comments to sort
 
 - Devin:
     - Where do informal party networks enter the causal graph that I'm positing (Ch 4?)
@@ -158,7 +197,7 @@ Sort APW comments:
 
 
 
-Some readings:
+# misc readings (sort)
 
 - Devin email
 - Daron Shaw thermometer dimensions
@@ -171,7 +210,9 @@ Some readings:
 - Bailey ranefs/incidental parameters (get this 100% right)
 
 
-Model questions:
+
+
+# Model questions:
 
 - including the group-level means of lower-level covariates as a way of absorbing correlation?
 - what about pooling toward something not normal?
@@ -186,6 +227,7 @@ Model questions:
 - [ ] identifiability in heteroskedastic model
 
 
+# leftover notes
 
 Data things 
 

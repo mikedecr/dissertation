@@ -463,6 +463,10 @@ There are functional form considerations however---biases may remain if the func
 - Simulate violated assumptions by way of correlated error parameters?
 ------------------------->
 
+### Sequential-$g$ Estimation
+
+
+Keep the notation general enough (expectations) so that there are no explicit linear regression functional forms introduced by accident.
 
 
 ### Multilevel Considerations 
@@ -506,28 +510,54 @@ or, written as a probability distribution
 
  -->
 
-## Data and Empirical Approach
 
-### Data
+## Bayesian Causal Inference with Neural Networks
 
-
-#### Primary Rules
-
-General comment: very difficult to code these.
-
-- law vs. party rules
-- for some organizations "open" means there's ANY openness, which can include the McGhee "semi-closed" definition
-- most states have the same system for both parties, but some state laws leave it open to parties to modify their rules in the months leading up to the election. 
+(1) Doing CI with ML methods and (2) how to understand this Bayesianly
 
 
-I take data from Boatright on primaries. 
+### Machine Learning and Causal Inference
 
-- 2016: combination of NCSL, Ballotpedia, and OpenPrimaries.org, as of 2020-05-27.
+Problems:
+
+- don't know the covariates
+- even if we did, don't know the model
+
+Solution: ML
+
+- regularization and other covariate selection methods (not necessarily the purview of "machine learning")
+- many models are set up for interactions, nonlinearities
+- The causal models themselves are derived in terms of expectations, not in terms of regression functions.
+
+Bayesian considerations:
+
+- uncertainty in ML models is a problem
+- Bayes gives a straightforward mode for characterizing uncertainty in model parameters (feeding forward into model predictions)
+- handles non-identifiability in certain models pretty naturally!
 
 
-### Sequential-G Estimation
 
-### Bayesian Neural Network Model
+
+
+### Regularization in Covariate Adjustment
+
+Regular parameterization:
+\begin{align}
+  y_{g} &= \tau\theta_{g} + \mathbf{x}^{\intercal}_{g}\beta + \epsilon_{g}
+\end{align}
+
+Orthogonalized parameterization:
+\begin{align}
+  \theta_{g} &= \mathbf{x}^{\intercal}_{g}\gamma_{1} + \nu_{g}
+  y_{g} &= \tau\left(\theta_{g} - \hat{\theta}_{g}\right)_ + \mathbf{x}^{\intercal}_{g}\gamma_{2} + \epsilon_{g}
+\end{align}
+
+In an unbiased regression, estimates of $\tau$ would be identical. With regularization applied to the covariate effects, however, the estimates would differ. By explicitly modeling $\theta_{g}$ as a function of $\mathbf{x}_{g}$ and residualizing, we explicitly make all of the identifying variation $\theta_{g} - \mathrm{E}\left[\theta_{g} \mid \mathbf{x_{g}}\right]$ independent of the regression function, allowing shrinkage in the selection model to behave freely without biasing the estimate of $\tau$ by direct consequence. The researcher is then able to set up whatever priors on $\tau$ make sense. 
+
+
+
+### Neural Network Predictor
+
 
 Regression with Gaussian errors:
 \begin{align}
@@ -569,6 +599,32 @@ which is commonly referred to as a "neuron" in the neural network parlance. The 
 
 
 The conditional mean is given by $\text{tanh}\left(\mathbf{x}^{T}_{i}\boldsymbol{\omega}\right)\boldsymbol{\alpha}$. The predictor matrix $\mathbf{x}^{\intercal}_{i}$, instead of being multiplied by a vector of coefficients, is multiplied by a $P \times M$ matrix of coefficients $\boldsymbol{\omega}$, resulting in a $1 \times M$ matrix that is nothing more than $M$ linear regression functions of the form 
+
+
+
+### Posterior Distributions for Causal Quantities
+
+What are the quantities we are interested in?
+
+
+
+## Data and Modeling
+
+### Data Sources
+
+
+### Primary Rules
+
+General comment: very difficult to code these.
+
+- law vs. party rules
+- for some organizations "open" means there's ANY openness, which can include the McGhee "semi-closed" definition
+- most states have the same system for both parties, but some state laws leave it open to parties to modify their rules in the months leading up to the election. 
+
+
+I take data from Boatright on primaries. 
+
+- 2016: combination of NCSL, Ballotpedia, and OpenPrimaries.org, as of 2020-05-27.
 
 
 `r knit_exit()`
@@ -626,7 +682,7 @@ Control variables are measured primarily at the congressional district level and
 
 
 
-### Model
+### Full Model
 
 As mentioned above, I estimate average controlled direct effects separately for incumbents, challengers, and open seat candidates in two parties, totaling six routines altogether. I write a general model that applies regardless of which subset of data is being used. Because the estimation in every data subset proceeds in two stages, I use subscript some parameters $1$ and $2$ to indicate that they are not fixed across model stages.
 
@@ -691,6 +747,11 @@ These models contain hierarchical variance terms, so they are fit with MLE algor
 
 ### Algorithm {#sec:pos-uncertainty}
 
+<!------- TO DO ---------
+- How is the model set up in Stan
+- propagating uncertainty
+------------------------->
+
 Because the demediated outcome value in stage two depends on parameter estimates from stage one, our average controlled direct estimate $\tau_{2}$ should reflect parameter uncertainty from both stages. @acharya-blackwell-sen:2016:direct-effects derive an analytical variance estimator that deals with this, but unfortunately this estimator does not incorporate the additional uncertainty introduced by the fact that the key independent variable, district-party ideology, is an estimate from a separate measurement model. To overcome this, I implement a simulation routine that propagates model uncertainty from the ideal point estimate into both stages, as well as stage one uncertainty into the second stage. 
 
 Suppose that we had a matrix of ideal point samples $\Theta$ that had one row for every district-party group and one column for every Markov chain Monte Carlo iteration from the estimation in Chapter&nbsp;\@ref(ch:model). We begin by drawing a set of $m$ columns from this matrix, and then for each column $m$ we perform the following routine:^[
@@ -703,6 +764,9 @@ Suppose that we had a matrix of ideal point samples $\Theta$ that had one row fo
 - Use the demediated outcome to estimate the average controlled direct effect of district-party ideology. Sample one ACDE draw from the implied posterior and store it. 
 
 This routine was performed for $m = `r smart_number(length(unique(direct_samples$.draw)))`$ ideal point draws, so the result is a distribution of `r smart_number(length(unique(direct_samples$.draw)))` ACDE simulations that reflect measurement uncertainty in district-party ideology as well as modeling uncertainty in both stages of sequential-$g$.
+
+
+### Model Selection with Cross-Validation
 
 
 

@@ -218,3 +218,5 @@ simple-net.rds
 simple-choice.rds
 choice-net.rds
 code/*/stan/*.rds
+MGD-thesis.md
+MGD-thesis.tex
