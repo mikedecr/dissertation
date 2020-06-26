@@ -22,18 +22,25 @@ data {
 
 }
 
+transformed data {
+
+  int<lower = p> hid_p = p + 1; // num hidden weights (add constant)
+  matrix[n, hid_p] hid_X;
+
+  hid_X = append_col(rep_vector(1, n), X); // add constant
+}
 
 
 parameters {
  
-  matrix[p, n_nodes] hid_wt;
+  matrix[hid_p, n_nodes] hid_wt;
   vector[n_nodes] act_wt;
 
 }
 
 transformed parameters {
   
-  vector[n] util = tanh(X * hid_wt) * act_wt; // latent utility
+  vector[n] util = tanh(hid_X * hid_wt) * act_wt; // latent utility
 
 }
 

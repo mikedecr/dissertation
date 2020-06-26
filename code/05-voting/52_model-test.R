@@ -133,6 +133,8 @@ moden_constrained_neyman <- stan_model(
 #   stan data
 # ----------------------------------------------------
 
+nn_nodes <- 5
+nn_thin_multiplier <- 5
 
 # ---- linear model data -----------------------
 
@@ -170,16 +172,16 @@ lapply(data_simple_R, head)
 
 # just seeing if the models don't fail
 sampling(object = model_simple, data = data_simple_R)
-sampling(object = model_net, data = data_simple_R)
+sampling(object = model_net, data = c(data_simple_R, n_nodes = nn_nodes))
 sampling(object = model_simple, data = data_simple_D)
-sampling(object = model_net, data = data_simple_D)
+sampling(object = model_net, data = c(data_simple_D, n_nodes = nn_nodes))
 
 
 net_test_data <- 
   crossing(
     party = c("D", "R"), 
     model = c("net", "simple"),
-    nodes = 1:5
+    nodes = 1:nn_nodes
   ) %>%
   filter(nodes == 1 | model == "net") %>%
   group_by(r = row_number()) %>% 
@@ -193,7 +195,7 @@ net_test_data <-
   mutate(
     warmup = 1000,
     thin = case_when(
-      nodes > 1 ~ 5, 
+      nodes > 1 ~ nn_thin_multiplier, 
       nodes == 1 ~ 1 
     ), 
     post_warmup = warmup * thin,

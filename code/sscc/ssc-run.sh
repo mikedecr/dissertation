@@ -6,7 +6,7 @@ ssh -Y decrescenzo@linstat.ssc.wisc.edu
 
 # --- Working in Linstat interactively
 
-# zsh
+zsh
 
 cd dissertation
 
