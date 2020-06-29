@@ -62,6 +62,7 @@ cands <- cands_raw %>%
     ),
     theta_mean_rescale, recipient_cfscore_dyn,
     theta_x_cf = theta_mean_rescale * recipient_cfscore_dyn,
+    incumbency = Incum_Chall,
     incumbent = as.numeric(Incum_Chall == "I"),
     challenger  = as.numeric(Incum_Chall == "C")
   ) %>%
@@ -102,7 +103,7 @@ cands %>%
 
 
 # ----------------------------------------------------
-#   stan models
+#   stan models: simple net vs. clogit
 # ----------------------------------------------------
 
 # test these two first for linear model
@@ -117,22 +118,14 @@ model_net <- stan_model(
 )
 
 
-# test these for performance/prediction
-model_neyman <- stan_model(
-  file = here("code", "05-voting", "stan", "choice-net-neyman.stan"), 
-  verbose = TRUE
-)
-
-moden_constrained_neyman <- stan_model(
-  file = here("code", "05-voting", "stan", "constrained-neyman.stan"), 
-  verbose = TRUE
-)
-
 
 # ----------------------------------------------------
 #   stan data
 # ----------------------------------------------------
 
+prior_sd = 2
+hid_prior_scale = 1
+act_prior_scale = 1
 nn_nodes <- 5
 nn_thin_multiplier <- 5
 
@@ -148,10 +141,9 @@ data_simple_D <- cands %>%
   ) %>%
   c(p = ncol(.$X),
     G = length(.$n_g),
-    prior_sd = 10,
-    hid_prior_scale = 2,
-    act_prior_scale = 2
-  )
+    prior_sd = prior_sd,
+    hid_prior_scale = hid_prior_scale,
+    act_prior_scale = act_prior_scale)
 
 data_simple_R <- cands %>%
   filter(party == "R") %$%
@@ -164,18 +156,22 @@ data_simple_R <- cands %>%
   c(p = ncol(.$X),
     G = length(.$n_g),
     prior_sd = 10,
-    hid_prior_scale = 2,
-    act_prior_scale = 2)
+    hid_prior_scale = hid_prior_scale,
+    act_prior_scale = act_prior_scale)
 
 lapply(data_simple_D, head)
 lapply(data_simple_R, head)
 
 # just seeing if the models don't fail
 sampling(object = model_simple, data = data_simple_R)
-sampling(object = model_net, data = c(data_simple_R, n_nodes = nn_nodes))
+sampling(object = model_net, data = c(data_simple_R, n_nodes = 1))
 sampling(object = model_simple, data = data_simple_D)
-sampling(object = model_net, data = c(data_simple_D, n_nodes = nn_nodes))
+sampling(object = model_net, data = c(data_simple_D, n_nodes = 1))
 
+
+# grid test
+# both parties & models
+# nodes 1:k
 
 net_test_data <- 
   crossing(
@@ -230,12 +226,26 @@ boxr::box_write(
   dir_id = box_dir_model_output
 )
 
+
+
+
 # ---- MLE version -----------------------
+
+if (system("whoami", intern = TRUE) == "michaeldecrescenzo") {
+  net_test_data <- 
+    here(
+      "data", "_model-output", "05-voting", "2020-06-26_choice-net-tests.RDS"
+    ) %>%
+    read_rds()
+}
+
+
 
 rmod <- clogit(
   win_primary ~ theta_x_cf + incumbent + challenger +
   + strata(g_code), 
-  data = filter(cands, party == "R")
+  data = filter(cands, party == "R"),
+  model = TRUE
 )  %>%
   print()
 
@@ -243,14 +253,14 @@ rmod <- clogit(
 dmod <- clogit(
   win_primary ~ theta_x_cf + incumbent + challenger +
   + strata(g_code),
-  data = filter(cands, party == "D")
+  data = filter(cands, party == "D"),
+  model = TRUE
 ) %>%
   print()
 # stan_params = list(iter = iter, warmup = warmup, thin = thin)
 
 
 tidy_linear <- net_test_data %>%
-  filter(nodes == 1) %>%
   mutate(
     tidy = map(stanfit, tidy, ess = TRUE, rhat = TRUE, conf.int = TRUE)
   ) %>%
@@ -259,6 +269,7 @@ tidy_linear <- net_test_data %>%
 
 
 linear_params <- tidy_linear %>%
+  filter(model == "simple") %>%
   filter(str_detect(term, "util") == FALSE) %>%
   bind_rows(
     tidy(rmod, conf.int = TRUE) %>% mutate(party = "R", model = "MLE"),
@@ -280,8 +291,85 @@ ggplot(linear_params) +
     aes(ymin = conf.low, ymax = conf.high),
     position = position_dodge(width = -0.25)
   ) +
-  scale_color_manual(values = party_code_colors) +
+  # scale_color_manual(values = party_code_colors) +
   coord_flip()
+
+
+
+
+
+# ---- maybe you should recreate everything -----------------------
+
+pred_MLE_D <- cands %>%
+  filter(party == "D") %>%
+  mutate(
+    .fitted = 
+      cbind(theta_x_cf, incumbent, challenger) %*% coef(dmod) %>%
+      as.vector()
+  ) %>%
+  print()
+
+
+pred_MLE_R <- cands %>%
+  filter(party == "R") %>%
+  mutate(
+    .fitted = 
+      cbind(theta_x_cf, incumbent, challenger) %*% coef(rmod) %>%
+      as.vector()
+  ) %>%
+  print()
+
+
+tidy_linear %>%
+  filter(model == "net") %>%
+  # filter(party == "R") %>%
+  filter(str_detect(term, "util")) %>%
+  mutate(case = parse_number(term)) %>%
+  inner_join(cands) %>%
+  group_by(g_code, model, party, nodes) %>%
+  mutate_at(
+    .vars = vars(estimate, conf.low, conf.high),
+    .funs = list(prob = ~ exp(.) / sum(exp(.)))
+  )  %>%
+  ungroup() %>%
+  pivot_longer(
+    cols = c(estimate, estimate_prob),
+    names_to = "transform"
+  ) %>%
+  ggplot(aes(x = theta_mean_rescale, y = value, color = incumbency)) +
+  facet_grid(transform ~ nodes) +
+  geom_point() +
+  # geom_smooth() +
+  labs(
+    y = "Utility of Primary Candidate", 
+    x = "District-Party Ideal Point",
+    title = "How Local Ideology Affects Primary Voting",
+    subtitle = "Policy preferences matter for open-seat races only"
+  ) +
+  scale_color_viridis_d(end = 0.8)
+
+
+
+
+tidy_linear %>%
+  filter(str_detect(term, "util")) %>%
+  mutate(
+    case = parse_number(term),
+    term = "util"
+  ) %>%
+  select(model, party, estimate, conf.low, conf.high, case) %>%
+  pivot_wider(
+    names_from = model,
+    values_from = c(estimate, conf.low, conf.high)
+  ) 
+
+tidy_linear %>%
+  mutate(
+    class = str_split(term, pattern = "\\[", simplify = TRUE)[,1],
+    case = parse_number(term)
+  ) %>%
+  count(class, party, nodes, model)
+
 
 
 linear_preds <- tidy_linear %>%
@@ -312,6 +400,9 @@ linear_preds <- tidy_linear %>%
     DF = NULL
   ) %>%
   print()
+
+
+
 
 
 augment(rmod, data = filter(cands, party == "R")) %>% 
@@ -348,4 +439,20 @@ ggplot(linear_preds) +
   ) +
   geom_abline() +
   facet_wrap(~ party, nrow = 2)
+
+# ----------------------------------------------------
+#   performance / prediction
+# ----------------------------------------------------
+
+
+# test these for performance/prediction
+model_neyman <- stan_model(
+  file = here("code", "05-voting", "stan", "choice-net-neyman.stan"), 
+  verbose = TRUE
+)
+
+moden_constrained_neyman <- stan_model(
+  file = here("code", "05-voting", "stan", "constrained-neyman.stan"), 
+  verbose = TRUE
+)
 
