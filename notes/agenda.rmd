@@ -6,20 +6,21 @@ title: Overall thesis notes
 
 Urgent methods reading agenda
 
-- ratkovic/tingley, direct estimation
-- design uncertainty
+- zigler et al 2013: two stage bayes
 - bayesian causal inf (oganisian, etc)
-- two stage bayes
 - neural nets
 - choice models
 - neural net + choice
+- design uncertainty
 - other cool hypothesis reframing stuff
     - TOST equivalence test of assumptions
     - Caughey NPC, beyond sharp null
 - tree models for p.s. (montgomery et al)
+- check on primary laws again, potentially resolve with Barry
 
 
 - Alex:
+    - couldn't you have chooser covariates in the hidden layer, since it's transformed?
     - relating arithmetic mean to beta-binomial model:
         - the arithmetic mean the same as the MAP under...beta(1, 1) prior?
         - how does the beta(.5, .5) prior relate to nonparametric estimation of the proportion?
