@@ -1,8 +1,20 @@
-# A Bayesian Framework for Causal Inference in Political Science {#ch:causality}
+# Bayesian Causal Models for Political Science {#ch:causality}
+
+<!------- TO DO ---------
+- why no build with tufte?
+------------------------->
 
 ```{r knitr-03-causality, include = FALSE, cache = FALSE}
 source(here::here("assets-bookdown", "knitr-helpers.R"))
 ```
+
+<!-- who knows if this works on next latex build -->
+$\renewcommand{\ind}[0]{\perp \!\!\! \perp}$
+$\renewcommand{\doop}[1]{\mathit{do}\left(#1\right)}$
+$\renewcommand{\diff}[1]{\, \mathrm{d}#1}$
+$\renewcommand{\E}[1]{\mathbb{E}\left[#1\right]}$
+$\renewcommand{\p}[1]{p\left(#1\right)}$
+
 
 
 ```{r r-03-causality, cache = FALSE}
@@ -16,19 +28,6 @@ library("latex2exp")
 library("scales")
 library("patchwork")
 ```
-
-<!-- do operator -->
-$\renewcommand{\do}[1]{\mathit{do}\left(#1\right)}$
-
-<!-- derivative diff -->
-$\newcommand{\diff}[1]{\, \mathrm{d}#1}$
-
-<!-- independence -->
-$\newcommand{\ind}[0]{\perp \!\!\! \perp}$
-
-<!-- expectation -->
-$\newcommand{\E}[1]{\mathbb{E}\left[#1\right]}$
-$\newcommand{\p}[1]{\mathbb{p}\left(#1\right)}$
 
 
 <!------- TO DO ---------

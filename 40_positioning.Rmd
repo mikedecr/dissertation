@@ -1,0 +1,1017 @@
+# Constituent Ideology and Candidate Positioning: Bayesian De-Mediation Model {#ch:positioning}
+
+```{r knitr-04-1-positioning, include = FALSE, cache = FALSE}
+source(here::here("assets-bookdown", "knitr-helpers.R"))
+```
+
+<!-- might need to add math -->
+
+```{r packages-04-positioning, cache = FALSE}
+library("knitr")
+library("here")
+library("magrittr")
+library("tidyverse")
+library("scales")
+library("patchwork")
+library("broom")
+library("ggdag")
+
+theme_dag <- theme_dag(base_family = font_fam)
+```
+
+`r knit_exit()`
+
+
+Do primary elections effectively transmit citizens' policy preferences into government? For this to be true, we should expect that the policy ideology with a partisan constituency to affect the ideological positioning of candidates who run for that party's nomination. This chapter explores the effect of district-party public ideology on the candidates who run to represent that district-party.
+
+It is important to distinguish the influence of the district-party public from the influence of district _partisanship_. Does Senator Susan Collins (R-ME) have a reputation as a moderate Republican senator because the balance of a close numerical balance of Republican and Democratic voters in Maine? Or is it because her Republican constituency in Maine is relatively moderate compared to the Republican constituencies in other states represented by more conservative Senators? Although past research has been interested in the threat of primary challenges as a cause of ideological divergence between partisan legislators [for example @boatright:2013:getting-primaried; @hill:2015:nominating-institution; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems], many of these studies lacked the capability to observe the preferences within local partisan groups as a district construct from aggregate voting patterns. This chapter uses my new measures of district-party ideology to investigate this question in ways that previous research projects could not. 
+
+The effect of district-party ideology on candidate positioning is a challenging causal inference problem. We cannot directly compare the "explanatory power" of district-party ideology and district-level voting by measuring whether one is more strongly correlated with candidate ideal points, because district-level voting behavior is certainly affected by district-party ideology, and it likely mediates the effect of district-party ideology on candidate positioning. Estimating the direct effect of district-party ideology by simply controlling for district voting in a regression is likely to introduce collider bias by conditioning on a post-treatment variable [@greenland-et-al:1999:dags-epidemiology].
+
+This chapter investigates the effect of district-party ideology on primary candidate positions using a sequential-$g$ model, a multistage approach that estimates the direct effect of district-party ideology while holding fixed district-level voting, a likely mediator of the total effect [@acharya-blackwell-sen:2016:direct-effects]. I use causal graphs to illustrate the modeling problem and discuss the assumptions required for identifying the targeted effect, which I adapt to a multilevel context where treatment and mediators exist at different levels of the data hierarchy. Finally, I describe and implement a method for propagating measurement uncertainty through the sequential-$g$ method, since the key independent variable is an uncertain estimate from a measurement model.
+
+
+## Constituency Preferences and Candidate Positioning
+
+Lit review:
+
+- I have lit review but it isn't well organized right now. I'll summarize some main points:
+- classic models of electoral competition view candidate moderation as an electoral benefit. You can make non-moderate positions make sense if you incorporate campaign volunteers, primaries, etc. 
+- Researchers find evidence that district-level aggregate voting (e.g.\ the presidential vote) is related to candidate positioning.
+- Why do candidates take non-moderate stances in reality? Studies that look into the polarizing effects of primaries find little evidence that primaries matter for candidate positioning, but many of these studies are focused on Congressional incumbents. 
+- Studies that include non-incumbent candidates show that many of the empirical implications of the "strategic positioning dilemma" don't receive a lot of evidence. For instance, studies of primary "openness" consistently show basically zero or even reversed relationships to candidate ideology as you would expect from theory.  
+
+
+```{r read-dime, eval = FALSE}
+dime <- read_rds(here("data", "_clean", "candidates-x-irt.rds"))
+```
+
+
+```{r simple-regs, eval = FALSE}
+simple_regs <- 
+  read_rds(here("data", "_model-output", "04-positioning", "simple-regs.rds"))
+```
+
+
+
+```{r plot-first-look, eval = FALSE}
+dime %>%
+  filter(
+    is.na(recipient_cfscore_dyn) == FALSE &
+    is.na(theta) == FALSE
+  ) %>%
+  ggplot() +
+  aes(x = scale(theta), y = recipient_cfscore_dyn) +
+  # facet_grid(
+  #   str_glue("{cycle} Campaign") ~ fct_relevel(incumbency, "Incumbent")
+  # ) +
+  facet_wrap(
+    ~ str_glue("{cycle} Campaign")
+  ) +
+  geom_point(
+    aes(color = as.factor(party)), 
+    size = 1, shape = 1, alpha = 0.5
+  ) + 
+  geom_smooth(
+    aes(fill = as.factor(party)), 
+    color = "black",
+    method = "lm",
+    size = 0.25
+  ) +
+  scale_y_continuous(breaks = seq(-4, 4, 4)) +
+  scale_color_manual(values = party_factor_colors) +
+  scale_fill_manual(values = party_factor_colors) +
+  labs(x = "District-Party Ideal Point", y = "Candidate Dime Score") +
+  theme(panel.grid = element_line(color = "gray90")) +
+  geom_text(
+    data = tibble(
+      theta = c(-1.25, 0.25),
+      recipient_cfscore_dyn = c(-3, 3),
+      text = c("Democrats", "Republicans"),
+      cycle = 2012, 
+      incumbency = factor("Incumbent")
+    ),
+    aes(label = text)
+  ) +
+  # geom_label(
+  #   data = simple_regs,
+  #   aes(x = (party - 1.5), y = -5 * (party - 1.5), 
+  #       label = str_glue("r = {number(sqrt(r.squared), accuracy = .01)}\nb = {number(estimate, accuracy = .01)}\nn = {df + df.residual}")),
+  #   color = "black", size = 3
+  # ) +
+  theme(legend.position = "none")
+```
+
+With direct measures of district-party policy ideology, do we get a different topline picture of within-party representation in primaries? Figure&nbsp;\@ref(fig:plot-first-look) shows a descriptive picture of the relationship between district-party ideology and candidate ideology for House primary candidates, the latter measured with dynamic ideal point scores derived from campaign contributions [@bonica:2014:mapping-ideology]. Across incumbents, challengers, and open-seat candidates, in both parties, and across several election cycles, we observe a generally positive relationship between these two measures. As partisan citizens in a district become more conservative, so too do the candidates who run in those districts.
+
+
+```{r plot-first-look, include = TRUE, fig.width = 8, fig.height = 6, eval = FALSE, out.width= "100%", fig.cap = "Simple comparison of candidate Dime scores against their respective district-party ideal points. Results generally indicate a positive relationship: as partisan constituents in a district hold more conservative policy preferences, candidates running for that party's nomination in the House are also more conservative."}
+```
+
+
+The strength of these relationships vary most dramatically by candidate incumbency status, which could be owed to competitive positioning incentives when, for example, challengers attempt to differentiate themselves ideologically from incumbents in ways that aren't entirely explained by bottom-up ideological pressure from voters [c.f. @ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning]. Incumbent candidates' ideal points are most strongly related to district-party ideology, consistent with a notion that ideological consistency creates a selection effect into incumbency in previous election. 
+
+This descriptive picture informs a few modeling choices during the sequential-$g$ routine. Because incumbency status appears to be a substantial modifier of the relationship between citizen and candidate ideology, I estimate the direct effect of district-party ideology separately for incumbents, challengers, and open seat candidates. By comparison, estimates are quite similar across election cycles, so I pool election cycles into one model with cycle fixed effects rather than estimating entirely separate models for different cycles. And although the descriptive relationships vary modestly across parties, the variables that could confound the relationship between citizen and candidate ideology could differ dramatically across parties. I therefore estimate models for Democrats and Republicans separately. This results in six groups of sequential-$g$ estimates: three incumbency categories $\times$ two major parties.
+
+
+<!------- TO DO ---------
+- whom to attribute to?
+------------------------->
+
+
+
+
+
+<!------- TO DO ---------
+- plot vote as f(theta)
+------------------------->
+
+```{r, eval = FALSE}
+ggplot(dime) +
+  aes(
+    y = district_pres_vs, x = theta, 
+    color = as.factor(party)
+  ) +
+  geom_point(alpha = 1, shape = 1) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = party_factor_colors) +
+  labs(
+    y = "Past Republican Presidential Vote",
+    x = "District-Party Ideology"
+  ) +
+  facet_wrap(~ cycle, ncol = 1) +
+  # scale_x_continuous(labels = percent_format(digits = 1), limits = c(0, 1))
+  NULL
+```
+
+```{r plot-scattering, eval = FALSE}
+(
+  ggplot(dime) +
+  aes(
+    x = district_pres_vs, y = recipient_cfscore_dyn, 
+    color = as.factor(party)
+  ) +
+  geom_point(alpha = 1, shape = 1) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = party_factor_colors) +
+  labs(
+    x = "Past Republican Presidential Vote",
+    y = "Dynamic Dime Score"
+  ) +
+  scale_x_continuous(labels = percent_format(digits = 1), limits = c(0, 1))
+) /
+((
+  ggplot(dime) +
+  aes(
+    x = district_pres_vs, y = dwnom1, 
+    color = as.factor(party)
+  ) +
+  geom_point(alpha = 1, shape = 1) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = party_factor_colors) +
+  labs(
+    x = "Past Republican Presidential Vote",
+    y = "DW-Nominate (D1)"
+   ) +
+   scale_x_continuous(labels = percent_format(digits = 1), limits = c(0, 1)) +
+   scale_y_continuous(limits = c(-1, 1))
+) +
+(
+  ggplot(dime) +
+  aes(
+    x = dwnom1, y = recipient_cfscore_dyn, 
+    color = as.factor(party)
+  ) +
+  geom_point(alpha = 1, shape = 1) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = party_factor_colors) +
+  labs(
+    y = "Dynamic Dime Score", 
+    x = "DW-Nominate (D1)"
+   ) +
+   scale_x_continuous(limits = c(-1, 1))
+))
+```
+
+Although this descriptive picture is suggestive about the relationship between district-party ideology and candidate ideology, we need more rigorous methods to interrogate a causal relationship. In particular, we should be concerned that district features that promote conservative voters also promote conservative candidates, so background features of districts are important to control. Furthermore, if it is worthwhile for researchers to consider the unique effect of district-party ideology, it is important to demonstrate that it affects candidate positioning above and beyond its intermediate effect on district voting. The sequential-$g$ approach confronts both of these threats to inference. 
+
+<!-- Figure&nbsp;\@ref(fig:plot-scattering) shows... -->
+
+```{r plot-scattering, include = FALSE, fig.width = 5, fig.height = 4, eval = FALSE, out.width= "70%", fig.cap = "Presidential Vote Shares and Ideal Point Measures, 2012--2016"}
+```
+
+
+
+```{r plot-scatter-by-incumbency, eval = FALSE}
+ggplot(dime) +
+  aes(
+    x = district_pres_vs, y = recipient_cfscore_dyn, 
+    color = as.factor(party)
+  ) +
+  geom_point(alpha = 1, shape = 1) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = party_factor_colors) +
+  labs(
+    x = "Past Republican Presidential Vote",
+    y = "Dynamic Dime Score"
+  ) +
+  scale_x_continuous(labels = percent_format(digits = 1), limits = c(0, 1)) +
+  facet_wrap(~ str_glue("{incumbency}s"))
+```
+
+<!-- put graph here -->
+<!-- cces figure -->
+<!-- dime vs. party prefs, dime vs. district voting -->
+<!-- swap dime for DW-Nominate -->
+
+
+
+## How Partisan Preferences Affect Candidates
+
+
+### Naive regression
+
+- what is the relationship
+- let's control for the thing
+- what does this imply?
+
+### The Direct Effect of District-Party Ideology
+
+```{r problem-dag}
+problem_dag <- 
+  dagify(
+    C ~ T + V + U,
+    V ~ T + U,
+    exposure = "T",
+    outcome = "C",
+    coords = tribble(
+      ~ name,      ~ x,    ~ y,
+      "T",      0,      0,
+      "C",      2,      0,
+      "V",      1,      1,
+      "U",      2,      1
+    ),
+    labels = c(
+      "T" = "Partisan Ideology",
+      "C" = "Candidate Positioning",
+      "V" = "District Voting"
+    )
+  ) %>%
+  tidy_dagitty() %>%
+  # node_parents("C") %>%
+  mutate(
+    pt_label = case_when(
+      name == "T" ~ "theta[pd]",
+      name == "C" ~ "Y[cpd]",
+      name == "V" ~ "P[d]",
+      name == "U" ~ "U"
+    )
+  ) %>%
+  print()
+```
+
+
+```{r plot-problem-dag}
+ggplot(problem_dag) +
+  aes(x = x, y = y, xend = xend, yend = yend) +
+  geom_dag_edges() +
+  geom_dag_point(
+    aes(color = (name == "U"))
+  ) +
+  geom_dag_text(
+    aes(label = name), 
+    parse = TRUE, 
+    family = font_fam
+  ) +
+  scale_color_manual(values = c("TRUE" = secondary, "FALSE" = "black")) +
+  annotate(
+    geom = "text",
+    label = "District Voting (V) affects\nCandidate Positioning (C) but is also\naffected by District-Party Ideology (T)",
+    x = 0.2, y = 1,
+    size = 3
+  ) +
+  theme_dag(
+    legend.position = "none"
+  ) + 
+  expand_plot(
+    expand_x = expand_scale(c(0.2, 0.2)), 
+    expand_y = expand_scale(c(0.2, 0.2))
+  ) +
+  NULL  
+```
+
+
+
+This section describes the causal estimand and estimation routine that follows. Sequential-$g$ estimates a quantity called the _average controlled direct effect_, the average effect of a treatment on an outcome, holding fixed a mediator variable for all units under consideration.
+
+Consider a potential outcome where candidate positioning $C$ is affected by district voting $V$ and district-party ideology $T$, or $C(T, V)$. The controlled direct effect imagines that we can intervene on both $T$ and $V$, varying the value of $T$ between $t$ and $t'$ while fixing $V = v$. The controlled direct effect is defined for a single unit $i$ as,
+\begin{align}
+  CDE_{i}(t, t', v) &= C_{i}(t, v) - C_{i}(t', v),
+  (\#eq:PO-CDE)
+\end{align}
+or, how would $C_{i}$ change if we could vary $t$ without influencing $v$ in the process? The dependence of district voting $V$ on district-party ideology $T$ is shown by the causal graph in Figure&nbsp;\@ref(fig:plot-problem-dag). A model that estimates the _total_ effect of district-party ideology will fail to differentiate the fraction of the effect flowing through path $T \rightarrow C$ from the fraction of the effect through path $T \rightarrow V \rightarrow C$. However, simply controlling for $V$ will not isolate the direct effect, since it can open back-door paths from $T$ to $C$ through confounders represented by $U$ [@montgomery-et-al:2018:colliders]. If there are variables that affect aggregate district voting that are independent of district-party ideology, such as valence features from unrelated prior candidates, post-treatment conditioning on the district vote can create confounders unintentionally. Sequential-$g$ is a special case of a broader class of models (structural nested mean models) that measure direct effects by subtracting intermediary effects without creating collider bias [@acharya-blackwell-sen:2016:direct-effects; @vansteelandt:2009:direct-effects]. 
+
+```{r plot-problem-dag, include = TRUE, fig.width = 5, fig.height = 3,out.width = "70%", fig.cap = "A DAG that presents district partisanship as a collider along the path from district-party preferences to candidate positioning. Controlling for district partisanship can bias the causal estimate of district-party preferences in several ways. If there is a path $\\theta \\rightarrow P \\rightarrow Y$, then the effect of $\\theta$ does not represent the total effect. In the presence of intermediate confounder $U$, controlling for district partisanship induces collider bias by unblocking the path $\\theta \\leftarrow U \\rightarrow Y$."}
+```
+
+In order to implement a sequential-$g$ routine, we need to specify valid models that separately identify the mediator-outcome relationship (the total effect of district voting on candidate positioning) and the treatment-outcome relationship (the total effect of district-party ideology on candidate positioning). This twin identification is formalized using an assumption of _sequential ignorability_, or sequential unconfoundedness [@robins-greenland:1994:sequential-ignorability]. This means that unit potential outcomes $C_{i}(t, v)$ are independent of treatment, conditional on pre-treatment covariates $X_{i}$,
+\begin{align}
+  C_{i}(t, v) \perp \!\!\! \perp T \mid X_{i} = x
+\end{align}
+and secondly that potential outcomes are independent of the mediator, conditional on treatment, pre-treatment covariates, and _intermediate covariates_ $Z_{i}$ that may affect the mediator separately from $T$ and $X$. 
+\begin{align}
+  C_{i}(t, v) \perp \!\!\! \perp M \mid T_{i} = t, X_{i} = x, Z_{i} = z
+\end{align}
+
+
+
+```{r create-g-dag}
+g_dag <- 
+  dagify(
+    C ~ T + V + Z + X + U1 + U2,
+    V ~ T + X + Z + U1,
+    Z ~ T + X,
+    T ~ X + U2,
+    exposure = "T", 
+    outcome = "C",
+    coords = tribble(
+      ~ name,  ~ x, ~ y,
+      "T",       1,   2,
+      "C",       3,   1,
+      "Z",       1,   0,
+      "V",       2,   0,
+      "X",       0,   1,
+      "U1",      3, 0,
+      "U2",      2,   2
+    )
+  ) %>%
+  tidy_dagitty(layout = "auto") %>%
+  mutate(
+    label = case_when(
+      name == "V" ~ "Past Presidential Vote",
+      name == "T" ~ "Partisan Ideology",
+      name == "C" ~ "Candidate Position",
+      name == "X" ~ "Pre-Treatment Confounders",
+      name == "Z" ~ "Intermediate Confounders"
+    )
+  ) %>%
+  print()
+```
+
+```{r g-dags}
+base_dag <- g_dag %>%
+  ggplot() +
+  aes(x = x, y = y, xend = xend, yend = yend) +
+  coord_cartesian(ylim = c(-0.25, 2.25)) +
+  # theme_dag() +
+  theme_mgd_dag() +
+  NULL
+
+mediator_dag <- base_dag +
+  geom_dag_point(data = filter(g_dag, name %in% c("U2", "U1") == FALSE)) +
+  geom_dag_edges(
+    data_directed = filter(g_dag, name %in% c("U2", "U1") == FALSE)
+  ) +
+  geom_dag_text(
+    data = filter(g_dag, name %in% c("U2", "U1") == FALSE), 
+    aes(label = name)
+  ) +
+  labs(title = "\nStage 1", subtitle = "Mediator-outcome model\n") +
+  NULL
+
+exposure_dag <- base_dag +
+  geom_dag_point(
+    data = filter(g_dag, name %in% c("U2", "U1") == FALSE),
+    aes(color = name %in% c("Z", "V"))
+  ) +
+  geom_dag_edges(
+    data_directed = g_dag %>%
+      filter((name %in% c("U1", "U2", "Z", "V")) == FALSE, 
+             to %in% c("T", "C"))
+  ) +
+  geom_dag_edges(
+    data_directed = g_dag %>%
+      filter(to %in% c("Z", "V") | (name == "Z" & to == "C"),
+             name %in% c("U1", "U2") == FALSE),
+    edge_linetype = "dashed", 
+    edge_color = "gray50"
+  ) +
+  geom_dag_text(
+    data = filter(g_dag, name %in% c("U1", "U2") == FALSE),
+    aes(label = ifelse(name == "C", "b(C)", name))
+  ) +
+  scale_color_manual(values = c("TRUE" = "gray50", "FALSE" = "black")) +
+  labs(
+    title = "\nStage 2", 
+    subtitle = "Exposure-outcome model\nwith demediated outcome"
+  ) +
+  theme(legend.position = "none") +
+  NULL
+
+confounding_dag <- base_dag +
+  geom_dag_point(aes(color = name %in% c("U2", "U1"))) +
+  geom_dag_edges() +
+  geom_dag_text(aes(label = name)) +
+  theme(legend.position = "none") +
+  scale_color_manual(values = c("TRUE" = secondary, "FALSE" = "black")) +
+  labs(title = "Violations of Sequential\nUnconfoundedness", 
+       subtitle = "In mediator-outcome model (U1)\nand exposure-outcome model (U2)")
+```
+
+```{r plot-g-dag}
+mediator_dag + exposure_dag + confounding_dag 
+```
+
+Figure&nbsp;\@ref(fig:plot-g-dag) visualizes the modeling assumptions for sequential-$g$ estimation using causal graphs, which helps explain how to implement the routine. The left panel shows the stage-one model, which estimates the effect of past voting $V$ (the mediator) on candidate positioning $C$ (the outcome). This first stage conditions on district-party preferences $T$, pre-treatment confounders $X$, and intermediate confounders $Z$, all of which are necessary to identify the causal effect of the mediator. 
+
+```{r plot-g-dag, include = TRUE, fig.width = 11, fig.height = 5, out.width = "100%", fig.cap = "Directed acyclic graphs that describe the modeling problem and sequential-$g$ estimation. The stage 1 mediator model estimates the effect of the past presidential vote ($V$) on candidate positioning ($C$). The stage 2 exposure model subtracts the vote effect from candidate positions and estimates the effect of partisan group ideology ($T$) on the demediated candidate positions ($b(C)$). The final panel shows where unadjusted confounders violate the identification assumptions in stage 1 ($U1$) and in stage 2 ($U2$)."}
+```
+
+
+After estimating the mediator's effect on the outcome, the outcome variable is _demediated_ by subtracting the mediator effect from the outcome variable. The center panel represents this demediation step by rewriting the outcome variable as $b(C)$, the demediated value of $C$.^[
+  The exact demediation operation is shown below in Equation&nbsp;\@ref(eq:blipdown-function).
+]
+The stage-two model then estimates the effect of district-party preferences $T$ on the demediated candidate positions, controlling for pre-treatment covariates $X$.
+Demediating the outcome suppresses the path from $V$ to $b(C)$ because (by sequential unconfoundedness) there is no longer any systematic variation between the mediator and the outcome. As such, there is no need to adjust for $V$, since it has no systematic effect on $b(C)$ after demediation. 
+Furthermore, although there remains a causal effect from the intermediate confounders $Z$ to candidate positions, the stage-two model does not adjust for these confounders to avoid post-treatment bias in the estimate of the CDE.
+This stage-two model recovers the controlled direct effect of $T$ on $C$.
+
+It is worth noting here that if we estimate the stage-two model using the natural value of $C$ rather than the demediated $b(C)$, we would obtain the total effect of $T$ (the conditional average treatment effect) rather than the controlled direct effect. This can be valuable, since the difference between the total effect and the controlled direct effect are an indirect indicator of how much of the total effect flows through a mediator variable.
+
+The final panel shows where unmeasured confounding can violate the sequential unconfoundedness assumption. The stage-one model identifies the causal effect of the mediator, so if an unmeasured variable (represented in the future by $U1$) affects both the mediator and the outcome, the mediator's effect is not identified. Similarly, the stage-two model does not identify the effect of $T$ on $b(C)$ if they share an unmeasured confounder $U2$.
+Unmeasured variables in other locations of the graph certainly exist, but they do not violate sequential unconfoundedness unless they can be represented by an open back-door path through $U1$ or $U2$.^[
+  For instance, a variable $W$ may be a common cause of $X$ and $C$, thus creating the path $T \rightarrow X \rightarrow W \rightarrow C$, but it does not confound the effect of $T$ because conditioning on $X$ blocks the path. 
+  Additionally, although intermediate confounders $Z$ are presented as descendants of group policy ideology $T$, intermediate confounders do not necessarily have to be affected by $T$ (though they can be). They only need to be confounders of the mediator-outcome relationship.
+]
+There are functional form considerations however---biases may remain if the functional forms for confounders $X$ and $Z$ are inappropriate.^[
+  I plan to investigate more flexible functional forms in the near future.
+]
+<!------- TO DO ---------
+- functional forms comment
+------------------------->
+
+<!------- TO DO ---------
+- way bigger emphasis on the contribution of the design.
+  other analysis do this kind of observables setup, but they don't
+  deal with the causal estimand and the explication of assumptions.
+------------------------->
+
+<!------- TO DO ---------
+- Discuss potential violations of assumptions
+- Simulate violated assumptions by way of correlated error parameters?
+------------------------->
+
+### Sequential-$g$ Estimation
+
+
+Keep the notation general enough (expectations) so that there are no explicit linear regression functional forms introduced by accident.
+
+
+### Multilevel Considerations 
+
+The research question in this chapter presents us with multilevel data: how is the ideological positioning of primary candidates affected by the policy ideology of partisans in their district, when there are potentially multiple candidates per district? In this scenario, the outcome is a variable specific to an individual candidate $i$, but the treatment is fixed for an entire district-partisan group $g$. 
+
+That setup violates likely violates the stable unit treatment value assumption (SUTVA) within a given group---even if candidates in the same group receive the same treatment, the positioning of one candidate may affect the positioning of another, violating the "no interference" component of SUTVA. Under this violation, the treatment effect at the individual level is not identified. If SUTVA holds _between_ groups, however, it is possible to identify a treatment effect by averaging across groups [@Hill:2013:multilevel-causal-inf]. In potential outcomes notation, even if we can define potential outcomes at the individual level ($\mathit{Dime}_{i}(\bar{\theta}_{g[i]})$), the lowest level where we could credibly identify treatment effects would be at the group level, where the potential outcome for a group is the average outcome within the group ($\overline{\mathit{Dime}}_{g}\left(\bar{\theta}_{g}\right)$).
+
+<!-- (If size is correlated with treatment effect, the parameter is not the avg effect, since you want to weight by group size)
+If treatment is group-level, the natural treatment effect is at the group level, but you may not get this by averaging individual units if group size is correlated with treatment assignment. So you want to average the group effects! [@Hill:2013:multilevel-causal-inf]
+ -->
+
+<!-- If treatment is correlated with X _by design_(?) or otherwise(?), such as blocking along a key covariate like income, can include block-specific means of the treatment variable [@Hill:2013:multilevel-causal-inf]; Bafumi and Gelman, Raudenbush -->
+
+
+
+### Bayesian Considerations
+
+One important feature of this dissertation is that our causal variable of interest, the policy ideology of district-party publics, is not measured with certainty. The model in Chapter&nbsp;\@ref(ch:model) estimates this quantity up to a posterior distribution, but the variation in the posterior distribution creates an additional layer of uncertainty in our understanding of causal effects. This creates theoretical issues with the definition of treatment effects as well as practical issues for estimation, which I describe in turn.
+
+As discussed in Chapter&nbsp;\@ref(ch:causality), it is natural to interpret causal inference as Bayesian updating about a causal parameter using models and data. Following @rubin:1978:bayesian's Bayesian interpretation of his own work with potential outcomes, causal inference is a method for generating counterfactual estimates of an outcome variable as if they were predictive draws from the posterior distribution. Supposing that we seek the causal effect of an intervention on group ideology, $\tau$, and we observe only one potential outcome, $y_{g}(\bar{\theta}_{g})$, how do we specify the posterior distribution if we set group ideology to some other value $\theta'$? Not only do we have posterior uncertainty about $\tau$, but we are also uncertain about the actual value of $\bar{\theta}_{g}$ that we observed in the first place, since the measurement model from Chapter&nbsp;\@ref(ch:model) estimates it only up to a posterior distribution. Our posterior distribution for missing potential outcomes reflects both sources of uncertainty. Econometrics refers to this problem as "errors in variables," but it takes on a special meaning when it comes to the interpretation of causal interventions, since it stresses our understanding of what an "observed" potential outcome is.
+
+Practically, this means that we will underestimate our uncertainty about causal effects unless we can account for the uncertainty in our treatment variable on top of our uncertainty in its effect on candidate positioning. All ideal point estimates are uncertain, but not many studies confront this uncertainty. Since the usefulness of the ideal point model in Chapter&nbsp;\@ref(ch:model) is important to explore in this dissertation, it feels appropriate not to ignore posterior uncertainty in its applications. As such, I conduct all sequential-$g$ analyses below using raw posterior samples, rather than posterior means. I describe the exact routine in Section&nbsp;\@ref(sec:pos-uncertainty).
+
+<!-- 
+
+We observe $y_{g}\left(\bar{\theta}_{g}\right)$, but we don't know $\bar{\theta}_{g}$ with certainty. Instead let $p\left(\bar{\theta}_{g}\right)$ be the posterior distribution of $g$'s average policy ideology as estimated from the group IRT model in Chapter&nbsp;\@ref(ch:model). Our observed outcome is a function of this unknown value, which we represent as $y_{g}\left(p\left(\bar{\theta}_{g}\right)\right)$. 
+
+Thus the causal effect of setting $\mathrm{do}\left(\theta\right)$, as opposed to some $\theta'$, for unit $g$ is
+\begin{align}
+  \tau_g &= y_{g}\left(\theta\right) - y_{g}\left(\bar{\theta}_{g}'\right),
+\end{align}
+
+The posterior distribution for this value is 
+$p\left(\tau_{g}\right) = p\left(\right)$
+
+or, written as a probability distribution 
+\begin{align}
+  p\left(\tau_{g}\right) &= p\left(y_{g}\left(\theta'\right) - y_{g}\left(\bar{\theta}_{g}\right)\right)
+\end{align}
+
+ -->
+
+
+## Bayesian Causal Inference with Neural Networks
+
+(1) Doing CI with ML methods and (2) how to understand this Bayesianly
+
+
+### Machine Learning and Causal Inference
+
+Problems:
+
+- don't know the covariates
+- even if we did, don't know the model
+
+Solution: ML
+
+- regularization and other covariate selection methods (not necessarily the purview of "machine learning")
+- many models are set up for interactions, nonlinearities
+- The causal models themselves are derived in terms of expectations, not in terms of regression functions.
+
+Bayesian considerations:
+
+- uncertainty in ML models is a problem
+- Bayes gives a straightforward mode for characterizing uncertainty in model parameters (feeding forward into model predictions)
+- handles non-identifiability in certain models pretty naturally!
+
+
+
+
+
+### Regularization in Covariate Adjustment
+
+Regular parameterization:
+\begin{align}
+  y_{g} &= \tau\theta_{g} + \mathbf{x}^{\intercal}_{g}\beta + \epsilon_{g}
+\end{align}
+
+Orthogonalized parameterization:
+\begin{align}
+  \theta_{g} &= \mathbf{x}^{\intercal}_{g}\gamma_{1} + \nu_{g}
+  y_{g} &= \tau\left(\theta_{g} - \hat{\theta}_{g}\right)_ + \mathbf{x}^{\intercal}_{g}\gamma_{2} + \epsilon_{g}
+\end{align}
+
+In an unbiased regression, estimates of $\tau$ would be identical. With regularization applied to the covariate effects, however, the estimates would differ. By explicitly modeling $\theta_{g}$ as a function of $\mathbf{x}_{g}$ and residualizing, we explicitly make all of the identifying variation $\theta_{g} - \mathrm{E}\left[\theta_{g} \mid \mathbf{x_{g}}\right]$ independent of the regression function, allowing shrinkage in the selection model to behave freely without biasing the estimate of $\tau$ by direct consequence. The researcher is then able to set up whatever priors on $\tau$ make sense. 
+
+
+
+### Neural Network Predictor
+
+
+Regression with Gaussian errors:
+\begin{align}
+  (\#eq:normal-reg)
+  y_{i} 
+  &\sim \text{Normal}\left(
+    \mathbf{x}^{\intercal}_i\beta, %_ 
+    \sigma 
+  \right)
+\end{align}
+where $\mathbf{x}_{i}$ is a $P$-vector of predictors for unit $i$, and $\beta$ is a $P$-vector of coefficients.
+
+We write a one-layer neural network with slightly more general notation that evokes a basis-function interpretation of a regression model:
+\begin{align}
+  (\#eq:normal-nn)
+  y_{i} &\sim 
+    \text{Normal}\left(
+      \eta\right(\mathbf{x}_{i}\left) %_
+      \boldsymbol{\alpha},
+      \sigma
+    \right)
+\end{align}
+where $\eta\left(\mathbf{x}_{i}\right)$ is a neural network basis function of $\mathbf{x}_{i}$ with coefficients $\alpha$. This basis function is specified as a transformed regression of the predictors,
+\begin{align}
+  (\#eq:nn-prediction)
+  \eta\left(\mathbf{x}_{i}\right) %_
+    &= \text{tanh}\left(
+    \mathbf{x}_{i}^{\intercal}%_
+    \mathbf{\omega}
+  \right)
+\end{align}
+which is commonly referred to as a "neuron" in the neural network parlance. The neuron basis differs from linear regression in two ways. First, the coefficients $\boldsymbol{\omega}$ contain $M$ columns rather than $1$ column as in simple regression. The resulting linear combination $\mathbf{x}_{i}^{\intercal}\mathbf{\omega}$ is therefore a $1 \times M$. This is a generalization of regression, and if $M = 1$, the network essentially reduces to linear regression as $\mathbf{x}_{i}^{\intercal}\mathbf{\omega}$ would be a scalar prediction for unit $i$. The second innovation is an element-wise transformation of $\mathbf{x}_{i}^{\intercal}\mathbf{\omega}$ using the hyperbolic tangent function, which is a scaled logistic function.^[
+  Traditionally, the hyperbolic tangent function is written as $\text{tanh}\left(x\right) = \dfrac{e^{x} - e^{-x}}{e^{x} + e^{-x}} = \dfrac{e^{2x} - 1}{e^{2x} + 1}$. It is related to the logistic function by $\text{tanh}\left(x\right) = 2g(2x) - 1$, where $g(\cdot)$ is the standard logistic function. The hyperbolic tangent function is more commonly used for neural networks than the standard logistic function because its output lies in the interval $(-1, 1)$ rather than $(0, 1)$. This is convenient for certain neural network models that "deactivate" 
+]
+<!------- TO DO ---------
+- ReLU
+------------------------->
+
+
+
+The conditional mean is given by $\text{tanh}\left(\mathbf{x}^{T}_{i}\boldsymbol{\omega}\right)\boldsymbol{\alpha}$. The predictor matrix $\mathbf{x}^{\intercal}_{i}$, instead of being multiplied by a vector of coefficients, is multiplied by a $P \times M$ matrix of coefficients $\boldsymbol{\omega}$, resulting in a $1 \times M$ matrix that is nothing more than $M$ linear regression functions of the form 
+
+
+
+### Posterior Distributions for Causal Quantities
+
+What are the quantities we are interested in?
+
+
+
+## Data and Modeling
+
+### Data Sources
+
+
+### Primary Rules
+
+General comment: very difficult to code these.
+
+- law vs. party rules
+- for some organizations "open" means there's ANY openness, which can include the McGhee "semi-closed" definition
+- most states have the same system for both parties, but some state laws leave it open to parties to modify their rules in the months leading up to the election. 
+
+
+I take data from Boatright on primaries. 
+
+- 2016: combination of NCSL, Ballotpedia, and OpenPrimaries.org, as of 2020-05-27.
+
+
+`r knit_exit()`
+
+### Move me
+
+```{r read-g, eval = FALSE}
+g_samples <- 
+  here("data", "_model-output", "04-positioning", "pos-g-samples.rds") %>%
+  read_rds() %>%
+  print()
+```
+
+```{r unnest-samples, eval = FALSE}
+mediator_samples <- g_samples %>%
+  select(party, incumbency, .draw, mediator_samples) %>%
+  unnest(cols = mediator_samples) %>%
+  ungroup() %>%
+  mutate(
+    incumbency = str_glue("{incumbency}s")
+  ) %>%
+  print()
+
+direct_samples <- g_samples %>%
+  select(party, incumbency, .draw, direct_samples) %>%
+  unnest(cols = direct_samples) %>%
+  ungroup() %>%
+  mutate(
+    incumbency = str_glue("{incumbency}s")
+  ) %>%
+  print()
+
+total_samples <- g_samples %>%
+  select(party, incumbency, .draw, direct_samples, total_samples) %>%
+  unnest(cols = c(total_samples, direct_samples)) %>%
+  ungroup() %>%
+  mutate(
+    indirect_effect = total_effect - direct_effect,
+    incumbency = str_glue("{incumbency}s")
+  ) %>%
+  print()
+```
+
+I implement the sequential-$g$ routine using candidate data drawn primarily from @bonica:2019:dime, @foster-molina:2016:data, and my own estimates. 
+
+For the dependent variable, I use Bonica's dynamic Dime scores for House primary candidates in election years 2012, 2014, and 2016. These estimates are generated from a data reduction on campaign contributions data, assuming that campaign contributors give money to ideologically proximate candidates.
+
+For the mediator, I use the Republican share of the presidential vote in the prior election, available in the Bonica data for each candidate running for House. This serves as a broad measure of district voting that closely reflects the partisan composition of the district.
+
+For my independent variable, I use my own district-party ideology estimates generated for the post-2012 districting cycle, estimated from ANES and CCES data for years 2012 through 2018.^[
+  One feature in this design that needs improvement is that it would be nice to have ideology estimates that evolve more over time, so as not to treat district-party ideology as fixed for an entire redistricting cycle, which is the current setup of the model.
+]
+
+Control variables are measured primarily at the congressional district level and are drawn primarily from @foster-molina:2016:data. These covariates include racial, educational, religious, and economic features of districts, which I revisit below. Currently I do not have data on primary institutions included in the routine, which limits what I can say about effect modification in primaries vs. caucuses or as a function of primary openness. This is an important part of the story to include in the future. 
+
+
+
+### Full Model
+
+As mentioned above, I estimate average controlled direct effects separately for incumbents, challengers, and open seat candidates in two parties, totaling six routines altogether. I write a general model that applies regardless of which subset of data is being used. Because the estimation in every data subset proceeds in two stages, I use subscript some parameters $1$ and $2$ to indicate that they are not fixed across model stages.
+
+<!------- TO DO ---------
+- separate parties
+- incumbency
+------------------------->
+
+The first stage is a mediator-outcome model, predicting the Dime score of candidate $i$ in group $g$, where a group is a combination of district $d$ and party ($p$, which is fixed within models for now). Covariate specifications are intended to identify the effect of the previous Republican presidential vote share in district $d$ ($\mathit{pvote}_{g}$). This is done with the following regression model:
+\begin{align}
+  \mathrm{Dime}_{i} &= 
+    \mu_{1} + \tau_{1} \bar{\theta}_{g[i]} + \delta \mathrm{pvote}_{d[i]} + 
+    \mathbf{x}_{d[i]}^{\intercal}\beta_{1} +
+    \mathbf{z}_{i}^{\intercal}\gamma +
+    \alpha_{1d} + \epsilon_{i}
+    (\#eq:med-model)
+\end{align}
+where $\mu_{1}$ is a constant, $\tau_{1}$ is the coefficient for district-party ideology $\bar{\theta}_{g}$, $\delta$ is the coefficient for the past district vote share. The $\mathbf{x}_{d}^{\intercal}\beta_{1}$ and $\mathbf{z}_{ig}^{\intercal}\gamma$ terms are covariate adjustments for pre-treatment confounders $\mathbf{x}$ and intermediate confounders $\mathbf{z}$. Pre-treatment confounders consist of district-level demographic indicators for the racial composition, college graduation rate, median income, inequality (Gini), unemployment rate, foreign-born population, and evangelical population, and $\mathbf{z}_{ig}$ currently contains an order-3 polynomial function of candidate $i$'s total campaign receipts.^[
+  Note: this isn't a good choice for intermediate confounding, and it should change. Ask me why!
+]
+
+<!------- TO DO ---------
+- should be a prior measure of relative party campaign spending
+------------------------->
+Because many districts contain multiple candidates, I include a district-level intercept $\alpha_{1d}$ that is modeled as a hierarchical Normal error term. Lastly, $\epsilon_{i}$ is assumed to be Normal.
+<!------- TO DO ---------
+- justify covariates with cites?
+------------------------->
+
+
+
+The second stage of sequential-$g$ estimation requires a demediated outcome. This requires that we isolate the mediator's effect on the outcome in Equation&nbsp;\@ref(eq:med-model) and fix it such a way that the mediator falls out of the model.^[
+  Or "blipped" out of the outcome value, hence the name "blipdown function."
+]
+The specification of the first stage implies a demediation function of the following form:
+\begin{align}
+  \psi_{d}\left(\mathrm{pvote}'\right) %_
+    &= 
+    \hat{\delta}\left(\mathrm{pvote}_{d} - \mathrm{pvote}'_{d}\right) %_
+  (\#eq:blipdown-function)
+\end{align}
+where $\mathit{pvote}'$ is the value of the mediator where the CDE is fixed for all units, and $\hat{\delta}$ is the mediator effect estimate. In the case where the mediator is fixed at zero, this expression reduces to $\hat{\delta} \times \mathit{pvote}_{d}$. The definition of $\psi_{d}(\cdot)$ can be more complex if the mediator's effect on the outcome is modeled with interaction terms. This function is subtracted from the outcome data to calculate the demediated outcome, $b\left(\mathrm{Dime}\right)_{i}$.
+\begin{align}
+  b\left(\mathrm{Dime}\right)_{i} &=
+    \mathrm{Dime}_{i} - \psi_{d}\left(\mathrm{pvote}'\right) %_
+  (\#eq:blipdown-outcome)
+\end{align}
+Because the previous presidential vote share varies from district to district, the demediation function also varies across districts. However, because the mediator is fixed for a given district, all candidates from that district are demediated with the same blipdown function, regardless of their original Dime score.
+
+The demediated outcome is then used in the second stage model, which has a similar specification to the first stage except that the mediator and intermediate confounders are omitted.
+\begin{align}
+  b\left(\mathrm{Dime}\right)_{i} = 
+    \mu_{2} + \tau_{2}\bar{\theta}_{g} + 
+    \mathbf{x}^{\intercal}_{ig}\beta_{2} + \alpha_{2d} + u_{i}
+\end{align}
+Under sequential unconfoundedness, $\tau_{2}$ represents the controlled direct effect of district-party preferences on Dime scores. This regression includes residual error term $u_{i}$ and district error $\alpha_{2d}$.
+
+These models contain hierarchical variance terms, so they are fit with MLE algorithms from the `lme4` package for R.
+
+
+
+
+### Algorithm {#sec:pos-uncertainty}
+
+<!------- TO DO ---------
+- How is the model set up in Stan
+- propagating uncertainty
+------------------------->
+
+Because the demediated outcome value in stage two depends on parameter estimates from stage one, our average controlled direct estimate $\tau_{2}$ should reflect parameter uncertainty from both stages. @acharya-blackwell-sen:2016:direct-effects derive an analytical variance estimator that deals with this, but unfortunately this estimator does not incorporate the additional uncertainty introduced by the fact that the key independent variable, district-party ideology, is an estimate from a separate measurement model. To overcome this, I implement a simulation routine that propagates model uncertainty from the ideal point estimate into both stages, as well as stage one uncertainty into the second stage. 
+
+Suppose that we had a matrix of ideal point samples $\Theta$ that had one row for every district-party group and one column for every Markov chain Monte Carlo iteration from the estimation in Chapter&nbsp;\@ref(ch:model). We begin by drawing a set of $m$ columns from this matrix, and then for each column $m$ we perform the following routine:^[
+  The index $m$ represents one MCMC iteration, with all parameters from that iteration sampled simultaneously. This deals with the fact that ideal point parameters will be correlated within iteration, so they should be supplied to the sequential-$g$ algorithm together.
+]
+
+- Estimate the mediator model using the sampled ideal point.
+- To carry uncertainty forward from the mediator model, sample 1 coefficient draw from the implied posterior distribution for the mediator effect. This results in a random draw of the mediator effect that combines the uncertainty in the district-party ideal points with the uncertainty in the mediator's effect on the outcome.
+- Use each sampled mediator effect to demediate the dependent variable. The demediated value reflects uncertainty in the mediator effect and in the initial ideal point draw.
+- Use the demediated outcome to estimate the average controlled direct effect of district-party ideology. Sample one ACDE draw from the implied posterior and store it. 
+
+This routine was performed for $m = `r smart_number(length(unique(direct_samples$.draw)))`$ ideal point draws, so the result is a distribution of `r smart_number(length(unique(direct_samples$.draw)))` ACDE simulations that reflect measurement uncertainty in district-party ideology as well as modeling uncertainty in both stages of sequential-$g$.
+
+
+### Model Selection with Cross-Validation
+
+
+
+## Findings
+
+I'm running short on time to write these results up gracefully, but here's what we're seeing so far!
+
+```{r g-summaries, eval = FALSE}
+mediator_summary <- mediator_samples %>%
+  group_by(party, incumbency) %>% 
+  summarize(
+    sample_mean = mean(mediator_effect), 
+    conf.low = quantile(mediator_effect, .05), 
+    conf.high = quantile(mediator_effect, .95),
+    n_samples = n()
+  ) %>%
+  print()
+
+direct_summary <- direct_samples %>%
+  group_by(party, incumbency) %>% 
+  summarize(
+    sample_mean = mean(direct_effect), 
+    conf.low = quantile(direct_effect, .05), 
+    conf.high = quantile(direct_effect, .95),
+    n_samples = n()
+  ) %>%
+  print()
+
+total_summary <- total_samples %>%
+  group_by(party, incumbency) %>% 
+  summarize(
+    sample_mean = mean(total_effect), 
+    conf.low = quantile(total_effect, .05), 
+    conf.high = quantile(total_effect, .95),
+    n_samples = n()
+  ) %>%
+  print()
+
+indirect_summary <- total_samples %>%
+  group_by(party, incumbency) %>% 
+  summarize(
+    sample_mean = mean(total_effect - direct_effect), 
+    conf.low = quantile(total_effect - direct_effect, .05), 
+    conf.high = quantile(total_effect - direct_effect, .95),
+    n_samples = n()
+  ) %>%
+  print()
+```
+
+### Stage 1
+
+
+```{r, eval = FALSE}
+ggplot(mediator_samples) +
+  aes(x = mediator_effect) +
+  geom_histogram(
+    aes(fill = as.factor(party), color = as.factor(party)), 
+    position = "identity", alpha = 0.5, bins = 50,
+    show.legend = FALSE
+  ) +
+  facet_wrap( ~ incumbency) +
+  scale_fill_manual(values = party_factor_colors) +
+  scale_color_manual(values = party_factor_colors)
+```
+
+```{r plot-mediator, eval = FALSE}
+ggplot(mediator_samples) +
+  aes(
+    x = mediator_effect, y = as.factor(party), 
+    fill = as.factor(party), color = as.factor(party)
+  ) +
+  # geom_vline(xintercept = 0, color = "gray", size = 0.5) +
+  # annotate(
+  #   geom = "segment", x = 0, xend = 0, y = 0, yend = 3.25,
+  #   color = "gray"
+  # ) +
+  geom_segment(
+    data = mediator_summary,
+    aes(x = conf.low, xend = conf.high, 
+        y = as.factor(party), yend = as.factor(party))
+  ) +
+  geom_point(
+    data = mediator_summary, aes(x = sample_mean, y = as.factor(party))
+  ) +
+  ggridges::geom_ridgeline(
+    stat = "binline", draw_baseline = FALSE,
+    boundary = 0, bins = 40, scale = 0.4,
+    alpha = 0.25
+  ) +
+  facet_wrap(~ incumbency, nrow = 1, strip.position = "bottom") +
+  scale_color_manual(values = party_factor_colors) +
+  scale_fill_manual(values = party_factor_colors) +
+  scale_y_discrete(
+    breaks = c(1, 2), labels = c("Democrats", "Republicans")
+  ) +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.line.x = element_line(),
+    axis.ticks.y = element_blank(),
+    strip.placement = "outside"
+    # axis.text.y = element_blank()
+  ) +
+  coord_cartesian(ylim = c(1.35, 2.75)) +
+  labs(
+    title = "Effect of Past Presidential Vote", 
+    subtitle = "On Candidate Dime Score",
+    y = NULL, x = NULL
+  ) +
+  NULL
+```
+
+
+Stage 1 estimates the previous presidential vote's effect on candidate ideal points (the mediator-outcome model). Mediator effects in Figure&nbsp;\@ref(fig:plot-mediator) show noisy estimates. A one-unit represents a 100 percent change in Republican vote, whereas most Dime scores for candidates live in the [-2, 2] range. So this regression is getting hardly any signal from the presidential vote. 
+
+This maybe isn't so crazy, since most of the votes vs. ideal point relationship is between rather than within parties. This echoes back to a key finding in [@mccarty-poole-rosenthal:2009:gerrymandering], that the within-party relationship between district vote shares and NOMINATE scores was actually quite weak! It appears that these data find an even weaker relationship between district votes and Dime scores.
+
+
+```{r plot-mediator, include = TRUE, fig.width = 7, fig.height = 3, eval = FALSE,  out.width = "100%", fig.cap = "Mediator findings"}
+```
+
+### Stage 2
+
+
+
+```{r plot-direct, eval = FALSE}
+ggplot(direct_samples) +
+  aes(
+    x = direct_effect, y = as.factor(party), 
+    fill = as.factor(party), color = as.factor(party)
+  ) +
+  geom_vline(
+    xintercept = 0, color = "gray", size = 0.5, linetype = "dashed"
+  ) +
+  # annotate(
+  #   geom = "segment", x = 0, xend = 0, y = 0, yend = 3.25,
+  #   color = "gray"
+  # ) +
+  geom_segment(
+    data = direct_summary,
+    aes(x = conf.low, xend = conf.high, 
+        y = as.factor(party), yend = as.factor(party))
+  ) +
+  geom_point(
+    data = direct_summary, aes(x = sample_mean, y = as.factor(party))
+  ) +
+  ggridges::geom_ridgeline(
+    stat = "binline", draw_baseline = FALSE,
+    boundary = 0, bins = 40, scale = 0.4,
+    alpha = 0.25
+  ) +
+  facet_wrap(~ incumbency, nrow = 1, strip.position = "bottom") +
+  scale_color_manual(values = party_factor_colors) +
+  scale_fill_manual(values = party_factor_colors) +
+  scale_y_discrete(
+    breaks = c(1, 2), labels = c("Democrats", "Republicans")
+  ) +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.line.x = element_line(),
+    axis.ticks.y = element_blank(),
+    strip.placement = "outside",
+    # axis.text.y = element_blank()
+  ) +
+  coord_cartesian(ylim = c(1.35, 2.25)) +
+  labs(
+    title = "Effects of District-Party Ideology",
+    subtitle = "Controlled Direct Effect on Candidate Dime Score",
+    y = NULL,
+    x = NULL
+  ) +
+  NULL
+```
+
+We're seeing average controlled direct effects that are statistically noteworthy in Figure&nbsp;\@ref(fig:plot-direct). Error bars represent 90 percent intervals,^[
+  90 percent intervals are chosen because simulation-based statistics they are more stable estimators of the interval bounds than 95 percent intervals, especially when we don't have a huge number of iterations to work with. 
+]
+which means that most of our simulations are showing ACDEs that have 95 percent posterior probability above zero. I know that I need to do some rescaling of variables to make these effects more interpretable, and once I do that I will be able to put regularizing priors on these effects so as to guard against overfitting in the inference of the treatment effect. 
+
+
+```{r plot-direct, include = TRUE, fig.width = 7, fig.height = 3, eval = FALSE, out.width = "100%", fig.cap = "ACDE findings"}
+```
+
+
+
+
+
+```{r plot-indirect, eval = FALSE}
+ggplot(total_samples) +
+  aes(
+    x = indirect_effect, y = as.factor(party), 
+    fill = as.factor(party), color = as.factor(party)
+  ) +
+  geom_vline(
+    xintercept = 0, color = "gray", size = 0.5, linetype = "dashed"
+  ) +
+  # annotate(
+  #   geom = "segment", x = 0, xend = 0, y = 0, yend = 3.25,
+  #   color = "gray"
+  # ) +
+  geom_segment(
+    data = indirect_summary,
+    aes(x = conf.low, xend = conf.high, 
+        y = as.factor(party), yend = as.factor(party))
+  ) +
+  geom_point(
+    data = indirect_summary, aes(x = sample_mean, y = as.factor(party))
+  ) +
+  ggridges::geom_ridgeline(
+    stat = "binline", draw_baseline = FALSE,
+    boundary = 0, bins = 40, scale = 0.4,
+    alpha = 0.25
+  ) +
+  facet_wrap(~ incumbency, nrow = 1, strip.position = "bottom") +
+  scale_color_manual(values = party_factor_colors) +
+  scale_fill_manual(values = party_factor_colors) +
+  scale_y_discrete(
+    breaks = c(1, 2), labels = c("Democrats", "Republicans")
+  ) +
+  theme(
+    legend.position = "none",
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.line.x = element_line(),
+    axis.ticks.y = element_blank(),
+    strip.placement = "outside",
+    # axis.text.y = element_blank()
+  ) +
+  coord_cartesian(ylim = c(1.35, 2.25)) +
+  labs(
+    title = "Strength of the District Vote Mechanism",
+    subtitle = "Total Effect minus Controlled Direct Effect of District-Party Ideology",
+    y = NULL,
+    x = NULL
+  ) +
+  NULL
+```
+
+```{r plot-indirect, include = TRUE, fig.width = 7, fig.height = 3, eval = FALSE, out.width = "100%", fig.cap = "ATE-ACDE findings"}
+```
+
+<!------- TO DO ---------
+- parameter constraints!
+    - total = direct + indirect
+    - p(total) and p(direct), which are estimated, implying a prior for p(indirect).
+    - Suppose we constrain the variance of one of these, which of the "free" priors gets a better signal?
+------------------------->

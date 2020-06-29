@@ -30,6 +30,7 @@ bookdown::tufte_book2:
   includes: 
     in_header: 
       - assets-bookdown/preamble-main.tex
+      - assets-bookdown/preamble-math.tex
       - assets-bookdown/preamble-tufte.tex
 
 bookdown::pdf_book:
@@ -42,6 +43,7 @@ bookdown::pdf_book:
   includes: 
     in_header: 
       - assets-bookdown/preamble-main.tex
+      - assets-bookdown/preamble-math.tex
       - assets-bookdown/preamble-title.tex
       - assets-bookdown/preamble-memoir.tex
 
