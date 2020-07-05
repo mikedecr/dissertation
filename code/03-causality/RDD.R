@@ -164,7 +164,7 @@ brm_flat <- brm(
   iter = rd_iter,
   warmup = rd_warmup,
   thin = rd_thin,
-  save_model = here(model_path, "win_default.stan")
+  save_model = here(model_path, "brm_win_default.stan")
 )
 
 brm_constrained <- brm(
@@ -195,7 +195,7 @@ brm_constrained <- brm(
   iter = rd_iter,
   warmup = rd_warmup,
   thin = rd_thin,
-  save_model = here(model_path, "win_constrained.stan")
+  save_model = here(model_path, "brm_win_constrained.stan")
 )
 
 
@@ -218,7 +218,7 @@ brm_logit <- brm(
   iter = rd_iter,
   warmup = rd_warmup,
   thin = rd_thin,
-  save_model = here(model_path, "win_logit.stan")
+  save_model = here(model_path, "brm_win_logit.stan")
 )
 
 beepr::beep(2)
