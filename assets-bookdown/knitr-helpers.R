@@ -15,45 +15,22 @@
 knitr::opts_chunk$set(
   # fig.path = here::here('_figs/')
   # cache.path = here::here("_bookdown_files", '_cache/'),
-  cache = TRUE, 
+  cache = TRUE,
   echo = FALSE, include = FALSE, 
   warning = FALSE, message = FALSE, 
   fig.height = 4, fig.width = 6, 
   out.width = "80%",
-  dev = "png",
+  # dev = "png",
   # fig device is f(pandoc_to) by default
-  fig.align = "center", dpi = 300#, fig.retina = 3
+  fig.align = "center", 
+  dpi = 300#, fig.retina = 3
 )
 
-# you could set this in each file?
+# you could set cache for each file?
 # cache.path is glued from the filename?
 
 # graphics device, use PDF in LaTeX
-options(knitr.graphics.auto_pdf = TRUE)
-
-# functions for knitr
-
-# a function to read .Rmd files
-include_text <- function(input, sep = "\n\n  "){
-  paste(readLines(input), collapse = sep)
-}
-
-# smarter number functions
-smart_number <- function(n, ...) {
-  # if non-int below ten, return as is
-  if ((n == as.integer(n)) == FALSE) {
-    return(n)
-  } else 
-  # if non-int above ten, return number()
-  if (abs(n) >= 10) {
-    return(scales::number(n, big.mark = ",", ...))
-  } else 
-  # if int below 10, print english
-  if (abs(n) < 10) {
-    return(english::english(n, ...))
-  } else 
-  stop("Something is wrong with this number")
-}
+# options(knitr.graphics.auto_pdf = TRUE)
 
 
 
@@ -63,5 +40,4 @@ smart_number <- function(n, ...) {
 source(here::here("code", "helpers", "call-R-helpers.R"))
 
 
-# ggsave("~/desktop/test.pdf", height = 4, width = 9, device = cairo_pdf); beepr::beep(2)
 

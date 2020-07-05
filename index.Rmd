@@ -27,33 +27,16 @@ csl: assets-bookdown/ajps.csl
 source(here::here("assets-bookdown", "knitr-helpers.R"))
 ```
 
-<!-- BEGIN FRONTMATTER CONTENT -->
 
-<!-- HTML abstract -->
-
-
-<!-- TeX: roman numbering, not on title page -->
-<!-- `r if (knitr::is_latex_output()) include_text("00_frontmatter.rmd")` -->
-
-
-
-
-<!-- R E N D E R I N G 
-
-NOTE: if you move writing into subfolders: 
-      setwd(here::here("writing")); render_*(...); setwd(here::here())
-
+<!--     --- R E N D E R I N G --- 
+NOTE: 
+  if you move writing into subfolders: 
+  setwd(here::here("writing")); render_*(...); setwd(here::here())
 -->
 
-```{r render-GITBOOK, eval = FALSE, cache = FALSE, include = FALSE}
-bookdown::render_book(
-  input = "Index.Rmd", 
-  output_format = "bookdown::gitbook"
-  # , new_session = FALSE # knits IN SESSION
-)
-```
-
 ```{r serve-book, eval = FALSE, cache = FALSE, include = FALSE}
+
+# serve
 bookdown::serve_book(
   dir = here::here(), 
   output_dir = here::here("_book"), 
@@ -61,33 +44,32 @@ bookdown::serve_book(
   in_session = TRUE, 
   quiet = FALSE
 )
-```
 
-```{r stop-server, eval = FALSE, cache = FALSE, include = FALSE}
 servr::daemon_stop()
-```
-
-```{r render-PDF, eval = FALSE, cache = FALSE, include = FALSE}
-bookdown::render_book("Index.Rmd", "bookdown::pdf_book")
-```
-
-```{r render-tufte, eval = FALSE, cache = FALSE, include = FALSE}
-bookdown::render_book("Index.Rmd", "bookdown::tufte_book2")
-```
 
 
-```{r render-HTML, eval = FALSE, cache = FALSE, include = FALSE}
-bookdown::render_book("Index.Rmd", "bookdown::html_book")
-```
-
-
-
-```{r render-preview-CHAPTER, eval = FALSE, cache = FALSE, include = FALSE}
+# chapter
 bookdown::preview_chapter('30_causality.Rmd')
-```
 
-```{r live-chapter, eval = FALSE, cache = FALSE, include = FALSE}
+# live chapter?
 xaringan::inf_mr("30_causality.Rmd")
+
+# gitbook
+bookdown::render_book(
+  input = "Index.Rmd", 
+  output_format = "bookdown::gitbook"
+  # , new_session = FALSE # knits IN SESSION
+)
+
+# pdf
+bookdown::render_book("Index.Rmd", "bookdown::pdf_book")
+
+# tufte pdf
+bookdown::render_book("Index.Rmd", "bookdown::tufte_book2")
+
+# html
+bookdown::render_book("Index.Rmd", "bookdown::html_book")
+
 ```
 
 ```{r render-interactive, eval = FALSE, cache = FALSE, include = FALSE}
@@ -123,7 +105,7 @@ Commit ``r commit_hash`` on branch "``r branch_name``":
 
 
 <!------- TO DO ---------
-- License
+- License / copyright
 ------------
 
 
