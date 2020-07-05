@@ -58,7 +58,6 @@ library("knitr")
 library("here")
 library("magrittr")
 library("tidyverse")
-library("extrafont")
 library("latex2exp")
 ```
 
@@ -379,8 +378,8 @@ f <-
   gather(key = group, value = y, dmod, rmod, dex, rex) %>% 
   mutate(
     party = ifelse(group %in% c("dmod", "dex"), "Democrats", "Republicans"), 
-    ex = ifelse(group %in% c("dmod", "rmod"), "District A: Moderate Voters", "District B: Polarized Voters"), 
-    ex = fct_relevel(ex, "District A: Moderate Voters")) %>% 
+    ex = ifelse(group %in% c("dmod", "rmod"), "Moderate Partisan Groups", "Polarized Partisan Groups")
+  ) %>%
   print()
 
 
@@ -406,10 +405,13 @@ ggplot(data = f) +
   scale_y_continuous(breaks = NULL) +
   scale_x_continuous(
     breaks = c(-0.75, 0, 0.75),
-    labels = c("Liberal\nPreferences", "Moderate\nPreferences", "Conservative\nPreferences")
+    labels = c("Liberals", 
+               "Moderates", 
+               "Conservatives")
   ) +
   labs(
-    # x = "Voter Ideal Points",
+    title = "Aggregate votes mask underlying policy preferences",
+    subtitle = "Two districts with the same median voter position",
     x = NULL,
     y = NULL, 
     fill = NULL
@@ -417,7 +419,7 @@ ggplot(data = f) +
   # geom_vline(data = means, aes(xintercept = xintercept)) +
   coord_cartesian(xlim = c(-1.25, 1.25)) +
   theme(
-    # panel.grid.major.x = element_blank(),
+    panel.grid.major.x = element_blank(),
     axis.ticks = element_blank(),
     panel.background = element_blank(),
     panel.border = element_blank(),

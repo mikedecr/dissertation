@@ -8,6 +8,8 @@ Urgent methods reading agenda
 
 - zigler et al 2013: two stage bayes
 - bayesian causal inf (oganisian, etc)
+- gelman king (bayesian causal inf in political science?)
+- pearl: half-bayesian
 - neural nets
 - choice models
 - neural net + choice

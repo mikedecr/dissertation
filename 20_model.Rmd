@@ -82,7 +82,7 @@ utility_plot <- ggplot(long_dd) +
   theme_void() +
   annotate(geom = "line", x = c(-2, 2), y = 0) +
   geom_text(aes(label = label), nudge_y = 1) +
-  coord_cartesian(ylim = c(-3, 3)) 
+  coord_cartesian(ylim = c(-3, 2.5)) 
 
 utility_plot
 ```
@@ -141,6 +141,7 @@ utility_plot +
     linetype = "dashed"
   ) +
   geom_point() +
+  coord_cartesian(ylim = c(-u_scale*(dd$Actor - dd$Left)^2, 2.5)) +
   NULL
 ```
 
@@ -345,14 +346,14 @@ item_params_2p <-
 ex_item_params <- 
   bind_rows(
     .id = "model",
-    "Ideology Only:\nNo Item Variation" = item_params_0p,
+    'No Item Variation\n("Additive Index")' = item_params_0p,
     "Varying Item Difficulty" = item_params_1p,
     "Varying Difficulty\n& Discrimination" = item_params_2p 
   ) %>%
   mutate(
     item = 1:n(),
     model = fct_relevel(
-      model, "Ideology Only:\nNo Item Variation", "Varying Item Difficulty"
+      model, 'No Item Variation\n("Additive Index")', "Varying Item Difficulty"
     )
   ) %>%
   print()
@@ -405,15 +406,22 @@ Intuitively, the discrimination parameter captures how well a test item differen
 ggplot(ex_iccs) +
   aes(x = theta, y = prob) +
   facet_wrap(~ model) +
-  geom_point(data = ex_item_params, aes(x = cutpoint, y = 0.5),
-             size = 1.5) +
-  geom_line(aes(group = as.factor(item)), show.legend = FALSE) +
+  # geom_point(data = ex_item_params, aes(x = cutpoint, y = 0.5),
+  #            size = 1.5) +
+  geom_line(
+    aes(color = as.factor(model), group = as.factor(item)), 
+    # color = primary,
+    show.legend = FALSE
+  ) +
   scale_y_continuous(breaks = c(0, .5, 1)) +
   scale_x_continuous(
     breaks = c(-3, 0, 3), 
     labels = c("Left", "Center", "Right")
   ) +
+  scale_color_viridis_d(option = "plasma", end = 0.7) +
   labs(
+    title = "Item Response Functions",
+    subtitle = "For different item characteristic assumptions",
     x = TeX("Policy Ideology $(\\theta_{\\mathit{i}})$"), 
     y = "Probability of\nConservative Response"
   ) +
@@ -962,7 +970,7 @@ ggplot(prior_probit) +
       ymin = -2, ymax = 2
     ),
     aes(ymin = ymin, ymax = ymax, y = NULL),
-    fill = primary_light, alpha = 0.3
+    fill = tertiary, alpha = 0.3
   ) +
   geom_ribbon(
     data = tibble(
@@ -970,7 +978,7 @@ ggplot(prior_probit) +
       ymin = -2, ymax = 2
     ),
     aes(ymin = ymin, ymax = ymax, y = NULL),
-    fill = primary_light, alpha = 0.5
+    fill = tertiary, alpha = 0.5
   ) +
   geom_ribbon(
     data = tibble(
@@ -978,7 +986,7 @@ ggplot(prior_probit) +
       ymin = -2, ymax = 2
     ),
     aes(ymin = ymin, ymax = ymax, y = NULL),
-    fill = primary_light, alpha = 0.7
+    fill = tertiary, alpha = 0.7
   ) +
   # 90%
   annotate(geom = "text", x = 3, y = 0.5, hjust = -0.1, label = "Inner 90%") +
@@ -1002,7 +1010,7 @@ ggplot(prior_probit) +
   ) +
   annotate(geom = "point", x = mean(qnorm(c(.99, .975))), y = 0.2, size = 1) +
   # cdf
-  geom_line(size = 0.75) +
+  geom_line(size = 0.75, color = dark2) +
   annotate(
     geom = "text", label = "Normal CDF",
     x = -2.5, y = .85,
@@ -1020,7 +1028,7 @@ ggplot(prior_probit) +
 # ---- investigation of CJR and Treier/Hillygus priors ------------
 
 treier <- tibble(
-  beta = rnorm(5000, mean = 0, sd = 1)
+  beta = rnorm(500, mean = 0, sd = 1)
 ) %>%
   mutate(group = row_number()) %>%
   crossing(theta = seq(-3, 3, .01)) %>%
@@ -1041,12 +1049,12 @@ treier %>%
       title = TeX("Discrimination ~ $N(0, 1)$")
     )
 
-  ggplot(treier) +
-    aes(x= theta, y = prob) +
-    geom_line(
-      aes(group = group),
-      alpha = 0.25
-    )
+ggplot(treier) +
+  aes(x= theta, y = prob) +
+  geom_line(
+    aes(group = group),
+    alpha = 0.25
+  )
 ```
 
 ### Item Parameters
@@ -1094,7 +1102,7 @@ lkj_density <- tibble(rho = seq(-1, 1, length.out = 1000)) %>%
   mutate(id = row_number()) %>%
   mutate(
     mat = map(rho, ~ matrix(data = c(1, .x, .x, 1), nrow = 2, ncol = 2)),
-    prop_density_lkj = map_dbl(mat, ~ rethinking::dlkjcorr(.x, eta = 2, log = TRUE))
+    prop_density_lkj = map_dbl(mat, ~ rethinking::dlkjcorr(.x, eta = 2, log = FALSE))
     # log SHOULD be false but bug in the program
     # , density_lkj = prop_density_lkj / sum(prop_density_lkj)
   ) %>%
@@ -1106,14 +1114,13 @@ lkj_density <- tibble(rho = seq(-1, 1, length.out = 1000)) %>%
 
 p_lkj <- ggplot(lkj_density) +
   aes(x = rho, y = prop_density_lkj, ymax = prop_density_lkj, ymin = 0) +
-  geom_ribbon(, fill = primary_light, color = NA, alpha = 0.5) +
+  geom_ribbon(, fill = primary, color = NA, alpha = 0.5) +
   geom_line() +
   labs(
     x = TeX("Off-Diagonal Correlation ($\\rho$)"),
-    y = "Prior Density"
+    y = NULL
   ) +
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
-  NULL
 
 lkj_dens_plots <- 
   p_lkj +
@@ -1121,7 +1128,8 @@ lkj_dens_plots <-
     labs(
       x = TeX("Item Scales ($\\sigma_{\\tilde{\\kappa}}$ and $\\sigma_{\\tilde{\\iota}}$)"),
       y = "Prior Density",
-      title = "Variance-Covariance Matrix Components"
+      title = "Variance-Covariance Prior with Separation Strategy",
+      subtitle = "Diagonal and LKJ Correlation Components"
     ) +
   p_lkj 
 
@@ -1188,11 +1196,9 @@ outer_point <- sim_lkj_params %$%
   print()
 
 p_item_scatter <- ggplot(sim_lkj_params) +
-  aes(x = cutpoint, y = (log_disc)) +
-  ggpointdensity::geom_pointdensity(
-    size = 1
-  ) +
-  viridis::scale_color_viridis(option = "viridis") +
+  aes(x = cutpoint, y = log_disc) +
+  ggpointdensity::geom_pointdensity(size = 1) +
+  scale_color_viridis_c(option = "plasma") +
   labs(
     x = TeX("Cutpoint ( $\\tilde{\\kappa}_{j}$ )"),
     y = TeX("Log Discrimination ( log $\\tilde{\\iota}_{j}$ )"),
@@ -1200,20 +1206,18 @@ p_item_scatter <- ggplot(sim_lkj_params) +
     subtitle = "Simulated from joint prior",
     color = "Density (num. neighbors)"
   ) +
-  coord_cartesian(
+  coord_fixed(
     ylim = c(-outer_point, outer_point),
     xlim = c(-outer_point, outer_point)
   ) +
+  theme(legend.position = "none") +
   NULL
 
-lkj_item_sim <- 
-  p_item_scatter + guide_area() + plot_layout(guides = 'collect')
-
-lkj_item_sim  
+p_item_scatter  
 ```
 
 ```{r plot-lkj}
-lkj_dens_plots  / lkj_item_sim
+p_item_scatter + lkj_dens_plots
 ```
 
 <!------- TO DO ---------
@@ -1262,7 +1266,7 @@ The LKJ distribution has one shape parameter $\eta$, which can be interpreted li
 
 Figure&nbsp;\@ref(fig:plot-lkj) plots several details of the item prior. The top row shows the prior densities for the terms in the decomposed variance-covariance matrix $\boldsymbol{\Sigma}$. The left panel shows the Half-Normal prior density for the scale terms. The right panel shows the marginal distribution of $\rho$, the off-diagonal parameter in the matrix $\boldsymbol{S}$ that controls the covariance of items in the joint prior, generated from the LKJ correlation matrix prior. The bottom panel shows the distribution of item parameter values simulated from the multivariate Normal distribution implied by the joint hierarchical prior. Each point represents a simulated item as a combination of cutpoint values (on the horizontal axis) and log-discrimination values (on the vertical axis). Points are colored according to the number of nearby points, which informally conveys the prior density of items with particular cutpoint and discrimination values.
 
-```{r plot-lkj, include = TRUE, fig.height = 6.5, fig.width = 6, out.width = "80%", fig.cap = "Components of the joint hierarchical prior for the unscaled item parameters. Top row shows prior densities for the parameters of the decomposed variance-covariance matrix, including the standard deviation terms (left) and the item correlation from the LKJ distribution (right). The bottom row shows prior values for unscaled items simulated from the joint prior."}
+```{r plot-lkj, include = TRUE, fig.height = 3, fig.width = 9, out.width = "80%", fig.cap = "Components of the joint hierarchical prior for the unscaled item parameters. Left panel shows prior values for unscaled item parameters from the joint prior. Remaining panels show priors for decomposed covariance matrix components: including the standard deviation that form the matrix diagonal (middle) and the off-diagonal correlation from the LKJ prior (right)."}
 ```
 
 <!-- This is rnorm for coef priors
