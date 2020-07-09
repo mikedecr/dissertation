@@ -240,16 +240,25 @@ boxr::box_write(
 
 
 
-# ---- MLE version -----------------------
+
+
 
 if (system("whoami", intern = TRUE) == "michaeldecrescenzo") {
   net_test_data <- 
     here(
-      "data", "_model-output", "05-voting", "2020-06-26_choice-net-tests.RDS"
+      "data", "_model-output", "05-voting", "2020-07-08_choice-net-tests.RDS"
     ) %>%
     read_rds()
+} else if (system("whoami", intern = TRUE) == "decrescenzo") {
+  net_test_data <- box_read(file_id = 684214873989 )
 }
 
+
+
+
+
+
+# ---- Estimate MLE version -----------------------
 
 
 rmod <- clogit(
@@ -271,6 +280,11 @@ dmod <- clogit(
 # stan_params = list(iter = iter, warmup = warmup, thin = thin)
 
 
+
+
+# ---- compare link scale coefficients -----------------------
+
+# tidy the big frame
 tidy_linear <- net_test_data %>%
   mutate(
     tidy = map(stanfit, tidy, ess = TRUE, rhat = TRUE, conf.int = TRUE)
@@ -278,7 +292,11 @@ tidy_linear <- net_test_data %>%
   unnest(tidy) %>%
   print()
 
+tidy_linear %>% 
+  count(party, model, nodes, add_constant) %>% 
+  print(n = nrow(.))
 
+# tidy stan coefs
 linear_params <- tidy_linear %>%
   filter(model == "simple") %>%
   filter(str_detect(term, "util") == FALSE) %>%
@@ -296,6 +314,7 @@ linear_params <- tidy_linear %>%
   ) %>%
   print()
 
+# compare coefs: stan v. MLE
 ggplot(linear_params) +
   aes(x = term, y = estimate, color = party, shape = model) +
   geom_pointrange(
@@ -308,9 +327,9 @@ ggplot(linear_params) +
 
 
 
+# ---- Fitted values predictions -----------------------
 
-# ---- maybe you should recreate everything -----------------------
-
+# MLE
 pred_MLE_D <- cands %>%
   filter(party == "D") %>%
   mutate(
@@ -331,8 +350,70 @@ pred_MLE_R <- cands %>%
   print()
 
 
+# join MLE to stan utility predictions
+linear_preds <- tidy_linear %>%
+  filter(str_detect(term, "util")) %>%
+  mutate(
+    case = parse_number(term),
+    term = "util"
+  ) %>%
+  select(
+    party, model, nodes, add_constant, estimate, conf.low, conf.high, case
+  ) %>%
+  pivot_wider(
+    names_from = model,
+    values_from = c(estimate, conf.low, conf.high)
+  ) %>%
+  left_join(
+    pred_MLE_R %>%
+      select(case, party, RF = .fitted)
+  ) %>%
+  left_join(
+    pred_MLE_D %>%
+      select(case, party, DF = .fitted)
+  ) %>%
+  mutate(
+    .fitted = case_when(
+      party == "R" ~ RF,
+      party == "D" ~ DF
+    ),
+    RF = NULL, 
+    DF = NULL
+  ) %>%
+  print()
+
+
+# MLE vs. stan clogit: these should be on top of one another
+ggplot(linear_preds) +
+  aes(x = .fitted, y = estimate_simple) +
+  geom_point() +
+  geom_abline() +
+  facet_wrap(~ party)
+
+
+# MLE vs. neural net w/ 1 node
+# better figure out what's going on w/ this.
+linear_preds %>%
+  filter(nodes == 1) %>%
+  ggplot() +
+  aes(x = .fitted, y = estimate_net, color = as.factor(add_constant)) +
+  geom_pointrange(
+    aes(ymin = conf.low_net, ymax = conf.high_net),
+    position = position_dodge(width = .25)
+  ) +
+  geom_abline() +
+  facet_wrap(~ party)
+
+# some evidence in favor of NO constant
+
+
+
+
+# ---- maybe you should recreate everything -----------------------
+
 tidy_linear %>%
-  filter(model == "net") %>%
+  filter(nodes >= 1) %>%
+  # filter(model == "net") %>%
   # filter(party == "R") %>%
   filter(str_detect(term, "util")) %>%
   mutate(case = parse_number(term)) %>%
@@ -347,9 +428,24 @@ tidy_linear %>%
     cols = c(estimate, estimate_prob),
     names_to = "transform"
   ) %>%
-  ggplot(aes(x = theta_mean_rescale, y = value, color = incumbency)) +
-  facet_grid(transform ~ nodes) +
-  geom_point() +
+  filter(transform == "estimate") %>%
+  ggplot() +
+  # aes(x = theta_mean_rescale, y = value, color = party, shape = incumbency) +
+  aes(x = theta_x_cf, y = value, color = party, shape = incumbency) +
+  facet_wrap(
+    ~ 
+    # transform + 
+    str_glue("constant = {add_constant}") +
+      str_glue("{nodes} nodes"),
+    # ~ nodes,
+    scales = "free_y",
+    ncol = nn_nodes
+  ) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    size = 0.25,
+    position = position_dodge(width = -0.25)
+  ) +
   # geom_smooth() +
   labs(
     y = "Utility of Primary Candidate", 
@@ -357,7 +453,7 @@ tidy_linear %>%
     title = "How Local Ideology Affects Primary Voting",
     subtitle = "Policy preferences matter for open-seat races only"
   ) +
-  scale_color_viridis_d(end = 0.8)
+  scale_color_manual(values = party_code_colors)
 
 
 
@@ -368,7 +464,7 @@ tidy_linear %>%
     case = parse_number(term),
     term = "util"
   ) %>%
-  select(model, party, estimate, conf.low, conf.high, case) %>%
+  select(model, party, estimate, conf.low, conf.high, case, nodes) %>%
   pivot_wider(
     names_from = model,
     values_from = c(estimate, conf.low, conf.high)
@@ -383,38 +479,6 @@ tidy_linear %>%
 
 
 
-linear_preds <- tidy_linear %>%
-  filter(str_detect(term, "util")) %>%
-  mutate(
-    case = parse_number(term),
-    term = "util"
-  ) %>%
-  select(model, party, estimate, conf.low, conf.high, case) %>%
-  pivot_wider(
-    names_from = model,
-    values_from = c(estimate, conf.low, conf.high)
-  ) %>%
-  left_join(
-    augment(rmod, data = filter(cands, party == "R")) %>%
-      select(case, party, RF = .fitted)
-  ) %>%
-  left_join(
-    augment(dmod, data = filter(cands, party == "D")) %>%
-      select(case, party, DF = .fitted)
-  ) %>%
-  mutate(
-    .fitted = case_when(
-      party == "R" ~ RF,
-      party == "D" ~ DF
-    ),
-    RF = NULL, 
-    DF = NULL
-  ) %>%
-  print()
-
-
-
-
 
 augment(rmod, data = filter(cands, party == "R")) %>% 
   ggplot(
@@ -424,21 +488,12 @@ augment(rmod, data = filter(cands, party == "R")) %>%
   geom_smooth(method = "lm")
 
 
-ggplot(linear_preds) +
-  aes(x = .fitted, y = estimate_simple) +
-  geom_point() +
-  geom_abline() +
-  facet_wrap(~ party)
 
 
-ggplot(linear_preds) +
-  aes(x = .fitted, y = estimate_net) +
-  geom_point() +
-  geom_abline() +
-  facet_wrap(~ party)
 
-
-ggplot(linear_preds) +
+linear_preds %>%
+  filter(nodes == 1) %>%
+  ggplot() +
   aes(x = estimate_simple, y = estimate_net, color = party) +
   geom_pointrange(
     aes(ymin = conf.low_net, ymax = conf.high_net),
@@ -450,6 +505,10 @@ ggplot(linear_preds) +
   ) +
   geom_abline() +
   facet_wrap(~ party, nrow = 2)
+
+
+
+
 
 # ----------------------------------------------------
 #   performance / prediction
