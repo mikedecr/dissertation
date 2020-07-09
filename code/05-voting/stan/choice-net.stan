@@ -72,7 +72,7 @@ model {
   target += y' * log(pprob);
 
   // priors
-  to_vector(hid_wt) ~ normal(0, hid_prior_scale);
+  to_vector(hid_wt) ~ double_exponential(0, hid_prior_scale);
   act_wt ~ normal(0, act_prior_scale);
 
 }
