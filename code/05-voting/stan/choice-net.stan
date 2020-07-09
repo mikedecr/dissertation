@@ -54,26 +54,38 @@ transformed parameters {
 
 model {
 
-  vector[n] pprob; // softmax utility
-  int pos = 1;     // for segmenting
-
+  vector[n] pprob;     // softmax utility
+  int pos = 1;         // for segmenting
   
-  // from stan manual ("ragged data structures"):l
-  // calculate choice probs in each choice set: segment(v, start, length)
+  // calculate choice probs for each case in each choice set: 
+  // from stan manual ("ragged data structures"): segment(v, start, length)
   for (g in 1:G) {
-    
     pprob[pos:(pos - 1) + n_g[g]] = softmax(segment(util, pos, n_g[g]));
     pos = pos + n_g[g];
-
   }
 
-  // sums log probability for successes only
+  // accumulates log prob for successes only
   // <https://khakieconomics.github.io/2019/03/17/The-logit-choice-model.html>
   target += y' * log(pprob);
 
   // priors
   to_vector(hid_wt) ~ double_exponential(0, hid_prior_scale);
   act_wt ~ normal(0, act_prior_scale);
+
+}
+
+generated quantities {
+
+  vector[G] grp_loglik; // prob for winning candidate in g
+  int pos = 1;         // for segmenting
+
+  // loglik from every GROUP (keep winning candidate only)
+  for (g in 1:G) {
+    grp_loglik[g] = 
+      segment(y, pos, n_g[g])' * log(softmax(segment(util, pos, n_g[g])));
+    pos = pos + n_g[g];
+  }
+
 
 }
 
