@@ -123,11 +123,14 @@ model_net <- stan_model(
 #   stan data
 # ----------------------------------------------------
 
-prior_sd = 2
-hid_prior_scale = 1
-act_prior_scale = 1
+prior_sd <-  2
+hid_prior_scale <- 1
+act_prior_scale <- 1
 nn_nodes <- 5
+
+desired_iters <- 1000
 nn_thin_multiplier <- 5
+warm_length <- 500
 
 # ---- linear model data -----------------------
 
@@ -164,9 +167,11 @@ lapply(data_simple_R, head)
 
 # just seeing if the models don't fail
 sampling(object = model_simple, data = data_simple_R)
-sampling(object = model_net, data = c(data_simple_R, n_nodes = 1))
 sampling(object = model_simple, data = data_simple_D)
-sampling(object = model_net, data = c(data_simple_D, n_nodes = 1))
+sampling(object = model_net, 
+         data = c(data_simple_R, n_nodes = 1, hidden_const = 1))
+sampling(object = model_net, 
+         data = c(data_simple_D, n_nodes = 1, hidden_const = 0))
 
 
 # grid test
@@ -177,24 +182,30 @@ net_test_data <-
   crossing(
     party = c("D", "R"), 
     model = c("net", "simple"),
-    nodes = 1:nn_nodes
+    nodes = 0:nn_nodes,
+    add_constant = c(0, 1)
   ) %>%
-  filter(nodes == 1 | model == "net") %>%
+  filter(
+    (nodes == 0 & add_constant == 0 & model == "simple") | 
+    (nodes >= 1 & model == "net")
+  ) %>%
   group_by(r = row_number()) %>% 
   mutate(
     data = case_when(
-      party == "D" ~ list(c(data_simple_D, n_nodes = nodes)),
-      party == "R" ~ list(c(data_simple_R, n_nodes = nodes))
+      party == "D" ~ 
+        list(c(data_simple_D, n_nodes = nodes, hidden_const = add_constant)),
+      party == "R" ~ 
+        list(c(data_simple_R, n_nodes = nodes, hidden_const = add_constant))
     )
   ) %>%
   ungroup() %>%
   mutate(
-    warmup = 1000,
+    warmup = warm_length,
     thin = case_when(
-      nodes > 1 ~ nn_thin_multiplier, 
-      nodes == 1 ~ 1 
+      nodes >= 1 ~ nn_thin_multiplier, 
+      nodes == 0 ~ 1
     ), 
-    post_warmup = warmup * thin,
+    post_warmup = desired_iters * thin,
     iter = warmup + post_warmup
   ) %>%
   nest(stan_params = warmup:iter) %>%

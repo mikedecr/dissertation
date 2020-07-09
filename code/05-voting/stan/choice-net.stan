@@ -16,6 +16,7 @@ data {
   // int<lower = 1, upper = G> g_index[n]; // group/set INDEX (1:G)
 
   // user-supplied parameters
+  int<lower = 0, upper = 1> hidden_const; // is there a hidden bias
   int<lower = 1> n_nodes; // neuron density
   real hid_prior_scale;          // coef scale
   real act_prior_scale;          // coef scale
@@ -24,10 +25,17 @@ data {
 
 transformed data {
 
-  int<lower = p> hid_p = p + 1; // num hidden weights (add constant)
+  // add constant?
+  int<lower = p> hid_p = p + hidden_const; // == p if no constant
   matrix[n, hid_p] hid_X;
 
-  hid_X = append_col(rep_vector(1, n), X); // add constant
+  // add 1s if we're adding biases
+  if (hidden_const == 1) {
+    hid_X = append_col(rep_vector(1, n), X); // add constant
+  } else if (hidden_const == 0) {
+    hid_X = X;
+  }
+
 }
 
 
