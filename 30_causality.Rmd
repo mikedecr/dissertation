@@ -172,7 +172,6 @@ problem_dag <-
     )
   ) %>%
   tidy_dagitty() %>%
-  # node_parents("C") %>%
   print()
 ```
 

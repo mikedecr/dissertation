@@ -4,6 +4,10 @@ title: Overall thesis notes
 
 # Meetings
 
+1. pick model data covariates
+2. ch 1 reading
+3. model work flow
+
 Urgent methods reading agenda
 
 - zigler et al 2013: two stage bayes
@@ -21,8 +25,31 @@ Urgent methods reading agenda
 - check on primary laws again, potentially resolve with Barry
 
 
+
+- ranefs meta-analysis
+    - the Borenstein estimator seems deterministic? is this obtained by an infinite variance prior?
+    - what choices are we making with the Bayesian (Rubin) view?
+    - std.err of estimator is the average wrongness from truth, but we don't know what side of the wrongness we're on.
+
 - Alex:
     - couldn't you have chooser covariates in the hidden layer, since it's transformed?
+        - might not be worth it the complexity, but that's ML, baybee!
+    - Thinking about approaches to regularization and overfitting
+        - ML uses cross-validation to get "optimal" predictions, so the data tell you stuff.
+        - Bayes _can_ use priors estimated from data, but what does this _mean_? "This is the prior that the data best support?" How is that not just "the data?" Is it because the data are supporting an optimal amount of regularization (data guide which prior values increase posterior uncertainty?)
+    - More practical question: what's the best strategy for regularizing a in a bayesian causal workflow
+        - priors
+            - only one fit, internal regularization, with an "empirical" prior?
+            - sparsity?
+                - do we care about separating shrinkage and regularization? (a problem with bland horseshoes, bayes lasso, bayes ridge)
+                - if I'm just trying to get good predictions, who cares about which things aren't sparse?
+                - then again, something like FH gives me more parameters to explore, which might help balance things?
+            - Bayesian LASSO: hard to separate sparsity and regularization
+        - Multi-stage modeling
+            - neyman orthogonalization lets us regularize stage 1.
+            - what are we allowed to do in stage 2?
+    - Regularization induced confounding
+        - hahn et al. parameterization: stage 1 covariates are IN stage 2, equivalently. So we NEED X in stage 2. does this hold when we aren't in linearity world? what changes?
     - relating arithmetic mean to beta-binomial model:
         - the arithmetic mean the same as the MAP under...beta(1, 1) prior?
         - how does the beta(.5, .5) prior relate to nonparametric estimation of the proportion?

@@ -402,7 +402,7 @@ Intuitively, the discrimination parameter captures how well a test item differen
 ]
 
 
-```{r plot-example-iccs, include = TRUE, echo = FALSE, fig.cap = "Examples of item characteristic curves under different item parameter assumptions", fig.width = 7, fig.height = 3, out.width = "100%"}
+```{r plot-example-iccs, include = TRUE, echo = FALSE, fig.cap = "Examples of item characteristic curves under different item parameter assumptions", fig.width = 9, fig.height = 4, out.width = "100%"}
 ggplot(ex_iccs) +
   aes(x = theta, y = prob) +
   facet_wrap(~ model) +
@@ -1266,7 +1266,7 @@ The LKJ distribution has one shape parameter $\eta$, which can be interpreted li
 
 Figure&nbsp;\@ref(fig:plot-lkj) plots several details of the item prior. The top row shows the prior densities for the terms in the decomposed variance-covariance matrix $\boldsymbol{\Sigma}$. The left panel shows the Half-Normal prior density for the scale terms. The right panel shows the marginal distribution of $\rho$, the off-diagonal parameter in the matrix $\boldsymbol{S}$ that controls the covariance of items in the joint prior, generated from the LKJ correlation matrix prior. The bottom panel shows the distribution of item parameter values simulated from the multivariate Normal distribution implied by the joint hierarchical prior. Each point represents a simulated item as a combination of cutpoint values (on the horizontal axis) and log-discrimination values (on the vertical axis). Points are colored according to the number of nearby points, which informally conveys the prior density of items with particular cutpoint and discrimination values.
 
-```{r plot-lkj, include = TRUE, fig.height = 3, fig.width = 9, out.width = "80%", fig.cap = "Components of the joint hierarchical prior for the unscaled item parameters. Left panel shows prior values for unscaled item parameters from the joint prior. Remaining panels show priors for decomposed covariance matrix components: including the standard deviation that form the matrix diagonal (middle) and the off-diagonal correlation from the LKJ prior (right)."}
+```{r plot-lkj, include = TRUE, fig.height = 5, fig.width = 9, out.width = "80%", fig.cap = "Components of the joint hierarchical prior for the unscaled item parameters. Left panel shows prior values for unscaled item parameters from the joint prior. Remaining panels show priors for decomposed covariance matrix components: including the standard deviation that form the matrix diagonal (middle) and the off-diagonal correlation from the LKJ prior (right)."}
 ```
 
 <!-- This is rnorm for coef priors

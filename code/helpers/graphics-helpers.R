@@ -49,7 +49,7 @@ theme_mgd <- function() {
       size = 16,
       hjust = 0,
       vjust = 1,
-      margin = margin(t = 0, r = 0, b = 10, l = 0, unit = "pt")
+      margin = margin(t = -5, r = 0, b = 15, l = 0, unit = "pt")
     ),
     plot.caption = element_text(
       size = 11,

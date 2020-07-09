@@ -390,7 +390,7 @@ means <-  f %>%
 ```
 
 
-```{r plot-two-parties, include = TRUE, fig.height = 2.5, fig.width = 8, out.width = "100%", fig.cap = "Two districts with identically located median voters"}
+```{r plot-two-parties, include = TRUE, fig.height = 4, fig.width = 8, out.width = "100%", fig.cap = "Two districts with identically located median voters"}
 ggplot(data = f) +
   aes(x = x, y = y, color = party, fill = party) +
   facet_wrap(~ ex, nrow = 1) +
