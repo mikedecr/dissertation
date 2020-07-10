@@ -11,6 +11,7 @@ library("boxr"); box_auth()
 library("survival") # mlogit()
 
 library("rstan")
+library("loo")
 mc_cores <- min(5, parallel::detectCores())
 options(mc.cores = mc_cores)
 rstan_options(auto_write = TRUE)
@@ -170,9 +171,14 @@ sampling(object = model_simple, data = data_simple_R)
 sampling(object = model_simple, data = data_simple_D)
 sampling(object = model_net, 
          data = c(data_simple_R, n_nodes = 1, hidden_const = 1))
-sampling(object = model_net, 
+
+loo_test <- sampling(object = model_net, 
          data = c(data_simple_D, n_nodes = 1, hidden_const = 0))
 
+# see relative_eff() for r_eff = 
+looey <- extract(loo_test, "grp_loglik")[[1]] %>% loo()
+names(looey)
+(looey)$estimates
 
 # grid test
 # both parties & models
@@ -216,7 +222,7 @@ net_test_data <-
     ),
     stanfit = pmap(
       .l = list(data = data, param = stan_params, mod = stan_model),
-      .f = ~ sampling(
+      .f = ~ try(sampling(
         object = ..3, 
         data = ..1, 
         iter = ..2$iter, 
@@ -225,15 +231,20 @@ net_test_data <-
         warmup = ..2$warmup
         # , include = FALSE,
         # pars = c()
-      )
+      ))
     )
+    # ,
+    # loo = map(
+    #   .x = stanfit,
+    #   .f = ~ try(extract(.x, "grp_loglik")[[1]] %>% loo())
+    # )
   ) %>%
   print()
 
 
 boxr::box_write(
   net_test_data, 
-  as.character(str_glue("{Sys.Date()}_choice-net-tests.RDS")), 
+  as.character(str_glue("{Sys.Date()}_choice-net-tests_exp-ll.RDS")), 
   dir_id = box_dir_model_output
 )
 
@@ -242,11 +253,12 @@ boxr::box_write(
 
 
 
-
+# EXPONENTIAL PRIOR
 if (system("whoami", intern = TRUE) == "michaeldecrescenzo") {
   net_test_data <- 
     here(
-      "data", "_model-output", "05-voting", "2020-07-08_choice-net-tests.RDS"
+      "data", "_model-output", "05-voting", 
+      "2020-07-09_choice-net-tests_exp-ll.RDS"
     ) %>%
     read_rds()
 } else if (system("whoami", intern = TRUE) == "decrescenzo") {
@@ -255,7 +267,24 @@ if (system("whoami", intern = TRUE) == "michaeldecrescenzo") {
 
 
 
+net_test_data <- net_test_data %>% 
+  mutate(
+    loo = map(
+      .x = stanfit, 
+      .f = ~ try(loo(extract(.x, "grp_loglik")[[1]]))
+    ) 
+  ) %>%
+  print()
 
+
+net_test_data %>%
+  map(
+    looic = map(
+      .x = loo,
+      .f = ~ try(.x$Estimates)
+    )
+  ) %>%
+  unnest(looic) 
 
 
 # ---- Estimate MLE version -----------------------
@@ -324,6 +353,20 @@ ggplot(linear_params) +
   # scale_color_manual(values = party_code_colors) +
   coord_flip()
 
+
+# ---- neural net parameters -----------------------
+
+
+tidy_linear %>%
+  filter(str_detect(term, "act_wt") | str_detect(term, "hid_wt")) %>%
+  ggplot() +
+  aes(x = term, y = estimate, color = nodes) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.5)
+  ) +
+  coord_flip() +
+  facet_grid(add_constant ~ party)
 
 
 

@@ -59,3 +59,16 @@ model {
 
 }
 
+generated quantities {
+
+  vector[G] grp_loglik; // prob for winning candidate in g
+  int pos = 1;         // for segmenting
+
+  // loglik from every GROUP (keep winning candidate only)
+  for (g in 1:G) {
+    grp_loglik[g] = 
+      segment(y, pos, n_g[g])' * log(softmax(segment(util, pos, n_g[g])));
+    pos = pos + n_g[g];
+  }
+
+}

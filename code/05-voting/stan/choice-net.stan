@@ -86,6 +86,5 @@ generated quantities {
     pos = pos + n_g[g];
   }
 
-
 }
 
