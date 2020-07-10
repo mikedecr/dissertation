@@ -35,11 +35,13 @@ Urgent methods reading agenda
     - couldn't you have chooser covariates in the hidden layer, since it's transformed?
         - might not be worth it the complexity, but that's ML, baybee!
     - Thinking about approaches to regularization and overfitting
+        - Firefly MCMC
         - ML uses cross-validation to get "optimal" predictions, so the data tell you stuff.
         - Bayes _can_ use priors estimated from data, but what does this _mean_? "This is the prior that the data best support?" How is that not just "the data?" Is it because the data are supporting an optimal amount of regularization (data guide which prior values increase posterior uncertainty?)
     - More practical question: what's the best strategy for regularizing a in a bayesian causal workflow
         - priors
             - only one fit, internal regularization, with an "empirical" prior?
+                - one fit per specification, LOO for evaluation, pick the best one
             - sparsity?
                 - do we care about separating shrinkage and regularization? (a problem with bland horseshoes, bayes lasso, bayes ridge)
                 - if I'm just trying to get good predictions, who cares about which things aren't sparse?

@@ -167,18 +167,27 @@ lapply(data_simple_D, head)
 lapply(data_simple_R, head)
 
 # just seeing if the models don't fail
-sampling(object = model_simple, data = data_simple_R)
+loo_test <- sampling(object = model_simple, data = data_simple_R)
 sampling(object = model_simple, data = data_simple_D)
 sampling(object = model_net, 
          data = c(data_simple_R, n_nodes = 1, hidden_const = 1))
-
-loo_test <- sampling(object = model_net, 
+sampling(object = model_net, 
          data = c(data_simple_D, n_nodes = 1, hidden_const = 0))
 
+
 # see relative_eff() for r_eff = 
-looey <- extract(loo_test, "grp_loglik")[[1]] %>% loo()
+extract_log_lik(loo_test, "grp_loglik") %>%
+  loo() %>%
+  (function(x) x$estimates) %>%
+  as_tibble(rownames = "stat")
+
+ll_test <- extract_log_lik(loo_test, "grp_loglik", merge_chains = FALSE)
+eff_test <- relative_eff(ll_test)
+
 names(looey)
 (looey)$estimates
+
+relative_eff(loo_test)
 
 # grid test
 # both parties & models
@@ -258,33 +267,89 @@ if (system("whoami", intern = TRUE) == "michaeldecrescenzo") {
   net_test_data <- 
     here(
       "data", "_model-output", "05-voting", 
-      "2020-07-09_choice-net-tests_exp-ll.RDS"
+      "2020-07-10_choice-net-tests_exp-ll.RDS"
     ) %>%
     read_rds()
 } else if (system("whoami", intern = TRUE) == "decrescenzo") {
-  net_test_data <- box_read(file_id = 684214873989 )
+  net_test_data <- box_read(file_id = (...) )
 }
 
 
 
-net_test_data <- net_test_data %>% 
+
+# ---- LOO-CV -----------------------
+
+net_test_data <- net_test_data %>%
   mutate(
-    loo = map(
+    loglik = map(
       .x = stanfit, 
-      .f = ~ try(loo(extract(.x, "grp_loglik")[[1]]))
-    ) 
+      .f = extract_log_lik, 
+      parameter = "grp_loglik", 
+      merge_chains = FALSE
+    ),
+    relative_ess = map(.x = loglik, .f = ~ relative_eff(exp(.x))),
+    loo = map2(
+      .x = loglik, 
+      .y = relative_ess, 
+      .f = ~ loo(.x, r_eff = .y)
+    ),
+    # pareto_k = map(loo, pareto_k_table),
+    looic = map(
+      .x = loo,
+      .f = ~ .x$estimates %>% as_tibble(rownames = "loo_stat")
+    )
   ) %>%
   print()
 
+beepr::beep(2)
+
+# compare node counts, group by party and constant
+net_test_data %>% 
+  arrange(party, add_constant, nodes) %>%
+  group_by(party, add_constant) %>%
+  mutate(
+    loo_compare = map2(
+      .x = lag(loo), 
+      .y = loo, 
+      .f = ~ try(loo_compare(.x, .y))
+    ),
+  ) %>%
+  pull(loo_compare)
+
 
 net_test_data %>%
-  map(
-    looic = map(
-      .x = loo,
-      .f = ~ try(.x$Estimates)
+  unnest(looic) %>%
+  filter(loo_stat != "elpd_loo") %>%
+  mutate(
+    loo_stat = case_when(
+      loo_stat == "elpd_loo" ~ "Expected Log Predictive Density", 
+      loo_stat == "looic" ~ "Leave-One-Out Information Criterion", 
+      loo_stat == "p_loo" ~ "Effective Number of Parameters"
     )
   ) %>%
-  unnest(looic) 
+  ggplot() +
+  aes(x = nodes, y = Estimate, 
+      color = party, shape = as.factor(add_constant)) +
+  geom_pointrange(
+    aes(ymin = Estimate - SE, ymax = Estimate + SE),
+    position = position_dodge(width = -0.25),
+    fill = "white",
+    size = 0.75
+  ) +
+  facet_wrap( ~ fct_rev(loo_stat), scales = "free_y") +
+  scale_color_manual(values = party_code_colors) +
+  scale_shape_manual(values = c(16, 21)) +
+  labs(
+    title = "Leave-One-Out Cross-Validation Estimates",
+    x = "Hidden Nodes",
+    y = NULL,
+    shape = "Contains Hidden Constants",
+    color = "Party",
+    caption = "Estimated with Pareto-smoothed importance weights"
+  )
+
+# 2-node vs. 1-node looks like biggest improvement
+
 
 
 # ---- Estimate MLE version -----------------------
