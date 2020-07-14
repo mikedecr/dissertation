@@ -1,4 +1,4 @@
-# Constituent Ideology and Candidate Positioning: Bayesian De-Mediation Model {#ch:positioning}
+# Constituent Ideology and Candidate Positioning: Bayesian Structural De-Mediation Model {#ch:positioning}
 
 ```{r knitr-04-1-positioning, include = FALSE, cache = FALSE}
 source(here::here("assets-bookdown", "knitr-helpers.R"))
