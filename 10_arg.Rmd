@@ -43,13 +43,6 @@ Outline for the dissertation
 
 ```{r knitr-01-arg, include = FALSE, cache = FALSE}
 source(here::here("assets-bookdown", "knitr-helpers.R"))
-
-# knitr::opts_chunk$set(
-#   cache.path = 
-#     stringr::str_glue('{knitr::opts_chunk$get("cache.path")}01-arg/'),
-#   fig.path = 
-#     stringr::str_glue('{knitr::opts_chunk$get("fig.path")}01-arg/')
-# )
 ```
 
 
@@ -58,8 +51,13 @@ library("knitr")
 library("here")
 library("magrittr")
 library("tidyverse")
-library("latex2exp")
+library("scales")
+# library("latex2exp")
+library("patchwork")
+# library("ggdag")
 ```
+
+
 
 
 
@@ -107,7 +105,7 @@ Rank-and-file partisan constituents are all but captured---if they are to expres
 The nomination stage---the primary election in particular---remains an important venue for the representation of partisans' policy views, whether the general election is closely contested or not.
 
 
-## Policy Preferences and the Study of Primaries
+## Policy Preferences and the Strategic Positioning Dilemma
 
 This dissertation is chiefly concerned with the policy preferences of partisan voters and their role in electoral representation through primary politics.
 The study of American electoral politics has not ignored the representational function of primary elections [@geer:1988:primary-electorates; @norrander:1989:primary-voters; @cohen-et-al:2009:party-decides; @aldrich:2011:why-parties], but as I discuss below, the quantifiable impact of primary voters' policy preferences in government is a startlingly open question. 
@@ -132,14 +130,18 @@ Primary elections tend to be dominated by partisan voters who are attentive to p
 - Institution of nomination in a separate section?
 ------------------------->
 As a result, competition in the primary stage may present a more acute electoral threat to partisan candidates than general elections do---a "strategic-positioning dilemma" that leads candidates to take ideological issue stances in favor of convergent stances that target the median voter [@aldrich:1983:downsian-activism; @burden:2004:candidate-positioning; @brady-han-pope:2007:out-of-step; @hill:2015:nominating-institution].
-The strategic positioning dilemma (SPD) is a central theoretical feature of this project, and tests of the SPD are key empirical contributions in the following chapters.
+
 <!------- TO DO ---------
 - considered cites in comment
 ------------------------->
 <!-- \citep{aldrich1983downsian,burden2004candidate,brady2007primary,aldrich2011parties,jacobson2015politics,hill2015institution}. -->
 
+The strategic positioning dilemma (SPD) is a central theoretical feature of this project, and tests of the SPD are key empirical contributions in the following chapters.
+The sections that follow introduce key terms for understanding my critique of the existing research and my contribution to it in this project.
 
-### Key terms: policy ideology
+
+
+### Key concept: policy ideology
 
 If we had an ideal test of the SPD's implications, the policy preferences of partisan primary voters are an essential ingredient.
 Primary voters are one of the key constituencies that a candidate must please in the SPD view of primary elections.
@@ -151,6 +153,11 @@ An individual's policy ideology is a summary of their policy views in a left–r
 Policy views are naturally complex and multidimensional, and it is possible for individuals to hold beliefs across policy areas that would strike many political scientists as being "ideologically inconsistent" [e.g. @campbell-et-al:1960:american-voter].
 Policy ideology distills this complexity into average tendencies; voters who hold a greater number of progressive preferences about policy are more ideologically progressive, and vice versa for voters with more conservative policy preferences.
 Voters who hold a mixture of progressive and conservative beliefs are ideologically moderate.
+
+<!------- TO DO ---------
+- not lofty,
+- not symbolic
+------------------------->
 
 Policy ideology is different from policy _mood_, since mood measures voter preferences for the government to do more or less than an ever-shifting baseline, while ideology meant to be directly comparable using only issue information [@stimson:1991:moods; @enns-koch:2013:state-mood; @mcgann:2014:irt-mood].
 Policy ideology is thus a similar concept to any method that measures a hidden ideological summary from one-off issue-based stimuli.
@@ -168,7 +175,8 @@ Although the additive scaling approach is common, it implies an assumption that 
 Modern measurement approaches doubt this assumption, instead viewing survey items as sources of correlated measurement error across respondents, leading to more careful modeling approaches for estimating a latent signal from noisy survey data [@ansolabehere-et-al:2008:voter-ideology].
 Following this modeling tradition, I refer to an individual's location in policy-ideological space as their "ideal point," the point at which their expected utility of a policy is maximized with respect to their ideological similarity.
 
-### Key terms: district-party groups
+
+### Key concept: district-party groups
 
 I argue that another key construct at work in the SPD is the notion of _groups_ in the electorate.
 For a given district, the general election is a contest among all voters, so we consider this constituency as a group. 
@@ -191,7 +199,7 @@ As I discuss below, decomposing a district's voters into separate party groups i
 To the best of my knowledge, an empirical study that decomposes the district electorate in this way has never been done, even though it is crucial for testing the implications of the SPD theory.
 
 One important distinction about district-party groups is that they are made of constituents, not organizations.
-For this reason, it is sometimes helpful to refer to district-party groups as district party "publics," which emphasizes that the groups are composed of ordinary citizens.
+For this reason, it is sometimes helpful to refer to district-party groups as district party "publics," which emphasizes that the groups are composed of ordinary citizens [@caughey-warshaw:2018:dynamic-responsiveness].
 There is no formal registration requirement to be a member of a party group, only a partisan identification.
 This construction of district-party publics aligns most closely with Key's "party in the electorate" rather than "party as organization" [@key:1955:politics-parties-groups].
 This distinguishes party publics from interest groups, policy groups, "intense policy demanders," or the "extended party network," which are concepts that describe organizations or maneuvers by political elites rather than rank-and-file constituents [@cohen-et-al:2009:party-decides; @koger-et-al:2009-partisan-webs; @masket:2009:no-middle-ground].
@@ -206,51 +214,131 @@ We bring in important concepts from elite-driven stories of primaries as they ap
 
 
 
-### Party-Group Ideology, Candidate Positioning, and Primary Choice
+### Key concept: district-party ideology
+
+It is important to define both "policy ideology" and "district-party publics" because they combine to form a key concept that anchors the substantive contributions of this project.
+This concept is _district-party ideology_, policy ideology aggregated to the level of the district-party group.
+Just as any individual might have a policy ideology ideal point, and any individual might affiliate with a party, district-party ideology averages the ideological variation within a district-party group into one group-level ideal point. 
+By aggregating policy ideology within groups in this way, this project summarizes how policy ideology among Democrats differs from policy ideology among Republicans even, and how these groups vary across congressional districts. 
+This enables us to consider how candidates are responsive to partisan sub-constituencies that together make up a shared general election constituencies [see also @clinton:2006:constituent-representation].
+
+### Key concept: candidate campaign positioning
+
+Burden, AnSnSt team, Bonica, Rogowski and Langella, 
+
+Henderson, Barberá, 
 
 
 
-First, the theory predicts that candidates strategically position themselves to appeal to primary voters.
-That is, if we could construct an ideological summary of the partisan primary voters in a district, we ought to find that the level of voter conservatism affects the conservatism of the primary candidates' campaign stances. And second, if primary voters present a credible threat to primary candidates (specifically via their policy preferences), they should vote for the candidate who best represents their policy views. We should observe that as the degree of primary voter conservatism increases, the probability that a more conservative candidate is nominated increases as well. These two predictions are the core empirical implications of the "strategic positioning dilemma" theory of representation in primaries, and they each require researchers to know the preferences of partisan voters within an electoral district. Yet, the preferences of the partisan constituency are either absent or dangerously misconstrued in the existing literature, and we have been unable to answer these key questions as a result.
+### The strategic positioning dilemma, implications, and research questions
 
-Stated differently, this dissertation asks if primaries "work" the way we think they do. It is widely believed that primaries are effective means for voters to inject their sincere preferences into the selection of candidates and, in turn, the priorities of elected officials. Is this *actually* true? Do candidates position themselves to win the favor of primary voters? Do primary voters select the candidate who best represents their issue beliefs? And further, do institutional factors that purportedly alter the positioning incentives of candidates, such as redistricting, affect which candidates are nominated?
-
-Not only is the evidence in support of this theory sparse or indirect,^[
-  I elaborate on the existing evidence later in this chapter.
-]
-its theoretical plausibility is not straightforward either. Primary elections present voters with uniquely high informational demands. Because most primary elections are held between candidates of the same party,^[
-  There are a few exceptions to this general characterization of nomination elections. California, Louisiana, and Washington hold blanket primaries, sometimes called "jungle" primaries, where candidates from all parties compete on one ballot to be included in a runoff general election.
-]
-the party label does not provide the same heuristic cue for voters to impute the positions of the candidates. Although primary voters are generally informed about the typical policy positions associated with their preferred party [@hill:2015:nominating-institution], the costs of learning about which candidate stands for which position will be higher than the information costs in a general election. Primary elections typically occur in odd months when voters are paying less attention to politics, and the press typically cover primary campaigns less closely than general election campaigns. In these low-information environments, voters may decide to cast their ballot for various non-policy reasons. They may vote for the familiar candidate instead of the ideologically proximate one, in which case asymmetric campaign expenditures or news coverage may advantage one candidate over the other. Candidates may determine that communicating their policy positions is less cost-effective than communicating symbolic positions by touting their incumbency or their "outsider" status. The efficacy of these appeals may be correlated with the actual ideological positions of the candidates (for example, if high-quality incumbents are more skilled at perceiving primary voter preferences,[
-  On the perception of voter preferences by politicians, see @broockman-skovron:2018:bias.
-]
-positioning themselves in relation to primary voters, and at communicating symbolically powerful messages), but the information voters are acting on is itself non-spatial. In short, although the proposition that voters' policy preferences affect their primary candidate choices seems straightforward, the informational environment of the primary campaign presents voters with many incentives to vote using non-policy considerations. Indeed, the notion that "voters matter" is a theoretical orientation toward primaries that is not shared by all scholars of electoral representation. Many scholars of political parties maintain that parties retained their gatekeeping roles over party nominations even as the direct primary ostensibly removed their formal powers over candidate selection. Although primary campaigns take place, these scholars argue that an informal network of party actors wields enormous influence behind the scenes, controlling which candidates obtain access to the party's resources, donor lists, and partisan campaign labor [@cohen-et-al:2009:party-decides; @masket:2009:no-middle-ground].
-
-There are two dominant obstacles that have kept the primary constituency from assuming its proper role in the the study of representation. First, and most importantly, the dominant conceptualization and operationalization of constituency preferences is unsuited the study of partisan primaries. Our working theory of primary representation, particularly as it relates to the "strategic positioning dilemma," pits two constituencies within the district against each other: the nominating constituency, which contains only nominating voters from one party, and the general election constituency, which is composed of citizens from both major parties as well as Independents. The former is theorized to prefer ideologically faithful candidates who adhere closely to the party's policy platform,^[
-  Strategic voting complicates this characterization, which I discuss below.
-]
-while the latter prefers moderate candidates in the general election. Studies routinely acknowledge this distinction in theory, but they often abandon the distinction between the two groups applied studies, instead operationalizing the preferences of all three constituencies---the general constituency and two partisan primary constituencies---using the same single and inappropriate measure: the district-level presidential vote. The presidential vote share is not suitable for the study of primary representation for the simple reason that votes are not equivalent to policy preferences or political ideology. (I refer to "ideology" in its meaning as a summary measure of an individual's issue preferences---i.e. an "ideal point"---rather than its meaning as an abstract political value set from which policy positions can be derived.)
+Now that we have defined some key terms, we can see how they relate to previous research on the strategic positioning dilemma.
+The theory states that candidates balance two competing constituencies during their campaign for office.
+Candidates face incentives to cater to the median voter in the general election, but they do not progress to the general election without first catering to partisan voters in the primary election.
+As a result, their campaign position is tailored to split the difference between the two constituencies, perhaps leaning more to the partisan base in safe districts and to the median voter in competitive districts.
+This section unpacks this intuition in detail and argues that existing research does not test the key claims. 
 <!------- TO DO ---------
-- section about the use of the term "ideology?"
+- cite this: MPR, Jackman(?), LJP, 
 ------------------------->
-Republican voters in a district may be ideological moderates or ideological conservatives, but the fact that they all vote Republican does not inform us on their relative ideological tastes. Similarly, a district's vote outcome captures how its constituents vote on average, but because partisans tend to vote foremost for their preferred party, this average may be more strongly affected by number of voters in each party rather than their ideological preferences.
-<!------- TO DO ---------
-- simulation
-------------------------->
-<!-- create a simulation where...
-  - district vote changes with number of partisans, even though ideal pts never change
-  - equivalent vote outcomes for a distribution of primary ideologies
--->
-The district presidential vote fails to represent primary constituent preferences both as a concept and as a feasible proxy measure, and the U.S. representation literature's reliance on this measure for decades potentially compromises its understandings of accountability under democratized party nominations. Because we have not studied primary constituency preferences, we cannot characterize their impact in electoral representation.
 
-The second obstacle preventing a more complete study of primary representation is the failure to incorporate primary candidates' ideal points into the analysis. Although ideal point estimates derived from roll-call votes such as [Nominate]{.smallcaps} are a popular tool for measuring politicians' ideological locations [@poole:1997:roll-call-history; @poole:2005:spatial-models], only incumbents cast roll call votes, so these measures are unavailable for non-incumbent candidates.^[
-  Studies of candidate positioning that go beyond incumbents sometimes use survey data from challenger candidates [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning], but the surveys only interview general election candidates. Furthermore, the rarity of these surveys limits the generalizability of their findings over time.
-]
-Further, when non-incumbents enter the picture, researchers tend to focus on the positioning of general election candidates rather than primary candidates [@ansolabehere-et-al:2001:candidate-positioning; @canes-wrone-et-al:2002:out-of-step; @burden:2004:candidate-positioning]. Some studies have argued that primary competition leads incumbent legislators to take non-median positions, but these studies do not observe primary candidate positions directly, instead observing the presence or threat of challengers [@burden:2004:candidate-positioning; @brady-han-pope:2007:out-of-step]. Recent advances in ideal point modeling using campaign contributions are a promising path forward [@hall-snyder:2015:ideology; @bonica:2013:ideology-interests; @bonica:2014:mapping-ideology], but they are not designed for the careful study of primary competition and thus contain many "post-treatment" measurement artifacts.
+First, how does district-party ideology affect the way candidates position themselves in a campaign?
+The logic of the SPD suggests that, at minimum, district-party conservatism should be positively correlated to the conservatism of a candidate's campaign position.
+At maximum, more conservative partisan voters exert a positive causal effect on the conservatism of a candidate's campaign position. 
+This implies that candidates can perceive the conservatism of their partisan constituents, reflecting the relative variation in actual constituents' views if not the absolute level [@broockman-skovron:2018:bias]. 
+
+If candidates anticipate partisan voters' policy views and position themselves accordingly, this suggests that candidates believe partisan voters are capable of voting in accordance with their policy views.
+If this is true, we should expect that district-party groups that are more conservative should be more likely to elect conservative candidates. 
+
+These two predictions are the core empirical implications of the "strategic positioning dilemma" theory of representation in primaries. 
+Crucially, testing each prediction requires a researcher to observe the policy ideologies of partisan constituents within a district, which is a separate group from the general election constituency or the location of the median voter.
+This project argues that district-party policy preferences are either absent from existing research or thoroughly misconstrued—an important theoretical and methodological point that I unpack in Section \@ref(sec:ideal-votes).
+As a result, U.S. elections research has been unable to empirically evaluate a widely held theory of representation in primaries.
+
+
 <!------- TO DO ---------
-- weaken
+- move this below the evidence of the above claim?
 ------------------------->
-<!-- don't diss Bonica if we're going to use him! -->
+
+Stated differently, this dissertation asks if primaries "work" the way the SPD claims they do.
+It is widely believed that primaries are effective means for voters to inject their sincere preferences into the selection of candidates and, in turn, the priorities of elected officials.
+Is this *actually* true? 
+The two empirical research questions underlying this project are:
+
+1. Do candidates position themselves to win the favor of primary voters?
+2. Do primary voters select the candidate who best represents their issue beliefs?
+
+<!------- TO DO ---------
+- And further, do institutional factors that purportedly alter the composition of primary electorates, such as primary "openness" rules, affect how candidates are positioned or nominated for office? 
+------------------------->
+
+## Does the Strategic Positioning Dilemma Describe Primary Representation?
+
+### Theoretical concerns
+
+The SPD perspective on these questions has questionable theoretical underpinning.
+I review the empirical evidence in detail in Section \@ref(sec:prefs-lit).
+Theoretically, the SPD depends on lofty assumptions about the sophistication of voter behavior in primaries. 
+Primary elections present voters with uniquely high informational demands. Because most primary elections are held between candidates of the same party, the party label does not provide the same heuristic cue for voters to impute the positions of the candidates.^[
+  There are a few exceptions to this institutional configuration of intra-party nominations. 
+  Some states hold blanket primaries, top-two primaries, or "jungle" primaries, where candidates from all parties compete on one ballot to be included in a runoff general election.
+]
+<!------- TO DO ---------
+- cite party label?
+------------------------->
+Although primary voters are generally informed about the typical policy positions associated with their preferred party [@hill:2015:nominating-institution], the costs of learning about which candidate stands for which position will be higher than the information costs in a general election.
+<!------- TO DO ---------
+- cost of learning?
+------------------------->
+Primary elections often occur during months when voters are paying less attention to politics, and the press typically cover primary campaigns less closely than general election campaigns.
+<!------- TO DO ---------
+- primary vs. general coverage
+------------------------->
+In these low-information environments, voters may decide to cast their ballot for various non-policy reasons.
+They may vote for the familiar candidate instead of the ideologically proximate one, in which case asymmetric campaign expenditures or news coverage may advantage one candidate over the other.
+<!------- TO DO ---------
+- name recognition
+- expenditures (Bonica lawyers, Jacobson stuff? Treul, Thomsen)
+- coverage
+------------------------->
+In short, the claim that voters' policy preferences affect their choices in primary campaigns sounds straightforward, but the information environment of  primary campaigns makes it difficult for constituents to vote foremost with their policy ideologies.
+
+Indeed, the notion that "voters matter" is a theoretical orientation toward primaries that not all scholars of electoral representation share to the same degree.
+Many scholars of political parties maintain that parties retained their gatekeeping roles over party nominations even as the direct primary ostensibly removed their formal powers over candidate selection. 
+<!------- TO DO ---------
+- hirano/snyder lit
+------------------------->
+Although primary campaigns take place, these scholars argue that an informal network of party actors wields enormous influence behind the scenes, controlling which candidates obtain access to the party's resources, donor lists, and partisan campaign labor [@cohen-et-al:2009:party-decides; @masket:2009:no-middle-ground].
+<!------- TO DO ---------
+- more EPN lit
+------------------------->
+
+The SPD also requires candidates to perceive the policy ideologies of their partisan constituencies accurately in order to position their candidacies in relation to the partisan base and the median voter.
+@broockman-skovron:2018:bias lend contradictory evidence to this notion by measuring the degree to which politicians "misperceive" their constituency's policy views.
+The authors find that elected politicians believe that their constituents are much more conservative on many issues than they actually are, which could affect how accurately candidates position themselves in relation to constituent views. 
+It is possible, however, that candidates have a _relative_ perception of voter accuracy: they can tell if constituency $A$ is more conservative than constituency $B$, even if they can't identify the _absolute_ degree of conservatism in either constituency. 
+A candidate's ability to respond to their constituents may itself be downstream from other notions of candidate "quality." 
+For instance, better-financed candidates may have better information on their constituents' views from pollsters or other campaign consultants.
+<!------- TO DO ---------
+- cite info from pollsters?
+------------------------->
+Candidates may also judge that their policy position is less important than other symbolic communications touting their successes as an incumbent or their "outsider" status, which leads voters to have less policy-relevant information about the candidates.
+The efficacy of these non-policy appeals may be correlated with the actual ideological positions of the candidates—for instance, if incumbents are more skilled at perceiving district-party ideology, positioning themselves in relation to the partisan base, and communicating symbolically powerful messages.
+
+<!------- TO DO ---------
+- technology to study these preferences is only very recent
+- https://www.journals.uchicago.edu/doi/full/10.1086/700723
+------------------------->
+
+### Empirical ambiguity
+
+<!------- TO DO ---------
+- this should be structured around EXPLICIT TESTS
+- 1: they don't find clear evidence
+- 2: primary rules
+- 2: they use ONE measure for partisan preferences (which would be bad even if we had to infer one midpoint)
+------------------------->
+
+
 
 It must be stressed that these obstacles are not merely methodological, since the theoretical consequences are enormous. The literature's dependence on the presidential vote as a proxy for district preferences and its omission of primary candidate ideology have prevented scholars from testing basic theoretical propositions in the study of primary politics. Put simply, without serviceable measures of local partisan preferences or primary candidate positions, we can say very little about the role of primary elections in the broader democratic order of U.S. politics. This affects our knowledges of topics beyond nominations as well. To study how politicians weigh the opinions of their party's base of support against other voters in their districts, we must be able to measure the preferences of a politician's local partisan constituency.^[
    @clinton:2006:constituent-representation provides suggestive evidence on the importance of this distinction. Using a cross-sectional survey, he finds that the roll-call voting behavior of Democratic members of Congress is more responsive to the district's median constituent, while Republican members respond more strongly to the average Republican constituent.
@@ -281,7 +369,565 @@ con:
 -->
 
 
-## Limitations for inferring ideal points from votes
+### Vote shares do not identify policy ideology {#sec:ideal-votes}
+
+
+
+The SPD's empirical support is also shaky. 
+This project is animated by a critique that existing research has not conceptualized and operationalized constituency preferences in a way that suitably tests the theoretical ideas at play. 
+The SPD pits two constituencies within the district against each other: the nominating constituency (district-party group) that contains constituents from one party's base, and the general election constituency that contains constituents from both major parties and with no party affiliation.
+The former is theorized to prefer ideologically faithful candidates who adhere closely to the party's policy platform, while the latter prefers moderate candidates in the general election. 
+<!------- TO DO ---------
+- strategic voting anywhere?
+------------------------->
+Studies routinely acknowledge this distinction in theory, but they often abandon the distinction between the two groups applied studies, instead operationalizing the preferences of all three constituencies---the general constituency and two partisan primary constituencies---using the same single and inappropriate measure: the district-level presidential vote. The presidential vote share is not suitable for the study of primary representation for the simple reason that votes are not equivalent to policy preferences or political ideology. (I refer to "ideology" in its meaning as a summary measure of an individual's issue preferences---i.e. an "ideal point"---rather than its meaning as an abstract political value set from which policy positions can be derived.)
+<!------- TO DO ---------
+- section about the use of the term "ideology?"
+------------------------->
+Republican voters in a district may be ideological moderates or ideological conservatives, but the fact that they all vote Republican does not inform us on their relative ideological tastes. Similarly, a district's vote outcome captures how its constituents vote on average, but because partisans tend to vote foremost for their preferred party, this average may be more strongly affected by number of voters in each party rather than their ideological preferences.
+<!------- TO DO ---------
+- simulation
+------------------------->
+<!-- create a simulation where...
+  - district vote changes with number of partisans, even though ideal pts never change
+  - equivalent vote outcomes for a distribution of primary ideologies
+-->
+The district presidential vote fails to represent primary constituent preferences both as a concept and as a feasible proxy measure, and the U.S. representation literature's reliance on this measure for decades potentially compromises its understandings of accountability under democratized party nominations. Because we have not studied primary constituency preferences, we cannot characterize their impact in electoral representation.
+
+
+
+
+
+
+<!------- TO DO ---------
+- transition
+------------------------->
+
+Suppose a distribution of voter ideal points. 
+There are two candidates who take positions (given real values), with a midpoint between the two of them.
+Formally, we can show that it is impossible to make inferences about candidate preferences using only the vote distribution.
+
+
+
+```{r create-two-parties}
+f <- 
+  tibble(
+    x = seq(-10, 10, .01)
+  ) %>%
+  mutate(
+    dmod = dnorm(x, mean = -0.15, sd = 0.25),
+    rmod = dnorm(x, mean = 0.15, sd = 0.25),
+    dex = dnorm(x, mean = -0.5, sd = 0.25),
+    rex = dnorm(x, mean = 0.5, sd = 0.25)
+  ) %>%
+  gather(key = group, value = y, dmod, rmod, dex, rex) %>% 
+  mutate(
+    party = ifelse(group %in% c("dmod", "dex"), "Democrats", "Republicans"), 
+    ex = ifelse(group %in% c("dmod", "rmod"), "Moderate Partisan Groups", "Polarized Partisan Groups")
+  ) %>%
+  print()
+
+
+means <-  f %>%
+  group_by(ex) %>% 
+  summarize(xintercept = sum(y * x)) %>% 
+  print
+```
+
+
+```{r plot-two-parties}
+ggplot(data = f) +
+  aes(x = x, y = y, color = party, fill = party) +
+  facet_wrap(~ ex, nrow = 1) +
+  geom_ribbon(
+    aes(ymin = 0, ymax = y), 
+    color = NA,
+    show.legend = FALSE,
+    alpha = 0.6
+  ) +
+  scale_color_manual(values = party_colors) +
+  scale_fill_manual(values = party_colors) +
+  scale_y_continuous(breaks = NULL) +
+  scale_x_continuous(
+    breaks = c(-0.75, 0, 0.75),
+    labels = c("Liberals", 
+               "Moderates", 
+               "Conservatives")
+  ) +
+  labs(
+    title = "Aggregate votes mask underlying policy preferences",
+    subtitle = "Two districts with the same median voter position",
+    x = NULL,
+    y = NULL, 
+    fill = NULL
+  ) +
+  # geom_vline(data = means, aes(xintercept = xintercept)) +
+  coord_cartesian(xlim = c(-1.25, 1.25)) +
+  theme(
+    panel.grid.major.x = element_blank(),
+    axis.ticks = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    # strip.placement = "outside"
+  )
+```
+
+
+
+
+
+
+We start with very strict assumptions about the composition of the electorate, 
+showing that not even the structure provided by these assumptions can we make inferences about the underlying distribution of voters.
+Suppose we have a district containing an equal number of Republican and Democratic voters, whose preferences are distributed Normal around some unknown median, which is equal to the mean.
+We can take as given that the median Republican voter is at least as conservative as the median Democratic voter.
+Two candidates stand to be elected president, Republican and Democrat.
+The same assumption is made about the ordering of candidate positions as the ordering of partisan voter medians: the Democratic candidate is no more conservative than the Republican.
+Voters deterministically vote for the nearest candidate to them in ideological space, which means that we can perfectly predict how a voter with a known ideal point will vote if we also know the midpoint between candidates.
+All voters to the "left" of the midpoint vote for the Democratic candidate, so the cumulative distribution function (CDF) of the Normal distribution 
+
+
+If the voter's ideal point is to the "right" of the midpoint, the voter is closer to the Republican candidate, so they vote Republican.
+The voter supports the Democrat if they are left of the candidate midpoint.
+This implies that the vote share for the Democratic candidate is equal to the cumulative distribution function (CDF) of the voter ideal point distribution evaluated at the candidate midpoint, and the vote share for the Republican is $1$ minus the CDF at the candidate midpoint.
+Furthermore we can restrict the location and scale of the ideological distribution so that the candidate midpoint is $0$. 
+
+We have assumed normality of the vote distribution, strict ordering of partisan voter medians and partisan candidate positions. 
+What can we infer about the distribution of voters from the vote share? 
+Very little.
+At minimum, the vote share only tells us the median 
+
+We can infer the median of the voter preference distribution _only_ if the vote share is exactly 50-50. 
+We cannot, based only on this information, infer the dispersion of candidate preferences around the mean, since we can stretch the underlying distribution of voter preferences without shifting the aggregate distribution left or right.
+As a result, a vote share of 50-50 does not tell us anything about the relative moderation or extremism about the underlying voter distribution. 
+Figure \@ref(fig:plot-two-parties).
+<!------- TO DO ---------
+- fix this
+------------------------->
+
+
+
+```{r plot-two-parties, include = TRUE, fig.height = 4, fig.width = 8, out.width = "100%", fig.cap = "Two districts with identically located median voters"}
+```
+
+If we move the vote share off of 50-50, we cannot determine either the median or the dispersion of the underlying voters. 
+
+
+
+1. The vote share is the CDF of the underlying preference distribution.
+   Assuming a symmetric distribution, we can infer the mean of the distribution from the vote share _only_ if the vote share is 50-50. 
+   Even if we could identify the mean, we would not be able to infer the variance, of the distribution. 
+   If the variance of the distribution is owed to the 
+   At any other non-50-50 vote share, there are infinite possible medians, since inference about the median depends on fixing the variance. 
+2. If we fix the candidate positions and consider multiple districts, what does variation in vote share imply about  How does variation in the vote share identify variation in 
+Even if a simplified world, we can't do anything with this. 
+
+
+<!------- TO DO ---------
+- here's two normal setup 
+- two party distributions
+- increase Republican vote by:
+    - move Republicans right
+    - reduce dispersion of Republicans
+    - more Republicans
+------------------------->
+
+```{r hypothetical-parties}
+
+sd_same <- 1
+sd_shift <- 1
+sd_narrow <- 0.5
+median_same <- -1
+median_shift <- -2
+median_narrow <- -1
+
+two_party_data <- 
+  tibble(
+    x = seq(-5, 5, .01),
+    rep = dnorm(x, mean = -1 * median_same, sd = sd_same),
+    dem_shift = dnorm(x, mean = median_shift, sd = sd_shift),
+    dem_same = dnorm(x, mean = median_same, sd = sd_same),
+    dem_narrow = dnorm(x, mean = median_narrow, sd = sd_narrow)
+  ) %>%
+  pivot_longer(
+    cols = starts_with("dem_"), 
+    names_to = "modification",
+    values_to = "dem"
+  ) %>%
+  mutate(
+    mixture_equal = 0.5*(dem + rep),
+    mixture_biased = (2/3 * dem) + (1/3 * rep)
+  ) %>%
+  pivot_longer(
+    cols = starts_with("mixture_"), 
+    names_to = "population",
+    values_to = "mix_density"
+  ) %>%
+  pivot_longer(
+    cols = c(rep, dem, mix_density), 
+    names_to = "aggregation",
+    values_to = "density"
+  ) %>%
+  mutate(
+    density = case_when(
+      population == "mixture_equal" & aggregation != "mix_density" ~ 
+        1/2 * density,
+      population == "mixture_biased" & aggregation == "dem" ~ 
+        2/3 * density,
+      population == "mixture_biased" & aggregation == "rep" ~ 
+        1/3 * density,
+      TRUE ~ density
+    ),
+    # mixture = case_when(
+    #   aggregation == "mix_density" ~ "Combined Population Distribution",
+    #   TRUE ~ "Partisan Base Distributions"
+    # ),
+    vote_dem = as.numeric(aggregation == "mix_density" & x < 0)
+  ) %>%
+  filter(
+    population == "mixture_equal" |
+    modification == "dem_same"
+  ) %>%
+  print()
+
+two_party_data %>% count(modification, population, aggregation)
+
+# make data frames for two halves of graphic
+balanced_data <- two_party_data %>%
+  filter(modification == "dem_same" & population == "mixture_equal") %>%
+  print()
+
+unbalanced_data <- two_party_data %>%
+  filter(modification != "dem_same" | population == "mixture_biased") %>%
+  print()
+
+# parameters of underlying distribution
+mod_stat_labels <- unbalanced_data %>%
+  filter(aggregation == c("mix_density")) %>%
+  group_by(modification) %>%
+  summarize(
+    dem_share = weighted.mean(vote_dem, density),
+    dem_mean = weighted.mean(x, density)
+  ) %>%
+  mutate(
+    dem_sd = case_when(
+      modification == "dem_narrow" ~ sd_narrow,
+      modification == "dem_shift" ~ sd_shift,
+      modification == "dem_same" ~ sd_same
+    ),
+    dem_median = case_when(
+      modification == "dem_narrow" ~ median_narrow,
+      modification == "dem_shift" ~ median_shift,
+      modification == "dem_same" ~ median_same
+    ),
+    aggregation = "dem"
+  ) %>%
+  print()
+
+
+
+plot_balanced <- ggplot(balanced_data) +
+  aes(x = x, y = density) +
+  facet_wrap(
+    ~ aggregation == "mix_density", nrow = 2,
+    labeller = as_labeller(
+      c(
+        "FALSE" = "District contains two partisan bases\nwith separate preference distributions",
+        "TRUE" = "Combined preference distribution\ndetermines election outcome"
+      )
+    )
+  ) +
+  geom_ribbon(
+    aes(ymax = density, ymin = 0, 
+        alpha = as.factor(vote_dem), fill = aggregation)
+  ) +
+  scale_fill_manual(
+    values = c("rep" = rred, "dem" = dblue, "mix_density" = "gray80")
+  ) +
+  scale_alpha_manual(values = c("1" = 1, "0" = 0.5)) +
+  geom_segment(
+    data = filter(balanced_data, aggregation == "mix_density" & x == 0),
+    aes(x = x, xend = 0, y = 0, yend = 1.3 * density),
+    linetype = "dashed"
+  ) +
+  # geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_text(
+    size = 3.5,
+    data = filter(mod_stat_labels, modification == "dem_same"),
+    aes(
+      x = -2.75, y = .25, 
+      label = str_glue("Democrats:\nMedian = {dem_median}\nStd. dev = {dem_sd}")
+    ),
+    hjust = 1
+  ) +
+  geom_text(
+    size = 3.5,
+    data = filter(mod_stat_labels, modification == "dem_same"),
+    aes(
+      x = 2.75, y = .25, 
+      label = str_glue("Republicans:\nMedian = {-1 * dem_median}\nStd. dev = {dem_sd}")
+    ), 
+    hjust = 0
+  ) +
+  geom_text(
+    size = 3.5,
+    data = filter(balanced_data, aggregation == "mix_density" & x == 0),
+    aes(x = 0.2, y = 1.35*density, label = "Midpoint between\ncandidates"),
+    hjust = 0,
+    vjust = 2
+  ) +
+  geom_text(
+    size = 3.5,
+    data = filter(balanced_data, aggregation == "mix_density" & x %in% c(-1.5, 1.5)),
+    aes(x = x, y = 0, 
+        label = c("Vote Dem", "Vote Rep")),
+    vjust = -2
+  ) +
+  labs(
+    y = NULL, x = "Voters' Policy Conservatism",
+    title = "District vote shaped by underlying\npartisan policy preferences"
+  ) +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_blank(),
+    plot.background = element_rect(color = "gray80")
+  )
+
+plot_balanced
+
+plot_unbalanced <- ggplot(unbalanced_data) +
+  aes(x = x, y = density) +
+  facet_wrap(
+    ~ fct_relevel(modification, "dem_shift", "dem_narrow", "dem_same"), 
+    labeller = as_labeller(
+      c(
+        "dem_shift" = "More progressive Democratic base\nincreases Democratic vote share",
+        "dem_narrow" = "Lower ideological variance increases Dem vote\nwithout shifting median Democrat",
+        "dem_same" = "Larger Democratic population increases Dem vote\nwithout changing ideal points"
+      )
+    ),
+    ncol = 1
+  ) +
+  geom_ribbon(
+    data = filter(unbalanced_data, aggregation == "mix_density"),
+    aes(ymax = density, ymin = 0, 
+        alpha = as.factor(vote_dem), fill = aggregation),
+    fill = "gray"
+  ) +
+  geom_line(
+    data = filter(unbalanced_data, aggregation != "mix_density"),
+    alpha = 1,
+    aes(color = aggregation)
+  ) +
+  annotate(
+    geom = "segment",
+    x = 0, xend = 0, y = 0, yend = .3,
+    linetype = "dashed"
+  ) +
+  geom_text(
+    size = 3.5,
+    data = mod_stat_labels,
+    aes(
+      x = 0.15, y = .35, 
+      label = str_glue("Dem vote share: {percent(dem_share, accuracy = 1)}")
+    ),
+    hjust = 0
+  ) +
+  geom_text(
+    size = 3.5,
+    data = mod_stat_labels,
+    aes(
+      x = -5, y = .3, 
+      label = str_glue("Dem median: {round(dem_median)}\nDem std. dev: {dem_sd}")
+    ),
+    hjust = 0
+  ) +
+  scale_color_manual(values = c("rep" = rred, "dem" = dblue)) +
+  scale_alpha_manual(values = c("1" = 1, "0" = 0.5)) +
+  labs(
+    y = NULL, x = "Voters' Policy Conservatism",
+    title = "District vote does not uniquely\nidentify preference distributions"
+  ) +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_blank(),
+    plot.background = element_rect(color = "gray80")
+  ) +
+  NULL
+
+plot_unbalanced
+
+```
+
+
+
+Insert simulations of non-identifiability...
+
+```{r plot-non-id}
+plot_balanced + plot_unbalanced
+```
+
+Figure \@ref(fig:plot-non-id) demonstrates the problem in a simplified theoretical model.
+The simple model considers how constituents in a district vote for president based on their policy-ideological preferences.
+The two panels on the left demonstrate the basic mechanics of the scenario.
+Every constituent has a policy ideal point represented on the real number line, with larger values indicating greater policy conservatism.
+Every constituent also identifies with either the Republican Party or the Democratic Party.
+The top-left panel breaks voters into Democratic and Republican Party affiliations and shows the distribution of ideal points for each partisan base.
+Democratic-identifying constituents hold policy preferences that are more progressive than Republican constituents on average: the median Republican and Democrat are respectively located at `r -1 * median_same` and `r median_same`, Each distribution has a standard deviation of `r sd_same`, so there is some overlap where some Democratic constituents are more conservative than some Republican constituents, despite their party affiliation.
+The bottom-left panel combines the two partisan distributions into one distribution for the entire constituency. 
+We assume at first that both partisan constituencies are equally sized, so the composite distribution is a simple finite mixture of the two distributions.^[
+  Analytically, if $f_{p}\left(x\right)$ is the probability density of ideal points $x$ in party $p$, then the composite density $f_{m}\left(x\right)$ is a weighted sum of the component densities: $f_{m}\left(x\right) = \sum\limits_{p}w_{p}f_{p}\left(x\right)$, where $w_{p}$ is the proportion of the total distribution contributed by party $p$, and $\sum\limits_{p}w_{p} = 1$. 
+  In this first example, both partisan constituencies are equally weighted at $w_{p} = \frac{1}{2}$. 
+  If parties had different population sizes within the same district, $w_{p}$ would take values in proportion to those population sizes.
+]
+The midpoint between two presidential candidates is shown at policy location $0$.
+Assuming all constituents vote according to single-peaked and symmetric utility functions over policy space, constituents are indifferent between candidates if they have ideal points equal to $0$, vote for the Democratic candidate if they have ideal points less than $0$, and vote for the Republican candidate if they have ideal points greater than $0$.
+The aggregate election result, therefore, is equal to the cumulative distribution function of the composite distribution evaluated at the candidate midpoint.
+In the bottom-left panel, the vote share for the Democrat is $50$%, with some Democrats voting for the Republican candidate, and some Republicans voting for the Democratic candidate.
+
+```{r plot-non-id, include = TRUE, fig.width = 10, fig.height = 10, out.width = "100%", fig.scap = "Non-identifiability of partisan group preferences from district vote shares", fig.cap = "Demonstrating how district vote shares from a single election are insufficient to identify underlying policy-ideological features of the district. The left side shows how the policy preference distributions for two parties in a district (top panel) combine to form an aggregate preference distribution for the district as a whole (bottom panel)."}
+```
+
+The panels on the right side of Figure \@ref(fig:plot-non-id) show how changes in the underlying partisan distributions affect the aggregate distribution of preferences and, as a result, the presidential vote share in the district.
+The modifications to the partisan distributions are chosen to show the problems with using district vote share as a proxy for policy ideology in the voting population.
+In each panel, I intervene on only one feature of the Democratic ideal point distribution, leaving the Republican distribution untouched (median of `r -1 * median_same`, standard deviation of `r sd_same`).
+Intervening only on one component of party's distribution is meant to keep the demonstration simple, bearing in mind that the problem is much more complex in the real world, where we can imagine multiple simultaneous changes to both parties at once.
+The interventions highlight two classes of problems.
+First, we can perform multiple modifications of the underlying partisan distribution that obtain the same aggregate vote share.
+This proves that the district vote does not uniquely identify the characteristics of the underlying voter distributions.
+And second, we can alter the district vote outcome by changing party _sizes_ without any change to the ideal point distribution within either party.
+This proves that vote shares may vary across districts even if partisan ideal points distributions are the same.
+
+
+The top-right panel shows how the composite distribution of voters in the district changes by shifting the location of the Democratic ideal point distribution to the left, from a median of `r median_same` to `r median_shift`. 
+This location shift results in a greater number of Democratic constituents holding ideal points left of the candidate midpoint, increasing the Democratic vote share in the district from 50% to `r mod_stat_labels %$% dem_share[modification == "dem_shift"] %>% percent(accuracy = 1)`.
+The top-left panel shows how the district vote changes by shrinking the scale of the Democratic ideal point distribution from `r sd_same` to `r sd_narrow`. 
+Lower ideal point variance within the Democratic base has the exact same effect on the vote as shifting the location, increasing the Democratic vote share to `r mod_stat_labels %$% dem_share[modification == "dem_narrow"] %>% percent(accuracy = 1)`.
+This means that compared to a district with a 50% presidential vote split, we would not be able to attribute the increased Democratic vote to a constituency that is _more progressive on average_ (location) or simply _more concentrated_ in particular areas of ideological space (scale).
+The final panel in the figure shows how we can obtain different votes across distributions without changing the underlying ideological distribution in either party whatsoever, instead changing only the relative size of each partisan base.
+The Democratic base in the final panel is unchanged compare to the original distribution laid out in the top-left panel: median of `r median_same` and standard deviation of `r sd_same`.
+The only difference is that the district contains an unequal balance of partisan voters, three Democratic constituents to every one Republican constituent.
+This results in an increased Democratic vote from 50% to `r mod_stat_labels %$% dem_share[modification == "dem_same"] %>% percent(accuracy = 1)`.
+To review, observing a greater than Democratic vote share greater than 50% reveals very little about the underlying distribution of voters. 
+In every panel, we observe an increase in the Democratic vote compared to our baseline scenario, but in almost no cases does this mean that the median partisan ideal point has changed.
+Since the Republican distribution is unaffected in every panel, inferring that Republicans are less conservative in districts with greater Democratic voting would be incorrect in every case. 
+For the Democratic constituents, this inference would be wrong in two out of three cases: since the median Democratic ideal point is affected only by location-shifting the distribution to the left, not by lowering the Democratic ideal point variance or increasing the size of the Democratic constituency. 
+
+It is worth repeating that the scenario laid out in Figure \@ref(fig:plot-non-id) is a vast oversimplification of the real electorate.
+This is intentional, as it shows how intractable the problem becomes even in an artificial setting where we can take many variables as given.
+This scenario contains no complicating elements such as non-partisan or third-party identifiers, non-policy voting, random sources of utility or utility function heterogeneity across different voters, differential turnout between partisan bases, and so on.
+
+
+
+
+```{r many-solutions}
+crossing(
+  median_voter = seq(-2, 2, .05),
+  voter_spread = seq(.25, 2, .25)
+) %>%
+  mutate(
+    rprob = pnorm(median_voter, sd = voter_spread)
+  ) %>%
+  group_by(median_voter, voter_spread) %>%
+  ggplot() +
+  aes(x = rprob, y = median_voter) +
+  geom_line(aes(color = as.factor(voter_spread)))
+```
+
+
+```{r}
+tibble(
+  x = seq(-5, 5, .1)
+) %>%
+  crossing(
+    mu1 = -1,
+    mu2 = seq(0, 2, 1),
+    sigma = seq(.5, 1.5, .5)
+  ) %>%
+  mutate(
+    d1 = dnorm(x, mu1, 1),
+    d2 = dnorm(x, mu2, sigma),
+    mixture_density = (d1 + d2) / 2,
+    rvote = 1 - ((pnorm(0, mu1, sigma) + pnorm(0, mu2, sigma)) / 2)
+  ) %>%
+  print() %>%
+  # group_by(mu2, sigma) %>%
+  # distinct(rvote)
+  ggplot(aes(x = x, y = mixture_density)) +
+  geom_ribbon(
+    aes(
+      ymax = mixture_density, ymin = 0, 
+      fill = str_glue("Mean Difference = {mu2 - mu1}") %>% as.character()
+    ),
+    alpha = 0.5
+  ) +
+  facet_grid(~ str_glue("Sigma Difference = {sigma - 1}")) +
+  scale_fill_viridis_d(option = "plasma", name = NULL, end = 0.9) +
+  theme(
+    legend.position = c(.95, .8),
+    legend.background = element_rect(color = NA, fill = "white")
+  )
+```
+
+
+
+```{r kernell-data}
+tibble(
+  r = 1:10000
+) %>%
+  crossing(
+    mu1 = seq(-2, 2, .5),
+    mu2 = mu1
+  ) %>%
+  mutate(
+    sigma = 1,
+    midpoint = mu2 - mu1,
+    draw1 = rnorm(n = n(), mean = mu1, sd = sigma),
+    draw2 = rnorm(n = n(), mean = mu2, sd = sigma)
+  ) %>%
+  group_by(mu1, mu2, sigma, midpoint) %>%
+  summarize(
+    p1 = mean(draw1 > midpoint),
+    p2 = mean(draw2 > midpoint),
+    diffp = p2 - p1,
+    diffpq = qnorm(p2) - qnorm(p1),
+    diffmu = mu2 - mu1
+  ) %>%
+  ggplot() +
+  aes(x = diffpq, y = diffmu) +
+  geom_abline() +
+  geom_line(aes(color = as.factor(midpoint)))
+```
+
+
+
+
+Georgia Kernell -@kernell:2009:districts demonstrates the difficulty of inferring district-level preferences (median voter locations) from observed votes. First, she shows that the ordering of district medians cannot be inferred from the vote shares of one election. Suppose we wish to place districts $1$ and $2$ on an ideological dimension. We observe that the Republican share of the two party vote in each district is $p_{1}$ and $p_{2}$. Assuming that voter preferences are normally distributed around the median voter (equivalent to the mean voter), then vote shares can be understood as the result of the normal CDF by comparing the candidate's ideal point to the distribution of voter preferences.
+\begin{align}
+  p_{i} &= \Phi\left(\frac{c - \mu_{i}}{\sigma_{i}}\right)
+\end{align}
+By inverting the normal CDF, she shows that the difference in medians $\mu_{1}$ and $\mu_{2}$ is not proportional to vote shares in each district, but to the $z$-score of the vote in each district.
+\begin{align}
+  \mu_{2} - \mu_{1} &\propto Z\left(p_{2}\right) - Z\left(p_{1}\right),
+\end{align}
+The nonlinear relationship between $\mu_{i}$ and $p_{i}$ suggests that district preferences are unidentifiable without using multiple elections resulting from the same fixed set of voter preferences $\mu_{i}$.
+
+Following a similar setup, I demonstrate that the task of inferring the positions of multiple parties is even more difficult. First, rather than assuming that voter preferences in a district are normally distributed with one mean and one dispersion term, we assume that voter preferences are mixture of two distributions (indexed $1$ and $2$). Each party votes for a Republican candidate akin to the normal CDF as before, but the vote share $p$ for the Republican reflects the size of each partisan constituency in the district as well. Suppose that the size and ideal point of party unaffiliated is represented by a normally distributed error term $\varepsilon$:
+\begin{align}
+  p &= \Phi\left(\frac{c - \mu_{1}}{\sigma_{1}}\right)\pi_{1} + \Phi\left(\frac{c - \mu_{2}}{\sigma_{2}}\right)\pi_{2} + \varepsilon,
+\end{align}
+where $p_{i}$ reflects the proportion of the electorate that identifies with party $i$. Isolating $\mu_{1}$ and $\mu_{2}$ in this setup is rather difficult, and the choice of simplifying assumptions is limited. We could assume that the variance of preferences in each party is equal, $\sigma_{1} = \sigma_{2} = \sigma$, and manipulate the equation somewhat...
+\begin{align}
+  Z\left(p\right)\sigma &= \left(c - \mu_{1}\right)\pi_{1} + \left(c - \mu_{2}\right)\pi_{2},
+\end{align}
+but the limitations are still significant. We could not make a simplifying assumption that $\pi_{1} = \pi_{2}$ for but a handful of districts. We might estimate $\pi_{i}$ from survey data
+<!------- TO DO ---------
+- but what
+------------------------->
+
+
+
+
 
 
 ```{r read-cces}
@@ -392,21 +1038,18 @@ ideo_party <- cces %>%
   ) %>%
   ungroup() %>%
   print()
-```
 
-```{r merge-dime-cces, eval = FALSE}
 ideo_merge <- 
   bind_rows(ideo_all, ideo_party) %>%
   left_join(dime) %>%
   mutate(
     party_group = case_when(
-      party == "All" ~ "All Respondents",
-      party %in% c("Democrat", "Republican") ~ "Partisans"
+      party == "All" ~ "District Means",
+      party %in% c("Democrat", "Republican") ~ "District-Party Means"
     )
   ) %>%
   filter(cycle %% 2 == 0) %>%
   print()
-
 # write_rds(
 #   ideo_merge, 
 #   here("present", "apw-2020", "easy-data", "ideo-vote.rds")
@@ -414,13 +1057,16 @@ ideo_merge <-
 
 ```
 
-```{r plot-ideo-mean, eval = FALSE}
+```{r plot-ideo-mean}
 ideo_merge %>%
   filter(is.na(party_group) == FALSE) %>%
   ggplot() +
   aes(x = district_pres_vs, y = mean_ideo, color = party) +
-  geom_point(shape = 1) +
-  geom_smooth(aes(group = party), color = "black") +
+  geom_point(alpha = 0.4, shape = 16) +
+  geom_smooth(
+    aes(group = party), 
+    color = "black"
+  ) +
   facet_grid(party_group ~ cycle) +
   scale_color_manual(
     values = c("All" = "gray", "Democrat" = dblue, "Republican" = rred)
@@ -433,112 +1079,147 @@ ideo_merge %>%
   )
 ```
 
+```{r}
 
-This section shows the limitations of inferring voter preferences from vote shares, using notation similar to @kernell:2009:districts. 
+selected_year <- 2018
+plot_one_year <- ideo_merge %>%
+  filter(cycle == selected_year) %>%
+  filter(is.na(party_group) == FALSE) %>%
+  ggplot() +
+  aes(x = district_pres_vs, y = mean_ideo, 
+      color = party, shape = party) +
+  geom_point(aes(size = party), alpha = 0.6) +
+  geom_smooth(
+    aes(group = party), 
+    color = "black",
+    # method = "lm",
+    se = FALSE,
+  ) +
+  facet_wrap(~ str_glue("{party_group} ({selected_year})")) +
+  scale_color_manual(
+    values = c("All" = "gray", "Democrat" = dblue, "Republican" = rred)
+  ) +
+  scale_shape_manual(
+    values = c("All" = "•", "Democrat" = "D", "Republican" = "R")
+  ) +
+  scale_size_manual(
+    values = c("All" = 10, "Democrat" = 3, "Republican" = 3)
+  ) +
+  scale_y_continuous(
+    breaks = 1:5,
+    limits = c(1, 5),
+    labels = c(
+      "Very Liberal", "Liberal", "Moderate", 
+      "Conservative", "Very Conservative"
+    )
+  ) +
+  scale_x_continuous(
+    limits = c(0, 1),
+    labels = scales::percent_format(accuracy = 1)
+  ) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(1, 5)) +
+  theme(legend.position = "none") +
+  labs(
+    y = NULL,
+    x = NULL
+  )
 
-Georgia Kernell -@kernell:2009:districts demonstrates the difficulty of inferring district-level preferences (median voter locations) from observed votes. First, she shows that the ordering of district medians cannot be inferred from the vote shares of one election. Suppose we wish to place districts $1$ and $2$ on an ideological dimension. We observe that the Republican share of the two party vote in each district is $p_{1}$ and $p_{2}$. Assuming that voter preferences are normally distributed around the median voter (equivalent to the mean voter), then vote shares can be understood as the result of the normal CDF by comparing the candidate's ideal point to the distribution of voter preferences.
-\begin{align}
-  p_{i} &= \Phi\left(\frac{c - \mu_{i}}{\sigma_{i}}\right)
-\end{align}
-By inverting the normal CDF, she shows that the difference in medians $\mu_{1}$ and $\mu_{2}$ is not proportional to vote shares in each district, but to the $z$-score of the vote in each district.
-\begin{align}
-  \mu_{2} - \mu_{1} &\propto Z\left(p_{2}\right) - Z\left(p_{1}\right),
-\end{align}
-The nonlinear relationship between $\mu_{i}$ and $p_{i}$ suggests that district preferences are unidentifiable without using multiple elections resulting from the same fixed set of voter preferences $\mu_{i}$.
+plot_one_year
 
-Following a similar setup, I demonstrate that the task of inferring the positions of multiple parties is even more difficult. First, rather than assuming that voter preferences in a district are normally distributed with one mean and one dispersion term, we assume that voter preferences are mixture of two distributions (indexed $1$ and $2$). Each party votes for a Republican candidate akin to the normal CDF as before, but the vote share $p$ for the Republican reflects the size of each partisan constituency in the district as well. Suppose that the size and ideal point of party unaffiliated is represented by a normally distributed error term $\varepsilon$:
-\begin{align}
-  p &= \Phi\left(\frac{c - \mu_{1}}{\sigma_{1}}\right)\pi_{1} + \Phi\left(\frac{c - \mu_{2}}{\sigma_{2}}\right)\pi_{2} + \varepsilon,
-\end{align}
-where $p_{i}$ reflects the proportion of the electorate that identifies with party $i$. Isolating $\mu_{1}$ and $\mu_{2}$ in this setup is rather difficult, and the choice of simplifying assumptions is limited. We could assume that the variance of preferences in each party is equal, $\sigma_{1} = \sigma_{2} = \sigma$, and manipulate the equation somewhat...
-\begin{align}
-  Z\left(p\right)\sigma &= \left(c - \mu_{1}\right)\pi_{1} + \left(c - \mu_{2}\right)\pi_{2},
-\end{align}
-but the limitations are still significant. We could not make a simplifying assumption that $\pi_{1} = \pi_{2}$ for but a handful of districts. We might estimate $\pi_{i}$ from survey data
-<!------- TO DO ---------
-- but what
-------------------------->
-
-
-```{r create-two-parties}
-f <- 
-  tibble(
-    x = seq(-10, 10, .01)
-  ) %>%
-  mutate(
-    dmod = dnorm(x, mean = -0.15, sd = 0.25),
-    rmod = dnorm(x, mean = 0.15, sd = 0.25),
-    dex = dnorm(x, mean = -0.5, sd = 0.25),
-    rex = dnorm(x, mean = 0.5, sd = 0.25)
-  ) %>%
-  gather(key = group, value = y, dmod, rmod, dex, rex) %>% 
-  mutate(
-    party = ifelse(group %in% c("dmod", "dex"), "Democrats", "Republicans"), 
-    ex = ifelse(group %in% c("dmod", "rmod"), "Moderate Partisan Groups", "Polarized Partisan Groups")
-  ) %>%
-  print()
-
-
-means <-  f %>%
-  group_by(ex) %>% 
-  summarize(xintercept = sum(y * x)) %>% 
-  print
 ```
 
 
-```{r plot-two-parties, include = TRUE, fig.height = 4, fig.width = 8, out.width = "100%", fig.cap = "Two districts with identically located median voters"}
-ggplot(data = f) +
-  aes(x = x, y = y, color = party, fill = party) +
-  facet_wrap(~ ex, nrow = 1) +
-  geom_ribbon(
-    aes(ymin = 0, ymax = y), 
-    color = NA,
-    show.legend = FALSE,
-    alpha = 0.6
+
+```{r}
+plot_all_lines <- ideo_merge %>%
+  filter(is.na(party_group) == FALSE) %>%
+  ggplot() +
+  aes(x = district_pres_vs, y = mean_ideo, color = party) +
+  geom_smooth(
+    aes(group = paste(party, cycle)), 
+    # color = "black",
+    # method = "lm",
+    se = FALSE,
   ) +
-  scale_color_manual(values = party_colors) +
-  scale_fill_manual(values = party_colors) +
-  scale_y_continuous(breaks = NULL) +
+  scale_color_manual(
+    values = c("All" = "gray", "Democrat" = dblue, "Republican" = rred)
+  ) +
+  scale_y_continuous(
+    breaks = 1:5,
+    limits = c(1, 5),
+    labels = c(
+      "Very Liberal", "Liberal", "Moderate", 
+      "Conservative", "Very Conservative"
+    )
+  ) +
+  facet_wrap(
+    ~ str_glue("Loess Fits: ({min(ideo_merge$cycle)}–{max(ideo_merge$cycle)})")
+  ) +
   scale_x_continuous(
-    breaks = c(-0.75, 0, 0.75),
-    labels = c("Liberals", 
-               "Moderates", 
-               "Conservatives")
+    limits = c(0, 1),
+    labels = scales::percent_format(accuracy = 1)
+  ) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(1, 5)) +
+  theme(
+    legend.position = "none", 
+    axis.text.y = element_blank()
   ) +
   labs(
-    title = "Aggregate votes mask underlying policy preferences",
-    subtitle = "Two districts with the same median voter position",
-    x = NULL,
-    y = NULL, 
-    fill = NULL
-  ) +
-  # geom_vline(data = means, aes(xintercept = xintercept)) +
-  coord_cartesian(xlim = c(-1.25, 1.25)) +
-  theme(
-    panel.grid.major.x = element_blank(),
-    axis.ticks = element_blank(),
-    panel.background = element_blank(),
-    panel.border = element_blank(),
-    # strip.placement = "outside"
+    y = NULL,
+    x = "District vote share for Republican\nin prior presidential election"
+  )
+
+plot_all_lines
+
+```
+
+```{r plot-compare-measures}
+plot_one_year + plot_all_lines +  
+  plot_layout(widths = c(2, 1)) +
+  plot_annotation(
+    title = "Weak Relationship Between District Voting and Ideology Within Parties",
+    subtitle = "Average ideological self-placement in each congressional district",
+    caption = "Data: Cooperative Congressional Election Studies"
   )
 ```
 
 
+The conceptual difference between district vote shares and aggregate ideology appears in real data as well, as shown in Figure \@ref(fig:plot-compare-measures). 
+The figure shows ideological self-placement responses to the Cooperative Congressional Election Study (CCES) as an approximate measure of a citizen policy ideology.
+I calculate the average self-placement for all respondents in each congressional district, as well as the average self-placement of Republican and Democratic identifiers as separate subgroups within each district.
+The first two panels use 2018 data show that the district vote captures variation in ideological self-placement reasonably well when examining congressional districts as a whole, but it does a poorer job capturing variation in self-placement within each party.
+The first panel shows that districts that voted more strongly for Democratic presidential candidate in 2016 were more liberal on average, and districts that voted more strongly for the Republican candidate in were conservative, indicated by a positively sloped loess fit line.
+The middle pattern shows that this pattern does not hold as strongly within parties.
+Among Republican identifiers within each district, a weaker but still positive relationship holds overall, with more conservative Republicans in districts that voted more Republican.
+Among Democratic identifiers, however, ideological self-placement is not as strongly related to aggregate voting, with a loess fit that is flatter and even negative at several points.
+The final panel of loess fits is included to show that this pattern appears in all CCES years and is not particular to 2018 CCES responses: a strong relationship between vote shares and self-placement _on average_, and weak or non-relationships within each party.
+
+The substantive takeaway from Figure \@ref(fig:plot-compare-measures) is that we should doubt the assumption that aggregate voting in the district is a reliable proxy of ideological variation within partisan primaries.
+Because the presidential candidates are the same in each district in each year, we know that this mismatch isn't due to different candidates with different campaign positions in each district.
+Instead, the observed pattern suggests that any aggregate relationship between ideological self-placement and district voting is driven by the partisan _composition_ of a district—more Republicans or more Democrats—rather than cross-district ideological variation within either party. 
+As a result, studies that use the presidential vote to proxy within-party ideology may simply be measuring the _size_ of a partisan group in a district instead of its ideological makeup.
 
 
-## Outline for the dissertation
+
+<!------- TO DO ---------
+- caveats about the use of this measure
+------------------------->
 
 
-### Theoretical Orientation
-
-Which games are we playing:
-
-- "Spatial" Models of Policy Preferences
-- Representatives as Delegates vs.\ Trustees
-- terms I need to define
+```{r plot-compare-measures, include = TRUE, fig.width = 10, fig.height = 6, out.width = "100%", fig.cap = "Average ideological self placement (vertical axis) and Republican vote share (horizontal axis) in all 435 congressional districts. Mean self-placement is calculated by numerically coding CCES ideological self-placement responses before averaging. The first panel plots average self-placement among all CCES respondents in each congressional districts. The middle panel breaks respondents in each congressional district into Republican and Democratic subgroups before averaging. The final panel plots loess fits for the same relationship measured over all CCES years."}
+```
 
 
-### Proposed Model
+### How have past studies incorporated voter preferences? {#sec:prefs-lit}
+
+
+
+
+## Project Outline and Contributions
+
+
+
+### Measuring district-party ideology
 
 Value of directly modeling each party:
 
@@ -547,7 +1228,17 @@ Value of directly modeling each party:
 
 
 
-### Causal Inference in the Study of Representation
+### Empirical tests: how district-party ideology matters
+
+Which games are we playing:
+
+- "Spatial" Models of Policy Preferences
+- Representatives as Delegates vs.\ Trustees
+- terms I need to define
+
+### Causal inference with structural models
+
+This is new to this lit
 
 What is the problem?
 
@@ -566,16 +1257,10 @@ What do I propose?
 - Pragmatic orientation: Taboo against explicit causal inference, (Grosz, Rohrer, Thoemmes), Whatever the Hernán (2018) article says 
 - The point of causal inference isn't to shame observational studies away from making causal claims. The point is to clarify which designs and assumptions enable certain causal claims and which do not.
 
+Machine learning
 
 
-### Machine Learning and Observational Causal Inference
-
-"Double Robustness" ??
-
-
-
-
-### Bayesian Causal Inference
+### Bayesian causal modeling
 
 Where do we have to confront things
 
@@ -584,6 +1269,9 @@ Where do we have to confront things
 - We aim to normalize a Bayesian interpretation of causal effects
     - there are many possible scenarios that could explain the data that we see
     - the posterior distribution represents the plausibility of scenarios, after seeing the data.
+
+
+
 
 
 
