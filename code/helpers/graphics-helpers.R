@@ -53,8 +53,7 @@ theme_mgd <- function() {
     ),
     plot.caption = element_text(
       size = 11,
-      hjust = 1, vjust = 1,
-      margin = margin(t = 10)
+      hjust = 1, vjust = 1
     ),
     plot.caption.position = "panel",
     plot.background = element_rect(fill = NA, color = NA)

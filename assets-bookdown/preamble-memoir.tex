@@ -1,7 +1,8 @@
 % document design
+
 % --- serif chapter styles ---
 \chapterstyle{dash} % don't want serif though
-  \renewcommand*{\chaptitlefont}{\huge\centering\bfseries} % \sffamily
+  \renewcommand*{\chaptitlefont}{\Large\centering\sffamily \bfseries} % \sffamily
   \renewcommand*{\chapnumfont}{\chaptitlefont}
 % \chapterstyle{dowding}
 
@@ -19,3 +20,15 @@
 \makeevenhead{chapter}{}{}{\thepage}
 \makeoddfoot{chapter}{}{}{}
 \makeevenfoot{chapter}{}{}{}
+
+% --- section style -----------------------
+\setsecheadstyle{\large \raggedright \sffamily \bfseries}
+\setsubsecheadstyle{\raggedright \bfseries \sffamily
+% \thesection\sectiontitle
+% \textcolor{gray}{} 
+% \\[-3pt] 
+% \textcolor{white}{\thesection}$\rightarrow \;$ % insert upper name
+} %\itshape
+
+
+\setsubsubsecheadstyle{\raggedright \itshape} 

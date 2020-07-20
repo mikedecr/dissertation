@@ -23,7 +23,7 @@ knitr::opts_chunk$set(
   # dev = "png",
   # fig device is f(pandoc_to) by default
   fig.align = "center", 
-  dpi = 300#, fig.retina = 3
+  fig.retina = 3
 )
 
 # you could set cache for each file?

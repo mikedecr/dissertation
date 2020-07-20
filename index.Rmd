@@ -15,7 +15,7 @@ github-repo: "mikedecr/dissertation"
 # annoying top-level LaTeX control
 documentclass: memoir
 classoption: oneside
-fontsize: 11pt
+fontsize: 12pt
 geometry: "left = 1.25in, right = 1.25in, top = 1.25in, bottom = 1.25in"
 bibliography: assets-bookdown/thesis-bib.bib
 csl: assets-bookdown/ajps.csl
