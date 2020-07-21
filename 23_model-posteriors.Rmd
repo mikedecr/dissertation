@@ -102,7 +102,7 @@ The model was estimated using a remote server at the University of Wisconsin--Ma
 I generated posterior samples using MCMC on `r smart_number(n_chains)` Markov chains. Each chain was run for `r comma(n_iterations)` iterations, divided into `r comma(n_warmup)` warmup iterations to tune Stan's adaptive HMC algorithm and `r comma(n_iterations - n_warmup)` post-warmup iterations saved for analysis.^[
   The algorithm was initialized with an `adalt_delta` parameter of `r adapt_delta` and a `max_treedepth` of `r max_treedepth`.
 ]
-Following the advice of @Link-Eaton:2011:thinning, I stored every post-warmup sample with no thinning of chains, resulting in a total of `r comma(total_samples)` samples per parameter across all chains.^[
+Following the advice of @link-eaton:2011:thinning-mcmc, I stored every post-warmup sample with no thinning of chains, resulting in a total of `r comma(total_samples)` samples per parameter across all chains.^[
   The chains mix well and exhibit little autocorrelation, which is owed to the fact that Hamiltonian Monte Carlo algorithms are much more efficient at proposing transitions and thus exploring a parameter space.
 ]
 

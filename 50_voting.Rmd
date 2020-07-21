@@ -1,5 +1,12 @@
 # District-Party Ideology and Primary Election Outcomes: Bayesian Double Machine Learning {#ch:voting}
 
+
+What is the research question
+
+- choice as f(ideology)
+- stratify on primary type?
+- stratify in open seats?
+
 What's the plan?
 
 - conditional logit vs. Hainmueller et al. OLS choice?
@@ -16,32 +23,111 @@ covariates:
     - cycle
 
 
-## Machine Learning Approach in Causal Inference
-
-### Why do it
-
-It's about $E[Y | X]$
-
-### Machine Learning Methods and Workflow
+## Machine Learning and Causal Inference
 
 
-### Internal Regularization and Bayesian Shrinkage Priors
+ML is basically just different methods for $E[Y | X]$
+
+
+### Why ML and Causal Inference
+
+ID assumptions are all about $E[Y | X]$.
+
+- models are post-identification
+- if we have to model, we like robustness and flexibility
+- we are specification and functional form dependences
+
+
+Problems:
+
+- don't know the covariates
+- even if we did, don't know the model
+
+
+
+Solution: ML
+
+- regularization and other covariate selection methods (not necessarily the purview of "machine learning")
+- many models are set up for interactions, nonlinearities
+- The causal models themselves are derived in terms of expectations, not in terms of regression functions.
+
+
+
+### how does ML work?
+
+workflow: 
+
+- model tuning, train/test split
+- penalize overfitting
+- regularization and shrinkage priors
+
+
+
+### Bayesian causal ML
+
+Notation:
+
+- model predictions are inherently posterior predictions
+
+
+Natural analogs:
+
+- ridge
+- lasso
+- extensions
+
+
+Benefits:
+
+- uncertainty in ML predictions has been a problem
+- Bayes gives a straightforward, unified framework for characterizing uncertainty in model parameters (feeding forward into model predictions)
+
+
+
+- handles non-identifiability in certain models pretty naturally!
+
+
+
+
+## Bias and Variance in Causal Identification
+
+
+### Regularization and Shrinkage Priors
+
+
+### Neyman Orthogonalization
+
+We can regularize in the first stage, then we try to be more agnostic in the second stage?
+
+
 
 
 ## Empirical Setup
 
-### Neural Network Model
+### Data
 
-### Regularization-Induced Confounding
+### Neural Network Choice Model
+
+Conditional choice likelihood
+
+Linear Index is Neyman-Parameterized
+
+Neural net in the selection stage
+
 
 ### Merging Model Subposteriors
 
-### Full Model
-
 ### Modeling Testing Workflow
 
+Model validation with LOO
 
-## Results
+Searched Parameters
+
+LOO results
+
+## Findings
+
+
 
 
 

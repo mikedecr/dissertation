@@ -1327,6 +1327,7 @@ Randomization limits the impact of the Bayesian assumptions
 
 Multi-stage models
 
+- uncertain measures _are priors_
 - propensity models (Zigler, Plummer/cutting)
 - structural models
 - to bootstrap or not to bootstrap?
@@ -1637,10 +1638,13 @@ We complete the model by specifying distributions for the outcome data and the r
 \end{align}
 The Normal model for the outcome data in the first line is equivalent to the Normal error term defined in \@ref(eq:bayes-rd).
 The priors for the $\beta_{w}$ slopes and residual standard deviation $\sigma$ are very diffuse given the scale of the outcome data, $\{0, 1\}$, and the running variable that only takes values in the interval $[`r -100 * bandwidth_margin`, `r 100 * bandwidth_margin`]$, a bandwidth of $\pm 5$ percentage points around the threshold.
+<!------- TO DO ---------
+- PPC
+------------------------->
 
-One possible retort to this model setup is that a binary outcome should be used instead, such as a logit or probit regression.
-These models are typically used to estimate probabilities underlying binary data in other contexts, so perhaps we should entertain its use here.
-Although this does run counter to the idea that the regression function is linear in the limit, for the sake of robustness I build a Bayesian logit specification as well. 
+A possible retort to this model setup is a Bayesian approach would be entirely unnecessary if instead we employed a binary outcome model like logit or probit regression.
+These models are typically used to estimate probabilities underlying binary data in other contexts, so we entertain it here as well.
+Although this model contradicts the limiting intuition that the regression function is instantaneously linear at the discontinuity (as any function is instantaneously linear for an infinitesimal change in its input), I indulge this possible retort by building a Bayesian logit specification as well. 
 This setup considers the binary election result as a Bernoulli variable with a probability parameter specified by a logit model,
 \begin{align}
   y_{dpt} &\sim \mathrm{Bernoulli}\left(\pi_{dpt}\right) \\
@@ -1745,7 +1749,7 @@ If we want to construct a prior for the treatment effect that is similar to the 
 This requires a prior for $\alpha^{*}_{w}$ on the log-odds scale that implies a flat prior for $\mathrm{logit}^{-1}\left(\alpha_{w}^{*}\right)$ on the probability scale.
 To solve this problem, we leverage the logit model's connection to the standard Logistic distribution.
 The logit function maps values in the $(0, 1)$ interval to any real number, and the inverse logit function maps any real number to $(0, 1)$.
-We accomplish a flat prior for win probabilities at the thredhold using a a standard Logistic prior on the log-odds scale,
+We accomplish a flat prior for win probabilities at the threshold using a a standard Logistic prior on the log-odds scale,
 \begin{align}
   \alpha_{w}^{*} &\sim \mathrm{Logistic}\left(0, 1\right)
   (\#eq:logit-prior)
@@ -1753,12 +1757,12 @@ We accomplish a flat prior for win probabilities at the thredhold using a a stan
 which becomes a flat density for $\mathrm{logit}^{-1}\left(\alpha_{w}^{*}\right)$. 
 It is startling at first to consider a prior as narrow as $\mathrm{Logistic}\left(0, 1\right)$ as an uninformative prior for a key parameter. 
 But at discussed in Section \@ref(sec:prior-flatness), the connection between prior vagueness and prior flatness is not absolute.
-Flatness is only a shape, and its relationship to prior information is contingent on other aspects of model configuration.
+Flatness is only a shape. The relationship between flatness and informativeness depends on model parameterization and the scale of the data.
 
 Figure \@ref(fig:plot-logit-priors) visualizes how the Logistic prior for the intercept on the log-odds scale becomes a flat prior on the probability scale at the threshold.
-The left panel shows a histogram of $\mathrm{Logistic}\left(0, 1\right)$ simulations, and the right panel shows a histogram of the same values after they are converted to probabilities using the inverse logit link function. 
+The left panel shows a histogram of $\mathrm{Logistic}\left(0, 1\right)$ simulations, and the right panel shows a histogram of the same values after they are converted to probabilities using the inverse logit function. 
 For comparison, I also simulate a $\mathrm{Normal}\left(0, 10\right)$ prior, which is something a researcher might pick if they wanted to be vague on the log-odds scale. 
-Converting the wide Normal prior to the probability scale, however, shows that higher prior density on logit far from zero translate to probability values very close to $0$ and $1$.
+Converting the wide Normal prior to the probability scale, however, shows that greater prior density on logit values far from zero translates to greater prior density over probability values very close to $0$ and $1$.
 
 The fact that the wide Normal prior has strange behavior on the probability scale does not mean that it shouldn't be used in Bayesian logistic modeling.
 It could be an appropriate choice for specifying priors for constructs that should be understood directly on the logit scale.
@@ -1766,9 +1770,10 @@ For instance, I give this exact prior to the slope parameters in this RDD logit 
 \begin{align}
   \beta_{w} &\sim \mathrm{Normal}\left(0, 10\right)
 \end{align}
-because I want the prior to consider a broader distribution slopes on the logit-scale.
-The lesson with these priors, as with any prior, is that distributions should be chosen to suit the modeling context.
+because I want the prior to consider a broader distribution slopes _on the logit-scale_.
+The lesson with these priors, as with any prior, is that prior distributions should be chosen to suit the modeling context.
 Elements of that context include link functions, model reparameterization, the scaling of outcome data or covariates, regularization concerns, and so on.
+Choosing "default priors" that always encode flatness on one scale has no guaranteed behavior for implies priors for important functions of parameters.
 
 ```{r plot-logit-priors, include = TRUE, fig.width = 9, fig.height = 4.5, out.width = "100%", fig.cap = 'Scale invariance of logit model priors. Standard logistic prior on logit scale becomes a flat prior on the probability scale. "Diffuse" priors on logit scale imply priors on probability scale that bias toward extreme probabilities.'}
 ```

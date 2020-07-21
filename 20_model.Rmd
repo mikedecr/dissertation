@@ -1,6 +1,4 @@
-# Hierarchical IRT Model for District-Party Public Ideology {#ch:model}
-
-Modeling the Partisan Constituency's Policy Preferences {#ch:model}
+# Hierarchical IRT Model for District-Party Ideology {#ch:model}
 
 
 

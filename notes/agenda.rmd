@@ -2,59 +2,163 @@
 title: Overall thesis notes
 ---
 
+# Near-Term Agenda
+
+- Read/write chapter 1
+- pick model data/covariates
+- ideal point priors (ch 4)
+- ML workflow
+
+
 # Meetings
 
-1. pick model data covariates
-2. ch 1 reading
-3. model work flow
 
-Urgent methods reading agenda
-
-- zigler et al 2013: two stage bayes
-- bayesian causal inf (oganisian, etc)
-- gelman king (bayesian causal inf in political science?)
-- pearl: half-bayesian
-- neural nets
-- choice models
-- neural net + choice
-- design uncertainty
-- other cool hypothesis reframing stuff
-    - TOST equivalence test of assumptions
-    - Caughey NPC, beyond sharp null
-- tree models for p.s. (montgomery et al)
-- check on primary laws again, potentially resolve with Barry
+## Qs for Barry
 
 
 
-- ranefs meta-analysis
-    - the Borenstein estimator seems deterministic? is this obtained by an infinite variance prior?
-    - what choices are we making with the Bayesian (Rubin) view?
-    - std.err of estimator is the average wrongness from truth, but we don't know what side of the wrongness we're on.
+## Qs for Alex
 
-- Alex:
-    - couldn't you have chooser covariates in the hidden layer, since it's transformed?
-        - might not be worth it the complexity, but that's ML, baybee!
-    - Thinking about approaches to regularization and overfitting
-        - Firefly MCMC
-        - ML uses cross-validation to get "optimal" predictions, so the data tell you stuff.
-        - Bayes _can_ use priors estimated from data, but what does this _mean_? "This is the prior that the data best support?" How is that not just "the data?" Is it because the data are supporting an optimal amount of regularization (data guide which prior values increase posterior uncertainty?)
-    - More practical question: what's the best strategy for regularizing a in a bayesian causal workflow
-        - priors
-            - only one fit, internal regularization, with an "empirical" prior?
-                - one fit per specification, LOO for evaluation, pick the best one
-            - sparsity?
-                - do we care about separating shrinkage and regularization? (a problem with bland horseshoes, bayes lasso, bayes ridge)
-                - if I'm just trying to get good predictions, who cares about which things aren't sparse?
-                - then again, something like FH gives me more parameters to explore, which might help balance things?
-            - Bayesian LASSO: hard to separate sparsity and regularization
-        - Multi-stage modeling
-            - neyman orthogonalization lets us regularize stage 1.
-            - what are we allowed to do in stage 2?
-    - Regularization induced confounding
-        - hahn et al. parameterization: stage 1 covariates are IN stage 2, equivalently. So we NEED X in stage 2. does this hold when we aren't in linearity world? what changes?
+- what does it mean for a model to estimate a regularizing prior?
+    - beta ~ normal(0, alpha); alpha ~ cauchy(0, tau), tau ~ ?
+    - Is this just overfitting, or what?
+    - I'm doing LOO to guard against model complexity
+- Sparsity-inducing priors as an approximation to "dropout"
+- priors and likelihoods
     - relating arithmetic mean to beta-binomial model:
         - the arithmetic mean the same as the MAP under...beta(1, 1) prior?
         - how does the beta(.5, .5) prior relate to nonparametric estimation of the proportion?
+
+
+# Reading
+
+##  Methods
+
+Bayes and causal inference
+
+- Zigler et al 2013: two stage Bayes
+- Bayesian causal inf (Oganisian, etc)
+- other cool hypothesis reframing stuff
+    - TOST equivalence test of assumptions
+    - Caughey NPC, beyond sharp null
+- design uncertainty
+- Gelman King (Bayesian causal inf in political science?)
+- Pearl: "half-Bayesian"
+
+
+Neural Nets
+
+- Bayesian view/uncertainty
+- Regularization approaches
+    - Simpson et al. "Penalizing Model Complexity"
+    - what is "dropout"
+    - can I approximate dropout
+    - sparsity priors, regularizing priors, etc.
+- Discrete choice models
+
+
+Broad ML
+
+- tree models for p.s. (montgomery et al)
+
+
+
+Meta-Analysis
+
+- ranefs meta-analysis
+    - the Borenstein estimator seems deterministic? is this obtained by an infinite variance prior?
+    - what choices are we making with the Bayesian (Rubin) view? compromise between flat prior and spike prior?
+    - std.err of estimator is the average wrongness from truth, but we don't know what side of the wrongness we're on
+
+
+
+## Ch 1 and other design stuff
+
+Primaries and representation:
+
+- cited in brady, han, and pope
+    - A.s.s.
+    - fiorina 1999
+    - galderisi, ezra, lyons 2001
+    - hacker/pearson 2005
+    - MPR 2006
+    - Bradyand Schwartz1995
+    - burden 2001
+    - francis et al 2004
+    - gerber/morton 1998
+    - schmidt, kenny, morton 1996
+- evidence of primary extremism
+    - presidentials: Norrander1989; Polsbyand Wildavsky1978
+    - extremism of presidential delegates: McClosky, Hoffman,and O'Hara 1960; Soule and McGrath 1975; Stone and Rapoport 1994
+    - SPD in primaries: Aldrich 1995;PolsbyandWildavsky2004; Schlesinger1991
+- Brady/Han/Pope SPD:
+    - primary preferences must differ
+        - Senate: BradyandSchwartz1995; Francis etal. 1994 ; GerberandMorton1998; Schmidt,Kenny,Morton 1996; 
+        - House: scant evidence
+    - they must present a _credible threat_
+        - general election vote losses principle (Canes-WroneB,radya,ndCogan2002) should apply to the primary, no?
+        - moderate candidates _attract_ primary threat (endogeneity)
+        - costs of flip-flopping on candidate reputations, clarity of positions: Alvarez1997
+- Burden 2001:
+    - candidates view of the world vs. voter view: be on your best behavior to not give opponents ammo and fend off challenges. Voters not noticing is actually a _best-case_ scenario.
+    - "As long as legislators think that positions matter, then researchers should treat them as though they do"
+    - overreaction to the circumstances on the ground is actually equilibrium! So the "unreasonableness" of legislator behavior in the face of voter ignorance or apathy is actually the equilibrium path that the legislator wants to be on, otherwise they could be caught behaving badly and have their voters be made aware.
+    - some evidence that legislators are more extreme when they have primary challengers
+
+Formal models that explain divergence:
+
+- Aldrich 1983,
+- Alesina 1988,
+- Calvert 1985
+- Wittman 1977
+- Cox 1990: centripetal and centrifugal
+
+- Districts and representation
+    - Ensley AJPS, public choice, district complexity/heterogeneity
+
+
+
+
+
+# Data agenda
+
+- check on primary laws again, potentially resolve with Barry
+- dynamic model, past data
+
+
+
+
+# Modeling agenda
+
+
+## Neural Net
+
+- choose covariates in hidden layer, or hierarchical coefficients
+    - might not be worth it but hey that's ML baybee!
+- Combining subposteriors
+    - Kernel estimator
+    - GP estimator
+    - firefly MCMC
+- parameterization: do we need covariates in stage 2
+- identifiability
+        - identifiability paper
+        - run for longer, with thinning
+        - simulate fake data to see that predictions work even if the parameters look bad
+
+# Writing Thoughts:
+
+Theory: 
+
+- how to set this up as falsification focus rather than verification focus
+    - severe tests
+
+
+# The Wild west
+
+
+- Alex:
+    - More practical question: what's the best strategy for regularizing a in a bayesian causal workflow
+
     - posterior ideal points
         - estimate MVnormal for ideal points
     - identifiability
@@ -96,14 +200,15 @@ Urgent methods reading agenda
 
 ## For design
 
-- [ ] Achen–Bartels (Realists) lit review
-- [ ] Achen critique of Miller and Stokes (Lewis and Tausanovitch)
-- [ ] alvarez nagler (conditional/multinom choice)
+- [ ] Desmairis et al. AJPS
 - [ ] read Hall-Thompson
 - [ ] Hirano and Snyder
 - [ ] Langella and Rogowski
 - [ ] Hill
 - [ ] Thomsen
+- [ ] Achen–Bartels (Realists) lit review
+- [ ] Achen critique of Miller and Stokes (Lewis and Tausanovitch)
+- [ ] alvarez nagler (conditional/multinom choice)
 - [ ] Snyder team old papers
 
 
@@ -446,18 +551,6 @@ Goals for next week:
   + more survey cleaning (A.S.S. paper)
 
 
-What to do with the Hopkins/Sniderman theory
-
-- does party's issue emphasis mean parties should collapse, or that variation should track
-- Grossman-Hopkins; parties care about issues so they try to position themselves on it
-  + read their stuff to see how they quality this
-  + do they think districts collapse?
-- weighting issues: left groups see fine variation in left members, but republicans are all bunched at zero (Brunell? Linda Fowler?)
-- or Sniderman conflicted theory: Democrats are conflicted about appeasing groups, so variation matters. Republicans are conflicted
-- THINK about abortion as a toy case
-  + if weighting
-- falsify rather than support
-  + *make falsification*
 
 
 

@@ -41,6 +41,51 @@ Lit review:
 - Why do candidates take non-moderate stances in reality? Studies that look into the polarizing effects of primaries find little evidence that primaries matter for candidate positioning, but many of these studies are focused on Congressional incumbents. 
 - Studies that include non-incumbent candidates show that many of the empirical implications of the "strategic positioning dilemma" don't receive a lot of evidence. For instance, studies of primary "openness" consistently show basically zero or even reversed relationships to candidate ideology as you would expect from theory.  
 
+<!------- TO DO ---------
+- from the prospectus:
+------------------------->
+The second obstacle preventing a more complete study of primary representation is the failure to incorporate primary candidates' ideal points into the analysis. 
+Although ideal point estimates derived from roll-call votes such as [Nominate]{.smallcaps} are a popular tool for measuring politicians' ideological locations [@poole:1997:roll-call-history; @poole:2005:spatial-models], only incumbents cast roll call votes, so these measures are unavailable for non-incumbent candidates.^[
+  Studies of candidate positioning that go beyond incumbents sometimes use survey data from challenger candidates [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning], but the surveys only interview general election candidates. Furthermore, the rarity of these surveys limits the generalizability of their findings over time.
+]
+Further, when non-incumbents enter the picture, researchers tend to focus on the positioning of general election candidates rather than primary candidates [@ansolabehere-et-al:2001:candidate-positioning; @canes-wrone-et-al:2002:out-of-step; @burden:2004:candidate-positioning]. Some studies have argued that primary competition leads incumbent legislators to take non-median positions, but these studies do not observe primary candidate positions directly, instead observing the presence or threat of challengers [@burden:2004:candidate-positioning; @brady-han-pope:2007:out-of-step]. Recent advances in ideal point modeling using campaign contributions are a promising path forward [@hall-snyder:2015:ideology; @bonica:2013:ideology-interests; @bonica:2014:mapping-ideology], but they are not designed for the careful study of primary competition and thus contain many "post-treatment" measurement artifacts.
+<!------- TO DO ---------
+- weaken
+------------------------->
+<!-- don't diss Bonica if we're going to use him! -->
+
+
+
+
+What to do with the Hopkins/Sniderman theory
+
+- does party's issue emphasis mean parties should collapse, or that variation should track
+- Grossman-Hopkins; parties care about issues so they try to position themselves on it
+  + read their stuff to see how they quality this
+  + do they think districts collapse?
+- weighting issues: left groups see fine variation in left members, but republicans are all bunched at zero (Brunell? Linda Fowler?)
+- or Sniderman conflicted theory: Democrats are conflicted about appeasing groups, so variation matters. Republicans are conflicted
+- THINK about abortion as a toy case
+  + if weighting... if not weighting...
+
+
+
+
+
+
+## How Partisan Preferences Affect Candidates
+
+
+### Naive regression
+
+- what is the relationship
+- let's control for the thing
+- what does this imply?
+
+
+
+
+
 
 ```{r read-dime, eval = FALSE}
 dime <- read_rds(here("data", "_clean", "candidates-x-irt.rds"))
@@ -226,14 +271,9 @@ ggplot(dime) +
 
 
 
-## How Partisan Preferences Affect Candidates
 
 
-### Naive regression
 
-- what is the relationship
-- let's control for the thing
-- what does this imply?
 
 ### The Direct Effect of District-Party Ideology
 
@@ -515,24 +555,6 @@ or, written as a probability distribution
 
 
 ### Machine Learning and Causal Inference
-
-Problems:
-
-- don't know the covariates
-- even if we did, don't know the model
-
-Solution: ML
-
-- regularization and other covariate selection methods (not necessarily the purview of "machine learning")
-- many models are set up for interactions, nonlinearities
-- The causal models themselves are derived in terms of expectations, not in terms of regression functions.
-
-Bayesian considerations:
-
-- uncertainty in ML models is a problem
-- Bayes gives a straightforward mode for characterizing uncertainty in model parameters (feeding forward into model predictions)
-- handles non-identifiability in certain models pretty naturally!
-
 
 
 
@@ -1015,3 +1037,19 @@ ggplot(total_samples) +
     - p(total) and p(direct), which are estimated, implying a prior for p(indirect).
     - Suppose we constrain the variance of one of these, which of the "free" priors gets a better signal?
 ------------------------->
+
+## Future Work
+
+The DAG reveals how confounding affects this conclusion.
+
+- if intermediary groups are the key voice, but intermediaries are sampled from the population, then the population has an effect.
+- if the population responds to intermediaries (which might instead be functions of industry, demographics, etc), then the causal effect remains confounded insofar as controlling for demographics does _not_ do a sufficient job.
+- draw a dag:
+    - positioning ~ ideology, EPN
+    - ideology ~ EPN, demographics
+    - EPN ~ demographics + u
+    - if U also connects to positioning, we're in trouble?
+
+
+
+

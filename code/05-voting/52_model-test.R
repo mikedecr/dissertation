@@ -303,6 +303,10 @@ net_test_data <- net_test_data %>%
 
 beepr::beep(2)
 
+net_test_data %>% 
+  pull(loo)
+
+
 # compare node counts, group by party and constant
 net_test_data %>% 
   arrange(party, add_constant, nodes) %>%
