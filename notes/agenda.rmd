@@ -17,6 +17,8 @@ title: Overall thesis notes
 
 
 
+
+
 ## Qs for Alex
 
 - what does it mean for a model to estimate a regularizing prior?
@@ -36,6 +38,7 @@ title: Overall thesis notes
 
 Bayes and causal inference
 
+- Maclaren identifiability
 - Zigler et al 2013: two stage Bayes
 - Bayesian causal inf (Oganisian, etc)
 - other cool hypothesis reframing stuff
@@ -55,6 +58,7 @@ Neural Nets
     - can I approximate dropout
     - sparsity priors, regularizing priors, etc.
 - Discrete choice models
+- Model avging over multiple models
 
 
 Broad ML

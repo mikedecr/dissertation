@@ -45,7 +45,7 @@ Lit review:
 - from the prospectus:
 ------------------------->
 The second obstacle preventing a more complete study of primary representation is the failure to incorporate primary candidates' ideal points into the analysis. 
-Although ideal point estimates derived from roll-call votes such as [Nominate]{.smallcaps} are a popular tool for measuring politicians' ideological locations [@poole:1997:roll-call-history; @poole:2005:spatial-models], only incumbents cast roll call votes, so these measures are unavailable for non-incumbent candidates.^[
+Although ideal point estimates derived from roll-call votes such as [Nominate]{.smallcaps} are a popular tool for measuring politicians' ideological locations [@poole-rosenthal:1997:roll-call-history; @poole:2005:spatial-models], only incumbents cast roll call votes, so these measures are unavailable for non-incumbent candidates.^[
   Studies of candidate positioning that go beyond incumbents sometimes use survey data from challenger candidates [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning], but the surveys only interview general election candidates. Furthermore, the rarity of these surveys limits the generalizability of their findings over time.
 ]
 Further, when non-incumbents enter the picture, researchers tend to focus on the positioning of general election candidates rather than primary candidates [@ansolabehere-et-al:2001:candidate-positioning; @canes-wrone-et-al:2002:out-of-step; @burden:2004:candidate-positioning]. Some studies have argued that primary competition leads incumbent legislators to take non-median positions, but these studies do not observe primary candidate positions directly, instead observing the presence or threat of challengers [@burden:2004:candidate-positioning; @brady-han-pope:2007:out-of-step]. Recent advances in ideal point modeling using campaign contributions are a promising path forward [@hall-snyder:2015:ideology; @bonica:2013:ideology-interests; @bonica:2014:mapping-ideology], but they are not designed for the careful study of primary competition and thus contain many "post-treatment" measurement artifacts.
@@ -630,7 +630,28 @@ What are the quantities we are interested in?
 
 ## Data and Modeling
 
-### Data Sources
+### Primary Candidacies
+
+### CF Scores
+
+CF scoreswork by assuming that a donor $i$ contributes to recipient $j$ by maximizing their donation utility over all potential recipients.
+The donor chooses a dollar amount $y_{ij}$ subject to contribution limits that maximizes
+\begin{align}
+  u_{i}(\mathbf{y}_{i}) &= \sum\limits_{j} \left[
+    b_{i}\left(y_{ij}\right) - y_{ij}\left(\theta_{i} - \delta_{j}\right)^2
+  \right]
+\end{align}
+where $b_{i}(y_{ij})$ is $i$'s net benefit for contribution $y_{ij}$ (instrumental and/or expressive benefits minus costs), $\theta_{i}$ is the donor's ideal point, and $\delta_{j}$ is the recipient's ideal point.
+The term $y_{ij}\left(\theta_{i} - \delta_{j}\right)^2$ is a dollar-weighted function of the ideological distance between donor and candidate ideologies.
+The term grows when the ideological distance is greater, meaning that the donor loses more utility by giving to candidates that don't reflect the donor's ideological preferences, and it also grows when the donation amount $y_{ij}$ is larger.
+The $b_{i}$ function acts like a donor-level fixed effect, capturing a donor's overall propensity to donate regardless of their ideological proximity to potential recipients.
+@bonica:2013:ideology-interests derives a fully parameterized item response theory (IRT) model from this utility framework, estimating latent ideological locations for all donors and all recipients from their contribution patterns.
+The IRT scores do not cover as wide of a universe as CF the scores created from correspondence analysis [@bonica:2014:mapping-ideology]. 
+
+<!------- TO DO ---------
+- validity conversation!!!
+------------------------->
+
 
 
 ### Primary Rules
