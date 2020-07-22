@@ -129,7 +129,7 @@ Primary elections tend to be dominated by partisan voters who are attentive to p
 <!------- TO DO ---------
 - Institution of nomination in a separate section?
 ------------------------->
-As a result, competition in the primary stage may present a more acute electoral threat to partisan candidates than general elections do---a "strategic-positioning dilemma" that leads candidates to take ideological issue stances in favor of convergent stances that target the median voter [@aldrich:1983:downsian-activism; @burden:2004:candidate-positioning; @brady-han-pope:2007:out-of-step; @hill:2015:nominating-institution].
+As a result, competition in the primary stage may present a more acute electoral threat to partisan candidates than general elections do---a "strategic-positioning dilemma" that leads candidates to take ideological issue stances in favor of convergent stances that target the median voter [@aldrich:1983:downsian-parties; @burden:2004:candidate-positioning; @brady-han-pope:2007:out-of-step; @hill:2015:nominating-institution].
 
 <!------- TO DO ---------
 - considered cites in comment
@@ -222,11 +222,28 @@ Just as any individual might have a policy ideology ideal point, and any individ
 By aggregating policy ideology within groups in this way, this project summarizes how policy ideology among Democrats differs from policy ideology among Republicans even, and how these groups vary across congressional districts. 
 This enables us to consider how candidates are responsive to partisan sub-constituencies that together make up a shared general election constituencies [see also @clinton:2006:constituent-representation].
 
+
+
 ### Key concept: candidate campaign positioning
 
-Burden, AnSnSt team, Bonica, Rogowski and Langella, 
+As with individual voters, we can imagine that candidates for congress have campaign platforms that are located in ideological space as well.
+The study of United States politics most commonly places elite political actors in ideological space using their voting records, including Congress members, Supreme Court justices, federal judges, and state legislators [@poole-rosenthal:1997:roll-call-history; @clinton-jackman-rivers:2004:ideal; @martin-quinn:2002:ideal; @epstein-et-al:2007:judicial-common-space; @shor-mccarty:2011:map-state-leg]. 
+Researchers have extended the modeling intuitions to estimate ideal points from unconventional sources of data, including surveys of congressional candidates, campaign finance transactions, text from political advertisements, and even Twitter activity [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning; @bonica:2013:ideology-interests; @henderson:2016:text-ideology; @barbera:2015:twitter-scores]
+<!------- TO DO ---------
+- henderson tbd
+------------------------->
 
-Henderson, Barberá, 
+This project is interested in the ideological locations of candidates for office as measured through their campaigns.
+The positioning of campaigns is more directly related to the strategic positioning dilemma than any other concepts that we might scale in ideological space: candidates compete against one another by positioning themselves to appeal to a partisan base of voters, and partisan constituents consult use these campaign positions to nominate the candidate of their liking.
+To be sure, campaign positions are influenced by other activities that researchers have used to scale candidates for office.
+Incumbent legislators cast votes to form a defensible record in office, for instance, which both bolsters and constrains their campaign messages [@mayhew:1974:congress; @canes-wrone-et-al:2002:out-of-step].
+Not every primary candidate has a roll-call voting record to compare, however, so this project requires an ideal point measure that places incumbents, candidates challenging incumbents, and candidates running for open seats in a comparable ideological space.
+
+This project measures primary candidates' campaign positioning using CFscores from Bonica's -@bonica:2019:dime _Database on Ideology, Money in Politics, and Elections_ (DIME) database.
+CFscores use campaign contributions to measure the political ideologies of contributors and recipients of campaign contributions, including candidates for office, party organizations, PACs, and individual donors. 
+The estimation method assumes that a donor contributes to potential recipients in a way that maximizes utility of their total contributions, which is affected by the ideological similarity between donors and potential recipients [@bonica:2013:ideology-interests; @bonica:2014:mapping-ideology].
+These scores have been used in other studies of primary candidate ideology by @thomsen:2014:moderate-candidates, @thomsen:2020:ideology-gender, @rogowski-langella:2015:primary-systems, @ahler-citrin-lenz:2016:CA-open-primaries; and @porter-treul:2020:primary-experience, and similar donation-based ideal point measures by @hall-snyder:2015:ideology have been used by @hall:2015:extremists and @hall-thompson:2018:who-punishes.
+As I discuss in future chapters, CFscore are not without controversy as indicators of elite ideology, especially when comparing members of the same party [@tausanovitch-warshaw:2017:polarized-congress; @hill-huber:2017:donorate], but research shows that donors differentiate moderate and ideological candidates within the same party [@barber-et-al:2016:ideological-donors], the ideology component of CFscores outperforms a party-only model of giving [@bonica:2014:mapping-ideology], and CFscores predict future votes by members of Congress to a similar degree of accuracy as roll-call based scores do [@bonica:2019:cf-validity].
 
 
 
@@ -290,7 +307,100 @@ The two empirical research questions underlying this project are:
 ### Theoretical concerns
 
 The strategic positioning dilemma view of U.S. primaries has questionable theoretical underpinning.
-First, the SPD depends on lofty assumptions about the sophistication of voter behavior in primaries. 
+First, the SPD is put forth as a theory to explain divergent candidate platforms across parties, but there are numerous theories that explain candidate divergence that do not rely on bottom-up pressures from primary voters.
+And second, the SPD requires voters and candidates to be highly sophisticated actors.
+Candidates must be capable of perceiving the relative extremity of their constituents, and voters capable of learning about candidate platforms, differentiating between candidates, and acting on sincerely-held preferences over candidate platforms.
+
+
+<!------- TO DO ---------
+- this needs to get organied below
+------------------------->
+
+"Representation" means many different things in the study of elections.
+Many theories invoke dichotomies of representational
+styles, such as "delegate" versus "trustee" models of representation, or "descriptive" versus "substantive" representation [@burke:2012:trusteeship
+[@pitkin:1967:representation; @phillips:1995:politics-presence; @canon:1999:racial-redistricting]. 
+Much of the empirical work in the study of Congressional elections and Congressional primaries has operated within a delegational framework, asking whether electoral candidates campaign by appealing to local policy attitudes, whether elected legislators according to their constituents' policy preferences, and whether constituents vote for the candidate who most closely represents their preferences [e.g. @miller:1963:constituency-influence; @campbell-et-al:1960:american-voter; @erikson-wright:1980:policy-representation; @poole-rosenthal:1997:roll-call-history].
+
+The notion of the SPD emerges from a clash between idealized candidate positioning in formal models and the candidate positioning we observe in the real world.
+Classic formal models highlight a strategic logic for candidates to position themselves by "converging" to the location of the median voter: if constituents vote primarily with policy-based or ideological considerations, then candidates maximize the probability of electoral victory by positioning themselves as closely to the median constituent as possible [@downs:1957:economic-theory; @black:1948:group-decisions].^[
+  Some empirical studies of candidate positioning [e.g. @ansolabehere-et-al:2001:candidate-positioning; @brady-han-pope:2007:out-of-step] claim that these formal models "predict" candidate convergence at the median voter.
+  In my opinion, this misrepresents the formal work.
+  @downs:1957:economic-theory in particular explains the logic of candidate convergence, but he also explores many circumstances that would prevent the convergent equilibrium from appearing in the real world.
+  This is important to clarify because, although it is common to describe candidate convergence as a "Downsian result" or a "Downsian prediction," we should recognize that the convergent equilibrium is an oversimplification.
+  The incentives for moderation are more theoretically important than the whether we observe perfect candidate convergence at the median voter. 
+]
+Empirical work finds evidence in partial support of both convergent and divergent candidate incentives.
+Candidates who run in electorally competitive districts are more moderate than co-partisans who are running in districts that run in electorally "safe" districts [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning], and even candidates who run in safe districts are marginally rewarded for taking more moderate issue positions than a typical party member would [@canes-wrone-et-al:2002:out-of-step].
+Extremist candidates, meanwhile, earn fewer votes and are less likely to win in Congressional elections, and this tendency is stronger in competitive districts than in safe districts [@hall:2015:extremists].
+Despite these incentives to take moderate campaign positions, candidates nonetheless take divergent rather than convergent stances by and large.
+Republican and Democratic members of Congress vote very differently from one another, and this partisan divergence increased in recent years [@poole-rosenthal:1997:roll-call-history; @McCarty-Poole-Rosenthal:2006:book].
+The difference in legislative voting behavior across parties isn't simply because Republicans and Democrats represent different districts, since Republicans and Democrats who represent similar districts (or the same state, in the case of U.S. Senators) nonetheless vote differently from one another [@mccarty-poole-rosenthal:2009:gerrymandering].
+Even among Congressional races in the exact same district, there is a sizable gap between Republican and Democratic candidate positions.
+In total, even though there is some evidence that candidates benefit by positioning themselves as marginally more moderate or more in line with local public opinion, the dominant finding is that candidates take divergent positions that are more closely aligned with a national party platform than with a set of local issue priorities [@ansolabehere-et-al:2001:candidate-positioning].
+
+The Downsian logic is a plausible explanation for the electoral benefits of moderation, but what explains the non-moderate stances?
+Political scientists have explored several theories whose underlying mechanisms are distinct from the SPD notion of competing constituencies.
+Parties are interested in cultivating long-term reputations for pursuing certain policy priorities [@downs:1957:economic-theory; @stokes:1963:spatial].
+It benefits both major parties for these reputations to be distinct from one another, since parties have office-seeking motivations to mutually divide districts into geographic bases that tend to support one party platform consistently over time [@snyder:1994:platform-differentiation].
+Party leaders maintain these party reputations by constructing brand-consistent legislative agendas and pressuring legislators to support reputation-boosting legislation [@cox-mccubbins:2005:agenda-cartel; @butler-powell:2014:valence-brand; @lebo-et-al:2007:strategic-party-government].
+In turn, non-median party platforms are more appealing to constituents with ideologically consistent issue beliefs.
+These voters are more likely to turn out in general elections than moderate voters are, so it it is more efficient for candidates to cater to these constituents. 
+Partisan constituents are also more likely to engage in pro-party activism, such as staffing campaigns and attending party conventions [@aldrich:1983:downsian-parties; @mcclosky-et-al:1960:conventions; @layman-et-al:2010:activists-conflict-extension].
+
+These incentives for candidates to diverge from median positions are possible without considering primary elections whatsoever.
+Even if we introduce primary elections into the theoretical story, many plausible explanations for divergence do not rely on outward pressures from ideological primary voters either.
+
+
+outward pressures from ideological primary voters.
+
+
+Primaries without voters:
+
+- parties gate-keep the ballot (direct primary?)
+- must please issue groups in private, campaign on valence in public
+- party activists (campaign labor)
+- 
+
+
+Why non-moderate stances?
+
+- xyz
+- primaries...
+
+
+
+
+Qualitative evidence suggests that candidates take careful positions on issues of local concern even if these delicate tactics don't influence high-level relationships between local preferences and legislator behavior [@fenno:1978:home-style], but systematic tests of localized, particularistic position-taking are mixed.
+- faithfulness to local opinion on specific issues [@canes-wrone-et-al:2011:issue-accountability]
+- not much convergence even where you "most expect it" @fowler-hall:2016:convergence].
+
+
+
+
+
+
+<!-- 
+pro:
+
+- responsiveness evidence
+
+
+con: 
+
+- information constraints
+- party over policy
+- Warshaw spatial voting (US House) (but also...maybe primary electorates are better)
+
+-->
+
+
+<!------- TO DO ---------
+- transition to sophistication argument
+------------------------->
+
+
+
 It is well understood that learning about the characteristics and issue positions of political candidates is costly for voters, particularly in non-presidential elections.
 <!------- TO DO ---------
 - cite information costs
@@ -321,6 +431,7 @@ They may vote for the familiar candidate instead of the ideologically proximate 
 - coverage
 ------------------------->
 In short, the claim that voters' policy preferences affect their choices in primary campaigns sounds straightforward, but the information environment of  primary campaigns makes it difficult for constituents to vote foremost with their policy ideologies.
+
 
 Indeed, the notion that "voters matter" is a theoretical orientation toward primaries that not all scholars of electoral representation share to the same degree.
 Many scholars of political parties maintain that parties retained their gatekeeping roles over party nominations even as the direct primary ostensibly removed their formal powers over candidate selection. 
@@ -356,9 +467,14 @@ The efficacy of these non-policy appeals may be correlated with the actual ideol
 
 <!------- TO DO ---------
 - this should be structured around EXPLICIT TESTS
-- they don't find clear evidence
+- review the theoretical proposition, introduce a few areas people have looked.
+- they don't find clear evidence?
+- presence of primary challengers
+- threat of primary challengers
+- voters vs. organizations (The parties are different maybe?)
 - primary rules
-- The parties are different maybe?
+- extremity/heterogeneity of the constituency...
+- redistricting?
 - they use ONE measure for partisan preferences (which would be bad even if we had to infer one midpoint)
 ------------------------->
 
@@ -366,60 +482,6 @@ Empirical support for the strategic positioning dilemma is as unclear as the the
 When researchers conduct empirical tests of the SPD or the general premises of primary representation and competition on which it rests, the results are ambiguous and often contradictory.
 This section reviews existing research on electoral representation and accountability in Congress to provide a background for the substantive innovations in this project.
 
-"Representation" means many different things in the study of elections.
-Many theories invoke dichotomies of representational
-styles, such as "delegate" versus "trustee" models of representation, or "descriptive" versus "substantive" representation [@burke:2012:trusteeship
-[@pitkin:1967:representation; @phillips:1995:politics-presence; @canon:1999:racial-redistricting]. 
-Much of the empirical work in the study of Congressional elections and Congressional primaries has operated within a delegational framework, asking whether electoral candidates campaign by appealing to local policy attitudes, whether elected legislators according to their constituents' policy preferences, and whether constituents vote for the candidate who most closely represents their preferences [e.g. @miller:1963:constituency-influence; @campbell-et-al:1960:american-voter; @erikson-wright:1980:policy-representation; @poole-rosenthal:1997:roll-call-history].
-
-The notion of the SPD emerges from a clash between idealized candidate positioning in formal models and the candidate positioning we observe in the real world.
-Classic formal models highlight a strategic logic for candidates to position themselves by "converging" to the location of the median voter: if constituents vote primarily with policy-based or ideological considerations, then candidates maximize the probability of electoral victory by positioning themselves as closely to the median constituent as possible [@downs:1957:economic-theory; @black:1948:group-decisions].^[
-  Some empirical studies of candidate positioning [e.g. @ansolabehere-et-al:2001:candidate-positioning; @brady-han-pope:2007:out-of-step] claim that these formal models "predict" candidate convergence at the median voter.
-  In my opinion, this misrepresents the formal work.
-  @downs:1957:economic-theory in particular explains the logic of candidate convergence, but he also explores many circumstances that would prevent the convergent equilibrium from appearing in the real world.
-  This is important to clarify because, although it is common to describe candidate convergence as a "Downsian result" or a "Downsian prediction," we should recognize that the convergent equilibrium is an oversimplification.
-  The incentives for moderation are more theoretically important than the whether we observe perfect candidate convergence at the median voter. 
-]
-Empirical work finds evidence in partial support of both convergent and divergent candidate incentives.
-Candidates who run in electorally competitive districts are more moderate than co-partisans who are running in districts that run in electorally "safe" districts [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning], and even candidates who run in safe districts are marginally rewarded for taking more moderate issue positions than a typical party member would [@canes-wrone-et-al:2002:out-of-step].
-Extremist candidates, meanwhile, earn fewer votes and are less likely to win in Congressional elections, and this tendency is stronger in competitive districts than in safe districts [@hall:2015:extremists].
-Despite these incentives to take moderate campaign positions, candidates nonetheless take divergent rather than convergent stances by and large.
-Republican and Democratic members of Congress vote very differently from one another, and this partisan divergence increased in recent years [@poole-rosenthal:1997:roll-call-history; @McCarty-Poole-Rosenthal:2006:book].
-The difference in legislative voting behavior across parties isn't simply because Republicans and Democrats represent different districts, since Republicans and Democrats who represent similar districts (or the same state, in the case of U.S. Senators) nonetheless vote differently from one another [@mccarty-poole-rosenthal:2009:gerrymandering].
-Even among Congressional races in the exact same district, there is a sizable gap between Republican and Democratic candidate positions.
-In total, even though there is some evidence that candidates benefit by positioning themselves as marginally more moderate or more in line with local public opinion, the dominant finding is that candidates take divergent positions that are more closely aligned with a national party platform than with a set of local issue priorities [@ansolabehere-et-al:2001:candidate-positioning].
-
-The Downsian logic is a plausible explanation for the electoral benefits of moderation, but what explains the non-moderate stances?
-Political scientists have explored several theories that are separate from local primary competition, as the SPD theory argues. 
-
-
-Why non-moderate stances?
-
-- xyz
-- primaries...
-
-
-Qualitative evidence suggests that candidates take careful positions on issues of local concern even if these delicate tactics don't influence high-level relationships between local preferences and legislator behavior [@fenno:1978:home-style], but systematic tests of localized, particularistic position-taking fail to substantiate this in general [@fowler-hall:2016:convergence].
-
-- but also...issue-by-issue accountability [@canes-wrone-et-al:2011:issue-accountability]
-
-
-
-
-
-<!-- 
-pro:
-
-- responsiveness evidence
-
-
-con: 
-
-- information constraints
-- party over policy
-- Warshaw spatial voting (US House) (but also...maybe primary electorates are better)
-
--->
 
 
 ### Vote shares do not identify policy ideology {#sec:ideal-votes}
@@ -1286,6 +1348,23 @@ This remainder of this chapter reviews leading theoretical approaches to primary
 
 ### How have past studies incorporated voter preferences? {#sec:prefs-lit}
 
+District vote
+
+- A.S.S. district vote?
+- Burden district vote?
+
+Some weird fuckin residualization thing
+
+Subconstituency preferences
+
+- Fenno 1978 (Homestyle) for why this matters
+- Arnold 1990
+- Kingdon 1973
+- scholars fail to advance a general theory, which makes models difficult to specify? (Poole and Romer 1993) cited in Bishin 2000
+- constituency matters if you drop member ideal points in here either: (Markus 1974; Shapiro et al. 1990; Wright 1989); doesn't matter if you include member ideal points (Medoff, Dennis, and Bishin 1995); cited in Bishin 2000
+- Bishin 2000 is a good example, but measurement isn't great.
+- Clinton: within-party
+
 
 
 
@@ -1295,29 +1374,66 @@ This remainder of this chapter reviews leading theoretical approaches to primary
 
 ### Measuring district-party ideology
 
-Value of directly modeling each party:
+This chapter has so far identified a shortcoming in the study of primaries that subconstituency preferences are rarely measured.
+This project rectifies this shortcoming by measuring district-party ideology for Republican and Democratic party groups in Chapter \@ref(ch:model).
+This allows the project to carry out direct tests of SPD hypotheses that were previously impossible in Chapters \@ref(ch:positioning) and \@ref(ch:voting).
 
-- identify the actual quantities of interest
-- do parties "move together" or not? This is only possible to infer by modeling each party's hierarchy separately.
+I estimate district-party ideology this using an item response theory (IRT) approach to ideal point modeling.
+The model estimates the policy ideology for a typical Democrat and a typical Republican in each Congressional district over time.
+<!------- TO DO ---------
+- over time? which years?
+------------------------->
+I employ recent innovations in hierarchical modeling to measure individual traits at subnational units of aggregation using geographic and temporal smoothing [@park-gelman-bafumi:2004:mrp; @lax-phillips:2009:mrp; @pacheco:2011:dynamic-mrp; @warshaw-rodden:2012:district-issues; @tausanovitch-warshaw:2013:constituent-prefs; @caughey-warshaw:2015:DGIRT].
+The model I build extends these technologies by specifying a more complete hierarchical structure for the bespoke parties-within-districts data context, a more flexible predictive model for geographic smoothing, and advances in Bayesian modeling best-practices from beyond the boundaries of political science (see also Section \@ref(sec:contribution-bayes)).
+
+
+<!------- TO DO ---------
+- splines in the HLM?
+------------------------->
 
 
 
-### Empirical tests: how district-party ideology matters
 
-Which games are we playing:
+### Empirical tests: how district-party ideology matters {#sec:contribution-empirical}
 
+Substantive value of the model.
+
+Chapter \@ref(ch:positioning) studies how district-party ideology affects candidate positioning in primary elections.
+
+
+Chapter \@ref(ch:voting) studies how district-party ideology affects candidate selection in primary elections.
+
+
+
+Orientation: Which games are we playing:
+
+- let's test the SPD
+- we do not root for or against the SPD. 
+    - the SPD makes sense for candidate behavior, but there are also reasons to doubt the competences of candidates.
+    - the SPD is hard for voters, but it's also possible that voters "accidentally" choose the correct candidate because of spurious or confounding factors such as fundraising or elite network machinations.
 - "Spatial" Models of Policy Preferences
 - Representatives as Delegates vs.\ Trustees
-- terms I need to define
 
-### Causal inference with structural models
 
-This is new to this lit
+### Causal inference with structural models {#sec:SCMs}
 
 What is the problem?
 
 - Ignorable assignment of aggregate ideology
 - Ignorable assignment of candidate ideology
+
+
+
+Using SCMs.
+
+DAGs as heuristic devices for causal inference are not new to political science in general (Gerring...), but the formalism of causal estimands and the strict derivation of causal assumptions from structural/graphical models is new.
+
+This is new to this LIT as well, which has not been great about explicit causal assumptions and empirical designs, with some notable exceptions.
+
+- hall 1 and 2
+- who else....literally idk.
+- hall diff-in-diff stuff?
+- hall convergence
 
 We actually don't have much of this here.
 
@@ -1334,7 +1450,14 @@ What do I propose?
 Machine learning
 
 
-### Bayesian causal modeling
+Specifically: 
+
+- modeling approach for controlling mediators: sequential-g (ch 4)
+- observation causal inference with machine learning models for covariate adjustment: neural network with neyman orthogonalization (ch 5)
+
+
+
+### Bayesian causal modeling {#sec:bayes-causal}
 
 Where do we have to confront things
 
@@ -1343,6 +1466,14 @@ Where do we have to confront things
 - We aim to normalize a Bayesian interpretation of causal effects
     - there are many possible scenarios that could explain the data that we see
     - the posterior distribution represents the plausibility of scenarios, after seeing the data.
+
+
+### Bayesian best practices {#sec:contribution-bayes}
+
+Another important contribution of the modeling exercise is the detailed discussion of Bayesian modeling and computational implementation it contains.
+Classic Bayesian texts for political and social sciences are written for an outdated computational landscape where Metropolis-Hastings and Gibbs sampling algorithms were state-of-the-art estimation approaches [@jackman:2009:bayesian; @gill:2014:bayesian-methods].
+Recent years have seen rapid progress in the development and understanding of Hamiltonian Monte Carlo algorithms, which are faster, more statistically reliable, and easier to diagnose [@duane-et-al:1987:hybrid-mc; @neal:2012:mcmc; @betancourt:2017:conceptual-hamiltonian], but they also require renewed attention to the way researchers specify and implement Bayesian models [@betancourt:2015:hamiltonian; @carpenter-at-al:2016:stan; @burkner:2017:brms].
+Furthermore, this new generation of applied Bayesian modeling has updated best practices for specifying priors, modeling workflow, and model evaluation that (to my knowledge) have no precedent in the current political science awareness [@gelman-et-al:2017:prior-likelihood; @LKJ:2009:correlation-matrices; @betancourt:2018:workflow-blog; @gabry-et-al:2019:visualization; @vehtari-et-al:2020:rhat; @vehtari-gelman-gabry:2017:loo-waic].
 
 
 
