@@ -13,6 +13,7 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 model_path <- file.path("code", "03-causality", "meta")
+samples_path <- file.path("data", "causal-inf", "meta")
 
 
 signs_direct <- 
@@ -87,6 +88,7 @@ brm_fix_agnostic <- brm(
   prior = set_prior(prior = agnostic_prior, class = "Intercept"),
   iter = 3000,
   warmup = 1000,
+  file = here(samples_path, "brm-fix-agnostic.rds"),
   save_model = here(model_path, "brm-fix-agnostic.stan")
 )
 
@@ -96,6 +98,7 @@ brm_fix_optimistic <- brm(
   prior = set_prior(prior = optimistic_prior, class = "Intercept"),
   iter = 3000,
   warmup = 1000,
+  file = here(samples_path, "brm-fix-optimistic.rds"),
   save_model = here(model_path, "brm-fix-optimistic.stan")
 )
 
@@ -105,6 +108,7 @@ brm_fix_skeptical <- brm(
   prior = set_prior(prior = skeptical_prior, class = "Intercept"),
   iter = 3000,
   warmup = 1000,
+  file = here(samples_path, "brm-fix-skeptical.rds"),
   save_model = here(model_path, "brm-fix-skeptical.stan")
 )
 
@@ -189,7 +193,7 @@ mega_ranefs <- tibble(
           prior = c(..1, ..2),
           iter = 3000,
           warmup = 1000,
-          file = here(model_path, str_glue("brm-ran-{..3}-lam{..4}.rds")),
+          file = here(samples_path, str_glue("brm-ran-{..3}-lam{..4}.rds")),
           save_model = here(model_path, str_glue("brm-ran-{..3}-lam{..4}.stan"))
         )
       }
