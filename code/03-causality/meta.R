@@ -13,7 +13,7 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 model_path <- file.path("code", "03-causality", "meta")
-samples_path <- file.path("data", "causal-inf", "meta")
+samples_path <- file.path("data", "mcmc", "causal-inf", "meta")
 
 
 signs_direct <- 
@@ -258,159 +258,159 @@ mega_ranefs %>%
 
 
 
-ranef_prior <- set_prior(
-  "exponential(10)", class = "sd",
-)
+# ranef_prior <- set_prior(
+#   "exponential(10)", class = "sd",
+# )
 
 
-brm_ran_agnostic <- brm(
-  formula = estimate|se(sigma) ~ 1 + (1 | j), 
-  data = signs_direct,
-  prior = c(agnostic_prior, ranef_prior), 
-  iter = 3000,
-  warmup = 1000,
-  save_model = here(model_path, "brm-ran-agnostic.stan")
-)
+# brm_ran_agnostic <- brm(
+#   formula = estimate|se(sigma) ~ 1 + (1 | j), 
+#   data = signs_direct,
+#   prior = c(agnostic_prior, ranef_prior), 
+#   iter = 3000,
+#   warmup = 1000,
+#   save_model = here(model_path, "brm-ran-agnostic.stan")
+# )
 
-brm_ran_optimistic <- brm(
-  formula = estimate|se(sigma) ~ 1 + (1 | j), 
-  data = signs_direct,
-  prior = c(optimistic_prior, ranef_prior), 
-  iter = 3000,
-  warmup = 1000,
-  save_model = here(model_path, "brm-ran-optimistic.stan")
-)
+# brm_ran_optimistic <- brm(
+#   formula = estimate|se(sigma) ~ 1 + (1 | j), 
+#   data = signs_direct,
+#   prior = c(optimistic_prior, ranef_prior), 
+#   iter = 3000,
+#   warmup = 1000,
+#   save_model = here(model_path, "brm-ran-optimistic.stan")
+# )
 
-brm_ran_skeptical <- brm(
-  formula = estimate|se(sigma) ~ 1 + (1 | j), 
-  data = signs_direct,
-  prior = c(skeptical_prior, ranef_prior), 
-  iter = 3000,
-  warmup = 1000,
-  save_model = here(model_path, "brm-ran-skeptical.stan")
-)
-
-
-
-tidy_ran <- 
-  list(
-    "agnostic" = brm_ran_agnostic, 
-    "optimistic" = brm_ran_optimistic,
-    "skeptical" = brm_ran_skeptical
-  ) %>% 
-  lapply(tidy, conf.int = TRUE) %>%
-  bind_rows(.id = "prior") %>%
-  print()
-
-tidy_ran %>%
-  filter(term %in% c("sd_j__Intercept", "lp__") == FALSE) %>%
-  ggplot() +
-  aes(x = term, y = estimate) +
-  geom_pointrange(
-    aes(ymin = lower, ymax = upper),
-    position = position_dodge(width = -0.25)
-  ) +
-  facet_wrap(~ prior, ncol = 1) +
-  coord_flip()
-
-
-draws_ran <- 
-  list(
-    "agnostic" = brm_ran_agnostic, 
-    "optimistic" = brm_ran_optimistic,
-    "skeptical" = brm_ran_skeptical
-  ) %>% 
-  lapply(gather_draws, b_Intercept) %>%
-  bind_rows(.id = "prior") %>%
-  print()
-
-p_ran <- draws_ran %>%
-  group_by(prior) %>%
-  summarize(p = mean(.value > 0)) %>%
-  print() 
-
-ggplot(draws_ran) +
-  aes(x = .value) +
-  geom_histogram() +
-  facet_wrap(~ prior, ncol = 1) +
-  geom_text(
-    data = p_ran,
-    aes(x = 0, y = 0, label = round(p, 3)),
-    vjust = 0
-  )
+# brm_ran_skeptical <- brm(
+#   formula = estimate|se(sigma) ~ 1 + (1 | j), 
+#   data = signs_direct,
+#   prior = c(skeptical_prior, ranef_prior), 
+#   iter = 3000,
+#   warmup = 1000,
+#   save_model = here(model_path, "brm-ran-skeptical.stan")
+# )
 
 
 
-list(
-    "agnostic" = brm_ran_agnostic, 
-    "optimistic" = brm_ran_optimistic,
-    "skeptical" = brm_ran_skeptical
-  ) %>%
-  lapply(spread_draws, b_Intercept, r_j[study, ]) %>%
-  bind_rows(.id = "prior") %>%
-  mutate(
-    study_effect = b_Intercept + r_j
-  ) %>%
-  pivot_longer(
-    cols = c(study_effect, b_Intercept),
-    names_to = "term",
-    values_to = "effect"
-  ) %>%
-  mutate(
-    study = ifelse(term == "b_Intercept", 0, study)
-  ) %>%
-  group_by(prior, study) %>% 
-  summarize(
-    mean = mean(effect),
-    lower = quantile(effect, .05),
-    upper = quantile(effect, .95)
-  ) %>%
-  ggplot() +
-  aes(x = study, y = mean) +
-  geom_pointrange(
-    data = signs_direct,
-    aes(x = j + .2, y = estimate, ymin = estimate - 2*sigma, ymax = estimate + 2*sigma),
-    position = position_dodge(width = -0.25),
-    color = primary
-  ) +
-  geom_pointrange(
-    aes(ymin = lower, ymax = upper),
-    size = .75,
-    color = secondary
-  ) +
-  facet_wrap(~ prior, ncol = 1) +
-  coord_flip()
+# tidy_ran <- 
+#   list(
+#     "agnostic" = brm_ran_agnostic, 
+#     "optimistic" = brm_ran_optimistic,
+#     "skeptical" = brm_ran_skeptical
+#   ) %>% 
+#   lapply(tidy, conf.int = TRUE) %>%
+#   bind_rows(.id = "prior") %>%
+#   print()
+
+# tidy_ran %>%
+#   filter(term %in% c("sd_j__Intercept", "lp__") == FALSE) %>%
+#   ggplot() +
+#   aes(x = term, y = estimate) +
+#   geom_pointrange(
+#     aes(ymin = lower, ymax = upper),
+#     position = position_dodge(width = -0.25)
+#   ) +
+#   facet_wrap(~ prior, ncol = 1) +
+#   coord_flip()
+
+
+# draws_ran <- 
+#   list(
+#     "agnostic" = brm_ran_agnostic, 
+#     "optimistic" = brm_ran_optimistic,
+#     "skeptical" = brm_ran_skeptical
+#   ) %>% 
+#   lapply(gather_draws, b_Intercept) %>%
+#   bind_rows(.id = "prior") %>%
+#   print()
+
+# p_ran <- draws_ran %>%
+#   group_by(prior) %>%
+#   summarize(p = mean(.value > 0)) %>%
+#   print() 
+
+# ggplot(draws_ran) +
+#   aes(x = .value) +
+#   geom_histogram() +
+#   facet_wrap(~ prior, ncol = 1) +
+#   geom_text(
+#     data = p_ran,
+#     aes(x = 0, y = 0, label = round(p, 3)),
+#     vjust = 0
+#   )
 
 
 
-# ---- combine fix and random -----------------------
+# list(
+#     "agnostic" = brm_ran_agnostic, 
+#     "optimistic" = brm_ran_optimistic,
+#     "skeptical" = brm_ran_skeptical
+#   ) %>%
+#   lapply(spread_draws, b_Intercept, r_j[study, ]) %>%
+#   bind_rows(.id = "prior") %>%
+#   mutate(
+#     study_effect = b_Intercept + r_j
+#   ) %>%
+#   pivot_longer(
+#     cols = c(study_effect, b_Intercept),
+#     names_to = "term",
+#     values_to = "effect"
+#   ) %>%
+#   mutate(
+#     study = ifelse(term == "b_Intercept", 0, study)
+#   ) %>%
+#   group_by(prior, study) %>% 
+#   summarize(
+#     mean = mean(effect),
+#     lower = quantile(effect, .05),
+#     upper = quantile(effect, .95)
+#   ) %>%
+#   ggplot() +
+#   aes(x = study, y = mean) +
+#   geom_pointrange(
+#     data = signs_direct,
+#     aes(x = j + .2, y = estimate, ymin = estimate - 2*sigma, ymax = estimate + 2*sigma),
+#     position = position_dodge(width = -0.25),
+#     color = primary
+#   ) +
+#   geom_pointrange(
+#     aes(ymin = lower, ymax = upper),
+#     size = .75,
+#     color = secondary
+#   ) +
+#   facet_wrap(~ prior, ncol = 1) +
+#   coord_flip()
 
-bind_rows(
-  "random" = draws_ran,
-  "fixed" = draws_fix,
-  .id = "model"
-) %>%
-  ggplot(aes(x = .value)) +
-  geom_histogram(
-    aes(fill = model),
-    boundary = 0, 
-    bins = 150,
-    position = "identity",
-    alpha = 0.7
-  ) +
-  facet_wrap(~ prior, ncol = 1) +
-  scale_fill_manual(values = c("fixed" = secondary, "random" = primary))
 
 
-  list(
-    "agnostic" = brm_ran_agnostic, 
-    "optimistic" = brm_ran_optimistic,
-    "skeptical" = brm_ran_skeptical
-  ) %>% 
-  lapply(spread_draws, b_Intercept, sd_j__Intercept) %>%
-  bind_rows(.id = "prior") %>%
-  rename(mu = b_Intercept, sd = sd_j__Intercept) %>%
-  ggplot(aes(x = sd, y = mu)) +
-  geom_point(alpha = .1) +
-  scale_color_viridis_c(option = "plasma", end = 0.95) +
-  facet_wrap(~ prior)
+# # ---- combine fix and random -----------------------
+
+# bind_rows(
+#   "random" = draws_ran,
+#   "fixed" = draws_fix,
+#   .id = "model"
+# ) %>%
+#   ggplot(aes(x = .value)) +
+#   geom_histogram(
+#     aes(fill = model),
+#     boundary = 0, 
+#     bins = 150,
+#     position = "identity",
+#     alpha = 0.7
+#   ) +
+#   facet_wrap(~ prior, ncol = 1) +
+#   scale_fill_manual(values = c("fixed" = secondary, "random" = primary))
+
+
+#   list(
+#     "agnostic" = brm_ran_agnostic, 
+#     "optimistic" = brm_ran_optimistic,
+#     "skeptical" = brm_ran_skeptical
+#   ) %>% 
+#   lapply(spread_draws, b_Intercept, sd_j__Intercept) %>%
+#   bind_rows(.id = "prior") %>%
+#   rename(mu = b_Intercept, sd = sd_j__Intercept) %>%
+#   ggplot(aes(x = sd, y = mu)) +
+#   geom_point(alpha = .1) +
+#   scale_color_viridis_c(option = "plasma", end = 0.95) +
+#   facet_wrap(~ prior)

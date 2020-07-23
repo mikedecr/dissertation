@@ -1327,7 +1327,7 @@ Randomization limits the impact of the Bayesian assumptions
 
 Multi-stage models
 
-- uncertain measures _are priors_
+- uncertain measures _are priors_ in one big model
 - propensity models (Zigler, Plummer/cutting)
 - structural models
 - to bootstrap or not to bootstrap?

@@ -47,7 +47,7 @@ Bayes and causal inference
 - design uncertainty
 - Gelman King (Bayesian causal inf in political science?)
 - Pearl: "half-Bayesian"
-
+- objective bayes back and forth
 
 Neural Nets
 
@@ -120,6 +120,10 @@ Formal models that explain divergence:
 - Districts and representation
     - Ensley AJPS, public choice, district complexity/heterogeneity
 
+Other things to come back to:
+
+- porter and treul
+- Desmarais et al EPN
 
 
 

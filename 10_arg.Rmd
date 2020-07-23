@@ -339,12 +339,13 @@ The difference in legislative voting behavior across parties isn't simply becaus
 Even among Congressional races in the exact same district, there is a sizable gap between Republican and Democratic candidate positions.
 In total, even though there is some evidence that candidates benefit by positioning themselves as marginally more moderate or more in line with local public opinion, the dominant finding is that candidates take divergent positions that are more closely aligned with a national party platform than with a set of local issue priorities [@ansolabehere-et-al:2001:candidate-positioning].
 
-The Downsian logic is a plausible explanation for the electoral benefits of moderation, but what explains the non-moderate stances?
+The Downsian logic is a strong "centripetal" force that promotes moderation among candidates, but what "centrifugal" forces explain the non-moderate stances [@cox:1990:centripetal-centrifugal]?
 Political scientists have explored several theories whose underlying mechanisms are distinct from the SPD notion of competing constituencies.
 Parties are interested in cultivating long-term reputations for pursuing certain policy priorities [@downs:1957:economic-theory; @stokes:1963:spatial].
 It benefits both major parties for these reputations to be distinct from one another, since parties have office-seeking motivations to mutually divide districts into geographic bases that tend to support one party platform consistently over time [@snyder:1994:platform-differentiation].
 Party leaders maintain these party reputations by constructing brand-consistent legislative agendas and pressuring legislators to support reputation-boosting legislation [@cox-mccubbins:2005:agenda-cartel; @butler-powell:2014:valence-brand; @lebo-et-al:2007:strategic-party-government].
 In turn, non-median party platforms are more appealing to constituents with ideologically consistent issue beliefs.
+Candidates benefit by rewarding these constituents in particular because they are more likely to be influence election outcomes in favor of the candidate [@hirano-ting:2015:direct-indirect-representation].
 These voters are more likely to turn out in general elections than moderate voters are, so it it is more efficient for candidates to cater to these constituents. 
 Partisan constituents are also more likely to engage in pro-party activism, such as staffing campaigns and attending party conventions [@aldrich:1983:downsian-parties; @mcclosky-et-al:1960:conventions; @layman-et-al:2010:activists-conflict-extension].
 
@@ -469,9 +470,9 @@ The efficacy of these non-policy appeals may be correlated with the actual ideol
 - this should be structured around EXPLICIT TESTS
 - review the theoretical proposition, introduce a few areas people have looked.
 - they don't find clear evidence?
-- presence of primary challengers
-- threat of primary challengers
-- voters vs. organizations (The parties are different maybe?)
+- [x] presence of primary challengers
+- [x] threat of primary challengers
+- (???) voters vs. organizations (The parties are different maybe?)
 - primary rules
 - extremity/heterogeneity of the constituency...
 - redistricting?
@@ -479,14 +480,60 @@ The efficacy of these non-policy appeals may be correlated with the actual ideol
 ------------------------->
 
 Empirical support for the strategic positioning dilemma is as unclear as the theoretical underpinning.
-When researchers conduct empirical tests of the SPD or the general premises of primary representation and competition on which it rests, the results are ambiguous and often contradictory.
-This section reviews existing research on electoral representation and accountability in Congress to provide a background for the substantive innovations in this project.
+When researchers conduct empirical tests of the SPD or the narrower premises of primary representation and competition on which it rests, the results are ambiguous and often contradictory of the SPD story.
+This section reviews existing research in this area to review the outstanding questions and preview the substantive innovations in this project.
+
+Much of the interest in primary elections and representation comes from a focus on candidate divergence and partisan polarization.
+Why do candidates who stand for general election take divergent stances from one another, and do the competitive dynamics of primary elections increase this divergence?
+Prominent studies of candidate positioning in general elections initially found conflicting evidence about the influence of stiff primary competition on candidate extremity. 
+Using survey data from congressional candidates during the 2000 campaign, @burden:2004:candidate-positioning finds that general election candidates take more extreme policy positions in their campaigns if they also faced stronger primary competition.
+This makes sense especially if primary candidates care more about the candidate's ideological positioning than general election voters do, the latter of whom are also receptive to non-policy appeals.
+@ansolabehere-et-al:2001:candidate-positioning find the reverse pattern using 1996 survey data.
+The gap between major party candidates was actually smaller when one of the candidates faced stiffer primary competition.
+This counter-intuitive finding makes sense if the presence of a primary challenger is itself a consequence of candidate positioning.
+If an incumbent maintains a partisan reputation, this may fend off credible primary challengers who have less room to wage an ideological campaign against the incumbent.
+As a result, the _threat_ of a primary challenge exerts a centrifugal force on candidate positioning, even if a primary challenger never actually appears [@hacker-pierson:2005:off-center].
+@hirano-et-al:2010:primary-polarization study this threat-based hypothesis by measuring potential primary threat as the average presence of primary competitors in down-ballot races.
+In district with high levels of latent primary threat, we might expect the incumbent to take more extreme stances in Congress.
+Although the idea that incumbents vote as party faithfuls to preempt opportunistic challengers is intuitive and supported by other research [e.g. @mann:1978:unsafe], this measure was not meaningfully related to the extremity of an incumbent's voting record in Congress [@hirano-et-al:2010:primary-polarization].
+In short, the evidence of the polarizing effects of primary challenges is mixed and unclear.
+
+Researchers interested in the polarizing effects of primaries on candidates and legislators has also examined primary "rules."
+Political parties are private organizations, and nominees are intended to represent the parties' priorities and governing values, but participation in  primary elections is not always restricted to party members only.
+Primary "openness" rules that govern who can participate in a partisan primary are managed by state election law, with some allowances for parties to set rules within those limits.
+States with "closed" primaries restrict participation in primaries only to individuals who are registered as Republicans or Democrats in their state registration records.
+States that allow third-party or non-partisan voters to participate in partisan primaries are "partially" open, and states where any voter can participate in any primary are regarded as "open" primaries.
+I discuss finer details of primary rules in later chapters.
+Researchers seeking to exploit state-level variation in primary rules hypothesize that states with more restrictive participation criteria might select more ideologically extreme primary nominees, and states with more relaxed rules might select relatively moderate nominees.
+This is because primary voters are commonly believed to hold more ideologically consistent policy views than other constituents, so candidate polarization will respond to the polarization among the voting public [@hill:2015:nominating-institution].
+<!------- TO DO ---------
+- who does hill cite? 
+- Norrander 199x?
+- wo else?
+------------------------->
+However, these is essentially no recent evidence to support the argument that primary rules contribute to the polarization of congressional candidates or candidate divergence more broadly.
+<!------- TO DO ---------
+- mcghee, hill, sides et al on variation by rules
+- any hirano stuff?
+- check hirano book or boatright book
+------------------------->
+although other research disputes the premise that primary voters are distinct demographically or ideologically from other partisans
+[@sides-et-al:2018:primary-representativeness]
+
+
+
+Some states also have conventions that screen certain candidates out of the primary process altogether, so candidates on the primary ballot already have some degree of approval from an insider class of state party actors.
+<!------- TO DO ---------
+- cite conventions?
+------------------------->
+
+
+
+
 
 
 
 ### Vote shares do not identify policy ideology {#sec:ideal-votes}
-
-
 
 The SPD's empirical support is also shaky. 
 This project is animated by a critique that existing research has not conceptualized and operationalized constituency preferences in a way that suitably tests the theoretical ideas at play. 
@@ -1421,6 +1468,27 @@ What is the problem?
 
 - Ignorable assignment of aggregate ideology
 - Ignorable assignment of candidate ideology
+
+Measurement method uses weak data plus pooling
+
+- variation is smoothed by a hierarchical model
+- exogenous variation for design-based causal inference would have to come predominantly through the raw survey data, which is challenging to recover without massive enough data to rely less on the smoothing model
+- as a result, we rely on selection on observables methods, 
+
+Selection on observables is the graveyard of credible causal inference.
+
+- many regression-focused analyses are not careful about their strategies for including and excluding regressors
+- many regressors are naively included in linear forms without much thought to their generative influence on the outcome or potential interactions with other confounders
+- functional forms are generally under-examined
+
+One major ethic guiding the methodological contributions in this project is to take the modeling approaches more seriously from a causal inference point of view.
+
+- This means stating assumptions clearly
+- being explicit about the stipulated causal structure
+- where are certain controls located in the causal structure
+- which estimands are implied by the causal structure
+- which estimands assumptions identify these estimands
+- which modeling approaches are flexible enough to absorb confounding without too much model dependence
 
 
 

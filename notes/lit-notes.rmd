@@ -60,6 +60,7 @@ title: thesis - literature notes
     - McCarty et al: Geography, Uncertainty, Polarization:
         - in a moderate district, we have less info about the location of the median voter, so weak incentive to offer moderate policy platform
         - more heterogeneous voters -> more polarized legislators
+    - What about Ensley?
     - Broockman: Approaches to policy representation
         - voter "extremism" is usually consistency. Moderation is "crazy uncle"
         - legislative polarization is how they "bet the average"
