@@ -1,31 +1,17 @@
 # Acknowledgments {-}
 
-Many people supported this me through this project. Thanks to...
+Many people supported this me through this project...
 
-- My family, who would do anything in their power for me
-
-- My committee: Barry Burden, Ken Mayer, Ellie Powell, Alex Tahk, and Mike Wagner.
-
-- Members in the department who provided institutional support: the Election Research Center, Scott Straus, Deb McFarlane and others in the department administration, the "Beasts of Burden" roundtable group, and members of the Fall 2016 prospectus workshop course.
-
-- Faculty and students at other universities who shared data or provided advice: Robert Boatright, Devin Caughey, David Doherty, Andrew Hall, Seth Hill, Georgia Kernell, Shiro Kuriwaku, Rachel Porter, Andrew Reeves, Michael Ting, and Sarah Treul.
-
-- Software developers and users, whose tools and supporting community helped bring the project to life in my computer: Mara Averick, Jenny Bryan, Andrew Heiss, Matthew Kay, Mike Kearney, TJ Mahr, Thomas Lin Pederson, and Kara Woo.
+- My family
+- My committee
+- Department and related institutions: ERC, Straus, Deb, Beasts, Prospectus course fall 2016 
+- Faculty and students at other universities who shared data or provided advice: Devin Caughey, David Doherty, Seth Hill, Georgia Kernell, Shiro Kuriwaku, Jacob Montgomery, Rachel Porter, Andrew Reeves, Michael Ting, and Sarah Treul.
+- People who provided feedback in workshops: Devin Judge-Lord, Evan Morier, Rochelle Snyder, Blake Reynolds, David Canon, Marcy Shieh 
+- Software developers: Garrick Aiden-Bouie (sp), Matthew Kay
 <!------- TO DO ---------
 - spelling
 ------------------------->
-
-- My closest friends in the program: Micah Dillard, Jordan Hsu, Rachel Jacobs, Anna Meier, Anna Oltman, Rachel Schwartz
-
-- The Bike Gang: Josh Cruz and Erin Nelson
-
-- My friends in other cities who always cheered me on: Marissa Finazzo, Zach Gray, Spencer Melgren, Jake Moore, Daniel Putman, Ian Servantes, India Watts
-<!-- Tina? -->
-
-- Cafes and their staff, especially Black Locust Cafe and Johnson Public House.
-
-- People who provided feedback in workshops: Devin, Evan, Rochelle, Blake, David C, Marcy, 
-
+- Friends in Madison: Shaan Amin, Hannah Chapman, Josh Cruz, Micah Dillard, Jordan Hsu, Rachel Jacobs, Hari Jost, Amy Kawleski, Anna Meier, Erin Nelson, Anna Oltman, Rachel Schwartz, Erin Zwick
 <!------- TO DO ---------
-- others
+- who else
 ------------------------->

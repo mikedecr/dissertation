@@ -47,10 +47,18 @@ Bayes and causal inference
 - design uncertainty
 - Gelman King (Bayesian causal inf in political science?)
 - Pearl: "half-Bayesian"
+- bayes holes
+- kang whoever demystifying double robustness
+- imbens rubin 1997
+- king measurement error
+- bayes do-calc papers
+- objective bayes
+- rubin 1984: bayes frequency
 
 
 Neural Nets
 
+- residual debiasing (athey et al)
 - Bayesian view/uncertainty
 - Regularization approaches
     - Simpson et al. "Penalizing Model Complexity"
@@ -59,6 +67,7 @@ Neural Nets
     - sparsity priors, regularizing priors, etc.
 - Discrete choice models
 - Model avging over multiple models
+- Hartford et al. counterfactual prediction
 
 
 Broad ML

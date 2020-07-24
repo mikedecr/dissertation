@@ -1121,10 +1121,8 @@ Email to David:
 
 
 
-## Pragmatic Bayesian Modeling {#sec:bayes-how-to}
+### Pragmatic and Principled Prior Approaches {#sec:bayes-how-to}
 
-
-### Orientations Toward Prior Distributions
 
 Various roles that priors take on
 
@@ -1167,6 +1165,12 @@ At any rate:
 
 
 ### Principled Approaches to Model Parameterization
+
+
+<!------- TO DO ---------
+- I think this could probably all be moved somewhere else
+------------------------->
+
 
 Models are a tool, set it up so that it works.
 
@@ -1328,7 +1332,7 @@ Randomization limits the impact of the Bayesian assumptions
 Multi-stage models
 
 - uncertain measures _are priors_
-- propensity models (Zigler, Plummer/cutting)
+- propensity models (Zigler, Plummer/cutting, liao and zigler...)
 - structural models
 - to bootstrap or not to bootstrap?
 
