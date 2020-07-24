@@ -52,8 +52,8 @@ Bayes and causal inference
 - imbens rubin 1997
 - king measurement error
 - bayes do-calc papers
-- objective bayes
 - rubin 1984: bayes frequency
+- objective bayes back and forth
 
 
 Neural Nets
@@ -129,6 +129,10 @@ Formal models that explain divergence:
 - Districts and representation
     - Ensley AJPS, public choice, district complexity/heterogeneity
 
+Other things to come back to:
+
+- porter and treul
+- Desmarais et al EPN
 
 
 
