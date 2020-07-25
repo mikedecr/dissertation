@@ -48,6 +48,17 @@ bookdown::serve_book(
 servr::daemon_stop()
 
 
+
+# pdf
+bookdown::render_book("Index.Rmd", "bookdown::pdf_book")
+
+# tufte pdf
+bookdown::render_book("Index.Rmd", "bookdown::tufte_book2")
+
+# html
+bookdown::render_book("Index.Rmd", "bookdown::html_book")
+
+
 # chapter
 bookdown::preview_chapter('30_causality.Rmd')
 
@@ -60,15 +71,6 @@ bookdown::render_book(
   output_format = "bookdown::gitbook"
   # , new_session = FALSE # knits IN SESSION
 )
-
-# pdf
-bookdown::render_book("Index.Rmd", "bookdown::pdf_book")
-
-# tufte pdf
-bookdown::render_book("Index.Rmd", "bookdown::tufte_book2")
-
-# html
-bookdown::render_book("Index.Rmd", "bookdown::html_book")
 
 ```
 
