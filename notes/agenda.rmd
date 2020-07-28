@@ -21,6 +21,8 @@ title: Overall thesis notes
 
 ## Qs for Alex
 
+- best linear predictor (argmin MSE) in a binary treatment case?
+    - is this just an in/out of sample thing?
 - what does it mean for a model to estimate a regularizing prior?
     - beta ~ normal(0, alpha); alpha ~ cauchy(0, tau), tau ~ ?
     - Is this just overfitting, or what?

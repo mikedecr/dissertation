@@ -57,37 +57,27 @@ This might need to be chapter 2!!!!
 - missing right now: connect to political science!
 ------------------------->
 
-Before I employ the estimates of party-public ideology obtained in Chapter \@ref(ch:model), this chapter discusses a Bayesian framework for causal inference in political science. 
-This framework addresses two major themes in the empirical problems that I confront later in the project, among several other minor themes.
+Before I employ the estimates of party-public ideology obtained in Chapter \@ref(ch:model), this chapter discusses a Bayesian view of causal inference.
+This framework addresses two major themes in the empirical problems that I confront later in the project, as well as several other minor themes.
 
 First, this project views causal inference as a problem of posterior predictive inference.
-Causal models are tools that enable inferences about missing data: the data that would be observed if a key independent variable could be set to a different value. 
-The unobserved data are "unobserved potential outcomes" in the Rubin causal framework or "counterfactual observations" in the Pearl framework.
-<!------- TO DO ---------
-- Rubin and Pearl cites
-------------------------->
-Regardless of the notational/semantic conventions employed, "Bayesian causal inference" is a modeling framework for structuring the inferences about the probability distribution of unobserved potential outcomes, having observed one set of potential outcomes.
-In other words, which counterfactual data are plausible, given the observed data and a model relating the data to causal queries of interest? In this sense, the Bayesian approach to causal inference confronts our uncertainties about the "left-hand side" of our model.
+Causal models are tools for inferences about missing data: what we would observe if a treatment variable were set to a different value.
+The unobserved data are "unobserved potential outcomes" in the Rubin causal framework or "counterfactual outcomes" in the Pearl framework [@rubin:2005:potential-outcomes; @pearl:2009:causality].
+Causal inference can be Bayesian if the target of interest is the probability distribution of unobserved potential outcomes (or the probability distribution of any causal estimand), conditioning on the observed data.
+In this chapter, I will argue that this is what researchers are implicitly trying to obtain, even if implicitly, nearly all of the time.
 
-
-Second, the Bayesian approach confronts our uncertainties about the "right-hand side" of the model as well.
-Causal estimands (to use the Rubin terminology) are comparisons of potential outcomes are two hypothetical values of a treatment.
-In many cases, these estimands are comparisons of a unit's outcome under an observed treatment against an unobserved treatment.
-For this project, the treatment of interest---ideology in district-party-publics---is not directly observed.
-It is instead only observed up to a probability distribution from a measurement model.
-(To use potential outcomes notation, instead of observing $Y(\pi)$, we observe $Y(p(\pi))$).
-Bayesian probabilistic models provide machinery to describe causal queries when we have only a probabilistic understanding of the observed data as well as the unobserved data.
+Second, the Bayesian approach incorporates uncertainties about the key independent variable in this project.
+Causal estimands (to use the Rubin terminology) are comparisons of potential outcomes are two hypothetical values of a treatment, usually a unit's outcome under an _observed_ treatment versus an _unobserved_ treatment.
+The data in this project frustrate the typical structure of a causal estimand because the treatment value of interest---policy ideology in a districit-party public---is not observed.
+Instead, it is estimated up to a probability distribution specified by the measurement model in Chapter \@ref(ch:model).
+Uncertainty about the effect of setting district-party ideology to some new value $\theta'$ therefore contains multiple sources of uncertainty: statistical uncertainty about the estimated causal effect, and measurement uncertainty about the original value of $\theta$ before a causal intervention.
+Bayesian analysis provides the statistical machinery to quantify uncertainty in these causal effects as if they were any other posterior quantity, by marginalizing the posterior distribution over any nuisance parameters.
 
 This chapter unpacks these issues according to the following outline.
 First, I review the notation and terminology for causal modeling in empirical research, where data and causal estimands are posed in terms of "potential outcomes" or "counterfactual" observations. 
-I then describe a Bayesian reinterpretation of these models, which uses probability distributions to quantify uncertainty about causal effects and counterfactual data, conditional on the observed data. 
-Because Bayesian modeling remains largely foreign to political science,
-I confront several issues surrounding prior distributions for causal models.
-I discuss how priors are inescapable for many causal claims, how priors can provide important structure to improve causal inferences, and practical advice for constructing and evaluating priors.
-Finally, I provide examples of the Bayesian causal framework at work, highlighting how priors add value to causal inference at different levels of abstraction.
-
-
-
+I then describe a Bayesian reinterpretation of these models, which uses probability distributions to quantify uncertainty about causal effects and counterfactual data, conditional on observed data.
+Because Bayesian modeling remains largely foreign to political science, I spend much of the chapter explaining what a Bayesian appraoch to causal inference means with theoretical and practical justifications: how priors are inescapable for many causal claims, how priors provide valuable structure to improve the estimation of causal effects, and practical advice for constructing and evaluating Bayesian causal models.
+Finally, I provide examples of Bayesian causal modeling by replicating and extending published studies in political science, showing where priors add value to causal inference.
 
 
 
@@ -97,182 +87,125 @@ Finally, I provide examples of the Bayesian causal framework at work, highlighti
 ### Causal Models {#sec:causal-inf}
 
 As an area of scientific development, _causal inference_ refers to the formal modeling of causal effects, the assumptions required to identify causal effects, and research designs that make these assumptions plausible.
-The rigorous accounting of the causal model and identifying assumptions distinguishes causal inference from informal, verbal discussions of causal effects.
+Scientific disciplines, especially social sciences, have long been interested in substantiating causal claims using data, but the rigorous definition of the full causal model and identifying assumptions distinguishes the current causal inference movement from other informal approaches.
 
-The current movement in causal inference spans several fields, most notably in statistics, biostatistics, epidemiology, computer science, and economics.
+Contemporary approaches to causal inference span several fields, most notably in economics, epidemiology, and computer science.
 The dominant modeling approach to causal inference in political science is rooted in a notation of _potential outcomes_ [@rubin:1974:potential-outcomes; @rubin:2005:potential-outcomes].
 This "Rubin model" formalizes the concept of a causal effect by first defining a space of hypothetical outcomes.
 The outcome variable $Y$ for unit $i$ is a function of a treatment variable $A$.
 "Treatment" refers only to a causal factor of interest, regardless of whether the treatment is randomly assigned.^[
   Some causal inference literatures refer to treatments as "exposures," which may feel more broadly applicable to settings beyond experiments. For this project, I make no distinction between treatments and exposures.
 ]
-For a binary treatment assignment where $A = 1$ represents treatment and $A = 0$ represents control, unit $i$'s outcome under treatment is represented as $Y_{i}(A = 1)$ or $Y_{i}(1)$, and the outcome under control would be $Y_{i}(A = 0)$ or $Y_{i}(0)$.
+Considering a binary treatment assignment where $A = 1$ represents treatment and $A = 0$ represents control, unit $i$'s outcome under treatment is represented as $Y_{i}(A = 1)$ or $Y_{i}(1)$, and the outcome under control would be $Y_{i}(A = 0)$ or $Y_{i}(0)$.
 The benefit of expressing $Y$ in terms of hypothetical values of $A$ allows the causal model to describe, with formal exactitude, the entire space of possible outcomes that result from treatment assignment.
-If $Y_{i}(A = 1)$ differs from $Y_{i}(A = 0)$, then the treatment has a nonzero causal effect on unit $i$, denoted $\tau_{i}$.
+The treatment effect for unit $i$, denoted $\tau_{i}$, is the difference in potential outcomes when changing the treatment status $A_{i}$.
 \begin{align}
-  \tau_{i} &= Y_{i}(A = 1) - Y_{i}(A = 0)
+  \tau_{i} &= Y_{i}(A_{i} = 1) - Y_{i}(A_{i} = 0)
   (\#eq:tau-i)
 \end{align}
-Defining the causal model in terms of unit-level effects provides an exact, minimally sufficient definition of a causal effect: $A$ affects $Y$ treatment has a nonzero effect for any unit.
+If $\tau_{i}$ is not $0$, then $A_{i}$ has a causal effect on $Y_{i}$.
+Defining the causal model in terms of unit-level effects provides an exact, minimally sufficient definition of a causal effect: $A$ affects $Y$ if the treatment has a nonzero effect _for any unit_.
 
-By establishing this baseline model, the researcher can derive exact theoretical statements about causal effects by manipulating the equations that define the model.
+By establishing this baseline model, the researcher can derive exact statements about causal effects by manipulating the equations that define the space of treatments and outcomes.
 A causal model may describe more complex causal effects, such as whether $Y_{i}$ it is observed at all, whether the treatment effect is indirectly mediated by another variable, whether the effect depends on other baseline characterics of units, and so on. 
 
 The entire space of potential outcomes is a hypothetical device. 
 Although a causal model defines potential outcomes for every unit under every treatment assignment, it is not possible to observe all of these potential outcomes, since a unit can receive only one treatment, and thus can only take a single outcome value. 
-This implies that the individual causal effect ($\tau_{i}$), while a valid feature of the hypothetical causal model, is never actually observed be for any unit.
-This "fundamental problem of causal inference" is the core philosophical problem in causal inference; because the researcher never observes a unit under more than one treatment status, she can never make any causal claims based on the observed data alone [@holland:1986:causal-inf].
-Causal claims are possible only by imposing assumptions on the data that allow the researcher to predict what the data would look like if units received treatments that they did not actually receive.
-These "identification assumptions" specify the conditions under which data from one treatment group can be used to make generalizations about data from other treatment groups [@keele:2015:causal-inf].
-
-<!------- TO DO ---------
-- identification assumptions (oganisian and roy style)
-------------------------->
-
-A related feature of causal models is that the causal effect $\tau_{i}$ is defined at the unit level, so it can be different for each unit.
-This low-level causal heterogeneity is often an important feature of research designs, since the identifiable causal quantities will depend on which assumptions the researcher is willing to make about the structure of that heterogeneity.
-The body of work that we call "causal inference" focuses on (1) which the causal quantities are described by a causal model, (2) the assumptions required to identify those quantities in observed data and the research designs that invoke them, and (3) estimation methods for those causal quantities.
-
-
-
-A separate but increasingly popular approach to causal modeling focuses on _structural causal models_ or "SCMs" [@pearl:1995:causal-diagrams; @pearl:2009:causality] that describe networks of causally related variables.
-Some treatment $A$ causally affects the outcome $Y$ if the treatment is a component of the function that assigns values to the outcome: $Y_{i} := f(A_{i}, \ldots)$.
-The notion of _assignment_ is important to distinguish from _equality_, since it distinguishes a directional causal effect from a bidirectional correlation.
-This is a central feature of the SCM approach, which is premised on the difference between _observing_ relationships as they appear in the world and _obtaining_ relationships by intervening on the world.
-We can observe a relationship between outcome $Y$ and treatment $A$ by observing that the distribution of $Y$ given $A$, $p(Y \mid A = a)$, changes as $A$ takes different values, but we would observe a different relationship by intervening on the world to set the value of $A$ ourselves.
-
+This implies that the individual causal effect ($\tau_{i}$), while a valid feature of the hypothetical causal model, is never actually observed for any unit.
+This "fundamental problem of causal inference" is the core philosophical problem in causal inference; the researcher never observes a unit under more than one treatment status, so they can never make causal claims with observed data alone [@holland:1986:causal-inf].
+Instead, causal claims are possible only by imposing assumptions on the data.
+These "identification assumptions" specify the conditions under which observed can be used to describe what the data would look like if units received counterfactual treatments [@keele:2015:causal-inf].
+For observational causal inference, it is common to invoke the following four assumptions. 
+The _consistency_ assumption states that when a unit receives a treatment, the outcome that we observed is the potential outcome for that unit under that treatment.
 \begin{align}
-  \begin{split}
-    \text{Observational Distribution:} &\;  p(Y \mid A = a) \\
-    \text{Interventional Distribution:} &\;  p(Y \mid \doop{A = a}) 
-  \end{split}
-  (\#eq:obs-int-distributions)
+  \text{Consistency: } Y_{i} = Y_{i}(A_{i} = a) \mid A_{i} = 1
+  (\#eq:consistency-assumption)
 \end{align}
-
-
-
-
-Like the potential outcomes model, $A$ has a causal effect on $Y$ if it changes at least one unit's $Y$ value, since it only takes one unit to change the probability distribution $p(Y \mid \doop{A = a})$.
-The SCM framework comes to life by implementing _do_-calculus [@pearl:1995:causal-diagrams], rules for conditioning on variables in the causal system to nonparametrically identify causal effects.
-The SCM approach is important for this dissertation because its use of probability distributions to convey causal effects lends itself to Bayesian modeling more readily than the potential outcomes notation.
-
-
-```{r confounding-dag}
-problem_dag <- 
-  dagify(
-    Y ~ A + U,
-    A ~ U,
-    exposure = "X",
-    outcome = "Y",
-    coords = tribble(
-      ~ name,      ~ x,    ~ y,
-      "Y", 1, 0,
-      "A", 0, 0,
-      "U", 0, 1
-    )
-  ) %>%
-  tidy_dagitty() %>%
-  print()
-```
-
-```{r plot-confounding-dag}
-ggplot(problem_dag) +
-  aes(x = x, y = y, xend = xend, yend = yend) +
-  geom_dag_edges() +
-  geom_dag_point(aes(color = (name == "U"))) +
-  geom_dag_text(
-    aes(label = name), 
-    parse = TRUE, 
-    color = "black",
-    family = font_fam
-  ) +
-  scale_color_manual(
-    values = c(
-      "TRUE" = primary,
-      "FALSE" = "gray"
-    )
-  ) +
-  annotate(
-    geom = "text",
-    label = "Effect of treatment (A → Y) is identified\nconditioning on confounder (U)",
-    x = 0.1, y = 1.2,
-    hjust = 0
-  ) +
-  theme_dag(legend.position = "none") +
-  expand_plot(
-    expand_x = expand_scale(c(0.2, 0.2)), 
-    expand_y = expand_scale(c(0.2, 0.2))
-  ) +
-  NULL  
-```
-
-
-
-The most recognizable feature of the SCM framework is that every structural model can be visualized as a graphical model, where nodes represent variables and directed edges represent causal relationships. Many researchers refer to these graphs as "directed acyclic graphs," but I refer to them simply as "causal graphs."^[
-  This is an effort to reduce jargon. 
-  DAGs can be used to represent many systems that have nothing to do with causal inference, since "directed" and "acyclic" refer only to the mathematical properties of the graph.
-  Formally, any graph is a DAG if two nodes can only be first-order connected by just one directed edge, and no path through the graph begins and ends with the same node.
-  This entails that nodes cannot be immediately connected by multiple edges, undirected edges, or bidirectional edges.
-  Furthermore, the graph contains no "loops": edges that connect a node to itself.
+In other words, observing the outcome does not affect the outcome, and there are no hidden versions of treatment that are not defined in the causal model. 
+The _no interference_ assumption states that unit $i$'s potential outcome depends only on $i$'s treatment status, not on any other units' treatment status.
+\begin{align}
+  \text{No Interference: } Y_{i}\left(A_{i}\right) = Y_{i}\left(A_{1}, A_{2}, \ldots, A_{n}\right)
+  (\#eq:interference-assumption)
+\end{align}
+The consistency and no-interference assumptions are sometimes grouped into a single assumption, called the "stable unit treatment value assumption" [or SUTVA, @rubin:1980:comment-randomization].
+The _conditional independence_ assumption (CIA), also known as conditional "ignorability," states that potential outcomes are independent of treatment status conditional on a unit's membership in a specific stratum of covariates $X_{i} = x$.
+\begin{align}
+   \text{Conditional Independence: } 
+   Y_{i}\left(A_{i} = 1\right), \; Y_{i}\left(A_{i} = 0\right) \ind 
+   A_{i} \mid X_{i} = x
+   (\#eq:ignorability-assumption)
+\end{align}
+The CIA is essentially an assumption about unit-level expectations under counterfactuals.
+Within stratum $X_{i} = x$, any observed $Y_{i}$ in the treatment group are independent from the $Y_{i}(1)$ potential outcome values for units in the control group.
+This assumption is violated by self-selection processes or other confounding affects that sort units into treatment statuses in a way that is correlated with their potential outcomes.
+The CIA is usually invoked alongside a _positivity_ assumption,
+\begin{align}
+   \text{Positivity: } 0 < p\left(A_{i} = a \mid X_{i} = x\right) < 1, \; \forall a \in \mathcal{A}, \; \forall x \in \mathcal{X}
+   (\#eq:positivity-assumption)
+\end{align}
+where $\mathcal{A}$ and $\mathcal{X}$ are respectively the spaces of possible treatments and covariate strata.
+Positivity stipulates nonzero probability of treatment statuses within each strata, ensuring that causal inferences are conducted only on units that could conceivably have received other treatment statuses.^[
+  See @liao-et-al:2019:post-predict-time-varying for Bayesian causal estimation for "overlapping populations" under violations of strict positivity.
 ]
-These graphs are valuable because they reveal which variables must be adjusted for in order to satisfy certain identification criteria in _do_-calculus.
-Most notably, the _back-door criterion_ states that a causal effect is identified by "blocking any back-door paths" between treatment $A$ and outcome $Y$—paths that connect $A$ to $Y$ that begin with an arrow flowing into $A$ and that pass through other variables.
-For instance, Figure \@ref(fig:plot-confounding-dag) shows a causal system where the effect of $A$ on $Y$ is not identified because we can connect $A$ to $Y$ through the back-door path $A \rightarrow U \rightarrow Y$.
-This means that $U$ confounds the relationship between $A$ and $Y$, but we can identify the relationship by conditioning on $U$ and "blocking" the back-door path.
-Graphs are valuable for this project because I use them to convey important identification assumptions in later chapters.
+Conditional independence and positivity assumptions are essential for conducting causal inference using methods of covariate adjustment.
 
-```{r plot-confounding-dag, include = TRUE, fig.width = 4, fig.height = 2,out.width = "70%", fig.cap = "A causal graph where the effect of $A$ on $Y$ is confounded by $U$."}
-```
-
-<!-- 
-\begin{align}
-  P(Y = y \mid \doop{A = a}) &= \int\limits_{\mathcal{U}}P(Y \mid A = a, U = u)P(U = u) \diff{u}
-  (\#eq:adjustment-formula)
-\end{align} -->
-
-<!-- how each expresses confounding, correlation ≠ causation, and identification by conditioning -->
-
-
-As with the potential outcomes framework, _do_-calculus (and causal graphs in turn) describe minimally sufficient conditions for _nonparametric_ causal identification. There is no guarantee that linear regression models, or any parametric models, adequately control for confounders and isolate identifying variation in the treatment. For this reason, it can be helpful to lay out a hierarchy of modeling concerns for any causal inference problem.
-
-1. Causal modeling: the definition of potential outcomes or structural equations that define the space of causal effects, and the declaration of relevant causal estimands.
-2. Identification assumptions: the assumptions required to identify causal estimands using only the observed data. 
-These assumptions are usually posed as statements about expectations of $Y$ and when we can ignore the fact that counterfactuals are unobserved.
-For instance, conditioning on a confounder $U$ identifies the conditional causal effect of $A$ because it satisfies an assumption that $A$ is independent of the potential outcomes after conditioning on $U$. 
-\begin{align}
-  Y_{i}(A = 1), \; Y_{i}(A = 0) \ind A_{i} \mid U_{i} = u
-  (\#eq:conditional-independence)
-\end{align}
-Conditional independence between treatment and potential outcomes lets the researcher make inferences about potential outcomes, which we can't always observe because they are hypothetical entities in the causal model, having only observed the real-world data. For instance, if potential outcomes are conditionally independent of treatment status $A$, then we can conclude that the $Y$ actually observed at $A = a$ is equal to the $Y$ that we _would have observed_ if we could set $A = a$ ourselves, within strata $U = u$.
+All together, these assumptions enable inferences about potential outcomes, which aren't always observed, using only observed data.
+For instance, from these assumptions it follows that the average $Y$ values observed at $A = a$ are equal to the average potential outcomes that we would obtain by setting $A = a$ ourselves, within strata $X = x$:
 \begin{align}
   \begin{split}
-    \E{Y_{i} \mid A_{i} = a, U_{i} = u} 
-      &= \E{Y_{i}(A = a) \mid A_{i} = a, U_{i} = u} \\
-      &= \E{Y_{i}(A = a)} \mid U_{i} = u
+    \E{Y_{i} \mid A_{i} = a, X_{i} = x}
+      &= \E{Y_{i}(A = a) \mid A_{i} = a, X_{i} = x} \\
+      &= \E{Y_{i}(A = a)} \mid X_{i} = x
   \end{split}
-  (\#eq:CIA-implication)
+  (\#eq:assumption-implications)
 \end{align}
-This conditional independence assumption (CIA) is the same assumption invoked by the back-door criterion. By conditioning on $U$, we subtract any variation in $A$ that can be explained by $U$, so the remaining relationship between $A$ and $Y$ represents the relationship we would observe by setting $\doop{A = a}$ within stratum $U = u$.
-3. Statistical assumptions: What estimators are we using to estimate $\E{Y_{i} \mid A_{i}, U_{i}}$, and do they introduce additional assumptions that interfere with causal inference? 
-Do they suffer additional biases due to misspecification, functional form assumptions, that jeopardize key identification assumptions?
+The first line of \@ref(eq:assumption-implications) equates observed outcomes given treatment to potential outcomes under an imposed treatment, which is enabled by SUTVA (consistency and no interference).
+Conditional independence allows us to suppresses the explicit conditioning on $A_{i} = a$ in the second line, and positivity is implied by referring generically to treatment level $a$ and covariate stratum $x$.
 
-I lay out this hierarchy for two reasons.
-First, it clarifies why researchers use certain research designs or statistical approaches to overcome certain problems with their data.
+Implications derived from identification assumptions are typically posed in terms of expectations about potential outcomes, $\E{Y_{i}\left(A_{i}\right)}$, instead of unit-level potential outcomes $Y_{i}\left(A_{i}\right)$, because unit-level causal heterogeneity is always unidentified [@holland:1986:causal-inf]. 
+This is why causal quantities of interest, also known as causal estimands, are usually posed in terms of expectations as well.
+This project will generally discuss _conditional average treatment effects_ (CATEs), which are within-strata expectations of treatment effects averaged over the population of units.
+Let $\bar{\tau}(a, a', x)$ be the average effect of setting $A = a$, as opposed to some other value $a'$, within stratum $X = x$.
+\begin{align}
+  \bar{\tau}(a, a', x) = \E{Y_{i}(a) - Y_{i}(a') \mid X_{i} = x}
+  (\#eq:CATE)
+\end{align}
+
+When deriving estimands such as the CATE with identification assumptions, it is important to note that assumptions describe minimally sufficient conditions for _nonparametric_ causal identification [@keele:2015:causal-inf]. 
+There is no guarantee that linear regression models, or any parametric models, adequately control for confounders.
+For this reason, it is important to distinguish causal estimands from estimation methods, the latter of which can introduce statistical assumptions that differ from identification assumptions.
+In order to separate the major planks of causal inference methods, I center the discussion of causal inference going forward around a three-party hierarchy of causal methodology.
+
+1. Causal model: the hypothetical model that defines all treatments and potential outcomes at the unit level.
+   The causal model is an omniscient view of the causal system, defining individual-level causal effects even though they cannot be observed in real data.
+2. Identification assumptions: the assumptions required to identify causal estimands using only the observed data. 
+   These assumptions specify how knowledge of observed $Y$ data can be used to make inferences about counterfactual $Y$ data that is not observed.
+   Inferences enabled by identification assumptions are typically posed as expectations about counterfactual data, unless further assumptions are specified that relate individual unit effects to average effects.^[
+     For instance, a _constant additive effects_ assumption states that all  causal effects are constant for all units and can be combined without interactions [@Rosenbaum:2002:observational-studies].
+   ]
+   Because inferences are posed as expectations, they are abstractions that follow from analytical derivations that do not depend on statistical estimation approaches.
+3. Estimation methods: How do we estimate the expectations derived from the causal model and identification assumptions? Do these estimation methods introduce additional statistical assumptions on top of the identification assumptions?
+
+I lay out this hierarchy for two main reasons.
+First, it clarifies why researchers use certain research designs or statistical approaches to overcome particular problems with their data.
 Statistical assumptions, we will see, can undermine identification assumptions, which is why causal inference scholars tend to promote estimation strategies that rely on as few additional assumptions as possible [@keele:2015:causal-inf].
 One way to avoid these assumptions is to use research designs that eliminate confounding "by design" rather than through statistical adjustment, such as randomized experiments, instrumental variables, regression discontinuity, and difference-in-differences [for instance, @angrist-pischke:2008:mostly-harmless].
 If researchers cannot design away these difficult assumptions, other methods are available to adjust for confounders without as many strict assumptions about the functional form of the causal model as are commonly invoked in parametric regression models.
-Causal inference is not synonymous with the new "agnostic statistics" [@aronow-miller:2019:agnostic-statistics], but it is animated by a similar motivation to implement statistical methods that relies on fewer fragile assumptions.
-For causal inference problems, these methods include matching, propensity score weighting, and even machine learning methods for estimating flexible conditional expectation functions that are robust to nonlinearities and non-additivities in the data generating process [@sekhon:2009:opiates; @aronow-samii:2016:regression; @hill:2011:bart; @green-kern:2012:bart; @samii-et-al:2016:retrospective-causal-inference-ML].
-This dissertation will use machine learning methods, in particular Bayesian neural networks (BNNs), to estimate flexible expectation functions without relying on strict assumptions about unknown functional forms. 
+Causal inference is not synonymous with the new "agnostic statistics" movement [e.g. @aronow-miller:2019:agnostic-statistics], but it is animated by a similar motivation to identify statistical methods that rely on as few fragile assumptions as possible.
+For causal inference problems, these methods include matching, doubly robust estimation, and machine learning methods for estimating flexible conditional expectation functions that are to varying degrees robust to misspecification, nonlinearities, or non-additivities in the data generating process [@sekhon:2009:opiates; @aronow-samii:2016:regression; @hill:2011:bart; @green-kern:2012:bart; @samii-et-al:2016:retrospective-causal-inference-ML; @aronow-miller:2019:agnostic-statistics].
+This dissertation will employ machine learning methods, in particular Bayesian neural networks (BNNs), to estimate regression functions that rely less on exact, reduced-form model specification choices.
 
-Second, this three-party hierarchy of causal clarifies where my contributions around Bayesian causal estimation will be focused.
-As I discuss below, a Bayesian view changes the interpretation of the causal model (level 1) by invoking a _probability distribution_ over the space of potential outcomes. This probability distribution allows the researcher to say which counterfactual data are more plausible than others, which is a desirable property in a causal modell that conventional inference methods nonetheless do not readily enable.
-A Bayesian approach to causal inference also has the potential to extend the meaning of identification assumptions (level 2) by construing them also as probabilistic features of a model rather than fixed features. 
-Finally, and most practically, the Bayesian framework offers a greater variety of statistical tools for estimating causal effects (level 3).
+Second, the three-part hierarchy of causal inference clarifies where my contributions around Bayesian causal estimation will be focused.
+As I discuss below, the "easiest way in" for Bayesian methods is through statistical estimation (level 3), since some flexible estimation methods are convenient to implement using Bayesian technologies [@imbens-rubin:1997:bayes-compliance; @ornstein-duck-mayr:2020:GP-RDD].
+I push this further by arguing that Bayesian estimation changes the interpretation of the causal model (level 1) by implying a probability distribution over the space of potential outcomes.
+This probability distribution allows the researcher to say which causal effects and counterfactual data are more plausible than others, which is a desirable property of causal inference that is not available through conventional inference methods.
+The Bayesian approach also has the power to extend the meaning of identification assumptions (level 2) by construing them also as probabilistic rather than fixed features of a causal analysis [@oganisian-roy:2020:bayes-estimation].
 
 
 
-### Bayesian Inference
+
+
+### Bayesian Inference {#sec:bayes-inf}
 
 Bayesian reasoning is a contentious and misunderstood topic in empirical political science, so it is important to establish some essential tenets to the approach before melding it with causal modeling.
 Bayesian analysis is the application of conditional probability for statistical inference.
@@ -308,7 +241,7 @@ The joint model for the data and the parameters takes the form
   (\#eq:joint-model)
 \end{align}
 where $p(\mathbf{y} \mid \boldsymbol{\pi})$ represents the probability distribution of the data, conditioning on parameters, and $p(\boldsymbol{\pi})$ represents a _prior distribution_ for parameters, marginal of (or unconditioned on) the data.
-The prior distribution is commonly described as the researcher's "prior information" (or, controversially, prior "beliefs") about the parameter, an important but misunderstood component of Bayesian modeling.  
+The prior distribution is commonly described as the researcher's "prior information" (or, controversially, prior "beliefs") about the parameter.  
 The joint model provides machinery for learning about parameters by conditioning the parameters on the data,
 \begin{align}
   p(\boldsymbol{\pi} \mid \mathbf{y}) &= \frac{p(\mathbf{y} \mid \boldsymbol{\pi})p(\boldsymbol{\pi})}{p(\mathbf{y})}
@@ -319,13 +252,12 @@ also known as obtaining the _posterior distribution_ of the parameters.
 These basic concepts of conditional probability and Bayesian updating are not foreign to political science, but it will be important to establish an interpretation of Bayesian thinking and Bayesian modeling that is productive for causal inference. 
 This project invokes what @mcelreath:2017:decolonized-bayes calls an "inside view" of Bayesian statistics---Bayesian statistics on its own terms.
 This implies a rejection of an "outside view" that construes Bayesian statistics as a penalized variation of maximum likelihood.
-Under the outside view, heavily influenced by the prominence of non-Bayesian likelihood approaches to statistical inference, data follow probability distributions, while parameters are fixed constants.
-Bayesian estimation uses the original likelihood model and attaches a penalty in the form of a prior distribution for model parameters.
-Prior distributions, in turn, represent the subjective beliefs of the researcher.
-Bayesian modeling can be reduced to a biased estimation procedure that downweights data in favor of arbitrary subjectivity.
+Under the outside view, data follow probability distributions, but parameters are fixed.
+Bayesian estimation is nothing but a likelihood model for the data with an added penalty on the parameter estimates, and since the penalty comes from the researcher's subjective beliefs, the penalty could be anything.
+Bayesian modeling, under this formulation, can be reduced to a biased estimation procedure that downweights data in favor of arbitrary subjectivity.
 This view of Bayesian statistics is admittedly confusing, and if we take it at face value, it is no wonder that causal inference in political science has largely avoided Bayesian tools other than for computational convenience.^[
   I return to the distinction between "Bayes for the sake of MCMC" and "Bayes for the sake of Bayes" in a later discussion of prior distributions.
-].
+]
 
 The inside view, as mentioned above, construes a Bayesian model as a joint model for all variables in a system.
 The use of the word "variables" to encompass both data and parameters is crucial.
@@ -351,23 +283,30 @@ Or we can condition the model on data to obtain a rationalizable distribution of
 ------------------------->
 
 From the inside view, Bayesian updating proceeds by considering a variety of possible scenarios that create data and evaluating which scenarios are consistent with the data.
-The joint prior model, $p(\mathbf{y} \mid \boldsymbol{\pi})p(\boldsymbol{\pi})$ describes an overly broad set of possible configurations of the world. This configurations are the combination of possible parameters, $p(\boldsymbol{\pi})$, and possible data given parameters, $p(\mathbf{y} \mid \boldsymbol{\pi})$.
-Bayesian updating decides which configurations of the world are more plausible in light of data actually observed.
-The plausibility, or posterior probability, of a parameter value is greater if the observed data are more likely to occur under that parameter value versus another value: larger $p(\mathbf{y} \mid \boldsymbol{\pi})$.
-Conditioning on the data downweights the configurations of the world that are inconsistent with the observed data, resulting in a distribution of scenarios that reflect more plausible configurations of the world [@mcelreath:2020:rethinking-2, chapter 2].
-This is an important distinction from non-Bayesian statistical inference, since there can be no formal notion of "plausible parameters" without a posterior distribution, which necessitates a prior distribution.
-For causal inference, this means there can be no formal notion of "plausible counterfactuals" without a probability distribution over the counterfactuals, which necessitates a probability distribution over causal effects.
+The joint prior model, $p(\mathbf{y} \mid \boldsymbol{\pi})p(\boldsymbol{\pi})$ describes an overly broad set of possible configurations of the world. These configurations contain a distribution of possible parameters, $p(\boldsymbol{\pi})$, and possible data given parameters, $p(\mathbf{y} \mid \boldsymbol{\pi})$.
+Bayesian updating decides which configurations of the world are consistent with the data and are therefore more plausible.
+The plausibility, or posterior probability, of a parameter value is greater if the observed data are more likely to occur under that parameter value versus another value.
+In turn, the posterior distribution downweights model configurations that are implausible, or inconsistent with the data [@mcelreath:2020:rethinking-2, chapter 2].
+This is an important distinction from non-Bayesian statistical inference, since there can is no formal notion of "plausible parameters given the data" without a posterior distribution, which necessitates a prior distribution.
+<!------- TO DO ---------
+- is this true?
+------------------------->
+For causal inference, this means there can be no formal notion of "plausible causal effects" without a probability distribution over causal effects.
 The mission in the remainder of this chapter is to establish a framework for causal inference in terms of plausible effects and plausible counterfactuals.
 
 The inside view of Bayesian modeling, and the philosophical unity that it brings to statistical machinery and inference, is possible even if using uninformative prior distributions that are indifferent to possible parameters  _a priori_.
 This is how Bayesian methods tend to appear in political science to date, with noninformative priors that exist primarily to facilitate Bayesian computation for difficult estimation problems.
 The infamy of Bayesian methods, however, is owed to the ability of the researcher to specify "informative" priors that concentrate probability density on model configurations that are thought to be more plausible even before data are analyzed.
-There are many modeling scenarios where this concentration of probability delivers results that are almost unthinkable without prior structure: multilevel models that allocate variance to different layers of hierarchy, highly parameterized models with correlated parameters such as spline regression, and sparse regressions where regularizing priors are used to shrink coefficients and preserve degrees of freedom to overcome the "curse of dimensionality" [e.g. @gelman-et-al:2013:BDA].
+There are many modeling scenarios where this concentration of probability delivers results that are almost unthinkable without prior structure: multilevel models that allocate variance to different layers of hierarchy, highly parameterized models with correlated parameters such as spline regression, and sparse regressions where regularizing priors are used to shrink coefficients and preserve degrees of freedom to overcome the "curse of dimensionality" [@bishop:2006:pattern-rec; @gelman-et-al:2013:BDA].
 At the same time, many researchers are skeptical of Bayesian methods because supplying a model with non-data information can be spun as data falsification [@garcia-perez:2019:bayes-data-falsification].
-As I elaborate in Section \@ref(sec:bayes-how-to), the mere non-flatness of a prior is often less consequential than the prior's _structure_. 
-For instance, whether a prior has variance of $10$ or $100$ often matters less than whether the prior specifies a hierarchical structure for borrowing information from other groups in the data.
-It is no coincidence the Bayesian contributions in this dissertation and in other areas of applied statistics are concerned with different prior structures more than the precision of otherwise equal prior structures.
+As I elaborate in Section \@ref(sec:priors), it is a mistake to equate flat prior "flatness" with prior "uninformativeness," and there are many legitimate sources of prior information that have nothing to do with subjective beliefs.
 
+
+<!------- TO DO ---------
+- Furthermore, the mere non-flatness of a prior is often less consequential than the parameter's structural relationship to other parameters.
+For instance, whether a prior has a scale of $10$ versus $30$ almost always matters less than whether the prior contains hierarchical structure for borrowing information from other groups of data.
+It is no coincidence the Bayesian contributions in this dissertation and in other areas of applied statistics are concerned with different prior structures more than the precision of otherwise equal prior structures. 
+------------------------->
 
 <!------- TO DO ---------
 - "random variable"
@@ -402,7 +341,7 @@ Not _inherently_ the same as "agnostic" inference though we fux with both.
 Having reviewed the basics of causal models and Bayesian inference, we now turn to a framework for Bayesian causal modeling.
 The distinguishing feature of a Bayesian causal model is that the elemental units of the model, the potential outcomes, are given probability distributions.
 This probability distribution reflects available causal information that exists outside the current dataset.
-Bayesian inference proceeds updating our information about counterfactual potential outcomes in light of the observed data.
+Bayesian inference proceeds updating our information about causal effects and counterfactual potential outcomes in light of the observed data.
 The headings under \@ref(sec:intro-bcm) introduce this modeling framework at a high level.
 I provide a probabilistic interpretation and notation for potential outcomes models (\@ref(sec:po-distributions)), a connection between causal parameters and model parameters (\@ref(sec:what-params)), and a broad justification for the Bayesian interpretation of causal effects (\@ref(sec:why-bcm)).
 
@@ -414,35 +353,36 @@ I provide a probabilistic interpretation and notation for potential outcomes mod
 As with other causal models, we begin at the unit level.
 Unit $i$ receives a treatment $A_{i} = a$, with potential outcomes $Y_{i}\left(A_{i} = a\right)$.
 Suppose a binary treatment case where $A_{i}$ can take values $0$ or $1$, so the unit-level causal effect is $\tau_{i} - Y_{i}\left(1\right) - Y_{i}\left(0\right)$.
-
-The unit-level causal effect $\tau_{i}$ is unidentified, but it is possible to estimate to estimate population-level causal quantities by invoking identification assumptions.
-For instance, the conditional average treatment effect at $U = u$, $\bar{\tau}(U = u) = \E{Y_{i}(1) - Y_{i}(0) \mid U_{i} = u}$, can be estimated from observed data assuming consistency, non-interference, conditional ignorability, and positivity,
+Although $\tau_{i}$ is unidentified, it is possible to estimate population-level causal quantities by invoking identification assumptions.
+For instance, the conditional average treatment effect at $X_{i} = x$, $\bar{\tau}(X = x) = \E{Y_{i}(1) - Y_{i}(0) \mid X_{i} = x}$, can be estimated from observed data assuming consistency, non-interference, conditional ignorability, and positivity. 
+Suppressing the unit index $i$,
 \begin{align}
 \begin{split}
-  \bar{\tau}(U = u) 
-      &= \E{Y(A = 1) - Y(A = 0)\mid U = u} \\
-      &= \E{Y(A = 1) \mid U = u} - \E{Y(A = 0) \mid U = u} \\
-      &= \E{Y \mid A = 1, U = u} - \E{Y \mid A = 0, U = u}
+  \bar{\tau}(X = x) 
+      &= \E{Y(A = 1) - Y(A = 0)\mid X = x} \\
+      &= \E{Y(A = 1) \mid X = x} - \E{Y(A = 0) \mid X = x} \\
+      &= \E{Y \mid A = 1, X = x} - \E{Y \mid A = 0, X = x}
 \end{split}
 (\#eq:cate-proof)
 \end{align}
 where the third line is obtained by the identification assumptions.
 The identification assumptions connect _causal estimands_ and what I will call _observable estimands_.
 Causal estimands are the true causal quantities stated in terms of potential outcomes, which makes them unobservable.
-Observable estimands are the equivalent quantities that could be recovered from observable data under the identification assumptions.
-Other literature refers to observable estimands as "nonparametric estimators" [@keele:2015:causal-inf], but I steer clear of this language because the gap between observable estimands and estimators is an essential distinction for understanding the Bayesian causal approach.
+Observable estimands are the equivalent quantities in terms of observable data, derived under the identification assumptions, that would be realized if we had an infinite sample size.
+Other literature refers to observable estimands as "nonparametric estimators" [@keele:2015:causal-inf], but I steer clear of this language because the gap between observable estimands and estimators is important for understanding the contributions of the Bayesian causal approach.
 
-The transition to a Bayesian probabilistic model begins with an acknowledgment that no estimator for the observable estimand, $\E{Y \mid A = a, U = u}$, is exact. 
-The assumptions identify causal effects only in an infinite data regime, where the observable estimand can be known exactly.
+The transition to a Bayesian probabilistic model begins with an acknowledgment that no estimator for the observable estimand, $\E{Y \mid A = a, X = x}$, is exact. 
+The assumptions identify causal effects only in an infinite data regime, where the observable estimand is known exactly.
 Inference about causal effects from finite samples, however, requires further statistical assumptions that link the observable estimand to an estimator or model.
 <!------- TO DO ---------
 - redo with an expectation-level model
 ------------------------->
-Let $f(Y \mid A, U, \boldsymbol{\pi})$ be a prediction function for the mean of $Y$ that depends on treatment $A$, confounders $U$, and parameters $\boldsymbol{\pi}$. This model's expectation is assumed to be equal to the observable estimand.
+Let $f(Y_{i} \mid A_{i}, X_{i}, \boldsymbol{\pi}) + \epsilon_{i}$ be a model for $Y_{i}$ that with a systematic predictor depending on treatment $A$, confounders $X$, and parameters $\boldsymbol{\pi}$, and an error term $\epsilon_{i}$.
+It follows that the observable estimand is equal to the population expectation of the model.
 \begin{align}
-  \E{Y \mid A = a, U = u} &= f(Y \mid A = a, U = u, \boldsymbol{\pi})
+  \E{Y \mid A = a, X = x} &= \E{f(Y \mid A = a, X = x, \boldsymbol{\pi}) + \epsilon_{i}}
 \end{align}
-This assumption is similar to any modeling assumption that appears in observational causal inference to link an estimator to the observable estimand, including parametric models for covariate adjustment, propensity models, matching, and more [@acharya-blackwell-sen:2016:direct-effects; @sekhon:2009:opiates].^[
+This setup is similar to any modeling assumption that appears in observational causal inference to link an estimator to the observable estimand, including parametric models for covariate adjustment, propensity models, matching, and more [@acharya-blackwell-sen:2016:direct-effects; @sekhon:2009:opiates].^[
   Although researchers are focusing more attention on estimation methods that focus on these statistical assumptions themselves, either by model ensembles/averages or "robust" models for propensity and response.
 ]
 <!------- TO DO ---------
@@ -450,13 +390,13 @@ This assumption is similar to any modeling assumption that appears in observatio
 - robust
 - ensembles in causal inf
 ------------------------->
-The conditional average treatment effect $\bar{\tau}(U = u)$ is obtained by differencing these model predictions over the treatment.
+The conditional average treatment effect $\bar{\tau}(X = x)$ is obtained by differencing these model predictions over the treatment.
 \begin{align}
 \begin{split}
-  \bar{\tau}(U = u) 
-    &= \E{Y \mid A = 1, U = u} - \E{Y \mid A = 0, U = u} \\
-    &= f(Y, A = 1, U = u, \boldsymbol{\pi})
-       - f(Y, A = 0, U = u, \boldsymbol{\pi})
+  \bar{\tau}(X = x) 
+    &= \E{Y \mid A = 1, X = x} - \E{Y \mid A = 0, X = x} \\
+    &= f(Y, A = 1, X = x, \boldsymbol{\pi})
+       - f(Y, A = 0, X = x, \boldsymbol{\pi})
 \end{split}
 (\#eq:cate-f)
 \end{align}
@@ -468,10 +408,10 @@ The data are distributed conditional on their expected value, modeled as $f(Y, A
 The parameters also have a prior distribution $\p{\boldsymbol{\pi}}$, or a distribution marginal of the data. 
 This model is sufficient to characterize the probability distribution for the conditional average treatment effect as defined in Equation \@ref(eq:cate-f),
 \begin{align}
-  p(\bar{\tau}(U = u))
+  p(\bar{\tau}(X = x))
     &= \int p\left[
-         f(Y, A = 1, U = u, \boldsymbol{\pi}) 
-         - f(Y, A = 0, U = u, \boldsymbol{\pi})
+         f(Y, A = 1, X = x, \boldsymbol{\pi}) 
+         - f(Y, A = 0, X = x, \boldsymbol{\pi})
        \right] 
        \p{\boldsymbol{\pi}}
        \diff{\boldsymbol{\pi}}
@@ -483,8 +423,8 @@ This model is sufficient to characterize the probability distribution for the co
 which is the probability distribution over differences in model predictions for $A = 1$ versus $A = 0$.
 Because the data are conditionally independent of $f()$ given $\boldsymbol{\pi}$, we need not incorporate the distribution of the data directly.
 This expected difference in model predictions is marginalized over the uncertain model parameters, so uncertainty about the causal effect reflects uncertainty over parameters $\boldsymbol{\pi}$.
-The expression in (\#eq:prior-cate) represents a prior distribution for $\bar{\tau}(U = u)$, since it is a joint distribution of the CATE and the prior distribution $\p{\boldsymbol{\pi}}$.
-Conditioning on the data gives us the posterior distribution for the CATE, $\p{\bar{\tau}(U = u) \mid Y}$, where we would integrate over the posterior distribution of the parameters instead of the prior distribution.
+The expression in (\#eq:prior-cate) represents a prior distribution for $\bar{\tau}(X = x)$, since it is a joint distribution of the CATE and the prior distribution $\p{\boldsymbol{\pi}}$.
+Conditioning on the data gives us the posterior distribution for the CATE, $\p{\bar{\tau}(X = x) \mid Y}$, where we would integrate over the posterior distribution of the parameters instead of the prior distribution.
 
 Probabilistic expressions about plausible and implausible causal effects are the key feature of a Bayesian causal model. 
 Building probabilistic expressions by conditioning on data is a natural way to think about causal inference. 
@@ -500,13 +440,13 @@ To see this in action, remember that we can "run the model forward" to create a 
 Denote these simulated observations as $Y'$ to distinguish them from the data $Y$ that are actually observed.
 If we marginalize this predictive distribution with respect to the prior parameters, we obtain a "prior predictive distribution"---the distribution of data we would expect from our prior parameters [@gelman-et-al:2013:BDA],
 \begin{align}
-  \p{Y' \mid A = a, U = u} &= \int \p{Y' \mid A = a, U = u \boldsymbol{\pi}}\p{\boldsymbol{\pi}} \diff{\boldsymbol{\pi}}
+  \p{Y' \mid A = a, X = x} &= \int \p{Y' \mid A = a, X = x, \boldsymbol{\pi}}\p{\boldsymbol{\pi}} \diff{\boldsymbol{\pi}}
   (\#eq:prior-predictive)
 \end{align}
 again fixing the treatment status and covariate profile.
 We update this distribution by conditioning on new data, delivering a "posterior predictive distribution"—the distribution of data that we expect from the posterior parameters.
 \begin{align}
-  \p{Y' \mid Y, A = a, U = u} &= \int \p{Y' \mid A = a, U = u, \boldsymbol{\pi}}\p{\boldsymbol{\pi} \mid Y} \diff{\boldsymbol{\pi}}
+  \p{Y' \mid Y, A = a, X = x} &= \int \p{Y' \mid A = a, X = x, \boldsymbol{\pi}}\p{\boldsymbol{\pi} \mid Y} \diff{\boldsymbol{\pi}}
   (\#eq:post-predictive)
 \end{align}
 These predictive distributions are the natural machinery of Bayesian generative models: the joint distribution and the laws of probability dictate which distributions can be obtained by conditioning and marginalizing over different variables in the model.^[
@@ -516,7 +456,7 @@ These predictive distributions are the natural machinery of Bayesian generative 
 The causal identification assumptions enable the model to generate counterfactual data by setting the treatment $A$ to some other value $a'$. 
 Denote these counterfactual observations $\tilde{Y}$, which I will subscript $i$ to show that this model implies a probability distribution for individual data points as well as aggregate treatment effects.
 \begin{align}
-  \p{\tilde{Y}_{i} \mid Y, A_{i} = a', U_{i} = u} &= \int \p{\tilde{Y}_{i} \mid A_{i} = a', U_{i} = u, \boldsymbol{\pi}}\p{\boldsymbol{\pi} \mid Y} \diff{\boldsymbol{\pi}}
+  \p{\tilde{Y}_{i} \mid Y, A_{i} = a', X_{i} = x} &= \int \p{\tilde{Y}_{i} \mid A_{i} = a', X_{i} = x, \boldsymbol{\pi}}\p{\boldsymbol{\pi} \mid Y} \diff{\boldsymbol{\pi}}
   (\#eq:post-predictive)
 \end{align}
 Stated more simply: if causal models are hypothetical models that _define_ potential outcomes, Bayesian causal models assign probability distributions to potential outcomes.
@@ -617,9 +557,21 @@ Works without repeated sampling.
 Probabilistic treatment status?
 
 
-### Bayesian Inference in the Hierarchy of Causal Inference
+### Bayesian Inference in the Hierarchy of Causal Inference {#sec:bayes-hierarchy}
 
-<!-- What "Parameters" Mean in Modeling and Estimation {#sec:what-params} -->
+Let us interpret the Bayesian causal model using the "hierarchy of causal inference" described in Section \@ref(sec:causal-inf).
+To review, the hierarchy consisted of three parts:
+
+1. The causal model: definition of potential outcomes, unit-level causal estimands.
+2. Identification assumptions: linkage between observable estimands to causal estimands.
+3. Estimation: linkage between finite data and observable estimands.
+
+The Bayesian causal model began as an estimator for the an observable estimand, so it belonged to level 3 in the hierarchy.
+As an estimation approach, it doesn't obviously change the observable estimand or the causal estimand.
+Instead, it is an estimator that can be evaluated for its bias and variance like any other estimator. 
+
+
+The model contained a data model conditional on parameters, and a parameter model 
 
 What was I trying to say here? 
 
@@ -753,7 +705,7 @@ Frequency properties are still possible for Bayesian estimators, but we view fre
 
 
 
-## Making Sense of Priors in Causal Inference
+## Making Sense of Priors in Causal Inference {#sec:priors}
 
 
 ### Priors as Data Falsification
@@ -827,10 +779,82 @@ The fact that it adds information to the log posterior is unaffected by whether 
 
 
 
+
+
+### Flatness is a Relative, Not an Absolute, Property of Priors {#sec:prior-flatness}
+
+<!------- TO DO ---------
+- The mapping from geometric space to statistical information is entirely dependent on the scale of a parameter space, and different model parameterizations invoke different scales.
+- start with a flat priors experiment and then go to the probit space?
+------------------------->
+
+
+
+<!-- information vs. shape, warping, covariant transformations -->
+
+<!------- TO DO ---------
+- "flat" isn't non-informative. They are just non-informative _relative to_ the likelihood. A likelihood that identifies a narrower region of parameter space will more quickly overcome a flatter prior, but it isn't the same as "non-informative." The speed with which a likelihood targets parameter space is a feature of the likelihood.
+------------------------->
+
+<!------- TO DO ---------
+- flat priors over effects imply non-flat priors for potential outcomes
+- flat priors for potential outcomes imply mode-zero priors for causal effects
+------------------------->
+
+<!------- TO DO ---------
+- does this go in previous section?
+------------------------->
+
+The primary resistance to Bayesian inference in applied research is the need to set a prior at all. To many researchers, the prior distribution is an additional assumptions that is never feels justified because it is external to the data. Often researchers wish to sidestep this choice altogether, preferring a "flat" prior that prefers all parameters equally.
+
+We have seen so far that the parameterization of a model has consequences for prior specification. Reparameterization may result in an algebraically equivalent likelihood
+<!------- TO DO ---------
+- define "equivalent reparameterization"
+------------------------->
+
+
+The incoherence of flatness: 
+
+- no universally valid strategy for specifying flat priors because it is always possible to rearrange the data model either by transforming a parameter or otherwise rearranging the likelihood. 
+
+Consider an experiment with a binary treatment $Z$ and a binary outcome variable $Y$. We want to determine the effect of $Z$ by comparing the success probability in the treatment group, $\pi_{1}$, to the success probability in the control group, $\pi_{0}$.
+
+
+
+- "no way to conceptualize an uninformative prior because you can always rearrange the problem through a reparameterization or transformation of a parameter"
+- examples of transformations having crazy implications/MLE being wild (logit).
+- Jeffreys prior: actually a very limited range of priors that satisfy an "invariance" property. My words: such that the "amount of information obtained from data about is invariant to parameterization of the likelihood, for all possible values of the parameter," or, "the only way for the posterior distribution to be exactly the same, given the same data, for all true parameter values (?), is the Jeffreys prior," or, regardless of the data, I will learn the same thing about the generative model regardless of which equivalent parameterization of the generative model is used.  
+    - is it worth it to think about the theoretical meaning of information
+    - how does flatness reflect information in nonlinear scales?
+
+
+Suppose we have some posterior distribution which relies on some parameter vector $\overrightarrow{\alpha}$. 
+\begin{align}
+  p\left(\overrightarrow{\alpha} \mid y\right) &\propto 
+    p(y \mid \overrightarrow{\alpha} )
+    p( \overrightarrow{\alpha} )
+\end{align}
+Consider some alternate parameterization of the likelihood parameterized by $\overrightarrow{\beta}$. 
+
+Nonlinear transformation of $\pi$ does not preserve a uniform density over parameters.
+
+
+
+
+
+Alex meeting takeaways:
+
+- every prior has a "covariant" prior in a different parameterization
+- the posteriors will be covariant as well.
+- The way you get between them is by transforming the parameter and doing the appropriate Jacobian transformation to the density.
+- Jeffrey's priors are a special case of this where the prior is proportional to the determinant of the information matrix. This has the beneficial property of "optimal learning" from the data. For example, flat Beta prior doesn't "hedge toward 50" in quite the same way.
+
+
 ### Priors and Model Parameterization
 
 <!------- TO DO ---------
 - this needs reverse outline
+- triangular prior over treatment effect
 ------------------------->
 
 Priors are defined with respect to a model of the data (the likelihood). 
@@ -1014,72 +1038,31 @@ Parameters are a _choice_.
 
 
 
+### Balancing Pragmatic and Principled Approaches to Priors {#sec:bayes-how-to}
 
 
 
-### Flatness is a Relative, Not an Absolute, Property of Priors {#sec:prior-flatness}
+Various roles that priors take on
 
-<!-- The mapping from geometric space to statistical information is entirely dependent on the scale of a parameter space, and different model parameterizations invoke different scales. -->
+- merely facilitate posterior inference
+- structural information
+- weak information
+- regularization / stabilization
+- prior knowledge
 
+A general orientation toward priors in this dissertation:
 
-<!-- information vs. shape, warping, covariant transformations -->
+- Not about "stacking the deck" or hazy notions of "prior beliefs"
+- information, not belief
+- Bayesian view of probability is _more general_, contains information and beliefs. Information is priors, but it's also data. Information is the fundamental unit of uncertainty-quantification
+- inference about the thing we care about (counterfactuals)
+- structural information when we have it
+- Causal inference: "agnosticism" is something valuable generally
 
-<!------- TO DO ---------
-- "flat" isn't non-informative. They are just non-informative _relative to_ the likelihood. A likelihood that identifies a narrower region of parameter space will more quickly overcome a flatter prior, but it isn't the same as "non-informative." The speed with which a likelihood targets parameter space is a feature of the likelihood.
-------------------------->
+Priors are not de-confounders
 
-<!------- TO DO ---------
-- flat priors over effects imply non-flat priors for potential outcomes
-- flat priors for potential outcomes imply mode-zero priors for causal effects
-------------------------->
+- downweighting, not upweighting
 
-<!------- TO DO ---------
-- does this go in previous section?
-------------------------->
-
-The primary resistance to Bayesian inference in applied research is the need to set a prior at all. To many researchers, the prior distribution is an additional assumptions that is never feels justified because it is external to the data. Often researchers wish to sidestep this choice altogether, preferring a "flat" prior that prefers all parameters equally.
-
-We have seen so far that the parameterization of a model has consequences for prior specification. Reparameterization may result in an algebraically equivalent likelihood
-<!------- TO DO ---------
-- define "equivalent reparameterization"
-------------------------->
-
-
-The incoherence of flatness: 
-
-- no universally valid strategy for specifying flat priors because it is always possible to rearrange the data model either by transforming a parameter or otherwise rearranging the likelihood. 
-
-Consider an experiment with a binary treatment $Z$ and a binary outcome variable $Y$. We want to determine the effect of $Z$ by comparing the success probability in the treatment group, $\pi_{1}$, to the success probability in the control group, $\pi_{0}$.
-
-
-
-- "no way to conceptualize an uninformative prior because you can always rearrange the problem through a reparameterization or transformation of a parameter"
-- examples of transformations having crazy implications/MLE being wild (logit).
-- Jeffreys prior: actually a very limited range of priors that satisfy an "invariance" property. My words: such that the "amount of information obtained from data about is invariant to parameterization of the likelihood, for all possible values of the parameter," or, "the only way for the posterior distribution to be exactly the same, given the same data, for all true parameter values (?), is the Jeffreys prior," or, regardless of the data, I will learn the same thing about the generative model regardless of which equivalent parameterization of the generative model is used.  
-    - is it worth it to think about the theoretical meaning of information
-    - how does flatness reflect information in nonlinear scales?
-
-
-Suppose we have some posterior distribution which relies on some parameter vector $\overrightarrow{\alpha}$. 
-\begin{align}
-  p\left(\overrightarrow{\alpha} \mid y\right) &\propto 
-    p(y \mid \overrightarrow{\alpha} )
-    p( \overrightarrow{\alpha} )
-\end{align}
-Consider some alternate parameterization of the likelihood parameterized by $\overrightarrow{\beta}$. 
-
-Nonlinear transformation of $\pi$ does not preserve a uniform density over parameters.
-
-
-
-
-
-Alex meeting takeaways:
-
-- every prior has a "covariant" prior in a different parameterization
-- the posteriors will be covariant as well.
-- The way you get between them is by transforming the parameter and doing the appropriate Jacobian transformation to the density.
-- Jeffrey's priors are a special case of this where the prior is proportional to the determinant of the information matrix. This has the beneficial property of "optimal learning" from the data. For example, flat Beta prior doesn't "hedge toward 50" in quite the same way.
 
 
 ### Generalization, Big and Small
@@ -1119,31 +1102,6 @@ Email to David:
 
 
 
-
-
-### Pragmatic and Principled Prior Approaches {#sec:bayes-how-to}
-
-
-Various roles that priors take on
-
-- merely facilitate posterior inference
-- structural information
-- weak information
-- regularization / stabilization
-- prior knowledge
-
-A general orientation toward priors in this dissertation:
-
-- Not about "stacking the deck" or hazy notions of "prior beliefs"
-- information, not belief
-- Bayesian view of probability is _more general_, contains information and beliefs. Information is priors, but it's also data. Information is the fundamental unit of uncertainty-quantification
-- inference about the thing we care about (counterfactuals)
-- structural information when we have it
-- Causal inference: "agnosticism" is something valuable generally
-
-Priors are not de-confounders
-
-- downweighting, not upweighting
 
 
 
@@ -1291,6 +1249,7 @@ tibble(
   facet_wrap(~ name) +
   geom_histogram(boundary = 0)
 ```
+
 
 
 ### Structural Priors and Weak Information
@@ -1947,7 +1906,7 @@ This manifested earlier in Figure \@ref(fig:plot-flat-effect), which showed that
 The standard deviation of the posterior samples is reduced for the models with structural prior constraints, so these prior interventions are also improving the precision of our estimates.
 This is because a fair amount of posterior uncertainty in the unconstrained model was owed to impossible parameter values.
 
-```{r plot-rdd-results, include = TRUE, fig.width = 8.5, fig.height = 4, out.width = "100%", fig.cap = "Comparison of posterior samples from Bayesian models with improper flat priors and weakly informative priors. Weakly informative models have flat priors over valid win probabilities at the discontinuity. Priors reduce effect magnitudes and variances by ruling out impossible win probabilities."}
+```{r plot-rdd-results, include = TRUE, fig.width = 9, fig.height = 5, out.width = "100%", fig.cap = "Comparison of posterior samples from Bayesian models with improper flat priors and weakly informative priors. Weakly informative models have flat priors over valid win probabilities at the discontinuity. Priors reduce effect magnitudes and variances by ruling out impossible win probabilities."}
 ```
 
 It bears emphasizing that the prior interventions in this case study were no more controversial than declaring what is already known: probabilities lie between $0$ and $1$.

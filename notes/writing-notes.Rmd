@@ -26,3 +26,121 @@ title: Thesis writing notes
 - fix Colophon
 - check out references
 
+
+# Holdover
+
+## structural causal models
+
+
+<!------- TO DO ---------
+- identification assumptions (oganisian and roy style)
+------------------------->
+
+<!-- A related feature of causal models is that the causal effect $\tau_{i}$ is defined at the unit level, so it can be different for each unit. -->
+<!-- This low-level causal heterogeneity is often an important feature of research designs, since the identifiable causal quantities will depend on which assumptions the researcher is willing to make about the structure of that heterogeneity. -->
+
+
+
+
+A separate but increasingly popular approach to causal modeling focuses on _structural causal models_ or "SCMs" [@pearl:1995:causal-diagrams; @pearl:2009:causality] that describe networks of causally related variables.
+Some treatment $A$ causally affects the outcome $Y$ if the treatment is a component of the function that assigns values to the outcome: $Y_{i} := f(A_{i}, \ldots)$.
+The notion of _assignment_ is important to distinguish from _equality_, since it distinguishes a directional causal effect from a bidirectional correlation.
+This is a central feature of the SCM approach, which is premised on the difference between _observing_ relationships as they appear in the world and _obtaining_ relationships by intervening on the world.
+We can observe a relationship between outcome $Y$ and treatment $A$ by observing that the distribution of $Y$ given $A$, $p(Y \mid A = a)$, changes as $A$ takes different values, but we would observe a different relationship by intervening on the world to set the value of $A$ ourselves.
+
+\begin{align}
+  \begin{split}
+    \text{Observational Distribution:} &\;  p(Y \mid A = a) \\
+    \text{Interventional Distribution:} &\;  p(Y \mid \doop{A = a}) 
+  \end{split}
+  (\#eq:obs-int-distributions)
+\end{align}
+
+
+
+
+Like the potential outcomes model, $A$ has a causal effect on $Y$ if it changes at least one unit's $Y$ value, since it only takes one unit to change the probability distribution $p(Y \mid \doop{A = a})$.
+The SCM framework comes to life by implementing _do_-calculus [@pearl:1995:causal-diagrams], rules for conditioning on variables in the causal system to nonparametrically identify causal effects.
+The SCM approach is important for this dissertation because its use of probability distributions to convey causal effects lends itself to Bayesian modeling more readily than the potential outcomes notation.
+
+
+```{r confounding-dag}
+problem_dag <- 
+  dagify(
+    Y ~ A + U,
+    A ~ U,
+    exposure = "X",
+    outcome = "Y",
+    coords = tribble(
+      ~ name,      ~ x,    ~ y,
+      "Y", 1, 0,
+      "A", 0, 0,
+      "U", 0, 1
+    )
+  ) %>%
+  tidy_dagitty() %>%
+  print()
+```
+
+```{r plot-confounding-dag}
+ggplot(problem_dag) +
+  aes(x = x, y = y, xend = xend, yend = yend) +
+  geom_dag_edges() +
+  geom_dag_point(aes(color = (name == "U"))) +
+  geom_dag_text(
+    aes(label = name), 
+    parse = TRUE, 
+    color = "black",
+    family = font_fam
+  ) +
+  scale_color_manual(
+    values = c(
+      "TRUE" = primary,
+      "FALSE" = "gray"
+    )
+  ) +
+  annotate(
+    geom = "text",
+    label = "Effect of treatment (A → Y) is identified\nconditioning on confounder (U)",
+    x = 0.1, y = 1.2,
+    hjust = 0
+  ) +
+  theme_dag(legend.position = "none") +
+  expand_plot(
+    expand_x = expand_scale(c(0.2, 0.2)), 
+    expand_y = expand_scale(c(0.2, 0.2))
+  ) +
+  NULL  
+```
+
+
+
+The most recognizable feature of the SCM framework is that every structural model can be visualized as a graphical model, where nodes represent variables and directed edges represent causal relationships. Many researchers refer to these graphs as "directed acyclic graphs," but I refer to them simply as "causal graphs."^[
+  This is an effort to reduce jargon. 
+  DAGs can be used to represent many systems that have nothing to do with causal inference, since "directed" and "acyclic" refer only to the mathematical properties of the graph.
+  Formally, any graph is a DAG if two nodes can only be first-order connected by just one directed edge, and no path through the graph begins and ends with the same node.
+  This entails that nodes cannot be immediately connected by multiple edges, undirected edges, or bidirectional edges.
+  Furthermore, the graph contains no "loops": edges that connect a node to itself.
+]
+These graphs are valuable because they reveal which variables must be adjusted for in order to satisfy certain identification criteria in _do_-calculus.
+Most notably, the _back-door criterion_ states that a causal effect is identified by "blocking any back-door paths" between treatment $A$ and outcome $Y$—paths that connect $A$ to $Y$ that begin with an arrow flowing into $A$ and that pass through other variables.
+For instance, Figure \@ref(fig:plot-confounding-dag) shows a causal system where the effect of $A$ on $Y$ is not identified because we can connect $A$ to $Y$ through the back-door path $A \rightarrow U \rightarrow Y$.
+This means that $U$ confounds the relationship between $A$ and $Y$, but we can identify the relationship by conditioning on $U$ and "blocking" the back-door path.
+Graphs are valuable for this project because I use them to convey important identification assumptions in later chapters.
+
+```{r plot-confounding-dag, include = TRUE, fig.width = 4, fig.height = 2,out.width = "70%", fig.cap = "A causal graph where the effect of $A$ on $Y$ is confounded by $U$."}
+```
+
+<!-- 
+\begin{align}
+  P(Y = y \mid \doop{A = a}) &= \int\limits_{\mathcal{U}}P(Y \mid A = a, U = u)P(U = u) \diff{u}
+  (\#eq:adjustment-formula)
+\end{align} -->
+
+<!-- how each expresses confounding, correlation ≠ causation, and identification by conditioning -->
+
+
+As with the potential outcomes framework, _do_-calculus (and causal graphs in turn) describe minimally sufficient conditions for _nonparametric_ causal identification. There is no guarantee that linear regression models, or any parametric models, adequately control for confounders and isolate identifying variation in the treatment. For this reason, it can be helpful to lay out a hierarchy of modeling concerns for any causal inference problem.
+
+
+
