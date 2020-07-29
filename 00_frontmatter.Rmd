@@ -1,4 +1,9 @@
+```{block, include = knitr:::pandoc_to() == "latex"}
 \thispagestyle{empty}
+
 \frontmatter
+
 \pagenumbering{roman}
 
+\OnehalfSpacing
+```

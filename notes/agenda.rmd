@@ -4,10 +4,11 @@ title: Overall thesis notes
 
 # Near-Term Agenda
 
-- Read/write chapter 1
-- pick model data/covariates
-- ideal point priors (ch 4)
-- ML workflow
+- clean chapter 1
+- write ch 3
+- model data/covariates
+- calculate ideal point priors (ch 4)
+- regularization confounding (reading, writing, analysis)
 
 
 # Meetings
@@ -15,7 +16,14 @@ title: Overall thesis notes
 
 ## Qs for Barry
 
+lit to include:
 
+- adams
+- boatright
+
+is district in NAES
+
+When did CCAP run
 
 
 
@@ -119,6 +127,7 @@ Primaries and representation:
     - "As long as legislators think that positions matter, then researchers should treat them as though they do"
     - overreaction to the circumstances on the ground is actually equilibrium! So the "unreasonableness" of legislator behavior in the face of voter ignorance or apathy is actually the equilibrium path that the legislator wants to be on, otherwise they could be caught behaving badly and have their voters be made aware.
     - some evidence that legislators are more extreme when they have primary challengers
+
 
 Formal models that explain divergence:
 
