@@ -1,10 +1,12 @@
-# Constituent Ideology and Candidate Positioning: Bayesian Structural De-Mediation Model {#ch:positioning}
+# How District-Party Ideology Ideology Affects Primary Candidate Positioning: A Bayesian De-Mediation Model {#ch:positioning}
 
 <!------- TO DO ---------
 - what's the latent relationship between local ideology and primary rules?
 - does this explain the weird findings by McGhee et al?
 ------------------------->
-
+```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
+knitr::knit_exit()
+```
 
 
 ```{r knitr-04-1-positioning, include = FALSE, cache = FALSE}
@@ -25,8 +27,6 @@ library("ggdag")
 
 theme_dag <- theme_dag(base_family = font_fam)
 ```
-
-`r knit_exit()`
 
 
 Do primary elections effectively transmit citizens' policy preferences into government? For this to be true, we should expect that the policy ideology with a partisan constituency to affect the ideological positioning of candidates who run for that party's nomination. This chapter explores the effect of district-party public ideology on the candidates who run to represent that district-party.

@@ -1,5 +1,8 @@
-# District-Party Ideology and Primary Election Outcomes: Bayesian Double Machine Learning {#ch:voting}
+# How District-Party Ideology Affects Primary Election Outcomes: Combining Subposteriors for Honest Bayesian Causal Inference {#ch:voting}
 
+```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
+knitr::knit_exit()
+```
 
 What is the research question
 
