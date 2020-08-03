@@ -23,7 +23,6 @@ bookdown::pdf_book:
   number_sections: true
   fig_caption: true
   dev: png
-  # dev: png
   toc: false
   keep_tex: true
   includes: 
@@ -32,8 +31,6 @@ bookdown::pdf_book:
       - assets-bookdown/preamble-math.tex
       - assets-bookdown/preamble-title.tex
       - assets-bookdown/preamble-memoir.tex
-
-
 
 # tufte has margin issues to fix
 bookdown::tufte_book2:
