@@ -132,7 +132,7 @@ The _no interference_ assumption states that unit $i$'s potential outcome depend
   (\#eq:interference-assumption)
 \end{align}
 The consistency and no-interference assumptions are sometimes grouped into a single assumption, called the "stable unit treatment value assumption" [or SUTVA, @rubin:1980:comment-randomization].
-The _conditional independence_ assumption (CIA), also known as conditional "ignorability," states that potential outcomes are independent of treatment status conditional on a unit's membership in a specific stratum of covariates $X_{i} = x$.
+The _conditional independence_ assumption (CIA), also known as conditional "ignorability" or conditional "unconfoundedness," states that potential outcomes are independent of treatment status conditional on a unit's membership in a specific stratum of covariates $X_{i} = x$.
 \begin{align}
    \text{Conditional Independence: } 
    Y_{i}\left(A_{i} = 1\right), \; Y_{i}\left(A_{i} = 0\right) \ind 
@@ -458,7 +458,7 @@ Invoking the causal identification assumptions, we can obtain the probability di
 Denote these counterfactual predictions $\tilde{Y}'$, which I will subscript $i$ to show that this model implies a probability distribution for individual data points as well as aggregate treatment effects.
 \begin{align}
   \p{\tilde{Y}_{i}' \mid Y, A_{i} = a', X_{i} = x} &= \int \p{\tilde{Y}_{i}' \mid A_{i} = a', X_{i} = x, \boldsymbol{\pi}}\p{\boldsymbol{\pi} \mid Y} \diff{\boldsymbol{\pi}}
-  (\#eq:post-predictive)
+  (\#eq:counterfactual-predictive)
 \end{align}
 Stated more simply: if causal models define a space of potential outcomes, then Bayesian causal models are probabilistic representations of the potential outcome space.
 Probability densities over potential outcomes are defined in the prior and after conditioning on observed data, and they can be defined all the way to the unit level if the generative model contains a probability density for unit outcomes.^[
@@ -475,62 +475,11 @@ Although it is rarely invoked in practice today, Rubin writes that "the posterio
 Unlike other Bayesian setups, however, this chapter will contain more practical guidance for thinking Bayesianly about causal inference, more synthesis of Bayesian causal innovations from other fields, and more examples of Bayesian causal modeling in practice.
 
 
-<!------- TO DO ---------
-- cite Rubin
-------------------------->
-
-This is possible by having a joint model for the data and parameters...
-
-With the joint model, we can write a probabilistic expression for unobserved potential outcomes directly.
-This is possible because, under the generative model, our model for counterfactual data is nothing more than a missing data model. (Rubin)
-We are simply churning out new data points, tweaking the treatment status. 
-
-- Direct counterfactual estimation: 
-    - Ratkovic and Tingley (2017): 
-        - directly predicts counterfactuals using a massive basis function set, screening, and then sparse modeling on the reduced basis set
-        - treatment effects are estimated as individual functions of covariates, approximated as instantaneous derivatives
-        - average effects are just averaging over the relevant sample
-    - David Carlson IMC for synthetic control
 
 
 
 
-Guidelines:
 
-- we have a probability distribution for an unknown potential outcome
-- this gives us a probability distribution for a unit causal effect
-- and a potential outcome for a mean
-- This is _missing data problem_ (Rubin 1978). Assumptions let us model E[Y | A] for all A.
-
-Causal model: $y_{i}(1)$ and $y_{i}(0)$
-
-Observed data: $y_{i} = z_{i}y_{i}(1) + (1 - z_{i})y_{i}(0)$
-
-Unobserved data: $\tilde{y}_{i}$
-
-Inference about $\tilde{y}_{i}$: $p(\tilde{y}_{i} \mid \mathbf{y}) \propto p(\tilde{y}_{i} \mid \pi, \mathbf{y})p(\pi)$
-
-
-This fits an ML approach:
-
-- ML approach to causal inference recasts the problem as a prediction problem for the treatment assignment.
-- Treatment effects are then integrated over the uncertainty in the propensity
-- This propagates uncertainty using the exact model machinery, rather than a post-hoc computational workaround like bootstrapping
-    - Bootstrapping does have an appealing feature that it isn't making a parametric assumption about errors in the model. It simply uses the "sampling uncertainty" intuition to build intuitive bounds on effect uncertainty.
-    - However in many real-world cases the data we have cannot be resampled, so the framework for inference under bootstrapping doesn't make theoretical sense without appealing to a "superpopulation" philosophy. 
-    - Bayes naturally deals with this by assigning a probability distribution to the unmodeled features, which mechanistically follows a similar assumption as a parametric assumption about errors in any typical regression case: the prior isn't really extra. 
-    - If this assumption isn't something you want, it is possible to generalize the model by specifying an overdispersion parameter and letting the data inform what which model estimates can be rationalized against plausible overdispersion parameters. For example, Kruske's BEST approach to difference-in-means testing. 
-- In a Bayesian framework, we have posterior More of a "priors to facilitate posteriors" approach, not a prior information view (since there is some formal data peeking involved)
-
-
-
-Works without repeated sampling.
-<!------- TO DO ---------
-- design uncertainty
-------------------------->
-
-
-Probabilistic treatment status?
 
 
 ### Bayesian Inference in the Hierarchy of Causal Inference {#sec:bayes-hierarchy}
@@ -562,23 +511,59 @@ We observe a similar pattern in the use of Gaussian process models for fitting t
 These authors use priors to regularize richly parameterized functions, posterior distributions to characterize uncertainty, and MCMC to estimate models, but the theoretical implications of Bayesian causal estimation are not a major focus.
 
 What does it mean for Bayesian estimation to have theoretical implications for causal inference? 
-This brings our focus to the first level of the causal inference hierarchy: the definition of potential outcomes
+This brings our focus to level one of the causal inference hierarchy: the model of potential outcomes
 Any estimation method that invokes Bayesian tools requires priors for model parameters. 
-These priors model the plausibility of parameter values before any data are observed.
-Because potential outcomes are functions of causal parameters (such as treatment and control means), and causal parameters require priors, this implies at the very least that causal effects have prior distributions before estimating causal effects from data.
-If the Bayesian model contains a unit-level data model, which is the case for most regression approaches, this directly implies that unit-level potential outcomes also have prior distributions.
+Because causal estimates are functions of model parameters, prior densities on model parameters imply that some causal effects can be more or less likely even before considering any data.
+If the statistical model contains a unit-level data model, which is the case for most regression approaches, this implies that unit-level potential outcomes also have prior probability densities: some potential outcomes at the unit level are more or less likely, marginal of any observed data.
+This is a decisive philosophical departure from a non-Bayesian approach to causal modeling, where potential outcomes and causal effects are simply defined in a space of outcomes.
+<!------- TO DO ---------
+- what's the correct term for this space?
+------------------------->
+As with causal effects, the benefit of prior distributions for unit outcomes is that that we can obtain, describe, and conduct direct inference using the posterior distribution for unit counterfactuals.
+The drawback is that researchers must specify priors for model parameters and understand how they impact the implied priors for unit counterfactuals.
+A few recent methodology papers in political science have invoked this idea of unit counterfactual estimation in a Bayesian framework, which is especially intuitive for synthetic control estimation [@carlson:2020:GP-synth; see @ratkovic-tingley:2017-direct-estimation for a regression application].
+But these papers do not highlight the notion of direct priors for counterfactuals, so skeptical applied researchers have little guidance for understanding what it means to have priors on counterfactual data, either theoretically or practically.
+
+The theoretical notion of prior densities in the potential outcome space is only interesting if it makes sense to see priors as important for causal estimation.
+I have already argued that priors enable direct probabilistic inference on causal effects and unit counterfactuals, which is the essential modeling goal for causal inference in the first place.
+It is natural to ask if it is sensible to use flat or uninformative priors achieve to enable direct probabilistic inference while minimizing the uncomfortable feeling of specifying priors for unobservable counterfactuals, avoiding the need to think hard about priors at all.
+As I discuss in future sections, however, flat priors obscure rather than avoid these complexities.
+This is because even simple modeling scenarios that begin with flat priors usually contain quantities of interest whose priors cannot also be flat.
+As a result, it is the researcher's job to decide how to parameterize a problem and how the chosen priors affect the important quantities in the analysis.
+
+Priors on important modeling constructs do not have to be an inconvenience.
+There are many scenarios where priors can actually relax assumptions, building robustness checks directly into a statistical model.
+This is layer two of the hierarchy, identification assumptions.
+Many identification assumptions can be encoded as functional form assumptions in an estimated model.
+Consider a regression scenario with outcome $Y_{i}$, treatment $A_{i}$, and some other covariate $U_{i}$.
+\begin{align}
+  \begin{split}
+    \text{True model:} & Y_{i} &= \alpha + \tau A_{i} + \beta U_{i} + \epsilon_{i}
+    \text{Estimated model:} & Y_{i} &= \hat{\alpha} + \hat{\tau} A_{i} + e_{i}
+  \end{split}
+(\#eq:omitted-confounder)
+\end{align}
+If we invoke an identifying assumption that the assignment of $A_{i}$ is ignorable, then our estimate for the average effect of $A_{i}$ using the second line of \@ref(eq:omitted-confounder) is unbiased.
+This is equivalent to an assumption that the correlation between the treatment $A_{i}$ and the true error term $\epsilon_{i}$ is exactly zero.
+For causal inference purposes, researchers have developed sensitivity tests that recover the treatment effect under ignorability violations, which work by picking a non-zero error correlation value and deriving the treatment under that model [@imai-et-al:2011:black-mox-mediation; @acharya-blackwell-sen:2016:direct-effects].
 
 
-This is only interesting if I can convince you that we MUST have priors in a causal model, and I'm going to show you that that is true.
-This might be no problem if I just give everything a flat prior, but I'm going to show you that that doesn't make sense.
+Researchers have derived estimators for $\tau$ in the presence of a, which can be used in a causal inference context to test the "robustness" or "sensitivity" of inferences to the ignorability assumption [@imai-et-al:2011:black-mox-mediation; @acharya-blackwell-sen:2016:direct-effects].
+If this correlation is zero, the treatment effect estimate is unbiased
+These are 
+
+In a causal inference context, researchers sometimes develop sensitivity tests to test the robustness of their inference to violations of ignorability assumptions [@imai-et-al:2011:black-mox-mediation; @acharya-blackwell-sen:2016:direct-effects], exclusion restrictions [@nyhan-skovron-titiunik:2017:reg-bias], and so on.
+Because identification assumptions are special cases of these more general models with additional nuisance parameters, it would be straightforward in a Bayesian framework to specify prior distributions on nuisance parameters that represent priors for violated assumptions. 
+Unpublished work by @leavitt:2020:bayes-did explores this approach in a difference-in-difference contexts, introducing an "epistemic" source of variance in his treatment effect estimate by specifying a prior on the parallel trends assumption.
 
 
 
 
+A more general review of papers that have taken this more seriously??
 
 <!-- bayesian viewpoints -->
-@rubin:1978:bayesian
-@rubin:2005:potential-outcomes
+<!-- @rubin:1978:bayesian -->
+<!-- @rubin:2005:potential-outcomes -->
 @baldi-shahbaba:2019:bayesian-causality
 
 <!-- meta-analysis -->
@@ -591,17 +576,17 @@ This might be no problem if I just give everything a flat prior, but I'm going t
 @horiuchi-et-al:2007:experimental-design
 
 <!-- BART for heterogeneity -->
-@green-kern:2012:bart
+<!-- @green-kern:2012:bart -->
 @guess-coppock:2018:backlash
 
 <!-- direct counterfactuals w/ incidental Bayes -->
-@ratkovic-tingley:2017-direct-estimation
-@carlson:2020:GP-synth
+<!-- @ratkovic-tingley:2017-direct-estimation -->
+<!-- @carlson:2020:GP-synth -->
 
 <!-- rdd -->
-@ornstein-duck-mayr:2020:GP-RDD
-@branson-at-al:2019:bayes-rdd
-@chib-jacobi:2016:bayes-rdd
+<!-- @ornstein-duck-mayr:2020:GP-RDD -->
+<!-- @branson-at-al:2019:bayes-rdd -->
+<!-- @chib-jacobi:2016:bayes-rdd -->
 
 <!-- ? -->
 @lattimore-rohde:2019:do-calc-bayes-rule
@@ -650,7 +635,7 @@ Do battle with the "implied nonparametric estimator" framework.
 
 - Causal models are manipulated to express causal _estimands_.
 - the "nonparametric estimators" are usually just averages of treatment and control group outcomes, under ignorability assumptions.
-- Parametric models for estimands are usually a byproduct of thinking within an MLE/regression framework. Many causal inf techniques don't do that. Instead they try to simply predict E[y(1) - y(0)] and don't care about the interpretability of the other RHS terms.
+- Parametric models for estimands are usually a byproduct of thinking within an MLE/regression framework. Many causal inf techniques do not do that. Instead they try to simply predict E[y(1) - y(0)] and do not care about the interpretability of the other RHS terms.
 - Thinking outside the "typical econometric" framework it's actually kinda easy to see how one flavor of fitting Bayesian models for causal effects. If the technology for prediction is Bayesian, you just get the prediction and the posterior distribution. You then deal with the bias/variance properties of $\hat{y}$ or $\tilde{y}$ (unobserved counterfactuals) but at least your focus is on the predictions rather than coefficients (which, from this view, who cares about those?)
 - This actually fits quite nicely with the machine learning approach to causal inference
 
@@ -686,17 +671,17 @@ Invoking Bayesian inference is really the only way to say what we _want_ to say 
 - soul searching about a philosophy of Bayes to stake out for the project?
 - "pragmatic bayesian workflow" - priors are "just a part of the model" that need to be checked w/ prior predictive checking and so on.
 - vs. the "philosophical coherence" view.
-- damnit don't spend too much time on this because it just needs to be an orientation to stick decisions to.
+- damnit do not spend too much time on this because it just needs to be an orientation to stick decisions to.
 - We're already leaning in the "pragmatic" direction from the IRT model text.
 ------------------------->
 
-This presumes an m-closed world(?right?), which maybe we don't like (Navarro, "Devil and Deep Blue Sea").
+This presumes an m-closed world(?right?), which maybe we do not like (Navarro, "Devil and Deep Blue Sea").
 <!------- TO DO ---------
 - Read Navarro CLOSELY!
 - Read ARONOW and MILLER: how to square "intra-model agonisticism" with 
   some philosophical view of what Bayes is.
 - Maybe this is terminology I should work on! Draw some helpful lines that 
-  don't already exist for defining subtypes of agnosticism or other
+  do not already exist for defining subtypes of agnosticism or other
   epistemic bundles of things.
   (there is also some paper on "types of Bayesians"?
    mentioned in a McElreath talk)
@@ -733,10 +718,10 @@ What is "bias?"
 Why would we want this? Inference makes more sense.
 
 - What's the probability of a model/hypothesis, given the data
-- vs. What's the probability of "more extreme data" (?) given a model that I don't believe.
+- vs. What's the probability of "more extreme data" (?) given a model that I do not believe.
 - posterior probabilities mean what they say they mean
     - conditioning on data (and implicitly the model), this is the distribution of parameters
-    - p-values are the "probability of more extreme results." They condition on the model, but they're only useful if they don't.
+    - p-values are the "probability of more extreme results." They condition on the model, but they're only useful if they do not.
 
 Proper frequentist analysis is violated as soon as you look at the data.
 
@@ -764,6 +749,9 @@ Not _inherently_ the same as "agnostic" inference though we fux with both.
 
 
 ## Making Sense of Priors in Causal Inference {#sec:causal-priors}
+
+
+This is because a prior's flatness is only relative to the parameterization of a model, and functions of parameters are not likely to have flat densities even if the underlying parameters have flat densities
 
 
 ### Priors as Data Falsification
@@ -908,7 +896,7 @@ Alex meeting takeaways:
 - Jeffrey's priors are a special case of this where the prior is proportional to the determinant of the information matrix. This has the beneficial property of "optimal learning" from the data. For example, flat Beta prior doesn't "hedge toward 50" in quite the same way.
 
 
-### Priors and Model Parameterization
+### Priors and Model Parameterization {sec:prior-parameterization}
 
 <!------- TO DO ---------
 - this needs reverse outline
@@ -1061,7 +1049,7 @@ Problems of beliefs:
 - No degree of belief.
 - Parameterization makes this too challenging.
 - Prior might change depending on what I ate for lunch. 
-- "Elicitation" of priors satisfying the wrong audience, or at the very least can be easily misused. We don't want to elicit priors about arcane model parameters. We want to elicit priors about the _world_ (Gill Walker)d
+- "Elicitation" of priors satisfying the wrong audience, or at the very least can be easily misused. We do not want to elicit priors about arcane model parameters. We want to elicit priors about the _world_ (Gill Walker)d
 
 
 Problems of nuisance prior
@@ -1146,17 +1134,17 @@ We are always doing violence, but the framework lets us build out more and more 
 
 Email to David:
 
-> My first reaction to this is like this: it's probably correct to say that Bayesians may have some shared ideas about how to think about generalizing that might differ systematically from non-Bayesians, but I'm not sure how much of that is because of Bayes per se so much as just...the types of modeling someone is willing to do. By "modeling" I mean, functional form assumptions are you willing to make about data, which is different from "Bayes" in that the former is something required of all modeling and the latter is only what you can say about parameters. For example, a functional modeling thing you might do is specify (using some weights or something) how an estimate in one sample might map to another sample, but whether you do that with Bayesian estimation is a separate choice aside from the functional model itself. That being said, even though functional modeling things can be done with Bayes/non-Bayes point of view, it does seem right to say that certain modeling approaches may feel more natural in a Bayesian framework, or that Bayesians might construe a problem slightly differently because they are more used to hierarchical modeling. 
+> My first reaction to this is like this: it's probably correct to say that Bayesians may have some shared ideas about how to think about generalizing that might differ systematically from non-Bayesians, but I am not sure how much of that is because of Bayes per se so much as just...the types of modeling someone is willing to do. By "modeling" I mean, functional form assumptions are you willing to make about data, which is different from "Bayes" in that the former is something required of all modeling and the latter is only what you can say about parameters. For example, a functional modeling thing you might do is specify (using some weights or something) how an estimate in one sample might map to another sample, but whether you do that with Bayesian estimation is a separate choice aside from the functional model itself. That being said, even though functional modeling things can be done with Bayes/non-Bayes point of view, it does seem right to say that certain modeling approaches may feel more natural in a Bayesian framework, or that Bayesians might construe a problem slightly differently because they are more used to hierarchical modeling. 
 > 
 > That's a pragmatic view of things, but I can give you a more theoretically abstract view, and think of situations where Bayesian lets you do things that non-Bayes can't. It all comes down to how "seriously" you want to take the tenets of Bayesian work and what kind of generalization-based claims you want to make. So I will lay out a series of vignettes that start from a world where Bayes is "not unique" and then gets into worlds where Bayes gets more and more necessary to say what you want to say about the out-of-sample world. I will use the example of estimating some parameter, but you can translate this into learning about a "mechanism" however Erica and Nick are defining that, and you can think about it non-statistically as well even if I'll use statistical modeling language.
 > 
 > I estimate some parameter $\mu$ in a study, but it's one instance of a more general phenomenon. If the study were representative of the world, you can imagine that the effect is one instance of the "population effect" and give it a hierarchical prior as such: $\mu \sim D(\theta, \sigma)$ where D() is some distribution, $\theta$ is the "general" effect. If I learn about $\mu$ (the estimate and standard error $\sigma$), I learn about $\theta$! Choice of distribution depends on your assumptions about the stochastic process at work. naturally, but that logic works basically just like a likelihood function choice. (In fact, Bayes sees priors for parameters as mechanistically no different from likelihoods for data. Which is to say, MLE models like logit are simply hierarchical priors on the data, and regression is estimating the hierarchical parameters of the prior.) This is basically a meta-analysis setup using Bayesian language: if you want tangible examples you can look at the Don Rubin "eight schools experiment" which is about generalizing from parallel studies in schools, or Rachael Meager (sp) has a paper applying this setup to micro-credit experiments in the development econ context: what do we learn about the "overall effect of microcredit expansion" by assimilating information from different studies. In this sense the priors are just ways to structure the meta-analysis.
 > 
-> If the study is unrepresentative or "not externally valid" then it's up to the researcher to specify some approach to modeling the invalidity: $\theta \sim D(f(\theta), \sigma)$, where f() is some function that distorts the representativeness of the study. Which is to say, $f(\theta)$ is the expectation for a study with these distortions. Researcher's task is then to learn the form of f(). These distortions might be like sample bias, the country where the study was performed, or whatever, and all you're really doing is reweighting or adjusting the estimate to make more sense for the target population. If you can estimate parameters that determine f(), viola you can infer the posterior distribution for the true $\theta$. But this is what I mean when I say that none of this is really EXCLUSIVELY Bayesian. Reweighting/adjusting happens in non-Bayes world all the time; the main thing that is different is how you write the model and your ability to say that the population estimate is a "posterior of the true parameter, given the information learned from the data." One example of this kind of thing is maybe the multilevel regression and poststratification: we use national surveys to model the attitudes of different demographic groups, and then we use those model predictions plus census information to project estimates for smaller units, for example states or counties, based on the demographic composition of those units! This example goes the other direction from where Erica and Nick want to go (from representative to unrepresentative) but the technology sounds similar: estimate something in the data that you have, and map it into a space where you don't have data. MRP in political science comes from Bayes world and feels natural there, but nothing saying that it HAS to be Bayesian in its overall approach.
+> If the study is unrepresentative or "not externally valid" then it's up to the researcher to specify some approach to modeling the invalidity: $\theta \sim D(f(\theta), \sigma)$, where f() is some function that distorts the representativeness of the study. Which is to say, $f(\theta)$ is the expectation for a study with these distortions. Researcher's task is then to learn the form of f(). These distortions might be like sample bias, the country where the study was performed, or whatever, and all you're really doing is reweighting or adjusting the estimate to make more sense for the target population. If you can estimate parameters that determine f(), viola you can infer the posterior distribution for the true $\theta$. But this is what I mean when I say that none of this is really EXCLUSIVELY Bayesian. Reweighting/adjusting happens in non-Bayes world all the time; the main thing that is different is how you write the model and your ability to say that the population estimate is a "posterior of the true parameter, given the information learned from the data." One example of this kind of thing is maybe the multilevel regression and poststratification: we use national surveys to model the attitudes of different demographic groups, and then we use those model predictions plus census information to project estimates for smaller units, for example states or counties, based on the demographic composition of those units! This example goes the other direction from where Erica and Nick want to go (from representative to unrepresentative) but the technology sounds similar: estimate something in the data that you have, and map it into a space where you do not have data. MRP in political science comes from Bayes world and feels natural there, but nothing saying that it HAS to be Bayesian in its overall approach.
 > 
-> Now we get to a world where Bayes is more necessary. If there's something TRULY Bayesian that really makes no sense withoutBayes, it is the fact that I actually don't need data about f() in order to estimate $\theta$. This is because I have priors even in the absence of data. If all I have is priors about f(), then even if I collect data about ONLY $\mu$ and NOTHING about f(), I nonetheless update my information about $\theta$. This is because the parameters are functionally related through f(), so if I learn about the subsample then I learn about the population. Stated differently, learning about $\mu$ restricts the space of $\theta$ because I can basically "solve backward" using my priors about f. This is the stuff that is very natural in Bayes, and I can think of basically no analog in non-Bayes that lets you do something similar (other than picking point estimates for unknowns and simulating, which doesn't have the same theoretical coherence as a prior/posterior distribution). Of course, this means that inference on f() is subject to the priors that go into f(), which is exactly the kind of thing that non-Bayesians are super afraid of despite majorly misconstruing how this works (IMO). For one, the functional form of f() is the kind of thing non-Bayesians would make assumptions about anyway, so that's not unique to Bayes at all. And secondly, the priors that would go into f() would usually be generic enough that researchers aren't "picking their hypothesis" (a common and frankly stupid stereotype) so much as restricting the space of f() to rule out stuff that's frankly impossible. Happy to give you more concrete examples of the kind of "weakly informative priors" that someone would use in a situation like that if it's a route you want to dig into more. It's this kind of stuff that I think non-Bayesians are under-utilizing: how much extrapolation power you get by being willing to place even weak priors on stuff you can't exactly identify with data. And if you REALLY want to give a nod to Bayesian views of extrapolation, this is the area you'd want to dig into, because it's the stuff that doesn't really make sense without Bayes. You can sort of see Ken and I do this in our voter ID paper (which you can find on my website) though we kind of wimp out of fully placing priors on f().
+> Now we get to a world where Bayes is more necessary. If there's something TRULY Bayesian that really makes no sense withoutBayes, it is the fact that I actually do not need data about f() in order to estimate $\theta$. This is because I have priors even in the absence of data. If all I have is priors about f(), then even if I collect data about ONLY $\mu$ and NOTHING about f(), I nonetheless update my information about $\theta$. This is because the parameters are functionally related through f(), so if I learn about the subsample then I learn about the population. Stated differently, learning about $\mu$ restricts the space of $\theta$ because I can basically "solve backward" using my priors about f. This is the stuff that is very natural in Bayes, and I can think of basically no analog in non-Bayes that lets you do something similar (other than picking point estimates for unknowns and simulating, which doesn't have the same theoretical coherence as a prior/posterior distribution). Of course, this means that inference on f() is subject to the priors that go into f(), which is exactly the kind of thing that non-Bayesians are super afraid of despite majorly misconstruing how this works (IMO). For one, the functional form of f() is the kind of thing non-Bayesians would make assumptions about anyway, so that's not unique to Bayes at all. And secondly, the priors that would go into f() would usually be generic enough that researchers aren't "picking their hypothesis" (a common and frankly stupid stereotype) so much as restricting the space of f() to rule out stuff that's frankly impossible. Happy to give you more concrete examples of the kind of "weakly informative priors" that someone would use in a situation like that if it's a route you want to dig into more. It's this kind of stuff that I think non-Bayesians are under-utilizing: how much extrapolation power you get by being willing to place even weak priors on stuff you can't exactly identify with data. And if you REALLY want to give a nod to Bayesian views of extrapolation, this is the area you'd want to dig into, because it's the stuff that doesn't really make sense without Bayes. You can sort of see Ken and I do this in our voter ID paper (which you can find on my website) though we kind of wimp out of fully placing priors on f().
 > 
-> Here's where things get really abstract because, gun to my head, we can be really scorched-earth and say that all extrapolation falls apart without a Bayesian notion of priors. Think about any model for data: $y \sim D(\theta)$, I think my data come from this distribution, and if I were to go out into the world and collect new data, my estimate for a new data point is characterized by this distribution assumption i.e. this prior for the data. If you try to lay out a formal definition of what "generalization" is, I would say that there is no such thing as generalization without an implicit prior that links your observed data to unobserved things that you want to project into. There are stats theorems out there called "no free lunch" theorems that basically say "all statistical inference is limiting the space of models that link parameters to data, and there is no way to improve your guess for a new data point using a model except to impose prior information on the system by way of the model." So this would be a hard line view of what priors mean in a philosophy of science (not necessarily quantitative or statistical, mind you), but that if you accept that view it trickles down into the more minor examples in a very natural way: the only way to generalize is by using priors to structure the connection between what I do observe and what I don't observe.
+> Here's where things get really abstract because, gun to my head, we can be really scorched-earth and say that all extrapolation falls apart without a Bayesian notion of priors. Think about any model for data: $y \sim D(\theta)$, I think my data come from this distribution, and if I were to go out into the world and collect new data, my estimate for a new data point is characterized by this distribution assumption i.e. this prior for the data. If you try to lay out a formal definition of what "generalization" is, I would say that there is no such thing as generalization without an implicit prior that links your observed data to unobserved things that you want to project into. There are stats theorems out there called "no free lunch" theorems that basically say "all statistical inference is limiting the space of models that link parameters to data, and there is no way to improve your guess for a new data point using a model except to impose prior information on the system by way of the model." So this would be a hard line view of what priors mean in a philosophy of science (not necessarily quantitative or statistical, mind you), but that if you accept that view it trickles down into the more minor examples in a very natural way: the only way to generalize is by using priors to structure the connection between what I do observe and what I do not observe.
 
 
 
@@ -1358,6 +1346,16 @@ Matching
 
 
 Predictive/ML models
+
+- ML approach to causal inference recasts the problem as a prediction problem for the treatment assignment.
+- Treatment effects are then integrated over the uncertainty in the propensity
+- This propagates uncertainty using the exact model machinery, rather than a post-hoc computational workaround like bootstrapping
+    - Bootstrapping does have an appealing feature that it isn't making a parametric assumption about errors in the model. It simply uses the "sampling uncertainty" intuition to build intuitive bounds on effect uncertainty.
+    - However in many real-world cases the data we have cannot be resampled, so the framework for inference under bootstrapping doesn't make theoretical sense without appealing to a "superpopulation" philosophy. 
+    - Bayes naturally deals with this by assigning a probability distribution to the unmodeled features, which mechanistically follows a similar assumption as a parametric assumption about errors in any typical regression case: the prior isn't really extra. 
+    - If this assumption isn't something you want, it is possible to generalize the model by specifying an overdispersion parameter and letting the data inform what which model estimates can be rationalized against plausible overdispersion parameters. For example, Kruske's BEST approach to difference-in-means testing. 
+- In a Bayesian framework, we have posterior More of a "priors to facilitate posteriors" approach, not a prior information view (since there is some formal data peeking involved)
+
 
 Multiple comparisons and regularization
 
@@ -1968,7 +1966,7 @@ This is because a fair amount of posterior uncertainty in the unconstrained mode
 ```
 
 It bears emphasizing that the prior interventions in this case study were no more controversial than declaring what is already known: probabilities lie between $0$ and $1$.
-Since many causal research designs estimate treatment effects on binary variables, and many causal research designs are limited to small numbers of relevant real-world observations or budget-limited experimental samples, simple interventions like this have the potential to substantially improve the precision of research findings in contexts where researchers don't realize how much information they are leaving out of their analyses.
+Since many causal research designs estimate treatment effects on binary variables, and many causal research designs are limited to small numbers of relevant real-world observations or budget-limited experimental samples, simple interventions like this have the potential to substantially improve the precision of research findings in contexts where researchers do not realize how much information they are leaving out of their analyses.
 
 
 ### Models for Nonparametric Treatment Effects with Applications to Meta-Analysis {#sec:models-for-means}
