@@ -328,8 +328,7 @@ The distinguishing feature of a Bayesian causal model is that the elemental unit
 This probability distribution reflects available causal information that exists outside the current dataset.
 Bayesian inference proceeds updating our information about causal effects and counterfactual potential outcomes in light of the observed data.
 The headings under \@ref(sec:intro-bcm) introduce this modeling framework at a high level.
-I provide a probabilistic interpretation and notation for potential outcomes models (\@ref(sec:po-distributions)), a connection between causal parameters and model parameters (\@ref(sec:what-params)), and a broad justification for the Bayesian interpretation of causal effects (\@ref(sec:why-bcm)).
-
+I provide a probabilistic interpretation and notation for potential outcomes models, describe how a Bayesian modeling framework affects the "hierarchy of causal inference," and provide some broad justification for Bayesian causal modeling.
 
 
 
@@ -467,12 +466,11 @@ Probability densities over potential outcomes are defined in the prior and after
   In some cases, such as binary outcome data, means in each group are sufficient statistics for the raw data, so the unit level model is implied by the group-level model.
   See Section \@ref(sec:models-for-means) for explanation and examples.
 ]
-In this way, Bayesian causal inference as nothing more remarkable than a missing data model for unobserved counterfactuals [see @rubin:2005:potential-outcomes].
+This Bayesian interpretation of causal inference as nothing more remarkable than a missing data model for unobserved counterfactuals is at least as old as @rubin:1978:bayesian.
+Bayesian methods for causal inference have appeared in political science only sporadically in the decades since [@horiuchi-et-al:2007:experimental-design; @green-et-al:2016:lawn-signs; @ornstein-duck-mayr:2020:GP-RDD], despite the fact that the namesake of the Rubin causal model most commonly invoked in political science finds the Bayesian view of causal inference especially appealing [@rubin:2005:potential-outcomes].
+Unlike these rare examples of Bayesian causal inference, however, this chapter will contain more practical guidance for thinking Bayesianly about causal inference, more synthesis of Bayesian causal innovations from other fields, and more examples of Bayesian causal modeling in practice.
 
-As mentioned above, this is not the first time causal inference has been frames as a Bayesian modeling problem. 
-Indeed, the Bayesian interpretation of causal inference and missing counterfactuals is at least as old as @rubin:1978:bayesian.
-Although it is rarely invoked in practice today, Rubin writes that "the posterior distribution of causal estimands, obtained from the posterior predictive distribution of the missing potential outcomes...is the most natural way to summarize evidence for a scientific question" [@rubin:2005:potential-outcomes].
-Unlike other Bayesian setups, however, this chapter will contain more practical guidance for thinking Bayesianly about causal inference, more synthesis of Bayesian causal innovations from other fields, and more examples of Bayesian causal modeling in practice.
+
 
 
 
@@ -532,52 +530,67 @@ This is because even simple modeling scenarios that begin with flat priors usual
 As a result, it is the researcher's job to decide how to parameterize a problem and how the chosen priors affect the important quantities in the analysis.
 
 Priors on important modeling constructs do not have to be an inconvenience.
-There are many scenarios where priors can actually relax assumptions, building robustness checks directly into a statistical model.
-This is layer two of the hierarchy, identification assumptions.
-Many identification assumptions can be encoded as functional form assumptions in an estimated model.
-Consider a regression scenario with outcome $Y_{i}$, treatment $A_{i}$, and some other covariate $U_{i}$.
+There are many scenarios where priors can actually relax assumptions, which building robustness checks directly into a statistical model.
+This is how Bayesian inference affects layer two of the hierarchy: identification assumptions.
+By their nature, identification assumptions can never be validated by consulting the data, so most causal inference research projects simply condition the analysis on the identification assumption holding.
+If we invoke a measurement model of treatment effects akin to @gerber-et-al:2004:obs-learning,
 \begin{align}
-  \begin{split}
-    \text{True model:} & Y_{i} &= \alpha + \tau A_{i} + \beta U_{i} + \epsilon_{i}
-    \text{Estimated model:} & Y_{i} &= \hat{\alpha} + \hat{\tau} A_{i} + e_{i}
-  \end{split}
-(\#eq:omitted-confounder)
+\text{Estimated Effect} &= \text{True Effect} + \text{Bias} + \text{Error},
+(\#eq:ggk-model)
 \end{align}
-If we invoke an identifying assumption that the assignment of $A_{i}$ is ignorable, then our estimate for the average effect of $A_{i}$ using the second line of \@ref(eq:omitted-confounder) is unbiased.
-This is equivalent to an assumption that the correlation between the treatment $A_{i}$ and the true error term $\epsilon_{i}$ is exactly zero.
-For causal inference purposes, researchers have developed sensitivity tests that recover the treatment effect under ignorability violations, which work by picking a non-zero error correlation value and deriving the treatment under that model [@imai-et-al:2011:black-mox-mediation; @acharya-blackwell-sen:2016:direct-effects].
+such that the estimated effect equals the true effect only if it is estimated with zero random error and zero systematic bias.
+Identification assumptions imply a prior that the bias is precisely zero, but in many applied research contexts, this assumption may be unreasonable to sustain with 100% certainty.
+A Bayesian approach to identification assumptions allows the researcher to relax their model of treatment effects by specifying a different prior on the bias term, or the sensitivity parameters that compose the bias term, that is consistent with the researcher's reasonable expectations for the remaining bias in the research design [@oganisian-roy:2020:bayes-estimation].
+This bears resemblance to sensitivity testing approaches in which the researcher evaluates the treatment effect estimates by stipulating a range of fixed values for a key sensitivity parameter, and then evaluating the treatment effect estimate conditional on each fixed value [@imai-et-al:2011:black-mox-mediation; @acharya-blackwell-sen:2016:direct-effects].
+Constructing these identification assumptions as priors lets the researcher conduct inference about treatment effects by _marginalizing over_ their priors for design parameters, rather than conditioning on fixed design parameter values with little thought to which values are plausible or implausible.
+One recent political science example of this approach is @leavitt:2020:bayes-did, who frames the parallel trends assumption in a difference-in-differences (DiD) analysis as a prior over unobserved trends.
+This introduces an additional layer of "epistemic uncertainty" into the DiD analysis that would ordinarily be assumed to be zero by design.
+I elaborate on the value of priors for unidentifiable quantities in Section \@ref(sec:identifiability-priors).
+
+A few papers in political science and related fields invoke Bayesian causal models that occupy more than one level of this causal inference hierarchy at once.
+One important figure to note is Rubin himself, who has advocated for a "phenomenological Bayes" approach to causal inference since his pioneering papers on causal inference [@rubin:1978:bayesian; @rubin:1978:phenomenological-bayes; @imbens-rubin:1997:bayes-compliance; @rubin:2005:potential-outcomes].
+The fundamental tenet of the so-called "phenomenological" approach is the use of parametric models to generate posterior distributions for unobserved potential outcomes, which are used to construct causal estimates as functions of these unit-level posterior predictions.
+Posterior distributions for units are essential to the approach because statistical models may differ in their parameterization, making model parameters difficult to compare, but counterfactual data from the posterior distribution can always be compared to observed data regardless of the model parameterization.
+This is especially useful for studies with more complex missing data structures, such as studies with noncompliance, because Bayesian methods can always return a posterior distribution even for quantities that are not point-identified from data [@imbens-rubin:1997:bayes-compliance].
+As such, the Rubin example invokes a Bayesian framework for estimation (level three) as well as a philosophical posture that the posterior distribution directly characterizes the plausibility of counterfactual data (level one).
+A recent political science example invoking a Bayesian approach for missing data under treatment noncompliance is @horiuchi-et-al:2007:experimental-design.
+
+Another important frontier for Bayesian methods in causal inference is meta-analysis.
+A fundamental modeling dilemma for meta-analysis is the choice between "fixed effects" and "random effects" approaches to meta-analysis [@borenstein-et-al:2011:meta-analysis].
+Fixed effects meta-analysis assumes that all studies contain imperfect estimates of the same underlying treatment effect, while random effects admit the possibility of between-study heterogeneity in the true underlying effect.
+Bayesian approaches to meta-analysis can compromise between the two extremes, relaxing the fixed effects assumption by allowing between-study variation while incorporating prior information that rules out extreme heterogeneity more aggressively than the conventional random effects approach.
+A common example from Bayesian pedagogy is a meta-analysis of parallel experiments across schools by @rubin:1981:eight-schools. 
+The approach simultaneously estimates study-specific treatment effects, cross-study variance in treatment effects, and a population average treatment effect.
+@meager:2019:microcredit creates a similar model to summarize the experimental evidence on micro-credit expansion in developmental economics.
+Like the noncompliance approaches above, these meta-analyses engage in levels one and three by constructing the problem explicitly as Bayesian learning of experimental effects and engaging assertively with Bayesian modeling assumptions using hierarchical priors in the meta-analytical model.
+In political science, @green-et-al:2016:lawn-signs perform a fixed effects analysis to aggregate noisy treatment effects, invoking a notion of Bayesian learning from parallel experiments but stopping short of a richer statistical model for cross-study variation.
+As I show in Section \@ref(sec:models-for-means), the researcher's assumptions about cross-study variation is highly consequential for meta-analytic inference, and a Bayesian framework provides inimitable benefits for theorizing about those assumptions and understanding how they affect inferences.
+
+For the remainder of this chapter, I explore several ways Bayesian modeling changes our view of causal inference at all three levels of hierarchy: causal modeling, identification assumptions, and statistical estimation.
+Many points discussed below touch on more than one level of the hierarchy, so the chapter cannot be neatly divided according to the hierarchy.
 
 
-Researchers have derived estimators for $\tau$ in the presence of a, which can be used in a causal inference context to test the "robustness" or "sensitivity" of inferences to the ignorability assumption [@imai-et-al:2011:black-mox-mediation; @acharya-blackwell-sen:2016:direct-effects].
-If this correlation is zero, the treatment effect estimate is unbiased
-These are 
-
-In a causal inference context, researchers sometimes develop sensitivity tests to test the robustness of their inference to violations of ignorability assumptions [@imai-et-al:2011:black-mox-mediation; @acharya-blackwell-sen:2016:direct-effects], exclusion restrictions [@nyhan-skovron-titiunik:2017:reg-bias], and so on.
-Because identification assumptions are special cases of these more general models with additional nuisance parameters, it would be straightforward in a Bayesian framework to specify prior distributions on nuisance parameters that represent priors for violated assumptions. 
-Unpublished work by @leavitt:2020:bayes-did explores this approach in a difference-in-difference contexts, introducing an "epistemic" source of variance in his treatment effect estimate by specifying a prior on the parallel trends assumption.
 
 
 
-
-A more general review of papers that have taken this more seriously??
 
 <!-- bayesian viewpoints -->
 <!-- @rubin:1978:bayesian -->
 <!-- @rubin:2005:potential-outcomes -->
-@baldi-shahbaba:2019:bayesian-causality
+<!-- @baldi-shahbaba:2019:bayesian-causality -->
 
 <!-- meta-analysis -->
-@rubin:1981:eight-schools
-@meager:2019:microcredit
-@green-et-al:2016:lawn-signs
+<!-- @rubin:1981:eight-schools -->
+<!-- @meager:2019:microcredit -->
+<!-- @green-et-al:2016:lawn-signs -->
 
 <!-- compliance -->
-@imbens-rubin:1997:bayes-compliance
-@horiuchi-et-al:2007:experimental-design
+<!-- @imbens-rubin:1997:bayes-compliance -->
+<!-- @horiuchi-et-al:2007:experimental-design -->
 
 <!-- BART for heterogeneity -->
 <!-- @green-kern:2012:bart -->
-@guess-coppock:2018:backlash
+<!-- @guess-coppock:2018:backlash -->
 
 <!-- direct counterfactuals w/ incidental Bayes -->
 <!-- @ratkovic-tingley:2017-direct-estimation -->
@@ -589,166 +602,67 @@ A more general review of papers that have taken this more seriously??
 <!-- @chib-jacobi:2016:bayes-rdd -->
 
 <!-- ? -->
-@lattimore-rohde:2019:do-calc-bayes-rule
-
-
-
-
-The Bayesian causal model began as an estimator for the an observable estimand, so it belonged to level 3 in the hierarchy.
-As an estimation approach, it doesn't obviously change the observable estimand or the causal estimand.
-Instead, it is an estimator that can be evaluated for its bias and variance like any other estimator. 
-
-
-The model contained a data model conditional on parameters, and a parameter model 
-
-What was I trying to say here? 
-
-A causal parameter is a feature of the _causal model_. 
-
-- The causal model is the model if you knew everything (level 1). 
-- Individual causal effect is only a transformation of _data_. if I knew all potential outcomes, I could calculate this with only data.
-- Estimands are different forms of causal effects, individual or aggregate.
-- Assumptions let us state the conditions under which an individual or aggregate parameter can be estimated from observed data only (level 2).
-
-Estimands are framed in terms of individual effects or aggregate expectations.
-
-- The estimator (3) of an expectation or a counterfactual is thus a different thing from the hypothetical estimand.
-- Some causal models imply nonparametric estimators, so no Bayesian anything will be required. However, estimates themselves are in-sample quantities, and any generalization about the in-sample effect can be augmented with priors.
-- Bayes is an _estimation_ framework that doesn't change the causal model itself. It is a different way of estimating the quantities in an in-sample causal estimand.
-- Oganisian and Roy (2020) "identification" assumptions vs. "statistical" assumptions. Identification assumptions get you to a place where you can express causal effects in terms of expectations about $Y$ given treatment, within confounding strata (perhaps then averaging over confounders). "Statistical" assumptions define how we think we can build $E[Y]$
-
-Bayes is 
-- Bayesian inference _begins_ as technology for thinking about statistical assumptions.
-- It eventually becomes technology for experimenting with identification assumptions.
-
-
-- For nonparametric estimators, structural priors can be helpful for concentrating probability mass in sensible areas of space, since nonparametric estimators may be lower-powered than estimators that get a power boost from parametric assumptions.
-- Parametric models, in term, are obvious areas where Bayesian estimates can go, but they are stacking more assumptions on top of the parametric assumptions.
-- Semi-parametric models are an interesting middle ground, where we want to be flexible about the exact nature of the underlying relationships, but we want to impose some stabilization to prevent the model from behaving like crazy.
+<!-- @lattimore-rohde:2019:do-calc-bayes-rule -->
 
 
 
 
 
 
-Do battle with the "implied nonparametric estimator" framework.
-
-- Causal models are manipulated to express causal _estimands_.
-- the "nonparametric estimators" are usually just averages of treatment and control group outcomes, under ignorability assumptions.
-- Parametric models for estimands are usually a byproduct of thinking within an MLE/regression framework. Many causal inf techniques do not do that. Instead they try to simply predict E[y(1) - y(0)] and do not care about the interpretability of the other RHS terms.
-- Thinking outside the "typical econometric" framework it's actually kinda easy to see how one flavor of fitting Bayesian models for causal effects. If the technology for prediction is Bayesian, you just get the prediction and the posterior distribution. You then deal with the bias/variance properties of $\hat{y}$ or $\tilde{y}$ (unobserved counterfactuals) but at least your focus is on the predictions rather than coefficients (which, from this view, who cares about those?)
-- This actually fits quite nicely with the machine learning approach to causal inference
 
 
+### Why Bayesian Causal Modeling {sec:why-bcm}
 
-We can think bigger about Bayesian _inference_ for a parameter as distinct from Bayesian _estimation_ of the in-sample quantity. 
-This lets us use a nonparametric data-driven estimator for the data, but the "inference" or "generalization" still has a prior.
-For instance a sample mean estimates a population mean without a likelihood model for the data, but inference about the population mean often follows a parametric assumption from the Central Limit Theorem that the sampling distribution from the mean is asymptotically normal (but doesn't have to, c.f. bootstrapping).
-<!------- TO DO ---------
-- Read more about sharp null and an RI framework for inference, 
-  since this runs up against the idea of asymptotic normality of the means.
-------------------------->
-Even if the point estimator we use for a mean is unbiased, we can assimilate external information during the interpretation of the estimator (biasing the inference without biasing the point estimator).
-Restated: the posterior distribution is a weighted average of the raw point estimator and external information, rather than biasing the data-driven estimate directly.
-
-Even bigger: Bayesian inference about _models_ (Baldi and Shahbaba 2019). 
-This is probably where I have to start my justification for this? 
-The _entire point_ of causal inference is to make inferences about counterfactuals given data (Rubin 1978?).
-Invoking Bayesian inference is really the only way to say what we _want_ to say about causal effects: what are the plausible causal effects given the model/data. We do _not_ care about the plausibility of data given the null (as a primary QOI). 
-- Probably want to use Harrell-esque language? Draw on intuition from clinical research, or even industry. We want our best answer, not a philosophically indirect weird jumble.
-- This probably also plays into the Cox/Jeffreys/Jaynes stuff I have open on my computer.
-<!------- TO DO ---------
-- Corey Yanofsky recommended reading
-- Gelman/Shalizi philosophy of Bayes
-- Induction/Deduction in Bayes
-- etc.
-- symposium about "objective" Bayes
-- And then also Gelman/Simpson/Betancourt "context of the likelihood"
-  => we have priors about the WORLD, not about model parameters.
-------------------------->
-
-<!------- TO DO ---------
-- soul searching about a philosophy of Bayes to stake out for the project?
-- "pragmatic bayesian workflow" - priors are "just a part of the model" that need to be checked w/ prior predictive checking and so on.
-- vs. the "philosophical coherence" view.
-- damnit do not spend too much time on this because it just needs to be an orientation to stick decisions to.
-- We're already leaning in the "pragmatic" direction from the IRT model text.
-------------------------->
-
-This presumes an m-closed world(?right?), which maybe we do not like (Navarro, "Devil and Deep Blue Sea").
-<!------- TO DO ---------
-- Read Navarro CLOSELY!
-- Read ARONOW and MILLER: how to square "intra-model agonisticism" with 
-  some philosophical view of what Bayes is.
-- Maybe this is terminology I should work on! Draw some helpful lines that 
-  do not already exist for defining subtypes of agnosticism or other
-  epistemic bundles of things.
-  (there is also some paper on "types of Bayesians"?
-   mentioned in a McElreath talk)
-------------------------->
-Me debating with myself: how to think about Bayesian model selection vs "doubly robust" estimation ideas...
-Maybe some hybrid view in the "quasi-experimental" approach to causal model selection. We estimate two models from the same data—one with a treatment parameter and one where we impose no treatment effect—and compare models using some likelihoodist or Bayes factor measure of evidence.
-<!------- TO DO ---------
- - articulate a good beef with the paper's terminology of "quasi-experimental"
- -------------------------> 
-
-What is THIS project going to do?
-
-- Pragmatic view of priors?
-- Are we doing more flexible covariate adjustment?
-- Maybe we should decide this AFTER we experiment with Ch 4 and 5 data/methods
-<!------- TO DO ---------
-- pronouncement of project values
-------------------------->
+- what inference means
+- one-off data
+- full posterior uncertainty
+- priors are everywhere and they matter
 
 
-### Inferential Goals {#sec:why-bcm}
+One-Off Data Collection:
 
 1. posterior isn't about frequency properties
-2. 
-
-
-
-What is "bias?"
-
-- look up in BDA
-- "Requiring unbiased estimates will often lead to relevant information being ignored (as we discuss with hierarchical models in Chapter 5)" (94)
-
-
-Why would we want this? Inference makes more sense.
-
-- What's the probability of a model/hypothesis, given the data
-- vs. What's the probability of "more extreme data" (?) given a model that I do not believe.
+2. What is "bias?"
+    - look up in BDA
+    - "Requiring unbiased estimates will often lead to relevant information being ignored (as we discuss with hierarchical models in Chapter 5)" (94) 
+- Why would we want this? Inference makes more sense. 
+    - What's the probability of a model/hypothesis, given the data 
+    - vs. What's the probability of "more extreme data" (?) given a model that I do not believe.
 - posterior probabilities mean what they say they mean
     - conditioning on data (and implicitly the model), this is the distribution of parameters
     - p-values are the "probability of more extreme results." They condition on the model, but they're only useful if they do not.
-
-Proper frequentist analysis is violated as soon as you look at the data.
-
-Are we in a repeated sampling framework at all?
-
-Frequency properties are still possible for Bayesian estimators, but we view frequency properties as a byproduct of something more essential (MSE).
+- Proper frequentist analysis is violated as soon as you look at the data. 
+- Frequency properties are still possible for Bayesian estimators, but we view frequency properties as a byproduct of something more essential (MSE).
 
 
 
-### Shared Goals, Different Tactics
+Full Posterior Uncertainty: 
 
-Fux with GGK:
+- Multi-stage models
+    - uncertain measures _are priors_
+    - propensity models (Zigler, Plummer/cutting, liao and zigler...)
+    - structural models
+    - to bootstrap or not to bootstrap?
+- weird estimators 
+    - Matching 
+    - Predictive/ML models 
+    - ML approach to causal inference recasts the problem as a prediction problem for the treatment assignment.
+    - Treatment effects are then integrated over the uncertainty in the propensity
+    - This propagates uncertainty using the exact model machinery, rather than a post-hoc computational workaround like bootstrapping
+        - Bootstrapping does have an appealing feature that it isn't making a parametric assumption about errors in the model. It simply uses the "sampling uncertainty" intuition to build intuitive bounds on effect uncertainty.
+        - However in many real-world cases the data we have cannot be resampled, so the framework for inference under bootstrapping doesn't make theoretical sense without appealing to a "superpopulation" philosophy. 
+        - Bayes naturally deals with this by assigning a probability distribution to the unmodeled features, which mechanistically follows a similar assumption as a parametric assumption about errors in any typical regression case: the prior isn't really extra. 
+        - If this assumption isn't something you want, it is possible to generalize the model by specifying an overdispersion parameter and letting the data inform what which model estimates can be rationalized against plausible overdispersion parameters. For example, Kruske's BEST approach to difference-in-means testing. 
+    - In a Bayesian framework, we have posterior More of a "priors to facilitate posteriors" approach, not a prior information view (since there is some formal data peeking involved)
+- Multiple comparisons
 
-- measure = truth + bias + variance
-- causal inference: 
-    - reduce bias "by design" 
-    - shrink prior on bias
-- bayesian estimation:
-    - shrink prior on variance using prior info
-    - or shrink prior on measure, where truth = measure - bias - variance
-
-
-Not _inherently_ the same as "agnostic" inference though we fux with both.
 
 
 
-## Making Sense of Priors in Causal Inference {#sec:causal-priors}
+
+
+
+## Understanding Priors in Causal Inference {#sec:causal-priors}
 
 
 This is because a prior's flatness is only relative to the parameterization of a model, and functions of parameters are not likely to have flat densities even if the underlying parameters have flat densities
@@ -1113,7 +1027,9 @@ Priors are not de-confounders
 
 ### Generalization, Big and Small
 
-
+<!------- TO DO ---------
+- should this go at the end?
+------------------------->
 
 
 Models (likelihoods) are priors
@@ -1150,22 +1066,6 @@ Email to David:
 
 
 
-
-### Modeling Cultures in Political Science: Complexity and Agnosticism
-
-Sidestepping priors
-
-complexity of bayes vs. parsimony of causal inference NOT A RULE
-
-Causal doesn't imply nonparametric, Bayesian doesn't imply complex
-
-At any rate: 
-
-- simple case: sensitivity testing for noisy circumstances
-- complex case: stabilizing highly parameterized problems
-    - dynamic TCSC models, lots of parameters
-    - that hierarchical conjoint thing
-    - priors in high dimensions are scary: consider parameterizations and do simulations
 
 
 ### Principled Approaches to Model Parameterization
@@ -1310,12 +1210,28 @@ $p$ doesn't care about your $n$.
 This is low-key pretty big
 
 
+### Models for Means
+
+In many situations, we can get around a data-level model if we want to.
+
+
+
+
 ### Regularization-Induced Confounding
 
 This is a huge, underappreciated problem in the broad ML-for-causal-inference world
 
 
-### Priors for Imperfect Identifiability
+## Bayesian Opportunities
+
+
+
+
+
+### Priors for Imperfect Identifiability {#sec:identifiability-priors}
+
+Relatedly: priors over models
+
 
 "The Bayesian approach also clarifies what can be learned in the noncompliance problem when causal estimands are intrinsically not fully “identified.” In par- ticular, issues of identification are quite different from those in the frequen- tist perspective because with proper prior distributions, posterior distribu- tions are always proper." (Imbens and Rubin 1997)
 
@@ -1325,48 +1241,47 @@ Randomization limits the impact of the Bayesian assumptions
 
 - "Classical random- ized designs stand out as especially appealing assignment mechanisms designed to make inference for causal effects straightforward by limiting the sensitivity of a valid Bayesian analysis." (Rubin 1978)
 
+<!------- TO DO ---------
+- from above:
+------------------------->
+
+Casting these identification assumptions as priors has at least two distinct benefits over an approach with fixed sensitivity parameter values.
+Firstly, it allows the researcher to conduct inference about the treatment effect by _marginalizing over_ their priors for design parameters, rather than conditioning on fixed design parameters.
+By marginalizing over the design parameters, the researcher obtains one posterior distribution that averages over their prior design uncertainty, rather than an arbitrary range of design parameter values that contains no information about which design parameter values are realistic or unrealistic.
+Secondly, and relatedly, marginalizing over design parameters speaks to the inferential question that is more consistent with the researcher's guiding question: which treatment effects are consistent with the data and our prior information.
+Sensitivity analysis using fixed parameters, meanwhile, answers a different question that is less useful for the goal of posterior inference about treatment effects: how big of an assumption violation is required in order for treatment effect estimates to be statistically insignificant, with no mention of whether violations of that size are likely or unlikely.
+
+returns a quantity of interest that is more consistent with the researcher's ultimate inferential goal—what treatment effects are consistent with prior information and the data—rather than a quantity 
 
 
 
-## Bayesian Opportunities
+Many identification assumptions can be encoded as functional form assumptions in an estimated model.
+Consider a regression scenario with outcome $Y_{i}$, treatment $A_{i}$, and some other covariate $U_{i}$.
+\begin{align}
+  \begin{split}
+    \text{True model:} & Y_{i} &= \alpha + \tau A_{i} + \beta U_{i} + \epsilon_{i}
+    \text{Estimated model:} & Y_{i} &= \hat{\alpha} + \hat{\tau} A_{i} + e_{i}
+  \end{split}
+(\#eq:omitted-confounder)
+\end{align}
+If we invoke an identifying assumption that the assignment of $A_{i}$ is ignorable, then our estimate for the average effect of $A_{i}$ using the second line of \@ref(eq:omitted-confounder) is unbiased.
+This is equivalent to an assumption that the correlation between the treatment $A_{i}$ and the true error term $\epsilon_{i}$ is exactly zero.
+For causal inference purposes, researchers have developed sensitivity tests that recover the treatment effect under ignorability violations, which work by picking a non-zero error correlation value and deriving the treatment under that model [@imai-et-al:2011:black-mox-mediation; @acharya-blackwell-sen:2016:direct-effects].
+
+, and building a richer understanding of how inferences depend on modeling assumptions.
+
+Researchers have derived estimators for $\tau$ in the presence of a, which can be used in a causal inference context to test the "robustness" or "sensitivity" of inferences to the ignorability assumption [@imai-et-al:2011:black-mox-mediation; @acharya-blackwell-sen:2016:direct-effects].
+If this correlation is zero, the treatment effect estimate is unbiased
+These are 
+
+In a causal inference context, researchers sometimes develop sensitivity tests to test the robustness of their inference to violations of ignorability assumptions [@imai-et-al:2011:black-mox-mediation; @acharya-blackwell-sen:2016:direct-effects], exclusion restrictions [@nyhan-skovron-titiunik:2017:reg-bias], and so on.
+Because identification assumptions are special cases of these more general models with additional nuisance parameters, it would be straightforward in a Bayesian framework to specify prior distributions on nuisance parameters that represent priors for violated assumptions. 
+Unpublished work by @leavitt:2020:bayes-did explores this approach in a difference-in-difference contexts, introducing an "epistemic" source of variance in his treatment effect estimate by specifying a prior on the parallel trends assumption.
 
 
 
-### Full Posterior Uncertainty
 
-Multi-stage models
-
-- uncertain measures _are priors_
-- propensity models (Zigler, Plummer/cutting, liao and zigler...)
-- structural models
-- to bootstrap or not to bootstrap?
-
-
-Matching
-
-
-Predictive/ML models
-
-- ML approach to causal inference recasts the problem as a prediction problem for the treatment assignment.
-- Treatment effects are then integrated over the uncertainty in the propensity
-- This propagates uncertainty using the exact model machinery, rather than a post-hoc computational workaround like bootstrapping
-    - Bootstrapping does have an appealing feature that it isn't making a parametric assumption about errors in the model. It simply uses the "sampling uncertainty" intuition to build intuitive bounds on effect uncertainty.
-    - However in many real-world cases the data we have cannot be resampled, so the framework for inference under bootstrapping doesn't make theoretical sense without appealing to a "superpopulation" philosophy. 
-    - Bayes naturally deals with this by assigning a probability distribution to the unmodeled features, which mechanistically follows a similar assumption as a parametric assumption about errors in any typical regression case: the prior isn't really extra. 
-    - If this assumption isn't something you want, it is possible to generalize the model by specifying an overdispersion parameter and letting the data inform what which model estimates can be rationalized against plausible overdispersion parameters. For example, Kruske's BEST approach to difference-in-means testing. 
-- In a Bayesian framework, we have posterior More of a "priors to facilitate posteriors" approach, not a prior information view (since there is some formal data peeking involved)
-
-
-Multiple comparisons and regularization
-
-
-
-### Priors for Key Assumptions
-
-Relatedly: priors over models
-
-
-
+- Oganisian and Roy (2020) "identification" assumptions vs. "statistical" assumptions. Identification assumptions get you to a place where you can express causal effects in terms of expectations about $Y$ given treatment, within confounding strata (perhaps then averaging over confounders). "Statistical" assumptions define how we think we can build $E[Y]$
 
 
 
@@ -1981,17 +1896,64 @@ Since many causal research designs estimate treatment effects on binary variable
 
 ### Beyond Estimation: Inferences About Models and Hypotheses
 
-Inherit material from earlier section
 
-### Priors are the Basis for all Generalization
 
-No-Free-Lunch theorems
 
-### Agnostic Causal Inference
 
+We can think bigger about Bayesian _inference_ for a parameter as distinct from Bayesian _estimation_ of the in-sample quantity. 
+This lets us use a nonparametric data-driven estimator for the data, but the "inference" or "generalization" still has a prior.
+For instance a sample mean estimates a population mean without a likelihood model for the data, but inference about the population mean often follows a parametric assumption from the Central Limit Theorem that the sampling distribution from the mean is asymptotically normal (but doesn't have to, c.f. bootstrapping).
 <!------- TO DO ---------
-- should this go into generalization, agnosticism sections above?
+- Read more about sharp null and an RI framework for inference, 
+  since this runs up against the idea of asymptotic normality of the means.
 ------------------------->
+Even if the point estimator we use for a mean is unbiased, we can assimilate external information during the interpretation of the estimator (biasing the inference without biasing the point estimator).
+Restated: the posterior distribution is a weighted average of the raw point estimator and external information, rather than biasing the data-driven estimate directly.
+
+
+Even bigger: Bayesian inference about _models_ (Baldi and Shahbaba 2019). 
+This is probably where I have to start my justification for this? 
+The _entire point_ of causal inference is to make inferences about counterfactuals given data (Rubin 1978?).
+Invoking Bayesian inference is really the only way to say what we _want_ to say about causal effects: what are the plausible causal effects given the model/data. We do _not_ care about the plausibility of data given the null (as a primary QOI). 
+- Probably want to use Harrell-esque language? Draw on intuition from clinical research, or even industry. We want our best answer, not a philosophically indirect weird jumble.
+- This probably also plays into the Cox/Jeffreys/Jaynes stuff I have open on my computer.
+<!------- TO DO ---------
+- Corey Yanofsky recommended reading
+- Gelman/Shalizi philosophy of Bayes
+- Induction/Deduction in Bayes
+- etc.
+- symposium about "objective" Bayes
+- And then also Gelman/Simpson/Betancourt "context of the likelihood"
+  => we have priors about the WORLD, not about model parameters.
+------------------------->
+
+
+
+
+
+This presumes an m-closed world(?right?), which maybe we do not like (Navarro, "Devil and Deep Blue Sea").
+<!------- TO DO ---------
+- Read Navarro CLOSELY!
+- Read ARONOW and MILLER: how to square "intra-model agonisticism" with 
+  some philosophical view of what Bayes is.
+- Maybe this is terminology I should work on! Draw some helpful lines that 
+  do not already exist for defining subtypes of agnosticism or other
+  epistemic bundles of things.
+  (there is also some paper on "types of Bayesians"?
+   mentioned in a McElreath talk)
+------------------------->
+Me debating with myself: how to think about Bayesian model selection vs "doubly robust" estimation ideas...
+
+
+
+
+
+
+
+Inherit material from earlier section (baldi paper)
+
+Quasi-experiment paper (LR/BF of two models)
+
 
 Conventional:
 \begin{align}
@@ -2003,6 +1965,42 @@ Implied:
 \begin{align}
   p(\theta \mid \mathbf{y}, \mathcal{H}) &= \frac{p(\mathbf{y} \mid \theta, \mathcal{H})p(\theta \mid \mathcal{H})}{p(\mathbf{y} \mid \mathcal{H})}
 \end{align}
+
+
+### Priors are the Basis for all Generalization
+
+No-Free-Lunch theorems
+
+
+
+### Agnostic Causal Inference
+
+<!-- ### Modeling Cultures in Political Science: Complexity and Agnosticism -->
+
+Sidestepping priors
+
+complexity of bayes vs. parsimony of causal inference NOT A RULE
+
+Causal doesn't imply nonparametric, Bayesian doesn't imply complex
+
+At any rate: 
+
+- simple case: sensitivity testing for noisy circumstances
+- complex case: stabilizing highly parameterized problems
+    - dynamic TCSC models, lots of parameters
+    - that hierarchical conjoint thing
+    - priors in high dimensions are scary: consider parameterizations and do simulations
+
+
+
+
+- For nonparametric estimators, structural priors can be helpful for concentrating probability mass in sensible areas of space, since nonparametric estimators may be lower-powered than estimators that get a power boost from parametric assumptions.
+- Parametric models, in term, are obvious areas where Bayesian estimates can go, but they are stacking more assumptions on top of the parametric assumptions.
+- Semi-parametric models are an interesting middle ground, where we want to be flexible about the exact nature of the underlying relationships, but we want to impose some stabilization to prevent the model from behaving like crazy.
+
+
+
+
 
 
 
