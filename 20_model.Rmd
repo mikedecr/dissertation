@@ -668,6 +668,10 @@ Item discrimination is then reparameterized as dispersion, $\sigma_{j} = \iota_{
 
 ### Weighted Outcome Data {#sec:model-weights}
 
+<!------- TO DO ---------
+- https://notstatschat.rbind.io/2020/08/04/weights-in-statistics/
+------------------------->
+
 The group-level model learns about group ideal points by surveying individuals within groups, but the model currently assumes that all $y_{gj}$ are independent conditional on the item. If the same individuals answer multiple items, this assumption is violated. Additionally, we cannot assume that responses are independent in the presence of nonrepresentative survey designs. This section describes an approach for weighting group-level data that adjusts for both issues. The corrections are lifted from @caughey-warshaw:2015:DGIRT with slight modifications.
 <!-- but I am able to relax the constraint that resulting data must be integer valued. -->
 <!------- TO DO ---------
@@ -1074,7 +1078,7 @@ I specify priors on the unscaled cutpoint and discrimination parameters that are
   &\sim 
   \mathrm{Normal}\left(\boldsymbol{\mu}, \boldsymbol{\Sigma}\right)
 \end{align}
-where $\boldsymbol{\mu}$ is a $2$-vector of means and $\boldsymbol{\Sigma}$ is a $2 \times 2$ variance-covariance matrix. 
+where $\boldsymbol{\mu}$ is a $2$-vector of means and $\boldsymbol{\Sigma}$ is a $2 \times 2$ variance–covariance matrix. 
 Whereas @caughey-warshaw:2015:DGIRT specify independent priors for all item cutpoint and discrimination parameters separately, my hierarchical model partially pools the item parameters toward a common distribution. 
 This allows estimates to borrow precision from one another rather than "forgetting" the information learned from one item when updating the prior for the next item.
 The discrimination parameter, which has a product of $1$ when scaled, is logged so that it has a mean of $0$ on the log scale. 
@@ -1128,7 +1132,7 @@ lkj_dens_plots <-
     labs(
       x = TeX("Item Scales ($\\sigma_{\\tilde{\\kappa}}$ and $\\sigma_{\\tilde{\\iota}}$)"),
       y = "Prior Density",
-      title = "Variance-Covariance Prior with Separation Strategy",
+      title = "Variance–Covariance Prior with Separation Strategy",
       subtitle = "Diagonal and LKJ Correlation Components"
     ) +
   p_lkj 
@@ -1224,7 +1228,7 @@ p_item_scatter + lkj_dens_plots
 - two panels: discrimination and inv(discrimination)
 ------------------------->
 
-I build a prior for the variance-covariance matrix $\boldsymbol{\Sigma}$ by decomposing it into a diagonal matrix of scale terms and a correlation matrix. First I factor out the scale components.
+I build a prior for the variance–covariance matrix $\boldsymbol{\Sigma}$ by decomposing it into a diagonal matrix of scale terms and a correlation matrix. First I factor out the scale components.
 \begin{align}
   \boldsymbol{\Sigma} &= 
   \begin{bmatrix}
@@ -1264,7 +1268,7 @@ The scale terms $\sigma_{\tilde{\kappa}}$ and $\sigma_{\tilde{\iota}}$ are given
 \end{align}
 The LKJ distribution has one shape parameter $\eta$, which can be interpreted like a shape parameter for a symmetric Beta distribution. Setting $\eta = 1$ yields a flat prior over all correlation matrices, where increasing values of $\eta1$ concentrate prior density toward the mode, which is an identity matrix. The chosen value of $\eta = 2$ provides weak regularization against extreme correlations near $-1$ and $+1$. Although it would have been sufficient to specify a prior for $\rho$ instead of the entire matrix $\boldsymbol{S}$, this convenience only arises in small (in this case, $2 \times 2$) correlation matrices. Larger matrices (such as those that would result from a more complex IRT model specification) would require explicit priors for a larger number of off-diagonal parameters. The LKJ prior can be generally applied to larger correlation matrices, so I choose it for the sake of building a more flexible and extensible model.
 
-Figure&nbsp;\@ref(fig:plot-lkj) plots several details of the item prior. The top row shows the prior densities for the terms in the decomposed variance-covariance matrix $\boldsymbol{\Sigma}$. The left panel shows the Half-Normal prior density for the scale terms. The right panel shows the marginal distribution of $\rho$, the off-diagonal parameter in the matrix $\boldsymbol{S}$ that controls the covariance of items in the joint prior, generated from the LKJ correlation matrix prior. The bottom panel shows the distribution of item parameter values simulated from the multivariate Normal distribution implied by the joint hierarchical prior. Each point represents a simulated item as a combination of cutpoint values (on the horizontal axis) and log-discrimination values (on the vertical axis). Points are colored according to the number of nearby points, which informally conveys the prior density of items with particular cutpoint and discrimination values.
+Figure&nbsp;\@ref(fig:plot-lkj) plots several details of the item prior. The top row shows the prior densities for the terms in the decomposed variance–covariance matrix $\boldsymbol{\Sigma}$. The left panel shows the Half-Normal prior density for the scale terms. The right panel shows the marginal distribution of $\rho$, the off-diagonal parameter in the matrix $\boldsymbol{S}$ that controls the covariance of items in the joint prior, generated from the LKJ correlation matrix prior. The bottom panel shows the distribution of item parameter values simulated from the multivariate Normal distribution implied by the joint hierarchical prior. Each point represents a simulated item as a combination of cutpoint values (on the horizontal axis) and log-discrimination values (on the vertical axis). Points are colored according to the number of nearby points, which informally conveys the prior density of items with particular cutpoint and discrimination values.
 
 ```{r plot-lkj, include = TRUE, fig.height = 5, fig.width = 9, out.width = "80%", fig.cap = "Components of the joint hierarchical prior for the unscaled item parameters. Left panel shows prior values for unscaled item parameters from the joint prior. Remaining panels show priors for decomposed covariance matrix components: including the standard deviation that form the matrix diagonal (middle) and the off-diagonal correlation from the LKJ prior (right)."}
 ```

@@ -226,3 +226,5 @@ MGD-thesis.tex
 code/*/brm*.stan
 code/*/*/brm*.stan
 MGD-ch1_barry-edits.pdf
+.idea
+venv
