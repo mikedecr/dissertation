@@ -132,9 +132,9 @@ The _no interference_ assumption states that unit $i$'s potential outcome depend
 The consistency and no-interference assumptions are sometimes grouped into a single assumption, called the "stable unit treatment value assumption" [or SUTVA, @rubin:1980:comment-randomization].
 The _conditional independence_ assumption (CIA), also known as conditional "ignorability" or conditional "unconfoundedness," states that potential outcomes are independent of treatment status conditional on a unit's membership in a specific stratum of covariates $X_{i} = x$.
 \begin{align}
-   \text{Conditional Independence: } 
-   Y_{i}\left(A_{i} = 1\right), \; Y_{i}\left(A_{i} = 0\right) \ind 
-   A_{i} \mid X_{i} = x
+    \text{Ignorability: } 
+    \p{A_{i} = a \mid Y_{i}\left(A_{i} = 1\right), Y_{i}\left(A_{i} = 0\right), X_{i} = x} &=
+      \p{A_{i} = a \mid X_{i} = x}
    (\#eq:ignorability-assumption)
 \end{align}
 The CIA is essentially an assumption about unit-level expectations under counterfactuals.
@@ -537,7 +537,7 @@ The realm of "mere estimation" is where many Bayesian causal approaches appear i
 The estimation benefits of Bayes tend to fall into three categories: priors provide practical stabilization or regularization, posterior distributions are convenient quantifications of uncertainty, or MCMC provides a tractable way to fit a complex model.
 We could characterize the use of Bayesian methods for these purposes as practically valuable but theoretically dispensable, in the sense that researchers might prefer non-Bayesian means to the same ends. 
 For instance, @green-kern:2012:bart adapt Bayesian Additive Regression Trees [or BART, @chipman-et-al:2010:BART] to measure treatment effect heterogeneity in randomized experiments. [See @hill:2011:bart for a non-political science introduction to causal inference with BART.]
-The advantages of a regression tree model for treatment heterogeneity is that it can explore arbitrary interactions among covariates while controlling overfitting, but the fact that BART is Bayesian isi an afterthought.
+The advantages of a regression tree model for treatment heterogeneity is that it can explore arbitrary interactions among covariates while controlling overfitting, but the fact that BART is Bayesian is an afterthought.
 We observe a similar pattern in the use of Gaussian process models for fitting the running variable in regression discontinuity designs by @ornstein-duck-mayr:2020:GP-RDD and in the development of augmented LASSO estimators for sparse regression models by Ratkovic and Tingley [-@ratkovic-tingley:2017-direct-estimation; -@ratkovic-tingley:2017:sparse-lasso-plus].^[
   See @tibshirani:1996:lasso for a general introduction to the LASSO shrinkage estimator using the L1 penalized optimization.
   @park-casella:2008:bayesian-lasso implement a Bayesian LASSO using Laplace priors for regression coefficients.
@@ -728,14 +728,198 @@ The fact that it adds information to the log posterior is unaffected by whether 
 
 ### Flatness is a Relative, Not an Absolute, Property of Priors {#sec:prior-flatness}
 
+Formally, a flat prior is a probability distribution that assigns equal probability density to all possible values of a parameter.
+It is common for researchers to prefer flatter priors in situations where they lack specific prior information about model parameters.
+In cases where a prior distribution is perfectly flat, the posterior mode will be equivalent to the maximum likelihood estimator regardless of the sample size.
+For this reason, many researchers who find themselves exploring Bayesian methods use flat or nearly-flat priors as a "default choice".
+It is likely that a researcher exploring Bayesian modeling for causal inference might make a similar choice, in the interest of "letting the data speak."
+A common criticism of this practice is that flat priors understate the researcher's actual prior information.
+Although this sounds obviously true, it is easy to see why an applied researcher would be unbothered by it—what's the harm with a vague prior?
+Instead, I argue that the default use of flat priors can often _misspecify_ prior information in many common modeling scenarios.
+Researchers must set prior distributions on parameters, but they usually have prior information about outcome data, which are functions of parameters.
+If researchers are not mindful of the functional relationship between raw parameters and other quantities of interest in the analysis, they will not the pernicious effects that "default priors" can have on model behavior. 
+
+
+```{r normal-factoring}
+normal_mu <- 3
+normal_sd <- 2
+
+
+implied_normal <- 
+  tibble(
+    x = seq(-10, 10, .01),
+    pi = dnorm(x),
+    h = dnorm(x, mean = normal_mu, sd = normal_sd)
+  ) %>%
+  pivot_longer(cols = -x, values_to = "density", names_to = "param") %>%
+  print()
+```
+
+
+
+
+```{r plot-normal-factoring}
+ggplot(implied_normal) +
+  aes(x = x, color = param, fill = param) +
+  geom_ribbon(
+    aes(ymin = 0, ymax = density),
+    alpha = 0.7,
+    outline.type = "upper"
+  ) +
+  labs(
+    x = NULL, 
+    y = NULL,
+    title = "Priors and Implied Priors",
+    subtitle = "Functions of parameters have implied prior density"
+  ) +
+  annotate(
+    geom = "text",
+    x = 0 + normal_mu + normal_sd,
+    y = 0.9 * (filter(implied_normal, param == "h") %$% max(density)),
+    label = TeX("Transformed parameter: $h(\\pi)$"),
+    hjust = 0
+  ) +
+  annotate(
+    geom = "text",
+    x = 0 + 1,
+    y = 0.9 * (filter(implied_normal, param == "pi") %$% max(density)),
+    label = TeX("Original parameter: $\\pi$"),
+    hjust = 0
+  ) +
+  coord_cartesian(xlim = c(-3, 10)) +
+  scale_fill_manual(values = c(primary, tertiary)) +
+  scale_color_manual(values = c(primary, tertiary)) +
+  scale_y_continuous(breaks = NULL) +
+  scale_x_continuous(breaks = seq(-10, 10, 2)) +
+  theme(legend.position = "none")
+```
+
+To understand the consequences of prior choices, it is essential to understand the _implied prior_. 
+Suppose we have a parameter $\pi$ and a function of that parameter, $h(\pi)$. 
+If $\pi$ is a prior density, then $h(\pi)$ has an implied prior density that is affected by the density of $\pi$ and the composition of the function $h(\cdot)$.
+Consider a simple example where $\pi$ is distributed $\mathrm{Normal}\left( 0, 1 \right)$, and $h(\pi) = `r normal_mu` + `r normal_sd`\pi$. 
+The implied prior for $h(\pi)$ is $\mathrm{Normal}\left( `r normal_mu`, `r normal_sd` \right)$, because a linear transformation of a Normal random variable results in another Normal random variable.
+Figure \@ref(fig:plot-normal-factoring) shows the probability density of $\pi$ and the implied density of $h(\pi)$.
+Any function of a parameter will an implied probability density, but there is no general guarantee that the implied density will be easy to understand like the example in Figure \@ref(fig:plot-normal-factoring).
+
+```{r plot-normal-factoring, include = TRUE, fig.cap = "Demonstration of centered and non-centered parameterizations for a Normal distribution. The non-centered parameterization is statistically equivalent, but the location and scale are factored out of the distribution.", fig.height = 5}
+```
+
+In order to understand a model, the researcher should understand the consequences of priors on the model's predictive distribution for new data, because prior distributions in parameter space yield implied priors in outcome space.
+This highlights an ever-present, pragmatic problem in building any model: a researcher has prior information about the _world_, but they must set priors on model parameters.
+This requires the researcher to solve backward for priors in parameter space that resemble reasonable expectations about the behavior of data.
+In order to understand and anticipate the consequences of priors, it is important to understand the data's functional dependence on model parameters and how those functions transform probability densities.
+It is thus a general principal of model-building that "the prior can often only be understood in the context of the likelihood" [@gelman-et-al:2017:prior-likelihood].
+The close relationship between priors and the data model expose where flat priors create problematic model behaviors.
+
+
+
+```{r beta-binom}
+n_bb <- 1e4
+
+set.seed(9348)
+
+tibble(
+  alpha = rbeta(n_bb, 1, 1),
+  alpha_normal = plogis(rnorm(n_bb, 0, 10)),
+  alpha_logistic = plogis(rlogis(n_bb, 0, 1))
+) %>%
+  mutate(
+    x_beta = rbinom(n = n(), size = n_bb, prob = alpha),
+    x_normal = rbinom(n = n(), size = n_bb, prob = alpha_normal),
+    x_logistic = rbinom(n = n(), size = n_bb, prob = alpha_logistic)
+  ) %>%
+  pivot_longer(
+    cols = starts_with("x_"), 
+    names_to = "param",
+    values_to = "value"
+  ) %>%
+  mutate(
+    param = fct_relevel(param, "x_beta", "x_normal", "x_logistic")
+  ) %>%
+  ggplot() +
+  aes(x = value) +
+  geom_histogram(
+    fill = primary,
+    boundary = 0, 
+    position = "identity", 
+    alpha = 0.7
+  ) +
+  facet_wrap(
+    ~ param,
+    labeller = as_labeller(
+      c(
+        "x_beta" = "Probability scale: Beta(1, 1)",
+        "x_normal" = "Logit scale: Normal(0, 10)",
+        "x_logistic" = "Logit scale: Logistic(0, 1)"
+      )
+    )
+  ) +
+  scale_fill_viridis_d(option = "plasma", end = 0.88) +
+  scale_x_continuous(labels = comma) +
+  ggeasy::easy_remove_legend() +
+  ggeasy::easy_remove_y_axis() +
+  labs(
+    title = "Prior Flatness ≠ Prior Vagueness",
+    subtitle = "How transformations of parameter space affect implied priors",
+    x = str_glue("Binomial variable x ({comma(n_bb)} draws)"),
+    y = NULL
+  )
+```
+
+It is helpful to highlight an example where flat priors, believed "by default" to be reasonable and conservative, create problematic or nonsensical results [@seaman-et-al:2012:noninformative-priors].
+Consider a binomial outcome variable that counts $x$ successes out of $n$ independent trials, each with success probability $\alpha$.
+We want to estimate $\alpha$, and we don't have specific prior information about it.
+We represent ignorance about $\alpha$ using a flat $\mathrm{Beta}\left(1, 1\right)$ density. 
+Not consider the identical data but estimating $\alpha$ with a logit model likelihood instead, where $\alpha = \mathrm{logit}^{-1}\left(\eta\right)$.
+In the logit model, $\alpha$ is a deterministic function of the parameter $\eta$, so we place the prior on $\eta$.
+We are ignorant about its value as well, so we follow a default instinct and give it a prior with a wide variance, $\mathrm{Normal}(0, 10)$ on the logit scale, and we might have considered scale values larger than 10 as well to represent more ignorance.
+
+If we take both of these models and generate prior simulations for $x \sim \mathrm{Binom}(n, \alpha)$, depicted as histograms in Figure \@ref(fig:beta-binom), the implied prior distributions for $x$ do not resemble one another at all.
+The first panel shows the implied prior for $x$ when $\alpha$ has a flat Beta prior, resulting in a distribution for $x$ that is also flat.
+The middle panel shows the implied prior for $x$ from the logit model, where $\mathrm{logit}\left(\alpha\right) = \eta \sim \mathrm{Normal}\left(0, 10\right)$, resulting in a very different prior for $x$ where most prior probability is concentrated on very small or very large values of $x$.
+Why does this prior for $x$ appear so informative when we used such a vague prior for $\eta$?
+Because $\eta$ had a wide prior on the logit scale, and the probability scale is a nonlinear transformation of the logit scale, the resulting prior for $x$ is also affected by the nonlinear mapping between parameter spaces.
+Only a thin range of logit-scale values map to probabilities that we routinely encounter in political science:
+logit sclae values between $-3$ and $3$ correspond to probabilities between approximately $`r plogis(-3) %>% round(3)`$ and $`r plogis(3) %>% round(3)`$.
+Because the $\mathrm{Normal}\left(0, 10\right)$ prior places most probability density outside of reasonably values on the logit scale, most of our implied probabilities are unreasonably small or large as well.
+In order to obtain a flat prior for $x$ using a logit model, we would actually use the prior $\eta \sim \mathrm{Logistic}\left(0, 1\right)$, shown in the third panel of Figure \@ref(fig:beta-binomial).
+The standard Logistic prior creates a flat density on the probability scale because the inverse link function for a logit model is the cumulative distribution function for a standard Logistic distribution.^[
+  This same intuition holds for a standard Normal prior in a probit model, demonstrated in Section \@ref(sec:priors).
+]
+
+
+
+```{r beta-binom, include = TRUE, fig.width = 9, fig.height = 4, out.width = "100%"}
+```
+
+
+
+
+- [x] Introduce implied prior
+- [x]  outcome vs. parameters
+- principal: info vs. shape
+- example, horiuchi
+- lesson for causal inference: we should expect to get different results because thinking explicitly about priors shows us where implied priors aren't flat (and that's fine) or where implied priors ARE flat (and that's batshit).
+<!-- information vs. shape, warping, covariant transformations -->
+
+Flat priors are problematic for many analyses because they lead to implied priors that have strange behaviors that researchers would be uncomfortable confronting.
+
+
+More complex functions of parameters, especially nonlinear functions, can produce in implied priors with strange shapes that are difficult to anticipate using intuition alone. [horiuchi]
+
+
+Outcome space != parameter space. Flat priors about outcomes is not the same thing as flat priors about parameters.
+Information ≠ shape.
+The mapping from geometric space to statistical information is entirely dependent on the scale of a parameter space, and different model parameterizations invoke different scales.
+
 <!------- TO DO ---------
-- The mapping from geometric space to statistical information is entirely dependent on the scale of a parameter space, and different model parameterizations invoke different scales.
 - start with a flat priors experiment and then go to the probit space?
+- make the connection to _likelihoods_ explicit.
 ------------------------->
 
 
 
-<!-- information vs. shape, warping, covariant transformations -->
 
 <!------- TO DO ---------
 - "flat" isn't non-informative. They are just non-informative _relative to_ the likelihood. A likelihood that identifies a narrower region of parameter space will more quickly overcome a flatter prior, but it isn't the same as "non-informative." The speed with which a likelihood targets parameter space is a feature of the likelihood.
@@ -796,6 +980,8 @@ Alex meeting takeaways:
 
 
 
+
+
 ### Priors and Model Parameterization {sec:prior-parameterization}
 
 <!-- ### Principled Approaches to Model Parameterization -->
@@ -852,48 +1038,13 @@ The difference is only a matter of which component has the distributional assump
 In Equation \@ref(eq:ols-noncenter), the distribution is assigned to $\varepsilon_{i}$, so $y_{i}$ is a random variable only by way of $\varepsilon_{i}$.
 In Equation \@ref(eq:ols-center), we assign the distributional assumption directly to $y_{i}$, bringing the regression function into the mean rather than "factoring it out" of the distribution.
 
-```{r normal-factoring}
-normal_n <- 500
-normal_mu <- 4
-normal_sd <- 2
-```
-
-```{r plot-normal-factoring, include = TRUE, fig.cap = "Demonstration of centered and non-centered parameterizations for a Normal distribution. The non-centered parameterization is statistically equivalent, but the location and scale are factored out of the distribution."}
-set.seed(0987)
-tibble(
-  y1 = rnorm(n = normal_n, mean = normal_mu, sd = normal_sd),
-  y2 = normal_mu + normal_sd * rnorm(n = normal_n, mean = 0, sd = 1)
-) %>%
-  pivot_longer(cols = everything()) %>%
-  ggplot() +
-  aes(x = value, color = name) +
-  stat_ecdf(size = 1) +
-  coord_cartesian(
-    xlim = c(normal_mu - 2 * normal_sd, normal_mu + 2 * normal_sd)
-  ) +
-  scale_x_continuous(
-    breaks = seq(-10, 10, normal_sd)
-  ) +
-  labs(
-    title = str_glue(
-      "Empirical CDF of Normal({normal_mu}, {normal_sd}) Samples"
-    ),
-    subtitle = str_glue(
-      "{normal_n} Draws from Centered and Non-Centered Distributions"
-    ),
-    x = TeX("Random Variable $\\nu$"),
-    y = "ECDF"
-  ) +
-  scale_color_manual(values = c(med2, dark2)) +
-  theme(legend.position = "none")
-```
 
 The linear regression context is one context where the choice of parameterization appears. These two parameterizations are typically called the "centered" and "non-centered" parameterization for a Normal distribution. In the centered parameterization, the random variable is drawn from a distribution "centered" on a systematic component, whereas the non-centered distribution factors out any location and scale information from the distribution, such that the only remaining random variable is a standardized variate. The equations below describe a Normal variable $\nu$ with mean $`r normal_mu`$ and standard deviation $`r normal_sd`$.
 \begin{align}
   \text{Centered Parameterization:} && \nu &\sim \mathrm{Normal}(`r normal_mu`, `r normal_sd`) \\
   \text{Non-Centered Parameterization:} && \nu &= `r normal_mu` + `r normal_sd`z, & \text{where } z &\sim \mathrm{Normal}(0, 1)
 \end{align}
-To demonstrate that these parameterizations are equivalent, I simulate $`r normal_n`$ simulations from each parameterization and plot their empirical cumulative distribution functions alongside each other in Figure \@ref(fig:plot-normal-factoring). Because the distributions are the same, the empirical CDFs are identical except for random sampling error. 
+<!-- To demonstrate that these parameterizations are equivalent, I simulate $$ simulations from each parameterization and plot their empirical cumulative distribution functions alongside each other in Figure \@ref(fig:plot-normal-factoring). Because the distributions are the same, the empirical CDFs are identical except for random sampling error.  -->
 
 ```{r, include = TRUE, fig.width = 10, fig.height = 2, out.width = "100%", fig.cap = "A spectrum of attitudes toward priors. "}
 tibble(
