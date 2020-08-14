@@ -44,34 +44,43 @@ if (home) {
   theta_stats <- box_read(706620258916)
 }
 
+
+# ---- scale data -----------------------
+
+blip_value <- 0.5
+
+g_data <- full_data_raw %>%
+  mutate(
+    rep_vote_scale = (rep_pres_vs - blip_value) / sd(rep_pres_vs, na.rm = TRUE)
+  ) %>%
   print()
 
-theta_stats <- box_read(706620258916)
-  # read_rds(here("data", "_clean", "ideal-point-priors.rds"))
-
-names(theta_stats)
-
-full_data$dem_pres_vs
+ggplot(data = g_data) +
+  aes(x = theta_mean, y = recipient_cfscore_dyn) +
+  facet_wrap(~ party, scales = "free_x") +
+  geom_point()
 
 
-stan_data_dem <- full_data %>%
+
+
+stan_data_dem <- g_data %>%
   arrange(group) %>%
   filter_at(
-    .vars = vars(recipient_cfscore_dyn, district_num, dem_pres_vs),
+    .vars = vars(recipient_cfscore_dyn, district_num, rep_vote_scale),
     .vars_predicate = ~ !is.na(.)
   ) %>%
   filter(party_num == 1) %$%
   list(
     N = nrow(.),
-    y = recipient_cfscore_dyn,
+    y = scale(recipient_cfscore_dyn) %>% as.vector(),
     D = n_distinct(group),
     d = as.numeric(as.factor(group)),
-    mediator = .$dem_pres_vs,
+    mediator = .$rep_vote_scale,
     K_med = 1,
     K_trt = 1,
     Z_med = tibble(z = rnorm(nrow(.))) %>% as.matrix(),
     X_trt = tibble(x = rnorm(nrow(.))) %>% as.matrix(),
-    blip_value = 0.5,
+    blip_value = blip_value,
     ideal_means = theta_stats$mean_dem[1:n_distinct(group)],
     ideal_cov = theta_stats$vcov_dem[1:n_distinct(group), 1:n_distinct(group)],
     joint_prior = 0,
@@ -79,24 +88,24 @@ stan_data_dem <- full_data %>%
   )
 
 
-stan_data_rep <- full_data %>%
+stan_data_rep <- g_data %>%
   arrange(group) %>%
   filter_at(
-    .vars = vars(group, recipient_cfscore_dyn, district_num, dem_pres_vs),
+    .vars = vars(group, recipient_cfscore_dyn, district_num, rep_vote_scale),
     .vars_predicate = ~ !is.na(.)
   ) %>%
   filter(party_num == 2) %$%
   list(
     N = nrow(.),
-    y = recipient_cfscore_dyn,
+    y = scale(recipient_cfscore_dyn) %>% as.vector(),
     D = n_distinct(group),
     d = as.numeric(as.factor(group)),
-    mediator = .$dem_pres_vs,
+    mediator = .$rep_vote_scale,
     K_med = 1,
     K_trt = 1,
     Z_med = tibble(z = rnorm(nrow(.))) %>% as.matrix(),
     X_trt = tibble(x = rnorm(nrow(.))) %>% as.matrix(),
-    blip_value = 0.5,
+    blip_value = blip_value,
     ideal_means = theta_stats$mean_rep[1:n_distinct(group)],
     ideal_cov = theta_stats$vcov_rep[1:n_distinct(group), 1:n_distinct(group)],
     joint_prior = 0,
@@ -146,7 +155,7 @@ fit_g <- function(file = character(), data = list(), ...) {
 stanfit_dem <- fit_g(
   file = here("code", "04-positioning", "stan", "sequential-G-linear.stan"),
   data = stan_data_dem,
-  refresh = 100
+  refresh = 50L
   # , thin = 1,
   # , include = FALSE,
   # pars = c()
