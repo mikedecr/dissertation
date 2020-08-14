@@ -3,8 +3,12 @@
 <!------- TO DO ---------
 - what's the latent relationship between local ideology and primary rules?
 - does this explain the weird findings by McGhee et al?
+- take credit for the Bayesian setup:
+    - multilevel setup has a number of advantages for statistical identifiability and estimation
+    - priors on ideal points
 ------------------------->
-```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
+
+```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
 knitr::knit_exit()
 ```
 
@@ -410,8 +414,8 @@ base_dag <- g_dag %>%
   ggplot() +
   aes(x = x, y = y, xend = xend, yend = yend) +
   coord_cartesian(ylim = c(-0.25, 2.25)) +
-  # theme_dag() +
-  theme_mgd_dag() +
+  theme_dag() +
+  # theme_mgd_dag() +
   NULL
 
 mediator_dag <- base_dag +
@@ -508,10 +512,7 @@ There are functional form considerations however---biases may remain if the func
 - Simulate violated assumptions by way of correlated error parameters?
 ------------------------->
 
-## Empirical Approach
-
-
-### Bayesian sequential-$g$ model
+## Empirical Approach: Bayesian Sequential-$g$ 
 
 Keep the notation general enough (expectations) so that there are no explicit linear regression functional forms introduced by accident?
 
@@ -523,19 +524,185 @@ ACDE is posterior distribution of the causal quantity...
 
 
 
+
+<!-- As mentioned above, I estimate average controlled direct effects separately for incumbents, challengers, and open seat candidates in two parties, totaling six routines altogether.  -->
+I write a general model that applies regardless of which subset of data is being used. 
+Because the estimation in every data subset proceeds in two stages, I use subscript some parameters $1$ and $2$ to indicate that they are not fixed across model stages.
+
+<!------- TO DO ---------
+- separate parties
+- incumbency
+------------------------->
+
+The first stage is a mediator-outcome model, predicting the CF score of candidate $i$ within group $g$, where a group is a combination of district $d$ and party. 
+Because I estimate separate models for each party, each model sees data from only one group per district.
+Nonetheless, I use separate $g$ and $d$ subscripts to denote which variables have the potential to vary by groups within districts.
+We set up the sequential-$g$ method to control for the previous Republican presidential vote share in district $d$, denoted $\mathit{pvote}_{g}$.
+This is done with the following multilevel regression model.
+\begin{align}
+\begin{split}
+  \mathrm{CF}_{i} &= 
+    a_0 + 
+    \eta \bar{\theta}_{g[i]} + 
+    \mu \mathrm{pvote}_{d[i]} + 
+    \mathbf{x}_{d[i]}^{\intercal}\beta +
+    \mathbf{z}_{d[i]}^{\intercal}\gamma +
+    \alpha_{d[i]} + \epsilon_{i} \\
+  \alpha_{d} &\sim \mathrm{Normal}\left(0, \sigma_{\alpha}\right) \\
+  \epsilon_{i} &\sim \mathrm{Normal}\left(0, \sigma_{\epsilon}\right)
+\end{split}
+(\#eq:med-model)
+\end{align}
+This model identifies the effect of the presidential vote, $\mu$, under the identification assumption of sequential ignorability and the statistical assumptions of linearity and no interactions.
+<!------- TO DO ---------
+- check on these assumptions
+------------------------->
+The group ideal point $\bar{\theta}_{g}$ is included in the regression as a control, so the coefficient $\eta$ is estimated as a nuisance parameter, as are the coefficients $\beta$ for district-level pre-treatment confounders $\mathbf{x}_{d}$, the coefficients $\gamma$ for district-level intermediate confounders $\mathbf{z}_{d}$, and constant $a_{0}$.
+Because the mediator is measured at the district level, I include a district error term $\alpha_{d}$ in addition to the candidate-level error term $\epsilon_{i}$.
+The multilevel model accounts correlated error among candidates in the same district, similar to clustering standard errors when a treatment is dosed at the cluster level.
+
+
+Sequential-$g$ estimates the controlled direct effect of treatment by purging the DV of the mediator effect.
+This is done by predicting the outcome variable as if the mediator were fixed for all units, which purges the outcome of all systematic variation caused by the mediator variable. 
+This can be done by predicting the outcome under a fixed mediator value directly or by demediating the outcome directly using an estimate of the demediation function.
+Because the first stage is a linear model, the demediation function has a straightforward parametric definition,
+\begin{align}
+  \delta_{d} &= \mu \left(\mathrm{pvote}_{d} - \mathrm{pvote}'\right)
+  (\#eq:blipdown-function)
+\end{align}
+where $\mathit{pvote}'$ is the reference value for the mediator where all units are fixed, and $\mu$ is the mediator's effect from Equation \@ref(eq:med-model).
+The demediation function represents the effect setting district $d$'s presidential vote to its observed value compared to the reference value $\mathit{pvote}'$.
+Because the previous presidential vote varies across districts, so too does the demediation function.^[
+  In any case where the reference value for the mediator is zero, this expression reduces to $\mu \mathit{pvote}_{d}$, and an observed value of zero implied a demediation function of zero.
+]
+We choose a reference value of $0.5$, an even vote split between the Republican and Democratic presidential vote shares in the previous election.
+The demediation function can be more complex if the mediator's effect on the outcome is modeled with a more complex model containing interactions or nonlinearities.
+We calculate the demediated outcome $b(CF)_{i}$ by subtracting each district's demediation function from its observed outcome value,
+\begin{align}
+  b\left(\mathrm{CF}\right)_{i} &= \mathrm{CF}_{i} - \delta_{d}
+  (\#eq:blipdown-outcome)
+\end{align}
+Because the mediator is fixed for a given district, all candidates in a district have the same demediation function, regardless of their original CF score.
+The demediated outcome value is equivalent to the outcome under a fixed mediator value,
+\begin{align}
+\begin{split}
+  b\left(\mathrm{CF}\right)_{i} &= \mathrm{CF}_{i} - \delta_{d} \\
+  b\left(\mathrm{CF}\right)_{i} &= 
+    a_{0} + 
+    \eta \bar{\theta}_{g[i]} +
+    \mu \mathrm{pvote}_{d[i]} + 
+    \mathbf{x}_{d[i]}^{\intercal}\beta + %_
+    \mathbf{z}_{d[i]}^{\intercal}\gamma + %_
+    \alpha_{d[i]} + \epsilon_{i} -
+    \mu \left(\mathrm{pvote}_{d[i]} - \mathrm{pvote}'\right) \\
+  &= 
+    a_{0} + 
+    \eta \bar{\theta}_{g[i]} +
+    \mu \left(\mathrm{pvote}_{d[i]} - \mathrm{pvote}_{d[i]} + \mathrm{pvote}'\right) +
+    \mathbf{x}_{d[i]}^{\intercal}\beta + %_
+    \mathbf{z}_{d[i]}^{\intercal}\gamma + %_
+    \alpha_{d[i]} + \epsilon_{i} \\
+  &= 
+    a_{0} + 
+    \eta \bar{\theta}_{g[i]} +
+    \mu \mathrm{pvote}' + 
+    \mathbf{x}_{d[i]}^{\intercal}\beta + %_
+    \mathbf{z}_{d[i]}^{\intercal}\gamma + %_
+    \alpha_{d[i]} + \epsilon_{i} \\
+  &= 
+    a' + 
+    \eta \bar{\theta}_{g[i]} +
+    \mathbf{x}_{d[i]}^{\intercal}\beta + %_
+    \mathbf{z}_{d[i]}^{\intercal}\gamma + %_
+    \alpha_{d[i]} + \epsilon_{i} \\
+\end{split}
+(\#eq:med-model-blipped)
+\end{align}
+which makes it clearer to see how the demediation step subtracts the mediator variation from the outcome, absorbing the non-varying mediator into the new constant $a'$.
+
+The demediated outcome is then used in the second stage model, which is different from the first stage in two ways.
+First, the mediator falls out of the equation because it no longer varies across observations. 
+Second, intermediate confounders are omitted because they are unnecessary to identify the effect of district-party ideology, and they could induce collider bias if included.
+This new equation is,
+\begin{align}
+  b\left(\mathrm{CF}\right)_{i} = 
+    a_{1} +
+    \tau \bar{\theta}_{g} + 
+    \mathbf{x}^{\intercal}_{g[i]}\omega + 
+    \nu_{d} + u_{i} \\
+(\#eq:trt-model)
+\end{align}
+where $a_{1}$ is a constant, $\tau$ is the coefficient for district-party ideology, $\omega$ are coefficients for district-level pre-treatment confounders $\mathbf{x}_{d}$, $\nu_{d}$ is a district error term, and $u_{i}$ is a candidate error term.
+Under the identification and statistical assumptions, $\tau$ measures the average controlled direct effect of a one-unit increase in district-party ideology.
+More generally, the ACDE of setting district-party ideology to $\bar{\theta}$ is
+\begin{align}
+  ACDE(\tau, \bar{\theta}, \bat{\theta}') &= \tau \left(\bar{\theta} - \bar{\theta}')
+  (\#eq:general-ACDE)
+\end{align}
+where $\bar{\theta}'$ is a reference value of district-party ideology.
+
+
+### Bayesian Contributions
+
+- theta is uncertain
+
+$\bar{\theta}_{g}$ is an element of $\bar{\Theta}$, the vector of all group ideal points. 
+The exact value of $\bar{\theta}_{g}$ is unknown—the model in Chapter \@ref(ch:model) used survey data to update our information, but we still only have samples from the probability distribution given our current data.
+This means that the $\bar{\theta}_{g}$ that the sequential-$g$ model sees are parameters with probability distributions, not fixed data.
+As such, they appear in the model with a prior distribution, which is the posterior distribution from the measurement model. 
+\begin{align}
+  \bar{\Theta} &\sim 
+    \mathrm{MultiNormal}\left( \hat{\Theta}, \hat{\Sigma}_{\Theta} \right)
+  (\#eq:theta-prior)
+\end{align}
+
+
+
 ### Multilevel Considerations 
 
-The research question in this chapter presents us with multilevel data: how is the ideological positioning of primary candidates affected by the policy ideology of partisans in their district, when there are potentially multiple candidates per district? In this scenario, the outcome is a variable specific to an individual candidate $i$, but the treatment is fixed for an entire district-partisan group $g$. 
+The research question in this chapter presents us with multilevel data: how is the ideological positioning of primary candidates affected by the policy ideology of partisans in their district, when there are potentially multiple candidates per district?
+In this scenario, the outcome is a variable specific to an individual candidate $i$, but the treatment is fixed for an entire district-partisan group $g$. 
+This introduces a few issues for statistical assumptions and causal assumptions.
 
-That setup violates likely violates the stable unit treatment value assumption (SUTVA) within a given group---even if candidates in the same group receive the same treatment, the positioning of one candidate may affect the positioning of another, violating the "no interference" component of SUTVA. Under this violation, the treatment effect at the individual level is not identified. If SUTVA holds _between_ groups, however, it is possible to identify a treatment effect by averaging across groups [@Hill:2013:multilevel-causal-inf]. In potential outcomes notation, even if we can define potential outcomes at the individual level ($\mathit{Dime}_{i}(\bar{\theta}_{g[i]})$), the lowest level where we could credibly identify treatment effects would be at the group level, where the potential outcome for a group is the average outcome within the group ($\overline{\mathit{Dime}}_{g}\left(\bar{\theta}_{g}\right)$).
+On the statistical front, multilevel models bias coefficient estimates when the aggregate errors are not exchangeable.
+Mechanically, this is the same as "omitted variable bias" in a single-level regression: if the errors are not independent, then coefficients will be biased.
+Although this concern is well founded for many multilevel models, for these models we can be less concerned.
+Because all predictors in these regressions are measured at the district level, the district error term is analogous to an error term that we would obtain by averaging every candidate's CF score within a district-party group and running a single-level regression on those averages.
+In other words, we make the same independence assumption either way.
+The only difference for the models in this analysis is the additional candidate-level errors, but this too is a non-issue. 
+Averaging candidate data within each district invokes the same exchangeability assumption as an additional error term, otherwise a simple average wouldn't make sense.
 
-<!-- (If size is correlated with treatment effect, the parameter is not the avg effect, since you want to weight by group size)
-If treatment is group-level, the natural treatment effect is at the group level, but you may not get this by averaging individual units if group size is correlated with treatment assignment. So you want to average the group effects! [@Hill:2013:multilevel-causal-inf]
- -->
+The multilevel model has additional benefits that are convenient for these data.
+Because the number of candidates in a district isn't fixed across all districts, we would expect heteroskedasticity in the model residuals if we averaged the data within each district.
+Furthermore, in districts with only one candidate, there is no way for a naïve estimator to separate district variance from candidate variance. 
+The multilevel model addresses this by modeling the distributions of district errors and candidate errors simultaneously, enhancing the model's ability to recognize when larger district errors are caused by signal versus noise.
+Errors from smaller districts borrow more information from the overall distribution of districts, downweighting the contributions of smaller districts by shrinking their errors toward zero.
+This has a similar intuition as estimating a weighted least squares regression on the district-averaged data, where districts with fewer observations are given less weight to account for heteroskedasticity.
+Because the multilevel model is Bayesian, the posterior distribution naturally captures the negative correlation between the size of a district error and the size of a candidate error, even if these errors are not uniquely identified from data.
+In other words, the Bayesian approach facilitates a much more convenient and feasible modeling approach because the priors provide enough structure to prevent certain pathologies of clustered data.
+
+The multilevel data also raise causal inference issues that should be clarified.
+As with many causal model where treatments are assigned to clusters of observations, it makes sense to consider SUTVA as violated within a cluster: there is no way for one candidate in a district to be treated by a different district-party ideology than other candidates.^[
+  Candidates may vary in their ability to perceive district-party ideology, which might better be described as an issue of treatment compliance rather than hidden versions of treatment.
+]
+The positioning of one candidate may also affect the positioning of another, which could violate the "no interference" component of SUTVA. 
+Under this violation, the treatment effect at the individual level is not identified.
+If SUTVA holds _between_ groups, however, it is possible to identify a treatment effect by considering average effects across groups [@Hill:2013:multilevel-causal-inf]. 
+In potential outcomes notation, even if we can define potential outcomes at the individual level ($\mathit{CF}_{i}(\bar{\theta}_{g[i]})$), the lowest level where we could credibly identify treatment effects would be at the group level, where the potential outcome for a group is the average outcome within the group ($\overline{\mathit{CF}}_{g}\left(\bar{\theta}_{g}\right)$).
+This is consistent with the multilevel model setup that we have so far, where the treatment effect is captured using district-level data and district-level parameters only (see Equation \@ref(eq:general-ACDE)).
+
+<!-- 
+If group size is correlated with treatment effect, the parameter is not the avg effect. This could be the case is candidates who run unopposed do not feel as strong of effects of treatment. Then again, this is hard to identify with the raw data, since there can be anticipatory effects that enable treatment effects even in the absence of emergent challengers. In this case, you might calculate an average of individual treatment effects by weighting each group treatment effect by its group size, since larger groups apply to more individuals.
+
+If treatment is group-level, the natural treatment effect is at the group level, but you may not get this by averaging individual units if group size is correlated with treatment assignment. 
+This can happen if more primary competition has feedback effects on local ideology.
+I think I feel pretty comfortable saying that we have no idea if this is even remotely true, but it could be intuitive. 
+So you want to average the group effects! [@Hill:2013:multilevel-causal-inf]
+-->
 
 <!-- If treatment is correlated with X _by design_(?) or otherwise(?), such as blocking along a key covariate like income, can include block-specific means of the treatment variable [@Hill:2013:multilevel-causal-inf]; Bafumi and Gelman, Raudenbush -->
 
-ranefs assumption is similar to averaging w/in group...?
+<!-- ranefs assumption is similar to averaging w/in group...? -->
 
 
 ### Bayesian Considerations
@@ -567,6 +734,19 @@ or, written as a probability distribution
 
 
 ### Data
+
+
+
+Pre-treatment confounders consist of district-level demographic indicators for the racial composition, college graduation rate, median income, inequality (Gini), unemployment rate, foreign-born population, and evangelical population, and $\mathbf{z}_{ig}$ currently contains an order-3 polynomial function of candidate $i$'s total campaign receipts.^[
+  Note: this isn't a good choice for intermediate confounding, and it should change. Ask me why!
+]
+
+<!------- TO DO ---------
+- should be a prior measure of relative party campaign spending
+------------------------->
+<!------- TO DO ---------
+- justify covariates with cites?
+------------------------->
 
 
 
@@ -664,65 +844,6 @@ Control variables are measured primarily at the congressional district level and
 
 
 ### Full Model
-
-As mentioned above, I estimate average controlled direct effects separately for incumbents, challengers, and open seat candidates in two parties, totaling six routines altogether. I write a general model that applies regardless of which subset of data is being used. Because the estimation in every data subset proceeds in two stages, I use subscript some parameters $1$ and $2$ to indicate that they are not fixed across model stages.
-
-<!------- TO DO ---------
-- separate parties
-- incumbency
-------------------------->
-
-The first stage is a mediator-outcome model, predicting the Dime score of candidate $i$ in group $g$, where a group is a combination of district $d$ and party ($p$, which is fixed within models for now). Covariate specifications are intended to identify the effect of the previous Republican presidential vote share in district $d$ ($\mathit{pvote}_{g}$). This is done with the following regression model:
-\begin{align}
-  \mathrm{Dime}_{i} &= 
-    \mu_{1} + \tau_{1} \bar{\theta}_{g[i]} + \delta \mathrm{pvote}_{d[i]} + 
-    \mathbf{x}_{d[i]}^{\intercal}\beta_{1} +
-    \mathbf{z}_{i}^{\intercal}\gamma +
-    \alpha_{1d} + \epsilon_{i}
-    (\#eq:med-model)
-\end{align}
-where $\mu_{1}$ is a constant, $\tau_{1}$ is the coefficient for district-party ideology $\bar{\theta}_{g}$, $\delta$ is the coefficient for the past district vote share. The $\mathbf{x}_{d}^{\intercal}\beta_{1}$ and $\mathbf{z}_{ig}^{\intercal}\gamma$ terms are covariate adjustments for pre-treatment confounders $\mathbf{x}$ and intermediate confounders $\mathbf{z}$. Pre-treatment confounders consist of district-level demographic indicators for the racial composition, college graduation rate, median income, inequality (Gini), unemployment rate, foreign-born population, and evangelical population, and $\mathbf{z}_{ig}$ currently contains an order-3 polynomial function of candidate $i$'s total campaign receipts.^[
-  Note: this isn't a good choice for intermediate confounding, and it should change. Ask me why!
-]
-
-<!------- TO DO ---------
-- should be a prior measure of relative party campaign spending
-------------------------->
-Because many districts contain multiple candidates, I include a district-level intercept $\alpha_{1d}$ that is modeled as a hierarchical Normal error term. Lastly, $\epsilon_{i}$ is assumed to be Normal.
-<!------- TO DO ---------
-- justify covariates with cites?
-------------------------->
-
-
-
-The second stage of sequential-$g$ estimation requires a demediated outcome. This requires that we isolate the mediator's effect on the outcome in Equation&nbsp;\@ref(eq:med-model) and fix it such a way that the mediator falls out of the model.^[
-  Or "blipped" out of the outcome value, hence the name "blipdown function."
-]
-The specification of the first stage implies a demediation function of the following form:
-\begin{align}
-  \psi_{d}\left(\mathrm{pvote}'\right) %_
-    &= 
-    \hat{\delta}\left(\mathrm{pvote}_{d} - \mathrm{pvote}'_{d}\right) %_
-  (\#eq:blipdown-function)
-\end{align}
-where $\mathit{pvote}'$ is the value of the mediator where the CDE is fixed for all units, and $\hat{\delta}$ is the mediator effect estimate. In the case where the mediator is fixed at zero, this expression reduces to $\hat{\delta} \times \mathit{pvote}_{d}$. The definition of $\psi_{d}(\cdot)$ can be more complex if the mediator's effect on the outcome is modeled with interaction terms. This function is subtracted from the outcome data to calculate the demediated outcome, $b\left(\mathrm{Dime}\right)_{i}$.
-\begin{align}
-  b\left(\mathrm{Dime}\right)_{i} &=
-    \mathrm{Dime}_{i} - \psi_{d}\left(\mathrm{pvote}'\right) %_
-  (\#eq:blipdown-outcome)
-\end{align}
-Because the previous presidential vote share varies from district to district, the demediation function also varies across districts. However, because the mediator is fixed for a given district, all candidates from that district are demediated with the same blipdown function, regardless of their original Dime score.
-
-The demediated outcome is then used in the second stage model, which has a similar specification to the first stage except that the mediator and intermediate confounders are omitted.
-\begin{align}
-  b\left(\mathrm{Dime}\right)_{i} = 
-    \mu_{2} + \tau_{2}\bar{\theta}_{g} + 
-    \mathbf{x}^{\intercal}_{ig}\beta_{2} + \alpha_{2d} + u_{i}
-\end{align}
-Under sequential unconfoundedness, $\tau_{2}$ represents the controlled direct effect of district-party preferences on Dime scores. This regression includes residual error term $u_{i}$ and district error $\alpha_{2d}$.
-
-These models contain hierarchical variance terms, so they are fit with MLE algorithms from the `lme4` package for R.
-
 
 
 
