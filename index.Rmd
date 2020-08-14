@@ -63,7 +63,7 @@ bookdown::render_book("Index.Rmd", "bookdown::html_book")
 bookdown::preview_chapter('30_causality.Rmd')
 
 # live chapter?
-xaringan::inf_mr("30_causality.Rmd")
+xaringan::inf_mr("40_positioning.Rmd")
 
 # gitbook
 bookdown::render_book(

@@ -18,8 +18,11 @@ library("broom")
 library("scales")
 library("latex2exp")
 
-source(here::here("code", "helpers", "call-R-helpers.R"))
+if (system("whoami", intern = TRUE) == "michaeldecrescenzo") {
+  source(here::here("code", "helpers", "call-R-helpers.R"))
+}
 
+box_mcmc_4 <- 120779787044
 
 # ----------------------------------------------------
 #   data
@@ -59,8 +62,8 @@ stan_data_dem <- full_data %>%
     blip_value = 0.5,
     ideal_means = theta_stats$mean_dem[1:n_distinct(group)],
     ideal_cov = theta_stats$vcov_dem[1:n_distinct(group), 1:n_distinct(group)],
-    joint_prior = 1,
-    lkj_value = 2
+    joint_prior = 0,
+    lkj_value = 50
   )
 
 
@@ -84,8 +87,8 @@ stan_data_rep <- full_data %>%
     blip_value = 0.5,
     ideal_means = theta_stats$mean_rep[1:n_distinct(group)],
     ideal_cov = theta_stats$vcov_rep[1:n_distinct(group), 1:n_distinct(group)],
-    joint_prior = 1,
-    lkj_value = 2
+    joint_prior = 0,
+    lkj_value = 50
   )
 # group indexes are all messed up
 # need group-within-party index
@@ -138,6 +141,8 @@ stanfit_dem <- fit_g(
 )
 alarm()
 
+box_write(stanfit_dem, "g-dem-plain.rds", dir_id = box_mcmc_4)
+
 
 stanfit_rep <- fit_g(
   file = here("code", "04-positioning", "stan", "sequential-G-linear.stan"),
@@ -147,6 +152,9 @@ stanfit_rep <- fit_g(
   # pars = c()
 )
 alarm()
+
+box_write(stanfit_rep, "g-rep-plain.rds", dir_id = box_mcmc_4)
+
 
 
 

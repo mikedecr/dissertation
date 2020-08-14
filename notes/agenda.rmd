@@ -4,12 +4,9 @@ title: Overall thesis notes
 
 # Near-Term Agenda
 
-- reading
-- north hall
-- deb health insurance
 - write ch 3
 - model data/covariates
-- calculate ideal point priors (ch 4)
+- other party ideal point prior
 - regularization confounding (reading, writing, analysis)
 
 
