@@ -1,11 +1,11 @@
 data {
  
   int<lower=1> N;      // number of observations
-  int<lower = 1> D; // number of unique districts
+  int<lower = 1> D;    // number of unique districts
   vector[N] y;         // response variable
-  int<lower = 1> d[N];            // district index
+  int<lower = 1> d[N]; // district index
   
-  // predictive data (ideal point is parameter)
+  // predictive data (ideal point is a parameter)
   vector[N] mediator;
   int<lower = 1> K_med;   // n. intermediate confounders
   int<lower = 1> K_trt;   // n. pre-treatment confounders
@@ -27,7 +27,7 @@ data {
 
 transformed data {
 
-  // eventually want to calculate mundlak device (group means)?
+  // do we eventually want a mundlak device?
   matrix[N, K_med + K_trt] X_med;
 
   X_med = append_col(X_trt, Z_med);
@@ -40,12 +40,13 @@ parameters {
   vector[D] theta; 
 
   // stage 1 and 2 coefficients
-  real const_med; 
-  real const_trt;
+  real const_med;               // constant
   real coef_mediator;           // mediator effect (for blipping)
   real coef_theta_med;          // stage 1 theta coef
-  real coef_theta_trt;          // stage 2 theta coef
   vector[K_med + K_trt] wt_med; // confounder weights
+
+  real const_trt;               // constant
+  real coef_theta_trt;          // stage 2 theta coef
   vector[K_trt] wt_trt;         // confounder weights
 
   // district offsets and hypervariances
@@ -59,26 +60,30 @@ parameters {
   real<lower = 0> sigma_med;
   real<lower = 0> sigma_trt;
   // outcome dispersion under correlation
-  vector<lower = 0>[2] joint_scales;
   corr_matrix[2] joint_corr;
   
 }
 
 transformed parameters {
  
+  vector<lower = 0>[2] joint_scales;
   cov_matrix[2] joint_cov;
+  joint_scales = [sigma_med, sigma_trt]';
   joint_cov = quad_form_diag(joint_corr, joint_scales);
 
 }
 
 model {
 
-  // outcome models
+  // outcomes and transformation
   vector[N] yhat_med;
+  vector[N] blipdown_function;
+  vector[N] blip_y;  
   vector[N] yhat_trt;
 
-  vector[N] blipdown_function;
-  vector[N] blip_y;
+  vector[2] joint_y[N];
+  vector[2] joint_yhat[N];
+
 
   // loop over N to get each theta and ranef where it belongs
   for (i in 1:N) {
@@ -98,6 +103,10 @@ model {
       (theta[d[i]] * coef_theta_trt) + 
       (X_trt[i, ] * wt_trt) + 
       ranef_trt[d[i]];
+    
+    // 2-vector = row 2-vector transpose
+    joint_y[i] = [y[i], blip_y[i]]';
+    joint_yhat[i] = [yhat_med[i], yhat_trt[i]]';
   }
   
   // how to do joint model?
@@ -108,16 +117,8 @@ model {
   
   } else if (joint_prior == 1) {
 
-    vector[2] joint_y[N];
-    vector[2] joint_yhat[N];
-
-    joint_y[1] = y;
-    joint_y[2] = blip_y;
-    joint_yhat[1] = yhat_med;
-    joint_yhat[2] = yhat_trt;
-
     for (n in 1:N) {
-      joint_y ~ multi_normal(joint_yhat, joint_cov);
+      joint_y[n] ~ multi_normal(joint_yhat[n], joint_cov);
     }
     
 
@@ -125,10 +126,9 @@ model {
   
   
   // outcome dispersion
-  joint_corr ~ lkj_corr(lkj_value);
   sigma_med ~ normal(0, 5);
   sigma_trt ~ normal(0, 5);
-  joint_scales ~ normal(0, 5);
+  joint_corr ~ lkj_corr(lkj_value);
   
   // multivariate ideal point prior
   theta ~ multi_normal(ideal_means, ideal_cov);

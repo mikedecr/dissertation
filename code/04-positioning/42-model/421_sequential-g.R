@@ -6,7 +6,7 @@
 library("here")
 library("magrittr")
 library("tidyverse")
-# library("boxr"); box_auth()
+library("boxr"); box_auth()
 
 library("rstan")
 options(mc.cores = parallel::detectCores())
@@ -27,11 +27,12 @@ source(here::here("code", "helpers", "call-R-helpers.R"))
 
 # need actual data and ideal point priors
 full_data <- 
-  read_rds(here("data", "_clean", "candidates-x-irt.rds")) %>%
+  box_read(664519538654) %>%
+  # read_rds(here("data", "_clean", "candidates-x-irt.rds")) %>%
   print()
 
-theta_stats <- 
-  read_rds(here("data", "_clean", "ideal-point-priors.rds"))
+theta_stats <- box_read(706620258916)
+  # read_rds(here("data", "_clean", "ideal-point-priors.rds"))
 
 names(theta_stats)
 
@@ -58,7 +59,7 @@ stan_data_dem <- full_data %>%
     blip_value = 0.5,
     ideal_means = theta_stats$mean_dem[1:n_distinct(group)],
     ideal_cov = theta_stats$vcov_dem[1:n_distinct(group), 1:n_distinct(group)],
-    joint_prior = 0,
+    joint_prior = 1,
     lkj_value = 2
   )
 
@@ -83,7 +84,7 @@ stan_data_rep <- full_data %>%
     blip_value = 0.5,
     ideal_means = theta_stats$mean_rep[1:n_distinct(group)],
     ideal_cov = theta_stats$vcov_rep[1:n_distinct(group), 1:n_distinct(group)],
-    joint_prior = 0,
+    joint_prior = 1,
     lkj_value = 2
   )
 # group indexes are all messed up
@@ -102,11 +103,35 @@ lapply(stan_data_rep, n_distinct)
 #   stan model
 # ----------------------------------------------------
 
-stanfit_dem <- stan(
+n_iter <- 1000
+n_warmup <- 500
+n_chains <- min(parallel::detectCores() - 1, 5)
+n_thin <- 1
+nuts_adapt_delta <- 0.9
+nuts_max_treedepth <- 15
+
+
+fit_g <- function(file = character(), data = list(), ...) {
+  diagnostic_filepath <- here(
+    "data", "mcmc", "4-positioning", "logs", 
+    str_glue("{deparse(substitute(data))}_{lubridate::now()}.txt") 
+  )
+  stan(
+    file = file, data = data,
+    iter = n_iter, warmup = n_warmup, thin = n_thin, chains = n_chains,
+    control = list(
+      adapt_delta = nuts_adapt_delta, 
+      max_treedepth = nuts_max_treedepth
+    ),
+    diagnostic_file = diagnostic_filepath,
+    ...
+  )
+}
+
+stanfit_dem <- fit_g(
   file = here("code", "04-positioning", "stan", "sequential-G-linear.stan"),
-  data = stan_data_dem, 
-  iter = 2000, 
-  chains = parallel::detectCores()
+  data = stan_data_dem,
+  refresh = 100
   # , thin = 1,
   # , include = FALSE,
   # pars = c()
@@ -114,11 +139,9 @@ stanfit_dem <- stan(
 alarm()
 
 
-stanfit_rep <- stan(
+stanfit_rep <- fit_g(
   file = here("code", "04-positioning", "stan", "sequential-G-linear.stan"),
-  data = stan_data_rep, 
-  iter = 2000, 
-  chains = parallel::detectCores()
+  data = stan_data_rep
   # , thin = 1,
   # , include = FALSE,
   # pars = c()
