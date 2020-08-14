@@ -18,20 +18,32 @@ library("broom")
 library("scales")
 library("latex2exp")
 
-if (system("whoami", intern = TRUE) == "michaeldecrescenzo") {
+home <- system("whoami", intern = TRUE) == "michaeldecrescenzo"
+
+if (home) {
   source(here::here("code", "helpers", "call-R-helpers.R"))
 }
 
 box_mcmc_4 <- 120779787044
 
 # ----------------------------------------------------
-#   data
+#   data and helpers
 # ----------------------------------------------------
 
 # need actual data and ideal point priors
-full_data <- 
-  box_read(664519538654) %>%
-  # read_rds(here("data", "_clean", "candidates-x-irt.rds")) %>%
+if (home) {
+  full_data_raw <- 
+    here("data", "_clean", "candidates-x-irt.rds") %>%
+    read_rds() %>% 
+    print()
+  theta_stats <- 
+    here("data", "_clean", "ideal-point-priors.rds") %>%
+    read_rds()
+} else {
+  full_data_raw <- box_read(664519538654) %>% print()
+  theta_stats <- box_read(706620258916)
+}
+
   print()
 
 theta_stats <- box_read(706620258916)
