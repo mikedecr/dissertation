@@ -69,7 +69,7 @@ box_dir_clean <- 112745864917
 
 # ---- data -----------------------
 
-# MCMC
+# MCMC: check if most recent
 mcmc <- 
   here("data", "mcmc", "dgirt", "run", "samples", "2020-01-13-mcmc-homsk-2010s.RDS") %>%
   read_rds()
@@ -107,6 +107,7 @@ rules_16_raw <-
 # DIME, full data
 # has DYNAMIC cfscore
 # no primary pct
+# with rio (don't like load())
 dime_all_raw <- 
   rio::import(
     here("data", "dime-v3", "full", "dime_recipients_all_1979_2018.rdata")
@@ -156,7 +157,6 @@ dime_cong_raw <-
 
 
 
-# doing with rio, because I don't like load()
 
 
 
@@ -460,45 +460,101 @@ dpt_model_data <- pre_model_data %>%
   print()
 
 # full frame of tidy MCMC draws (not necessary?)
-mcmc_draws <- tidy_draws(mcmc) %>% print()
-
-n_draws <- 1000
-
-names(mcmc_draws)
+mcmc_draws <- 
+  tidy_draws(mcmc) %>% 
+  print()
 
 
-
-# can always get the quantile intervals later
-# IRT means and draws (nested) for each group
 theta_draws <- mcmc_draws %>%
-  gather_draws(theta[group], n = n_draws, seed = 20200513) %>%
+  spread_draws(theta[group]) %>%
+  group_by(.draw) %>%
+  mutate(
+    theta_raw = theta,
+    theta = (theta_raw - mean(theta_raw)) / sd(theta_raw)) %>%
   ungroup() %>%
-  select(group, .draw, theta = .value) %>%
-  group_by(.draw) %>% 
-  mutate(
-    theta_rescale = (theta - mean(theta)) / sd(theta)
-  ) %>%
-  group_by(group) %>%
-  nest("theta_draws" = -group_vars(.)) %>%
-  mutate(
-    theta_mean = map_dbl(theta_draws, ~ mean(.x$theta)),
-    theta_mean_rescale = map_dbl(theta_draws, ~ mean(.x$theta_rescale))
-  ) %>%
+  select(-starts_with("theta"), starts_with("theta")) %>%
   left_join(dpt_model_data, by = "group") %>%
   print()
 
+# calculate mean and covariances
+# can always get the quantile intervals later
+# IRT means and draws (nested) for each group
+theta_nest <- theta_draws %>%
+  group_by(group, state_abb, state_num, district_num, party_num) %>%
+  nest("theta_draws" = -group_vars(.)) %>%
+  mutate(
+    theta_mean = map_dbl(theta_draws, ~ mean(.x$theta)),
+    theta_mean_raw = map_dbl(theta_draws, ~ mean(.x$theta_raw))
+  ) %>%
+  ungroup() %>%
+  print()
+
+theta_cov_dem <- theta_draws %>%
+  filter(party_num == 1) %>%
+  select(group, theta, .draw) %>%
+  pivot_wider(
+    names_from = "group",
+    values_from = "theta"
+  ) %>%
+  select(-.draw) %>%
+  as.matrix() %>% 
+  cov()
+
+theta_cov_rep <- theta_draws %>%
+  filter(party_num == 2) %>%
+  select(group, theta, .draw) %>%
+  pivot_wider(
+    names_from = "group",
+    values_from = "theta"
+  ) %>%
+  select(-.draw) %>%
+  as.matrix() %>% 
+  cov()
+
+dim(theta_cov_dem)
+dim(theta_cov_rep)
+
+# both parties together (currently not used?)
+# theta_cov <- theta_draws %>%
+#   select(-theta_raw) %>%
+#   pivot_wider(
+#     names_from = "group",
+#     values_from = "theta"
+#   ) %>%
+#   select(-c(.chain, .iteration, .draw)) %>%
+#   as.matrix() %>%
+#   cov() 
+
+# dim(theta_cov)
+# sqrt(diag(theta_cov))
+
+
+theta_stats <- list(
+  cov_dem = theta_cov_dem,
+  cov_rep = theta_cov_rep,
+  mean_dem = theta_nest %>% filter(party_num == 1) %>% pull(theta_mean),
+  mean_rep = theta_nest %>% filter(party_num == 2) %>% pull(theta_mean)
+)
+
+lapply(theta_stats, tail)
+lapply(theta_stats, dim)
+lapply(theta_stats, length)
+
 # compare raw and rescaled thetas
 # (rescaling in each iteration)
-ggplot(data = theta_draws, aes(x = theta_mean,  y = theta_mean_rescale)) +
+ggplot(data = theta_nest) +
+  aes(x = theta_mean_raw,  y = theta_mean) +
   geom_point() +
   geom_abline()
 
 
+
+
 # ---- merge IRT summary into covariates -----------------------
 
-
-full_raw <- left_join(dime_bc, theta_draws) %>%
+full_raw <- left_join(dime_bc, theta_nest) %>%
   print()
+
 
 # only a few non-matched candidates
 # probably errors in DIME district number
@@ -507,6 +563,7 @@ full_raw %>%
   print() %>%
   count(state_abb, district_num, party) %>%
   print(n = nrow(.))
+
 
 
 # ---- clean FULL data -----------------------
@@ -523,7 +580,9 @@ full_data <- full_raw %>%
   print()
 
 
-
+# ...
+# "other party" theta too
+# group double-index for easier ranefs and stuff
 
 
 
@@ -533,7 +592,7 @@ full_data <- full_raw %>%
 
 # data/_clean
 box_write(full_data, "candidates-x-irt.rds", dir_id = box_dir_clean)
-
+box_write(theta_stats, "ideal-point-priors.rds", dir_id = box_dir_clean)
 
 
 

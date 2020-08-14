@@ -31,13 +31,16 @@ When did CCAP run
 
 ## Qs for Alex
 
+- Sparsity-inducing priors as an approximation to "dropout"
+- GP as generalization of neural net?
+
+
 - best linear predictor (argmin MSE) in a binary treatment case?
     - is this just an in/out of sample thing?
 - what does it mean for a model to estimate a regularizing prior?
     - beta ~ normal(0, alpha); alpha ~ cauchy(0, tau), tau ~ ?
     - Is this just overfitting, or what?
     - I'm doing LOO to guard against model complexity
-- Sparsity-inducing priors as an approximation to "dropout"
 - priors and likelihoods
     - relating arithmetic mean to beta-binomial model:
         - the arithmetic mean the same as the MAP under...beta(1, 1) prior?
