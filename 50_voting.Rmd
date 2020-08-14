@@ -97,6 +97,20 @@ Benefits:
 
 ### Regularization and Shrinkage Priors
 
+Regular parameterization:
+\begin{align}
+  y_{g} &= \tau\theta_{g} + \mathbf{x}^{\intercal}_{g}\beta + \epsilon_{g}
+\end{align}
+
+Orthogonalized parameterization:
+\begin{align}
+  \theta_{g} &= \mathbf{x}^{\intercal}_{g}\gamma_{1} + \nu_{g}
+  y_{g} &= \tau\left(\theta_{g} - \hat{\theta}_{g}\right)_ + \mathbf{x}^{\intercal}_{g}\gamma_{2} + \epsilon_{g}
+\end{align}
+
+In an unbiased regression, estimates of $\tau$ would be identical. With regularization applied to the covariate effects, however, the estimates would differ. By explicitly modeling $\theta_{g}$ as a function of $\mathbf{x}_{g}$ and residualizing, we explicitly make all of the identifying variation $\theta_{g} - \mathrm{E}\left[\theta_{g} \mid \mathbf{x_{g}}\right]$ independent of the regression function, allowing shrinkage in the selection model to behave freely without biasing the estimate of $\tau$ by direct consequence. The researcher is then able to set up whatever priors on $\tau$ make sense. 
+
+
 
 ### Neyman Orthogonalization
 
@@ -110,6 +124,51 @@ We can regularize in the first stage, then we try to be more agnostic in the sec
 ### Data
 
 ### Neural Network Choice Model
+
+
+
+Regression with Gaussian errors:
+\begin{align}
+  (\#eq:normal-reg)
+  y_{i} 
+  &\sim \text{Normal}\left(
+    \mathbf{x}^{\intercal}_i\beta, %_ 
+    \sigma 
+  \right)
+\end{align}
+where $\mathbf{x}_{i}$ is a $P$-vector of predictors for unit $i$, and $\beta$ is a $P$-vector of coefficients.
+
+We write a one-layer neural network with slightly more general notation that evokes a basis-function interpretation of a regression model:
+\begin{align}
+  (\#eq:normal-nn)
+  y_{i} &\sim 
+    \text{Normal}\left(
+      \eta\right(\mathbf{x}_{i}\left) %_
+      \boldsymbol{\alpha},
+      \sigma
+    \right)
+\end{align}
+where $\eta\left(\mathbf{x}_{i}\right)$ is a neural network basis function of $\mathbf{x}_{i}$ with coefficients $\alpha$. This basis function is specified as a transformed regression of the predictors,
+\begin{align}
+  (\#eq:nn-prediction)
+  \eta\left(\mathbf{x}_{i}\right) %_
+    &= \text{tanh}\left(
+    \mathbf{x}_{i}^{\intercal}%_
+    \mathbf{\omega}
+  \right)
+\end{align}
+which is commonly referred to as a "neuron" in the neural network parlance. The neuron basis differs from linear regression in two ways. First, the coefficients $\boldsymbol{\omega}$ contain $M$ columns rather than $1$ column as in simple regression. The resulting linear combination $\mathbf{x}_{i}^{\intercal}\mathbf{\omega}$ is therefore a $1 \times M$. This is a generalization of regression, and if $M = 1$, the network essentially reduces to linear regression as $\mathbf{x}_{i}^{\intercal}\mathbf{\omega}$ would be a scalar prediction for unit $i$. The second innovation is an element-wise transformation of $\mathbf{x}_{i}^{\intercal}\mathbf{\omega}$ using the hyperbolic tangent function, which is a scaled logistic function.^[
+  Traditionally, the hyperbolic tangent function is written as $\text{tanh}\left(x\right) = \dfrac{e^{x} - e^{-x}}{e^{x} + e^{-x}} = \dfrac{e^{2x} - 1}{e^{2x} + 1}$. It is related to the logistic function by $\text{tanh}\left(x\right) = 2g(2x) - 1$, where $g(\cdot)$ is the standard logistic function. The hyperbolic tangent function is more commonly used for neural networks than the standard logistic function because its output lies in the interval $(-1, 1)$ rather than $(0, 1)$. This is convenient for certain neural network models that "deactivate" 
+]
+<!------- TO DO ---------
+- ReLU
+------------------------->
+
+
+
+The conditional mean is given by $\text{tanh}\left(\mathbf{x}^{T}_{i}\boldsymbol{\omega}\right)\boldsymbol{\alpha}$. The predictor matrix $\mathbf{x}^{\intercal}_{i}$, instead of being multiplied by a vector of coefficients, is multiplied by a $P \times M$ matrix of coefficients $\boldsymbol{\omega}$, resulting in a $1 \times M$ matrix that is nothing more than $M$ linear regression functions of the form 
+
+
 
 Conditional choice likelihood
 
