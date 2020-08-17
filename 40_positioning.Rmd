@@ -620,8 +620,10 @@ The demediated outcome value is equivalent to the outcome under a fixed mediator
 \end{align}
 which makes it clearer to see how the demediation step subtracts the mediator variation from the outcome, absorbing the non-varying mediator into the new constant $a'$.
 
-The demediated outcome is then used in the second stage model, which is different from the first stage in two ways.
-First, the mediator falls out of the equation because it no longer varies across observations. 
+The demediated outcome is then used in the second stage estimation of the controlled direct effect.
+The second stage is different from the first stage in two ways.
+First, because we fixed the mediator value in calculating the transformed outcome variable, there is no more variation across observations that can be attributed to the mediator.
+As such, it is omitted from the equation.
 Second, intermediate confounders are omitted because they are unnecessary to identify the effect of district-party ideology, and they could induce collider bias if included.
 This new equation is,
 \begin{align}
@@ -629,22 +631,57 @@ This new equation is,
     a_{1} +
     \tau \bar{\theta}_{g} + 
     \mathbf{x}^{\intercal}_{g[i]}\omega + 
-    \nu_{d} + u_{i} \\
+    \nu_{d[i]} + u_{i} \\
 (\#eq:trt-model)
 \end{align}
 where $a_{1}$ is a constant, $\tau$ is the coefficient for district-party ideology, $\omega$ are coefficients for district-level pre-treatment confounders $\mathbf{x}_{d}$, $\nu_{d}$ is a district error term, and $u_{i}$ is a candidate error term.
-Under the identification and statistical assumptions, $\tau$ measures the average controlled direct effect of a one-unit increase in district-party ideology.
-More generally, the ACDE of setting district-party ideology to $\bar{\theta}$ is
+Because the presidential vote effect has been removed from the dependent variable, any treatment effect mediated by the presidential vote is not recoverable by the second stage equation.
+As such, $\tau$ measures the average controlled direct effect of a one-unit increase in district-party ideology.
+More generally, the ACDE of setting district-party ideology from $\bar{\theta}'$ to $\bar{\theta}$ is as follows.
 \begin{align}
-  ACDE(\tau, \bar{\theta}, \bat{\theta}') &= \tau \left(\bar{\theta} - \bar{\theta}')
+  ACDE(\tau, \bar{\theta}, \bar{\theta}') &= \tau \left(\bar{\theta} - \bar{\theta}'\right)
   (\#eq:general-ACDE)
 \end{align}
-where $\bar{\theta}'$ is a reference value of district-party ideology.
+Again, the formula for the ACDE depends on the model specification.
+The form in \@ref(eq:general-ACDE) applies to a linear model with no interactions, but a more complex model would entail a more complex formula.
 
 
-### Bayesian Contributions
+### Bayesian Contributions and Priors
+
+<!------- TO DO ---------
+- fix me
+------------------------->
+
+One important feature of this dissertation is that our causal variable of interest, the policy ideology of district-party publics, is not measured with certainty. The model in Chapter&nbsp;\@ref(ch:model) estimates this quantity up to a posterior distribution, but the variation in the posterior distribution creates an additional layer of uncertainty in our understanding of causal effects. This creates theoretical issues with the definition of treatment effects as well as practical issues for estimation, which I describe in turn.
+
+As discussed in Chapter&nbsp;\@ref(ch:causality), it is natural to interpret causal inference as Bayesian updating about a causal parameter using models and data. Following @rubin:1978:bayesian's Bayesian interpretation of his own work with potential outcomes, causal inference is a method for generating counterfactual estimates of an outcome variable as if they were predictive draws from the posterior distribution. Supposing that we seek the causal effect of an intervention on group ideology, $\tau$, and we observe only one potential outcome, $y_{g}(\bar{\theta}_{g})$, how do we specify the posterior distribution if we set group ideology to some other value $\theta'$? Not only do we have posterior uncertainty about $\tau$, but we are also uncertain about the actual value of $\bar{\theta}_{g}$ that we observed in the first place, since the measurement model from Chapter&nbsp;\@ref(ch:model) estimates it only up to a posterior distribution. Our posterior distribution for missing potential outcomes reflects both sources of uncertainty. Econometrics refers to this problem as "errors in variables," but it takes on a special meaning when it comes to the interpretation of causal interventions, since it stresses our understanding of what an "observed" potential outcome is.
+
+Practically, this means that we will underestimate our uncertainty about causal effects unless we can account for the uncertainty in our treatment variable on top of our uncertainty in its effect on candidate positioning. All ideal point estimates are uncertain, but not many studies confront this uncertainty. Since the usefulness of the ideal point model in Chapter&nbsp;\@ref(ch:model) is important to explore in this dissertation, it feels appropriate not to ignore posterior uncertainty in its applications. As such, I conduct all sequential-$g$ analyses below using raw posterior samples, rather than posterior means. I describe the exact routine in Section&nbsp;\@ref(sec:pos-uncertainty).
+
+<!-- 
+
+We observe $y_{g}\left(\bar{\theta}_{g}\right)$, but we don't know $\bar{\theta}_{g}$ with certainty. Instead let $p\left(\bar{\theta}_{g}\right)$ be the posterior distribution of $g$'s average policy ideology as estimated from the group IRT model in Chapter&nbsp;\@ref(ch:model). Our observed outcome is a function of this unknown value, which we represent as $y_{g}\left(p\left(\bar{\theta}_{g}\right)\right)$. 
+
+Thus the causal effect of setting $\mathrm{do}\left(\theta\right)$, as opposed to some $\theta'$, for unit $g$ is
+\begin{align}
+  \tau_g &= y_{g}\left(\theta\right) - y_{g}\left(\bar{\theta}_{g}'\right),
+\end{align}
+
+The posterior distribution for this value is 
+$p\left(\tau_{g}\right) = p\left(\right)$
+
+or, written as a probability distribution 
+\begin{align}
+  p\left(\tau_{g}\right) &= p\left(y_{g}\left(\theta'\right) - y_{g}\left(\bar{\theta}_{g}\right)\right)
+\end{align}
+
+ -->
+
+
 
 - theta is uncertain
+- we need priors
+- everything is one model, so instead of needing a variance correction that 
 
 $\bar{\theta}_{g}$ is an element of $\bar{\Theta}$, the vector of all group ideal points. 
 The exact value of $\bar{\theta}_{g}$ is unknown—the model in Chapter \@ref(ch:model) used survey data to update our information, but we still only have samples from the probability distribution given our current data.
@@ -689,48 +726,26 @@ The positioning of one candidate may also affect the positioning of another, whi
 Under this violation, the treatment effect at the individual level is not identified.
 If SUTVA holds _between_ groups, however, it is possible to identify a treatment effect by considering average effects across groups [@Hill:2013:multilevel-causal-inf]. 
 In potential outcomes notation, even if we can define potential outcomes at the individual level ($\mathit{CF}_{i}(\bar{\theta}_{g[i]})$), the lowest level where we could credibly identify treatment effects would be at the group level, where the potential outcome for a group is the average outcome within the group ($\overline{\mathit{CF}}_{g}\left(\bar{\theta}_{g}\right)$).
-This is consistent with the multilevel model setup that we have so far, where the treatment effect is captured using district-level data and district-level parameters only (see Equation \@ref(eq:general-ACDE)).
+This is consistent with the multilevel model setup that we have so far, where the treatment effect is captured using district-level data and district-level predictors only (see Equation \@ref(eq:general-ACDE)).
 
-<!-- 
-If group size is correlated with treatment effect, the parameter is not the avg effect. This could be the case is candidates who run unopposed do not feel as strong of effects of treatment. Then again, this is hard to identify with the raw data, since there can be anticipatory effects that enable treatment effects even in the absence of emergent challengers. In this case, you might calculate an average of individual treatment effects by weighting each group treatment effect by its group size, since larger groups apply to more individuals.
+There are a few additional considerations for causal inference with hierarchical data that, although I do not pursue these threads in this project, could be relevant for future work with similar data.
+If treatment effects are correlated with group size, then the average causal effect will not be equivalent to the average difference among groups.
+Instead, the average effect should be thought of as a size-weighted average of group effects [@Hill:2013:multilevel-causal-inf].
+A correlation between treatment effects and group size may arise if a crowded primary field causes larger treatment effects because stiffer competition leads candidates to be more responsive to district-party ideology.
+On the other hand, more crowded fields would lead to smaller treatment effects if candidates take heterogeneous ideological positions to differentiate themselves.
+These dynamics are not identifiable with the raw data in this project, as incumbents may take ideological positions to deter challengers, even if no challengers actually emerge.
+As such, the observed number of challengers may not capture the true degree of primary threat [@hirano-et-al:2010:primary-polarization].
 
-If treatment is group-level, the natural treatment effect is at the group level, but you may not get this by averaging individual units if group size is correlated with treatment assignment. 
-This can happen if more primary competition has feedback effects on local ideology.
-I think I feel pretty comfortable saying that we have no idea if this is even remotely true, but it could be intuitive. 
-So you want to average the group effects! [@Hill:2013:multilevel-causal-inf]
--->
+One additional consideration for group-level effects is the possibility that group size affects treatment assignment.
+This may indirectly be the case if the dynamics of primary competition within a district-party have feedback effects on local ideology, for instance if partisan constituents become more ideological after experiencing a history of strong primary competition in their district, or less ideological after a long period representation by one incumbent with little primary competition.
+Given the still-nascent state of the research on ideological primary competition, it is safe to say that political scientists have little idea which of these propositions is more likely. 
+Future researchers would make progress on these questions by extending the data and methods in this project to cover a greater number of election cycles and more detailed investigations of these causal and modeling assumptions.
+
 
 <!-- If treatment is correlated with X _by design_(?) or otherwise(?), such as blocking along a key covariate like income, can include block-specific means of the treatment variable [@Hill:2013:multilevel-causal-inf]; Bafumi and Gelman, Raudenbush -->
 
 <!-- ranefs assumption is similar to averaging w/in group...? -->
 
-
-### Bayesian Considerations
-
-One important feature of this dissertation is that our causal variable of interest, the policy ideology of district-party publics, is not measured with certainty. The model in Chapter&nbsp;\@ref(ch:model) estimates this quantity up to a posterior distribution, but the variation in the posterior distribution creates an additional layer of uncertainty in our understanding of causal effects. This creates theoretical issues with the definition of treatment effects as well as practical issues for estimation, which I describe in turn.
-
-As discussed in Chapter&nbsp;\@ref(ch:causality), it is natural to interpret causal inference as Bayesian updating about a causal parameter using models and data. Following @rubin:1978:bayesian's Bayesian interpretation of his own work with potential outcomes, causal inference is a method for generating counterfactual estimates of an outcome variable as if they were predictive draws from the posterior distribution. Supposing that we seek the causal effect of an intervention on group ideology, $\tau$, and we observe only one potential outcome, $y_{g}(\bar{\theta}_{g})$, how do we specify the posterior distribution if we set group ideology to some other value $\theta'$? Not only do we have posterior uncertainty about $\tau$, but we are also uncertain about the actual value of $\bar{\theta}_{g}$ that we observed in the first place, since the measurement model from Chapter&nbsp;\@ref(ch:model) estimates it only up to a posterior distribution. Our posterior distribution for missing potential outcomes reflects both sources of uncertainty. Econometrics refers to this problem as "errors in variables," but it takes on a special meaning when it comes to the interpretation of causal interventions, since it stresses our understanding of what an "observed" potential outcome is.
-
-Practically, this means that we will underestimate our uncertainty about causal effects unless we can account for the uncertainty in our treatment variable on top of our uncertainty in its effect on candidate positioning. All ideal point estimates are uncertain, but not many studies confront this uncertainty. Since the usefulness of the ideal point model in Chapter&nbsp;\@ref(ch:model) is important to explore in this dissertation, it feels appropriate not to ignore posterior uncertainty in its applications. As such, I conduct all sequential-$g$ analyses below using raw posterior samples, rather than posterior means. I describe the exact routine in Section&nbsp;\@ref(sec:pos-uncertainty).
-
-<!-- 
-
-We observe $y_{g}\left(\bar{\theta}_{g}\right)$, but we don't know $\bar{\theta}_{g}$ with certainty. Instead let $p\left(\bar{\theta}_{g}\right)$ be the posterior distribution of $g$'s average policy ideology as estimated from the group IRT model in Chapter&nbsp;\@ref(ch:model). Our observed outcome is a function of this unknown value, which we represent as $y_{g}\left(p\left(\bar{\theta}_{g}\right)\right)$. 
-
-Thus the causal effect of setting $\mathrm{do}\left(\theta\right)$, as opposed to some $\theta'$, for unit $g$ is
-\begin{align}
-  \tau_g &= y_{g}\left(\theta\right) - y_{g}\left(\bar{\theta}_{g}'\right),
-\end{align}
-
-The posterior distribution for this value is 
-$p\left(\tau_{g}\right) = p\left(\right)$
-
-or, written as a probability distribution 
-\begin{align}
-  p\left(\tau_{g}\right) &= p\left(y_{g}\left(\theta'\right) - y_{g}\left(\bar{\theta}_{g}\right)\right)
-\end{align}
-
- -->
 
 
 ### Data
