@@ -77,17 +77,15 @@ mcmc <-
 
 # tidy pre-stan data
 pre_model_data <- 
-  read_rds(
-    here("data", "mcmc", "dgirt", "run", "input", "master-model-data.RDS")
-  ) %>%
+  here("data", "mcmc", "dgirt", "run", "input", "master-model-data.RDS") %>%
+  read_rds() %>%
   print()
 
 
 # boatright candidates
 bc_raw <- 
-  haven::read_dta(
-    here("data", "elect-primary", "boatright", "boatright-cand-level.dta")
-  ) %>%
+  here("data", "elect-primary", "boatright", "boatright-cand-level.dta") %>%
+  haven::read_dta() %>%
   print()
 
 # extra primary rules data
@@ -479,6 +477,7 @@ theta_draws <- mcmc_draws %>%
 # calculate mean and covariances
 # can always get the quantile intervals later
 # IRT means and draws (nested) for each group
+# also add means for out-party
 theta_nest <- theta_draws %>%
   group_by(group, state_abb, state_num, district_num, party_num) %>%
   nest("theta_draws" = -group_vars(.)) %>%
@@ -488,6 +487,33 @@ theta_nest <- theta_draws %>%
   ) %>%
   ungroup() %>%
   print()
+theta_nest <- theta_nest %>%
+  select(out_theta_mean = theta_mean, state_num, district_num, party_num) %>%
+  mutate(
+    party_num = case_when(
+      party_num == 1 ~ 2,
+      party_num == 2 ~ 1
+    )
+  ) %>%
+  left_join(x = theta_nest, y = .) %>%
+  print()
+
+
+theta_cov <- theta_draws %>%
+  select(group, theta, .draw) %>%
+  pivot_wider(
+    names_from = "group",
+    values_from = "theta",
+  ) %>%
+  select(-.draw) %>%
+  as.matrix() %>%
+  cov()
+
+# democrats indexed
+theta_cov[seq(1, nrow(theta_cov), 2), seq(1, nrow(theta_cov), 2) ]
+
+# republicans indexed
+theta_cov[seq(2, nrow(theta_cov), 2), seq(2, nrow(theta_cov), 2) ]
 
 theta_cov_dem <- theta_draws %>%
   filter(party_num == 1) %>%
