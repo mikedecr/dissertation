@@ -61,8 +61,8 @@ cands <- cands_raw %>%
       pwinner == "W" ~ 1,
       pwinner == "L" ~ 0
     ),
-    theta_mean_rescale, recipient_cfscore_dyn,
-    theta_x_cf = theta_mean_rescale * recipient_cfscore_dyn,
+    theta_mean, recipient_cfscore_dyn,
+    theta_x_cf = theta_mean * recipient_cfscore_dyn,
     incumbency = Incum_Chall,
     incumbent = as.numeric(Incum_Chall == "I"),
     challenger  = as.numeric(Incum_Chall == "C")
@@ -166,6 +166,8 @@ data_simple_R <- cands %>%
 lapply(data_simple_D, head)
 lapply(data_simple_R, head)
 
+
+
 # just seeing if the models don't fail
 loo_test <- sampling(object = model_simple, data = data_simple_R)
 sampling(object = model_simple, data = data_simple_D)
@@ -188,6 +190,24 @@ names(looey)
 (looey)$estimates
 
 relative_eff(loo_test)
+
+
+
+
+# ---- VB on the neural net? -----------------------
+
+choice_vb_dem <- vb(
+  object = model_net, 
+  data = c(data_simple_D, n_nodes = 2, hidden_const = 1),
+)
+
+choice_vb_rep <- vb(
+  object = model_net, 
+  data = c(data_simple_R, n_nodes = 2, hidden_const = 1)
+)
+
+
+
 
 # grid test
 # both parties & models
@@ -229,24 +249,34 @@ net_test_data <-
       model == "net" ~ list(model_net),
       model == "simple" ~ list(model_simple)
     ),
+    vbfit = pmap(
+      .l = list(data = data, param = stan_params, mod = stan_model),
+      .f = ~ try(
+        vb(
+          object = ..3,
+          data = ..1
+        )
+      )
+    ),
     stanfit = pmap(
       .l = list(data = data, param = stan_params, mod = stan_model),
-      .f = ~ try(sampling(
-        object = ..3, 
-        data = ..1, 
-        iter = ..2$iter, 
-        chains = mc_cores, 
-        thin = ..2$thin,
-        warmup = ..2$warmup
-        # , include = FALSE,
-        # pars = c()
-      ))
+      .f = ~ try(
+        sampling(
+          object = ..3, 
+          data = ..1, 
+          iter = ..2$iter, 
+          chains = mc_cores, 
+          thin = ..2$thin, 
+          warmup = ..2$warmup
+          # , include = FALSE, pars = c()
+        )
+      )
     )
-    # ,
-    # loo = map(
-    #   .x = stanfit,
-    #   .f = ~ try(extract(.x, "grp_loglik")[[1]] %>% loo())
-    # )
+    ,
+    loo = map(
+      .x = stanfit,
+      .f = ~ try(extract(.x, "grp_loglik")[[1]] %>% loo())
+    )
   ) %>%
   print()
 
@@ -385,7 +415,9 @@ dmod <- clogit(
 # tidy the big frame
 tidy_linear <- net_test_data %>%
   mutate(
-    tidy = map(stanfit, tidy, ess = TRUE, rhat = TRUE, conf.int = TRUE)
+    tidy = map(vbfit, tidy, 
+               # ess = TRUE, rhat = TRUE, 
+               conf.int = TRUE)
   ) %>%
   unnest(tidy) %>%
   print()
@@ -398,6 +430,8 @@ tidy_linear %>%
 linear_params <- tidy_linear %>%
   filter(model == "simple") %>%
   filter(str_detect(term, "util") == FALSE) %>%
+  filter(str_detect(term, "loglik") == FALSE) %>%
+  filter(str_detect(term, "pos") == FALSE) %>%
   bind_rows(
     tidy(rmod, conf.int = TRUE) %>% mutate(party = "R", model = "MLE"),
     tidy(dmod, conf.int = TRUE) %>% mutate(party = "D", model = "MLE")
@@ -429,12 +463,13 @@ ggplot(linear_params) +
 tidy_linear %>%
   filter(str_detect(term, "act_wt") | str_detect(term, "hid_wt")) %>%
   ggplot() +
-  aes(x = term, y = estimate, color = nodes) +
+  aes(x = term, y = estimate, color = as.factor(nodes)) +
   geom_pointrange(
     aes(ymin = conf.low, ymax = conf.high),
     position = position_dodge(width = -0.5)
   ) +
   coord_flip() +
+  scale_color_viridis_d(option = "plasma", end = 0.8) +
   facet_grid(add_constant ~ party)
 
 
