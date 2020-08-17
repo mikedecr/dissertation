@@ -252,6 +252,8 @@ simple_regs <- full_data %>%
   filter(term != "(Intercept)") %>%
   print() 
 
+simple_regs %>%
+  filter(term == "theta_mean")
 
 # might want to change what you save here:
 # box_write(
