@@ -28,6 +28,7 @@ library("scales")
 library("patchwork")
 library("broom")
 library("ggdag")
+library("latex2exp")
 
 theme_dag <- theme_dag(base_family = font_fam)
 ```
@@ -291,36 +292,35 @@ ggplot(dime) +
 ```{r problem-dag}
 problem_dag <- 
   dagify(
-    C ~ T + V + U,
-    V ~ T + U,
-    exposure = "T",
-    outcome = "C",
+    CF ~ I + V + U,
+    V ~ I + U,
+    exposure = "I",
+    outcome = "CF",
     coords = tribble(
       ~ name,      ~ x,    ~ y,
-      "T",      0,      0,
-      "C",      2,      0,
-      "V",      1,      1,
-      "U",      2,      1
+      "I",       1,   1,
+      "CF",       3,   1,
+      "V",       2,   0,
+      "U",      3,      0
     ),
     labels = c(
-      "T" = "Partisan Ideology",
-      "C" = "Candidate Positioning",
+      "I" = "District-Party Ideology",
+      "CF" = "Candidate Positioning",
       "V" = "District Voting"
     )
   ) %>%
   tidy_dagitty() %>%
-  # node_parents("C") %>%
+  # node_parents("CF") %>%
   mutate(
     pt_label = case_when(
-      name == "T" ~ "theta[pd]",
-      name == "C" ~ "Y[cpd]",
-      name == "V" ~ "P[d]",
+      name == "I" ~ "bar(theta)[g]",
+      name == "CF" ~ "CF[i]",
+      name == "V" ~ "V[d]",
       name == "U" ~ "U"
     )
   ) %>%
   print()
 ```
-
 
 ```{r plot-problem-dag}
 ggplot(problem_dag) +
@@ -330,23 +330,33 @@ ggplot(problem_dag) +
     aes(color = (name == "U"))
   ) +
   geom_dag_text(
-    aes(label = name), 
+    aes(label = pt_label), 
     parse = TRUE, 
+    color = "black",
     family = font_fam
   ) +
-  scale_color_manual(values = c("TRUE" = secondary, "FALSE" = "black")) +
+  scale_color_manual(values = c("TRUE" = primary, "FALSE" = "gray80")) +
   annotate(
     geom = "text",
-    label = "District Voting (V) affects\nCandidate Positioning (C) but is also\naffected by District-Party Ideology (T)",
-    x = 0.2, y = 1,
+    label = "Group Ideology \naffects District Voting \nand Candidate Positioning",
+    x = 1.25, y = 1,
+    hjust = 0, vjust = -0.4,
+    size = 3
+  ) +
+  annotate(
+    geom = "text",
+    label = 
+      TeX("Controlling for $V_{d}$ opens $\\theta_{g} \\rightarrow V_{d} \\rightarrow U \\rightarrow CF_{i}$"),
+    parse = TRUE,
+    x = 1.15, y = 0,
     size = 3
   ) +
   theme_dag(
     legend.position = "none"
   ) + 
   expand_plot(
-    expand_x = expand_scale(c(0.2, 0.2)), 
-    expand_y = expand_scale(c(0.2, 0.2))
+    expand_x = expand_scale(c(0.25, 0.25)), 
+    expand_y = expand_scale(c(0.2, 0.4))
   ) +
   NULL  
 ```
@@ -379,31 +389,40 @@ and secondly that potential outcomes are independent of the mediator, conditiona
 ```{r create-g-dag}
 g_dag <- 
   dagify(
-    C ~ T + V + Z + X + U1 + U2,
-    V ~ T + X + Z + U1,
-    Z ~ T + X,
-    T ~ X + U2,
-    exposure = "T", 
-    outcome = "C",
+    CF ~ I + V + Z + X + U1 + U2,
+    V ~ I + X + Z + U1,
+    Z ~ I + X,
+    I ~ X + U2,
+    exposure = "I", 
+    outcome = "CF",
     coords = tribble(
       ~ name,  ~ x, ~ y,
-      "T",       1,   2,
-      "C",       3,   1,
+      "I",       1,   2,
+      "CF",       3,   1,
       "Z",       1,   0,
       "V",       2,   0,
       "X",       0,   1,
       "U1",      3, 0,
-      "U2",      2,   2
+      "U2",      2.25,   2
     )
   ) %>%
   tidy_dagitty(layout = "auto") %>%
   mutate(
     label = case_when(
       name == "V" ~ "Past Presidential Vote",
-      name == "T" ~ "Partisan Ideology",
-      name == "C" ~ "Candidate Position",
+      name == "I" ~ "Partisan Ideology",
+      name == "CF" ~ "Candidate Position",
       name == "X" ~ "Pre-Treatment Confounders",
       name == "Z" ~ "Intermediate Confounders"
+    ),
+    pt_label = case_when(
+      name == "V" ~ "V[d]",
+      name == "I" ~ "bar(theta)[g]",
+      name == "CF" ~ "CF[i]",
+      name == "X" ~ "X[d]",
+      name == "Z" ~ "Z[d]",
+      name == "U1" ~ "U1",
+      name == "U2" ~ "U2"
     )
   ) %>%
   print()
@@ -414,68 +433,101 @@ base_dag <- g_dag %>%
   ggplot() +
   aes(x = x, y = y, xend = xend, yend = yend) +
   coord_cartesian(ylim = c(-0.25, 2.25)) +
-  theme_dag() +
-  # theme_mgd_dag() +
+  theme_mgd_dag() +
+  labs(x = NULL, y = NULL) +
+  expand_plot(
+    expand_x = expand_scale(c(0.2, 0.2)), 
+    # expand_y = expand_scale(c(0.2, 0.2))
+  ) +
   NULL
 
 mediator_dag <- base_dag +
-  geom_dag_point(data = filter(g_dag, name %in% c("U2", "U1") == FALSE)) +
+  geom_dag_point(
+    data = filter(g_dag, name %in% c("U2", "U1") == FALSE),
+    color = "gray"
+  ) +
   geom_dag_edges(
     data_directed = filter(g_dag, name %in% c("U2", "U1") == FALSE)
   ) +
   geom_dag_text(
     data = filter(g_dag, name %in% c("U2", "U1") == FALSE), 
-    aes(label = name)
+    aes(label = pt_label),
+    parse = TRUE,
+    size = 3.5,
+    color = "black"
   ) +
-  labs(title = "\nStage 1", subtitle = "Mediator-outcome model\n") +
+  labs(title = "\nStage 1", subtitle = "Identifies mediator effect\n") +
   NULL
 
 exposure_dag <- base_dag +
-  geom_dag_point(
+  geom_dag_node(
     data = filter(g_dag, name %in% c("U2", "U1") == FALSE),
-    aes(color = name %in% c("Z", "V"))
+    internal_color = "gray",
+    color = "white"
+  ) +
+  geom_dag_point(
+    data = filter(g_dag, name %in% c("X", "I", "CF")),
+    color = "gray"
   ) +
   geom_dag_edges(
     data_directed = g_dag %>%
-      filter((name %in% c("U1", "U2", "Z", "V")) == FALSE, 
-             to %in% c("T", "C"))
-  ) +
-  geom_dag_edges(
-    data_directed = g_dag %>%
-      filter(to %in% c("Z", "V") | (name == "Z" & to == "C"),
-             name %in% c("U1", "U2") == FALSE),
+      filter(
+        to %in% c("Z", "V") | (name == "Z" & to == "CF"), 
+        name %in% c("U1", "U2") == FALSE
+      ),
     edge_linetype = "dashed", 
-    edge_color = "gray50"
+    edge_color = "gray"
+  ) +
+  geom_dag_edges(
+    data_directed = g_dag %>%
+      filter(
+        (name %in% c("U1", "U2", "Z", "V")) == FALSE, 
+        to %in% c("I", "CF")
+      )
   ) +
   geom_dag_text(
     data = filter(g_dag, name %in% c("U1", "U2") == FALSE),
-    aes(label = ifelse(name == "C", "b(C)", name))
+    aes(label = ifelse(name == "CF", "b(CF)[i]", pt_label)),
+    color = "black",
+    parse = TRUE,
+    size = 3.5
   ) +
-  scale_color_manual(values = c("TRUE" = "gray50", "FALSE" = "black")) +
   labs(
     title = "\nStage 2", 
-    subtitle = "Exposure-outcome model\nwith demediated outcome"
+    subtitle = "Identifies controlled direct effect\nof treatment using demediated outcome"
   ) +
-  theme(legend.position = "none") +
   NULL
 
 confounding_dag <- base_dag +
   geom_dag_point(aes(color = name %in% c("U2", "U1"))) +
   geom_dag_edges() +
-  geom_dag_text(aes(label = name)) +
+  geom_dag_text(
+    aes(label = pt_label), 
+    parse = TRUE, 
+    size = 3.5,
+    color = "black"
+  ) +
   theme(legend.position = "none") +
-  scale_color_manual(values = c("TRUE" = secondary, "FALSE" = "black")) +
-  labs(title = "Violations of Sequential\nUnconfoundedness", 
-       subtitle = "In mediator-outcome model (U1)\nand exposure-outcome model (U2)")
+  scale_color_manual(values = c("TRUE" = primary, "FALSE" = "gray")) +
+  labs(title = "Violations of Sequential Ignorability", 
+       subtitle = "In stage 1 (U1) and stage 2 (U2)")
 ```
 
 ```{r plot-g-dag}
-mediator_dag + exposure_dag + confounding_dag 
+g_layout <- "
+AABB
+#CC#
+"
+
+wrap_plots(
+  A = mediator_dag, B = exposure_dag, C = confounding_dag, 
+  design = g_layout
+)
 ```
 
 Figure&nbsp;\@ref(fig:plot-g-dag) visualizes the modeling assumptions for sequential-$g$ estimation using causal graphs, which helps explain how to implement the routine. The left panel shows the stage-one model, which estimates the effect of past voting $V$ (the mediator) on candidate positioning $C$ (the outcome). This first stage conditions on district-party preferences $T$, pre-treatment confounders $X$, and intermediate confounders $Z$, all of which are necessary to identify the causal effect of the mediator. 
 
-```{r plot-g-dag, include = TRUE, fig.width = 11, fig.height = 5, out.width = "100%", fig.cap = "Directed acyclic graphs that describe the modeling problem and sequential-$g$ estimation. The stage 1 mediator model estimates the effect of the past presidential vote ($V$) on candidate positioning ($C$). The stage 2 exposure model subtracts the vote effect from candidate positions and estimates the effect of partisan group ideology ($T$) on the demediated candidate positions ($b(C)$). The final panel shows where unadjusted confounders violate the identification assumptions in stage 1 ($U1$) and in stage 2 ($U2$)."}
+```{r plot-g-dag, include = TRUE, fig.width = 9, fig.height = 10, out.width = "100%", fig.cap = "Causal graphs describing the modeling problem and sequential-$g$ estimation. The stage 1 graph identifies the effect of the past district voting ($V_{d}$) on candidate positioning ($CF_{i}$). The stage 2 treatment-outcome model subtracts the district vote effect from candidate positions and identifies the effect of district-party ideology $\\bar{\\theta}_{g}$ on the demediated CF score $b(CF)_{i}$, which is equivalent to the controlled direct effect on the raw CF score. The final graph shows where unadjusted confounders violate the nonparametric causal identification assumptions in stage 1 ($U1$) and in stage 2 ($U2$)."}
 ```
 
 
@@ -512,7 +564,7 @@ There are functional form considerations however---biases may remain if the func
 - Simulate violated assumptions by way of correlated error parameters?
 ------------------------->
 
-## Empirical Approach: Bayesian Sequential-$g$ 
+## Bayesian Sequential-$g$ Analysis
 
 Keep the notation general enough (expectations) so that there are no explicit linear regression functional forms introduced by accident?
 

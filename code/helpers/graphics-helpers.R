@@ -63,17 +63,19 @@ theme_mgd <- function() {
 theme_set(theme_mgd())
 # hrbrthemes::theme_ipsum()
 
-# theme_mgd_dag <- function() {
-#   theme_mgd() %+replace%
-#   theme(
-#     panel.border = element_blank(),
-#     panel.background = element_blank(),
-#     # axis.line = element_blank(),
-#     axis.title = element_blank(),
-#     axis.text = element_blank(),
-#     axis.ticks = element_blank()
-#   )
-# }
+theme_mgd_dag <- function() {
+  theme_mgd() %+replace%
+  theme(
+    panel.background = element_blank(),
+    panel.grid.major = element_blank(),
+    # axis.line = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank()
+  )
+}
 
 
 
