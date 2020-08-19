@@ -47,6 +47,8 @@ if (home) {
 
 # ---- inspect and clean data -----------------------
 
+names(theta_stats)
+
 # eventually move this into the merge file?
 
 # small number of duplicate candidates?
@@ -68,7 +70,7 @@ ggplot(data = full_data_raw) +
   facet_wrap(~ party, scales = "free_x") +
   geom_point()
 
-
+full_data_raw
 
 
 
@@ -119,6 +121,27 @@ g_data <- full_data_raw %>%
 # - remember this is a thing you can do: x_at_y(x, y)
 # - factoring d again in each party groups group-in-party index
 
+theta_stats$mean_all[1:4, "theta_mean"]
+
+
+# trying to create theta data using raw draws
+testy <- g_data %>%
+  filter(party_num == 1) %>%
+  mutate(d = as.factor(group)) %>%
+  select(-c(starts_with("primary_rules"), party_num, incumbency)) %>%
+  compose_data(
+    ideal_means = theta_stats$mean_all$theta_mean[sort(unique(.$group))],
+    ideal_cov = theta_stats$cov_all[sort(unique(group)), sort(unique(group))],
+    group = NULL
+  ) %>%
+  lapply(dim)
+
+
+names(testy)
+lapply(testy, dim)
+lapply(testy, length)
+
+
 g_data_dem <- g_data %>%
   filter(party_num == 1) %>%
   mutate(d = as.factor(group)) %>%
@@ -129,29 +152,32 @@ g_data_dem <- g_data %>%
     K_med = ncol(Z_med),
     K_trt = ncol(X_trt),
     blip_value = blip_value,
-    ideal_means = theta_stats$mean_dem[levels(.$group)],
-    ideal_cov = theta_stats$cov_dem[levels(.$group), levels(.$group)],
+    ideal_means = theta_stats$mean_all$theta_mean[sort(unique(.$group))], 
+    ideal_cov = theta_stats$cov_all[sort(unique(group)), sort(unique(group))],
     joint_prior = 0,
-    lkj_value = 50
+    lkj_value = 50,
+    theta_draws = NULL
+    # group = NULL
   )
 
 g_data_rep <- g_data %>%
   filter(party_num == 2) %>%
   mutate(d = as.factor(group)) %>%
-  select(-starts_with("primary_rules"), -party_num, -group) %>%
+  select(-c(starts_with("primary_rules"), party_num, incumbency)) %>%
   compose_data(
     .n_name = toupper,
     N = length(y),
     K_med = ncol(Z_med),
     K_trt = ncol(X_trt),
     blip_value = blip_value,
-    ideal_means = theta_stats$mean_rep[levels(.$group)],
-    ideal_cov = theta_stats$cov_rep[levels(.$group), levels(.$group)],
+    ideal_means = theta_stats$mean_all$theta_mean[sort(unique(.$group))], 
+    ideal_cov = theta_stats$cov_all[sort(unique(group)), sort(unique(group))],
     joint_prior = 0,
     lkj_value = 50
   )
 
-
+sum(g_data_dem$group %% 2 != 1)
+sum(g_data_rep$group %% 2 != 0)
 
 
 names(g_data_dem)

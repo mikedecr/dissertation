@@ -556,8 +556,10 @@ dim(theta_cov_rep)
 
 
 theta_stats <- list(
+  cov_all = theta_cov,
   cov_dem = theta_cov_dem,
   cov_rep = theta_cov_rep,
+  mean_all = theta_nest %>% select(group, state_abb, state_num, district_num, party_num, theta_mean),
   mean_dem = theta_nest %>% filter(party_num == 1) %>% pull(theta_mean),
   mean_rep = theta_nest %>% filter(party_num == 2) %>% pull(theta_mean)
 )
