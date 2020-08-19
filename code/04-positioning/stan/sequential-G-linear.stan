@@ -42,7 +42,7 @@ parameters {
   // stage 1 and 2 coefficients
   real const_med;               // constant
   real coef_mediator;           // mediator effect (for blipping)
-  real wt_theta_med;          // stage 1 theta coef
+  real coef_theta_med;          // stage 1 theta coef
   vector[K_med + K_trt] wt_med; // confounder weights
 
   real const_trt;               // constant
@@ -91,7 +91,7 @@ model {
     yhat_med[i] = 
       const_med + 
       (mediator[i] * coef_mediator) + 
-      (theta[d[i]] * wt_theta_med) + 
+      (theta[d[i]] * coef_theta_med) + 
       (X_med[i, ] * wt_med) + 
       ranef_med[d[i]];  
 
@@ -138,7 +138,7 @@ model {
   const_trt ~ normal(0, 10); 
   coef_mediator ~ normal(0, 10); 
   coef_theta_trt ~ normal(0, 10); 
-  wt_theta_med ~ normal(0, 10); 
+  coef_theta_med ~ normal(0, 10); 
   wt_med ~ normal(0, 10); 
   wt_trt ~ normal(0, 10);
   

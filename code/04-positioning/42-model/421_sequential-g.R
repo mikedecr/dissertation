@@ -155,8 +155,7 @@ g_data_dem <- g_data %>%
     ideal_means = theta_stats$mean_all$theta_mean[sort(unique(.$group))], 
     ideal_cov = theta_stats$cov_all[sort(unique(group)), sort(unique(group))],
     joint_prior = 0,
-    lkj_value = 50,
-    theta_draws = NULL
+    lkj_value = 50
     # group = NULL
   )
 
@@ -200,6 +199,8 @@ lapply(g_data_rep, n_distinct)
 
 
 
+
+
 # to do:
 # make subsets for different primary rules, incumbency
 # ---
@@ -233,6 +234,27 @@ g_subset_grid <- g_data %$%
     )
   ) %>%
   filter(incumbency == "All" | primary_rules_co == "All") %>%
+  mutate(
+    stan_data = map(
+      .x = data,
+      .f = ~ .x %>% 
+        mutate(d = as.factor(group)) %>% 
+        select(-c(starts_with("primary_rules"), party_num, incumbency)) %>%
+        compose_data(
+          .n_name = toupper,
+          N = length(y),
+          K_med = ncol(Z_med),
+          K_trt = ncol(X_trt),
+          blip_value = blip_value,
+          ideal_means = 
+            theta_stats$mean_all$theta_mean[sort(unique(.x$group))], 
+          ideal_cov = 
+            theta_stats$cov_all[sort(unique(.x$group)), sort(unique(.x$group))],
+          joint_prior = 0,
+          lkj_value = 50
+        )
+    )
+  ) %>%
   print(n = nrow(.))
 # ----
 
@@ -352,6 +374,44 @@ vb_tidy %>%
 vb_tidy %>%
 
   filter(term %in% c("coef_theta_trt"))
+
+
+
+
+# ---- run VB grid -----------------------
+
+g_grid_models <- g_subset_grid %>%
+  mutate(
+    vbfit = map(
+      .x = stan_data,
+      .f = ~ try(vb(
+        object = stan_g,
+        data = .x
+      ))
+    )
+  ) %>%
+  print()
+alarm()
+
+
+box_write(g_grid_models, "g-grid-vb.rds", dir_id = box_mcmc_4)
+
+g_grid_models %>%
+  mutate(
+    tidy_vb = map(vbfit, tidy, conf.int = TRUE)
+  ) %>%
+  unnest(tidy_vb) %>%
+  filter(str_detect(term, "coef")) %>%
+  ggplot() +
+  aes(x = term, y = estimate, color = as.factor(party_num)) +
+  facet_grid(incumbency ~ primary_rules_co) +
+  geom_hline(yintercept = 0) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.25)
+  ) +
+  scale_color_manual(values = party_factor_colors) +
+  coord_flip()
 
 
 # ---- MCMC -----------------------
