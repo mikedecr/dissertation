@@ -1,6 +1,6 @@
 # Hierarchical IRT Model for District-Party Ideology {#ch:model}
 
-```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
+```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
 knitr::knit_exit()
 ```
 

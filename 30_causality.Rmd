@@ -88,7 +88,7 @@ Finally, I provide examples of Bayesian causal modeling by replicating and exten
 ## Overview of Key Concepts
 
 
-### Causal Models {#sec:causal-inf}
+### Causal models {#sec:causal-inf}
 
 As an area of scientific development, _causal inference_ refers to the formal modeling of causal effects, the assumptions required to identify causal effects, and research designs that make these assumptions plausible.
 Scientific disciplines, especially social sciences, have long been interested in substantiating causal claims using data, but the rigorous definition of the full causal model and identifying assumptions distinguishes the current causal inference movement from other informal approaches.
@@ -208,7 +208,7 @@ The Bayesian approach also has the power to extend the meaning of identification
 
 
 
-### Bayesian Inference {#sec:bayes-inf}
+### Bayesian inference {#sec:bayes-inf}
 
 Bayesian reasoning is a contentious and misunderstood topic in empirical political science, so it is important to establish some essential tenets to the approach before melding it with causal modeling.
 Bayesian analysis is the application of conditional probability for statistical inference.
@@ -330,7 +330,7 @@ I provide a probabilistic interpretation and notation for potential outcomes mod
 
 
 
-### Probabilistic Model for Potential Outcomes {#sec:po-distributions}
+### Probabilistic model for potential outcomes {#sec:po-distributions}
 
 As with other causal models, we begin at the unit level.
 Unit $i$ receives a treatment $A_{i} = a$, with potential outcomes $Y_{i}\left(A_{i} = a\right)$.
@@ -407,7 +407,7 @@ The joint generative model is sufficient to characterize the probability distrib
 which is the probability distribution of model contrasts for $A = 1$ versus $A = 0$.
 This distribution of model contrasts contains two sources of uncertainty: uncertainty about the data given parameters, and uncertainty over the parameters themselves.
 Integrating over $\boldsymbol{\pi}$ in Equation \@ref(eq:prior-cate) marginalizes the distribution with respect to the uncertain parameters. 
-Because the integrated parameters are the prior distribution $\p{\boldsymbol{\pi}}$, the expression in \@ref(eq:prior-cate) represents a prior distribution for the CATE.
+Because the marginalized parameters are distributed according to the prior $\p{\boldsymbol{\pi}}$, the expression in \@ref(eq:prior-cate) represents a prior distribution for the CATE.
 This is an inherent feature of the Bayesian approach: probability distributions of causal quantities even before data are observed.
 
 Conditioning on the observed data returns the posterior distribution for the CATE...
@@ -427,7 +427,7 @@ where we would integrating over the posterior distribution of the parameters, in
 
 
 
-### Why Bayesian Causal Modeling {#sec:why-bcm}
+### Why Bayesian causal modeling? {#sec:why-bcm}
 
 The Bayesian causal approach is sensible for causal inference because it facilitates _direct inference_ about treatment effects given the data: which effect sizes are more likely or less likely than others.
 While confidence intervals are often misused to make probabilistic statements about parameters, the posterior distribution and posterior intervals actually enable the researcher to state the probability of positive treatment effects, negligible treatment effects, and more.
@@ -516,7 +516,7 @@ This is a longer discussion that I untangle in Section \@ref(sec:causal-priors),
 
 
 
-### Bayesian Inference in the Hierarchy of Causal Inference {#sec:bayes-hierarchy}
+### Bayesian modeling and the hierarchy of causal inference {#sec:bayes-hierarchy}
 
 
 This section interprets the Bayesian causal inference framework in light of the "hierarchy of causal inference" described in Section \@ref(sec:causal-inf).
@@ -649,11 +649,15 @@ Many points discussed below touch on more than one level of the hierarchy, so th
 
 ## Understanding Priors in Causal Inference {#sec:causal-priors}
 
+What are priors for?
+
+What do priors do?
+
 
 This is because a prior's flatness is only relative to the parameterization of a model, and functions of parameters are not likely to have flat densities even if the underlying parameters have flat densities
 
 
-### Priors as Data Falsification
+### Information, belief, and data falsification
 
 <!------- TO DO ---------
 - figure this out
@@ -723,10 +727,10 @@ The fact that it adds information to the log posterior is unaffected by whether 
 ------------------------->
 
 
+### Priors are not for de-confounding
 
 
-
-### Flatness is a Relative, Not an Absolute, Property of Priors {#sec:prior-flatness}
+### Flatness is a relative, not an absolute, property of priors {#sec:prior-flatness}
 
 Formally, a flat prior is a probability distribution that assigns equal probability density to all possible values of a parameter.
 It is common for researchers to prefer flatter priors in situations where they lack specific prior information about model parameters.
@@ -901,6 +905,7 @@ The standard Logistic prior creates a flat density on the probability scale beca
 - principal: info vs. shape
 - example, horiuchi
 - lesson for causal inference: we should expect to get different results because thinking explicitly about priors shows us where implied priors aren't flat (and that's fine) or where implied priors ARE flat (and that's batshit).
+- we might have vague priors in one space that are informative in another, or one space is easier for specifying priors
 <!-- information vs. shape, warping, covariant transformations -->
 
 Flat priors are problematic for many analyses because they lead to implied priors that have strange behaviors that researchers would be uncomfortable confronting.
@@ -910,7 +915,7 @@ More complex functions of parameters, especially nonlinear functions, can produc
 
 
 Outcome space != parameter space. Flat priors about outcomes is not the same thing as flat priors about parameters.
-Information ≠ shape.
+Information != shape.
 The mapping from geometric space to statistical information is entirely dependent on the scale of a parameter space, and different model parameterizations invoke different scales.
 
 <!------- TO DO ---------
@@ -982,7 +987,7 @@ Alex meeting takeaways:
 
 
 
-### Priors and Model Parameterization {sec:prior-parameterization}
+### Priors and model parameterization {sec:prior-parameterization}
 
 <!-- ### Principled Approaches to Model Parameterization -->
 
@@ -1260,9 +1265,7 @@ tibble(
 
 
 
-### Balancing Pragmatic and Principled Approaches to Priors {#sec:bayes-how-to}
-
-
+### Principled and pragmatic approaches to Bayesian modeling {#sec:bayes-how-to}
 
 Various roles that priors take on
 

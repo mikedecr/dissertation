@@ -1,19 +1,8 @@
 # Colophon
 
-This document was produced using `R`, R Markdown, \LaTeX. The document was built using the `bookdown` package for `R`. The document template is a variation on TJ Mahr's [`buckydown`](https://github.com/tjmahr/buckydown) template, which was itself an adaptation of documents designed by and for students at the Universities of Washington and Wisconsin. The PDF is typeset using pdf\TeX. The body text is $\text{\emph{\familydefault}}$ in 12pt size.
-
-The data and source code for this dissertation have been organized into an online [Git repository on Bitbucket](https://bitbucket.org/mikedecrescenzo/dissertation). A hard copy of the thesis can be found in the University of Wisconsin library system.
-
-- Git repository: <https://bitbucket.org/mikedecrescenzo/dissertation>
-- `huskydown`: <https://github.com/benmarwick/huskydown>
-- `bookdown`: <https://github.com/rstudio/bookdown>
-<!-- [uwthesis1]: http://staff.washington.edu/fox/tex/
-[uwthesis2]: https://github.com/UWIT-IAM/UWThesis
-[ucbthesis]: https://github.com/stevenpollack/ucbthesis
-[dissertate]: https://github.com/suchow/Dissertate -->
-
-This version of the thesis was generated on `r Sys.time()`. The repository is
-currently at this commit:
+This project is open source and managed with Git.
+A remote copy of the repository is available at <https://github.com/mikedecr/dissertation>.
+Currently, the repository is at the following commit:
 
 ```{r echo = FALSE, include = TRUE}
 # I've set eval=FALSE to ensure Travis-CI can run
@@ -26,11 +15,18 @@ if (in_repository()) {
 }
 ```
 
-<!-- The computational environment that was used to generate this version is as
-follows:
+This version of the document was generated on `r Sys.time()`. 
 
-```{r echo = FALSE}
+All Bayesian models were estimated using the probabilistic programming language Stan.
+Front-end interface to Stan and other data management was performed with R.
+The document was managed with the `bookdown` package for R, built to PDF using \LaTeX.
+<!-- A hard copy of the thesis can be found in the University of Wisconsin library system. -->
+
+<!-- The computational environment that was used to generate this version is as
+follows: -->
+
+```{r session-info, eval = FALSE, echo = FALSE, include = FALSE}
 devtools::session_info()
 ```
- -->
+
 

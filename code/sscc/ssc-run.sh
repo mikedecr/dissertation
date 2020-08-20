@@ -34,7 +34,7 @@ R < code/04-positioning/42-model/421_sequential-g.R > logs/sequential-g.log --no
 
 
 # log file
-vim lkj-real-data.log
+vim logs/sequential-g.log
 
 
 # checking open processes
