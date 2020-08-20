@@ -18,11 +18,11 @@ library("broom")
 library("scales")
 library("latex2exp")
 
-home <- system("whoami", intern = TRUE) == "michaeldecrescenzo"
+(home <- system("whoami", intern = TRUE) == "michaeldecrescenzo")
 
-if (home) {
-  source(here::here("code", "helpers", "call-R-helpers.R"))
-}
+# if (home) {
+  # source(here::here("code", "helpers", "call-R-helpers.R"))
+# }
 
 box_mcmc_4 <- 120779787044
 
@@ -199,12 +199,10 @@ lapply(g_data_rep, n_distinct)
 
 
 
-
-
 # to do:
-# make subsets for different primary rules, incumbency
+# make subsets for different parties, primary rules, incumbency
 # ---
-g_subset_grid <- g_data %$%
+g_grid_data <- g_data %$%
   crossing(
     party_num, 
     incumbency = c(incumbency, "All"), 
@@ -237,7 +235,8 @@ g_subset_grid <- g_data %$%
   mutate(
     stan_data = map(
       .x = data,
-      .f = ~ .x %>% 
+      .f = ~ {
+        .x %>% 
         mutate(d = as.factor(group)) %>% 
         select(-c(starts_with("primary_rules"), party_num, incumbency)) %>%
         compose_data(
@@ -253,13 +252,19 @@ g_subset_grid <- g_data %$%
           joint_prior = 0,
           lkj_value = 50
         )
+      }
     )
   ) %>%
   print(n = nrow(.))
 # ----
 
 
+g_data_dem %>% lapply(length)
 
+g_grid_data %>%
+  filter(incumbency == "All", primary_rules_co == "All", party_num == 1) %>%
+  (function(x) x$stan_data[[1]]) %>%
+  lapply(length)
 
 # ----------------------------------------------------
 #   stan model
@@ -268,13 +273,13 @@ g_subset_grid <- g_data %$%
 # ---- compile model -----------------------
 
 stan_g <- 
-  here("code", "04-positioning", "stan", "sequential-G-linear.stan") %>% 
-  stan_model()
-
+  stan_model(
+    here("code", "04-positioning", "stan", "sequential-G-linear.stan")
+  )
 
 # ---- sampler wrapper function  -----------------------
 
-n_iter <- 1000
+n_iter <- 2000
 n_warmup <- 500
 n_chains <- min(parallel::detectCores() - 1, 5)
 n_thin <- 1
@@ -282,19 +287,21 @@ nuts_adapt_delta <- 0.9
 nuts_max_treedepth <- 15
 
 
-mcmc_g <- function(file = character(), data = list(), ...) {
+mcmc_g <- function(object = NULL, data = list(), ...) {
   diagnostic_filepath <- here(
     "data", "mcmc", "4-positioning", "logs", 
     str_glue("{deparse(substitute(data))}_{lubridate::now()}.txt") 
   )
-  stan(
-    file = file, data = data,
+  sampling(
+    object = object,
+    data = data,
     iter = n_iter, warmup = n_warmup, thin = n_thin, chains = n_chains,
     control = list(
       adapt_delta = nuts_adapt_delta, 
       max_treedepth = nuts_max_treedepth
     ),
     diagnostic_file = diagnostic_filepath,
+    refresh = 10L,
     ...
   )
 }
@@ -307,12 +314,49 @@ mcmc_g <- function(file = character(), data = list(), ...) {
 # sample_file (where to save samples)
 # importance_resampling (default = FALSE)
 # iter
+
+
+# runs democratic test twice to check the convergence stability
 vb_dem <- vb(
+  object = stan_g,
+  data = g_data_dem
+)
+vb_dem_1 <- vb(
   object = stan_g,
   data = g_data_dem
 )
 alarm()
 
+
+# check stability, compare pt estimates
+list(vb_dem, vb_dem_1) %>%
+  lapply(tidy) %>%
+  bind_rows(.id = "test") %>%
+  pivot_wider(
+    names_from = "test",
+    values_from = c("estimate", "std.error")
+  ) %>%
+  pivot_longer(
+    cols = -term, 
+    names_to = "param",
+    values_to = "value"
+  ) %>%
+  mutate(
+    param = str_remove(param, "[.]"),
+    test = parse_number(param),
+    param = str_split(param, pattern = "_", simplify = TRUE)[,1]
+  ) %>%
+  pivot_wider(
+    names_from = "test",
+    values_from = "value",
+    names_prefix = "test_"
+  ) %>%
+  ggplot() +
+  aes(x = test_1, y = test_2) +
+  geom_point() +
+  facet_wrap(~ param)
+
+# test republican fit
 vb_rep <- vb(
   object = stan_g,
   data = g_data_rep
@@ -320,8 +364,7 @@ vb_rep <- vb(
 alarm()
 
 
-
-# make tidy frame of samples
+# tidy Rs and Ds
 vb_tidy <- 
   list(vb_dem, vb_rep) %>%
   lapply(tidy, conf.int = TRUE) %>%
@@ -337,17 +380,10 @@ vb_tidy %>%
     aes(ymin = conf.low, ymax = conf.high),
     position = position_dodge(width = -0.25)
   ) +
-  scale_color_manual(values = party_factor_colors) +
+  # scale_color_manual(values = party_factor_colors) +
   coord_flip(ylim = c(-1, 1))
 
-# look at all terms
-vb_tidy %>%
-  count(
-    str_split(term, pattern = "\\[", simplify = TRUE)[,1],
-    party_num
-  ) %>%
-  print(n = nrow(.))
-
+# plot all terms
 vb_tidy %>%
   filter(
     str_detect(term, "coef") |
@@ -356,9 +392,9 @@ vb_tidy %>%
   ) %>%
   mutate(
     prefix = case_when(
-      str_detect(term, "coef") ~ "Coef of Interest",
-      str_detect(term, "wt") ~ "Confounder Adjustments",
-      str_detect(term, "sigma") ~ "Variance Component"
+      str_detect(term, "coef") ~ "Coefs of Interest",
+      str_detect(term, "wt") ~ "Nuisance Coefs",
+      str_detect(term, "sigma") ~ "Variance Components"
     )
   ) %>%
   ggplot() +
@@ -369,18 +405,45 @@ vb_tidy %>%
   ) +
   facet_wrap(~ prefix, scales = "free") +
   coord_flip() +
-  scale_color_manual(values = party_factor_colors)
+  # scale_color_manual(values = party_factor_colors) +
+  NULL
 
-vb_tidy %>%
 
-  filter(term %in% c("coef_theta_trt"))
+# ---- sampling testing -----------------------
 
+
+mcmc_dem <- mcmc_g(
+  object = stan_g,
+  data = g_data_dem,
+  refresh = 10L
+)
+alarm()
+
+# test republican fit
+mcmc_rep <- mcmc_g(
+  object = stan_g,
+  data = g_data_rep,
+  refresh = 10L
+)
+alarm()
+
+box_write(mcmc_dem, "g-mcmc_dem.rds", dir_id = box_mcmc_4)
+box_write(mcmc_rep, "g-mcmc_rep.rds", dir_id = box_mcmc_4)
+
+list(mcmc_dem, mcmc_rep) %>%
+  lapply(tidy, conf.int = TRUE, rhat = TRUE, ess = TRUE) %>%
+  bind_rows(.id = "party_num") %>%
+  arrange((ess)) %>%
+  print(n = 100)
+
+list(mcmc_dem, mcmc_rep) %>%
+lapply(check_hmc_diagnostics)
 
 
 
 # ---- run VB grid -----------------------
 
-g_grid_models <- g_subset_grid %>%
+g_grid_vb <- g_grid_data %>%
   mutate(
     vbfit = map(
       .x = stan_data,
@@ -394,9 +457,13 @@ g_grid_models <- g_subset_grid %>%
 alarm()
 
 
-box_write(g_grid_models, "g-grid-vb.rds", dir_id = box_mcmc_4)
+box_write(g_grid_vb, "g-grid-vb.rds", dir_id = box_mcmc_4)
 
-g_grid_models %>%
+g_grid_vb <- 
+  here("data", "mcmc", "4-positioning", "g-grid-vb.rds") %>%
+  read_rds()
+
+g_grid_vb %>%
   mutate(
     tidy_vb = map(vbfit, tidy, conf.int = TRUE)
   ) %>%
@@ -410,37 +477,33 @@ g_grid_models %>%
     aes(ymin = conf.low, ymax = conf.high),
     position = position_dodge(width = -0.25)
   ) +
-  scale_color_manual(values = party_factor_colors) +
+  # scale_color_manual(values = party_factor_colors) +
   coord_flip()
+
+
+
+
+
+
 
 
 # ---- MCMC -----------------------
 
-stanfit_dem <- mcmc_g(
-  file = here("code", "04-positioning", "stan", "sequential-G-linear.stan"),
-  data = stan_data_dem,
-  refresh = 50L
-  # , thin = 1,
-  # , include = FALSE,
-  # pars = c()
-)
+g_grid_mcmc <- g_grid_data %>%
+  mutate(
+    mcmcfit = map(
+      .x = stan_data,
+      .f = ~ try(mcmc_g(
+        object = stan_g,
+        data = .x
+      ))
+    )
+  ) %>%
+  print()
 alarm()
 
-box_write(stanfit_dem, "g-dem-plain.rds", dir_id = box_mcmc_4)
 
-
-stanfit_rep <- mcmc_g(
-  file = here("code", "04-positioning", "stan", "sequential-G-linear.stan"),
-  data = stan_data_rep
-  # , thin = 1,
-  # , include = FALSE,
-  # pars = c()
-)
-alarm()
-
-box_write(stanfit_rep, "g-rep-plain.rds", dir_id = box_mcmc_4)
-
-
+box_write(g_grid_mcmc, "g-grid-mcmc.rds", dir_id = box_mcmc_4)
 
 
 
