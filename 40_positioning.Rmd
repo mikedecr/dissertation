@@ -1,4 +1,11 @@
-# How District-Party Ideology Ideology Affects Primary Candidate Positioning: A Bayesian De-Mediation Model {#ch:positioning}
+# How District-Party Ideology Affects Primary Candidate Positioning: A Bayesian De-Mediation Model {#ch:positioning}
+
+$\renewcommand{\ind}[0]{\perp \!\!\! \perp}$
+$\renewcommand{\doop}[1]{\mathit{do}\left(#1\right)}$
+$\renewcommand{\diff}[1]{\, \mathrm{d}#1}$
+$\renewcommand{\E}[1]{\mathbb{E}\left[#1\right]}$
+$\renewcommand{\p}[1]{p\left(#1\right)}$
+
 
 <!------- TO DO ---------
 - what's the latent relationship between local ideology and primary rules?
@@ -24,6 +31,7 @@ library("knitr")
 library("here")
 library("magrittr")
 library("tidyverse")
+library("tidybayes")
 library("scales")
 library("patchwork")
 library("broom")
@@ -34,28 +42,46 @@ theme_dag <- theme_dag(base_family = font_fam)
 ```
 
 
-Do primary elections effectively transmit citizens' policy preferences into government? For this to be true, we should expect that the policy ideology with a partisan constituency to affect the ideological positioning of candidates who run for that party's nomination. This chapter explores the effect of district-party public ideology on the candidates who run to represent that district-party.
+Do primary elections effectively transmit citizens' policy preferences into government? 
+For this to be true, we should expect that the policy ideology with a partisan constituency to affect the ideological positioning of candidates who run for that party's nomination. 
+This chapter explores the effect of district-party public ideology on the positioning of primary candidates running in that district.
 
-It is important to distinguish the influence of the district-party public from the influence of district _partisanship_. Does Senator Susan Collins (R-ME) have a reputation as a moderate Republican senator because the balance of a close numerical balance of Republican and Democratic voters in Maine? Or is it because her Republican constituency in Maine is relatively moderate compared to the Republican constituencies in other states represented by more conservative Senators? Although past research has been interested in the threat of primary challenges as a cause of ideological divergence between partisan legislators [for example @boatright:2013:getting-primaried; @hill:2015:nominating-institution; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems], many of these studies lacked the capability to observe the preferences within local partisan groups as a district construct from aggregate voting patterns. This chapter uses my new measures of district-party ideology to investigate this question in ways that previous research projects could not. 
+It is important to distinguish the influence of the district-party public from the influence of the district overall.
+Does a candidate like Senator Susan Collins have a reputation as a moderate Republican because of a close balance between the number of Republican and Democratic voters in Maine? 
+Or is the Republican constituency in Maine relatively moderate compared to Republican constituencies in states that elect more conservative Republicans? Although past research has been interested in the threat of primary challenges as a cause of ideological divergence between partisan legislators [for example @boatright:2013:getting-primaried; @hill:2015:nominating-institution; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems], many of these studies lacked the capability to observe the preferences within local partisan groups as a concept distinct from aggregate partisanship or aggregate voting in the entire district.
+This chapter uses my new measures of district-party ideology to investigate this question in ways that previous research projects could not.
 
-The effect of district-party ideology on candidate positioning is a challenging causal inference problem. We cannot directly compare the "explanatory power" of district-party ideology and district-level voting by measuring whether one is more strongly correlated with candidate ideal points, because district-level voting behavior is certainly affected by district-party ideology, and it likely mediates the effect of district-party ideology on candidate positioning. Estimating the direct effect of district-party ideology by simply controlling for district voting in a regression is likely to introduce collider bias by conditioning on a post-treatment variable [@greenland-et-al:1999:dags-epidemiology].
+The effect of district-party ideology on candidate positioning is a challenging causal inference problem.
+We cannot directly compare the "explanatory power" of district-party ideology and district-level voting by measuring whether one is more strongly correlated with candidate ideal points than the other, nor can we simply control for aggregate voting to recover the "partial effect" of district-party ideology.
+This is because aggregate policy ideology and aggregate voting are causally related: if a district contains a voter base with more conservative policy preferences, these policy preferences should influence aggregate voting behavior in the district as well as the positioning of candidates who try to respond to those policy preferences.
+Simply controlling for district voting in a regression will likely introduce collider bias by conditioning on a post-treatment variable [@greenland-et-al:1999:dags-epidemiology; @montgomery-et-al:2018:colliders].
 
-This chapter investigates the effect of district-party ideology on primary candidate positions using a sequential-$g$ model, a multistage approach that estimates the direct effect of district-party ideology while holding fixed district-level voting, a likely mediator of the total effect [@acharya-blackwell-sen:2016:direct-effects]. I use causal graphs to illustrate the modeling problem and discuss the assumptions required for identifying the targeted effect, which I adapt to a multilevel context where treatment and mediators exist at different levels of the data hierarchy. Finally, I describe and implement a method for propagating measurement uncertainty through the sequential-$g$ method, since the key independent variable is an uncertain estimate from a measurement model.
+This chapter investigates the effect of district-party ideology on primary candidate positions using a sequential-$g$ analysis, a multistage modeling approach that estimates the direct effect of district-party ideology while fixing district-level voting, which mediates the effect of local ideology.
+Substantively, I translate the primary candidate's strategic positioning dilemma into the language of causal graphs, highlighting how aggregate districting voting mediates a relationship between district-party ideology and candidate positioning.
+Methodologically, I take the sequential-$g$ method as it appears in political science [@acharya-blackwell-sen:2016:direct-effects] and embed it in a Bayesian framework.
+The Bayesian framework estimates all components of the structural model simultaneously, quantifying uncertainty in all model parameters in a single posterior distribution.
+Total model uncertainty includes the measurement error in district-party ideal points, whose posterior distributions from the IRT model in Chapter \@ref(ch:model) serve as priors in the causal analysis.
+The key payoff for the Bayesian structure, therefore, is a unified framework for conducting inference about treatment effects by marginalizing over other sources of uncertainty, be they design parameters or imprecise data.
+
+<!------- TO DO ---------
+- Findings
+------------------------->
 
 
-## Constituency Preferences and Candidate Positioning
 
-Lit review:
 
-- I have lit review but it isn't well organized right now. I'll summarize some main points:
+## Candidate Positioning and Voters' Policy Preferences
+
 - classic models of electoral competition view candidate moderation as an electoral benefit. You can make non-moderate positions make sense if you incorporate campaign volunteers, primaries, etc. 
-- Researchers find evidence that district-level aggregate voting (e.g.\ the presidential vote) is related to candidate positioning.
+- Researchers find evidence that candidate positioning is related to district-level aggregate voting (e.g.\ the presidential vote) and to voter preferences [@ansolabehere-et-al:2001:candidate-positioning; @clinton:2006:constituent-representation; @ansolabehere-et-al:2008:voter-ideology].
 - Why do candidates take non-moderate stances in reality? Studies that look into the polarizing effects of primaries find little evidence that primaries matter for candidate positioning, but many of these studies are focused on Congressional incumbents. 
 - Studies that include non-incumbent candidates show that many of the empirical implications of the "strategic positioning dilemma" don't receive a lot of evidence. For instance, studies of primary "openness" consistently show basically zero or even reversed relationships to candidate ideology as you would expect from theory.  
+
 
 <!------- TO DO ---------
 - from the prospectus:
 ------------------------->
+
 The second obstacle preventing a more complete study of primary representation is the failure to incorporate primary candidates' ideal points into the analysis. 
 Although ideal point estimates derived from roll-call votes such as [Nominate]{.smallcaps} are a popular tool for measuring politicians' ideological locations [@poole-rosenthal:1997:roll-call-history; @poole:2005:spatial-models], only incumbents cast roll call votes, so these measures are unavailable for non-incumbent candidates.^[
   Studies of candidate positioning that go beyond incumbents sometimes use survey data from challenger candidates [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning], but the surveys only interview general election candidates. Furthermore, the rarity of these surveys limits the generalizability of their findings over time.
@@ -83,13 +109,12 @@ What to do with the Hopkins/Sniderman theory
 
 
 
+### Exploratory analysis
 
-
-## How Partisan Preferences Affect Candidates
-
-
-### Naive regression
-
+- introduce the data first.
+    - DIME candidate scores
+    - posterior means only
+    - we will do a more complete modeling routine later
 - what is the relationship
 - let's control for the thing
 - what does this imply?
@@ -97,11 +122,179 @@ What to do with the Hopkins/Sniderman theory
 
 
 
-
-
-```{r read-dime, eval = FALSE}
-dime <- read_rds(here("data", "_clean", "candidates-x-irt.rds"))
+```{r read-dime, eval = TRUE}
+full_data <- read_rds(here("data", "_clean", "candidates-x-irt.rds"))
 ```
+
+```{r by-party}
+party_fits <- full_data %>%
+  group_by(party_num) %>%
+  nest() %>%
+  mutate(
+    correlation = map(
+      .x = data,
+      .f = ~ cor(
+        .x$recipient_cfscore_dyn, 
+        .x$theta_mean_raw,
+        use = "pairwise.complete.obs"
+      )
+    ),
+    lmfit = map(
+      .x = data,
+      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean_raw, data = .x)
+    ),
+    lmtidy = map(lmfit, tidy, conf.int = TRUE),
+    lmglance = map(lmfit, glance),
+    lmhat = map2(
+      .x = lmfit, 
+      .y = lmglance,
+      .f = ~ {
+        tstat <- qt(p = 0.975, df = .y$df.residual) 
+        augment(.x) %>%
+        mutate(
+          lower = .fitted - tstat*.se.fit,
+          upper = .fitted + tstat*.se.fit
+        )
+      }
+    )
+  ) %>%
+  print()
+
+party_fits$lmglance
+
+byparty_labels <- party_fits %>%
+  unnest(c(correlation, lmglance)) %>%
+  mutate(
+    n = df + df.residual,
+    party = names(party_colors)[party_num]
+  ) %>%
+  select(party, n, correlation, p.value) %>%
+  ungroup() %>%
+  print()
+
+ggplot(full_data) +
+  aes(x = theta_mean_raw, y = recipient_cfscore_dyn) +
+  geom_point(
+    aes(color = as.factor(party_num)), 
+    size = 2.5, shape = 16, alpha = 0.25
+  ) + 
+  geom_smooth(
+    aes(group = as.factor(party_num)), 
+    color = "black",
+    method = "lm",
+    size = 0.25
+  ) +
+  scale_y_continuous(breaks = seq(-4, 4, 2)) +
+  scale_color_manual(values = party_factor_colors) +
+  scale_fill_manual(values = party_factor_colors) +
+  labs(
+    title = "Primary Candidate Positioning and Group Ideology",
+    subtitle = "Candidates from 2012, 2014, and 2016",
+    x = "District-Party Ideal Point\n(Posterior Mean)", 
+    y = "Candidate CF Score"
+  ) +
+  theme(legend.position = "none") +
+  geom_text(
+    data = byparty_labels %>%
+      mutate(
+        theta_mean_raw = c(-1.75, 0.05),
+        recipient_cfscore_dyn = c(3, -3)
+      ),
+    aes(label = str_glue("{party} (n = {comma(n)})")),
+    hjust = 0
+  ) 
+```
+
+
+```{r by-incumbency}
+# incumbency_fits <- full_data %>%
+#   group_by(incumbency) %>%
+#   nest() %>%
+#   mutate(
+#     correlation = map(
+#       .x = data,
+#       .f = ~ cor(
+#         .x$recipient_cfscore_dyn, 
+#         .x$theta_mean_raw,
+#         use = "pairwise.complete.obs"
+#       )
+#     ),
+#     lmfit = map(
+#       .x = data,
+#       .f = ~ lm(recipient_cfscore_dyn ~ theta_mean_raw, data = .x)
+#     ),
+#     lmtidy = map(lmfit, tidy, conf.int = TRUE),
+#     lmglance = map(lmfit, glance),
+#     lmhat = map2(
+#       .x = lmfit, 
+#       .y = lmglance,
+#       .f = ~ {
+#         tstat <- qt(p = 0.975, df = .y$df.residual) 
+#         augment(.x) %>%
+#         mutate(
+#           lower = .fitted - tstat*.se.fit,
+#           upper = .fitted + tstat*.se.fit
+#         )
+#       }
+#     )
+#   ) %>%
+#   print()
+
+
+ggplot(full_data) +
+  aes(x = theta_mean_raw, y = recipient_cfscore_dyn) +
+  facet_wrap(~ fct_relevel(str_glue("{incumbency}s"), "Incumbents", "Challengers")) +
+  geom_point(
+    aes(color = as.factor(party_num)), 
+    size = 2.5, shape = 16, alpha = 0.25
+  ) + 
+  geom_smooth(
+    aes(group = as.factor(party_num)), 
+    color = "black",
+    method = "lm",
+    size = 0.25
+  ) +
+  scale_y_continuous(breaks = seq(-4, 4, 2)) +
+  scale_color_manual(values = party_factor_colors) +
+  scale_fill_manual(values = party_factor_colors) +
+  labs(
+    title = "Incumbency Status and Ideological Responsiveness",
+    subtitle = "Candidates from 2012, 2014, and 2016",
+    x = "District-Party Ideal Point\n(Posterior Mean)", 
+    y = "Candidate CF Score"
+  ) +
+  theme(legend.position = "none")
+```
+
+
+```{r by-cycle}
+ggplot(full_data) +
+  aes(x = theta_mean_raw, y = recipient_cfscore_dyn) +
+  facet_wrap(~ str_glue("{cycle} Campaign")) +
+  geom_point(
+    aes(color = as.factor(party_num)), 
+    size = 2.5, shape = 16, alpha = 0.25
+  ) + 
+  geom_smooth(
+    aes(group = as.factor(party_num)), 
+    color = "black",
+    method = "lm",
+    size = 0.25
+  ) +
+  scale_y_continuous(breaks = seq(-4, 4, 2)) +
+  scale_color_manual(values = party_factor_colors) +
+  scale_fill_manual(values = party_factor_colors) +
+  labs(
+    title = "Ideological Responsiveness Across 2010s Districting Cycle",
+    subtitle = "Each year contains incumbents, challengers, and open seats",
+    x = "District-Party Ideal Point\n(Posterior Mean)", 
+    y = "Candidate CF Score"
+  ) +
+  theme(legend.position = "none")
+```
+
+
+
 
 
 ```{r simple-regs, eval = FALSE}
@@ -112,19 +305,19 @@ simple_regs <-
 
 
 ```{r plot-first-look, eval = FALSE}
-dime %>%
+full_data %>%
   filter(
     is.na(recipient_cfscore_dyn) == FALSE &
-    is.na(theta) == FALSE
+    is.na(theta_mean_raw) == FALSE
   ) %>%
   ggplot() +
-  aes(x = scale(theta), y = recipient_cfscore_dyn) +
-  # facet_grid(
-  #   str_glue("{cycle} Campaign") ~ fct_relevel(incumbency, "Incumbent")
-  # ) +
-  facet_wrap(
-    ~ str_glue("{cycle} Campaign")
+  aes(x = scale(theta_mean_raw), y = recipient_cfscore_dyn) +
+  facet_grid(
+    str_glue("{cycle} Campaign") ~ fct_relevel(incumbency, "Incumbent")
   ) +
+  # facet_wrap(
+  #   ~ str_glue("{cycle} Campaign")
+  # ) +
   geom_point(
     aes(color = as.factor(party)), 
     size = 1, shape = 1, alpha = 0.5
@@ -142,7 +335,7 @@ dime %>%
   theme(panel.grid = element_line(color = "gray90")) +
   geom_text(
     data = tibble(
-      theta = c(-1.25, 0.25),
+      theta_mean_raw = c(-1.25, 0.25),
       recipient_cfscore_dyn = c(-3, 3),
       text = c("Democrats", "Republicans"),
       cycle = 2012, 
@@ -287,7 +480,14 @@ ggplot(dime) +
 
 
 
-### The Direct Effect of District-Party Ideology
+### The direct effect of district-party ideology
+
+Make the argument for the direct effect setup
+
+- appeal to SPD theory
+- connect to spatial theory: we don't get different voting _but for_ different voter distributions
+- this may be unrealistic, but that is perhaps the point, since this is theory testing.
+
 
 ```{r problem-dag}
 problem_dag <- 
@@ -566,6 +766,10 @@ There are functional form considerations however---biases may remain if the func
 
 ## Bayesian Sequential-$g$ Analysis
 
+what is ACDE
+
+Cite ABS
+
 Keep the notation general enough (expectations) so that there are no explicit linear regression functional forms introduced by accident?
 
 Identification and estimand are above?
@@ -698,15 +902,94 @@ Again, the formula for the ACDE depends on the model specification.
 The form in \@ref(eq:general-ACDE) applies to a linear model with no interactions, but a more complex model would entail a more complex formula.
 
 
-### Bayesian Contributions and Priors
+### Bayesian causal inference
+
+The key methodological innovation in this chapter is embedding the sequential-$g$ method in a Bayesian framework.
+Chapter \@ref(ch:causality) describes a number of special advantages for Bayesian causal modeling, stemming from the fact that Bayesian inference allows the researcher to describe their information about causal effects using the intuitive of language of probabilistic inference: the treatment effect is _probably_ greater than $x$, where "probably" has a direct translation to approximate cumulative probabilities from posterior samples.
+
+The most important feature of Bayesian causal inference for this chapter is the fact that one posterior distribution quantifies uncertainty in all parameters from the multi-stage sequential-$g$ method.
+This is valuable because uncertainty in stages 1 and 2 are directly related to one another. 
+The average controlled direct effect of district-party ideology in stage 2 is estimated using demediated CF score, which is calculated using the demediation function, which is itself a function of stage 1 model coefficients.
+Substantively, the ACDE should have a larger magnitude whenever the indirect effect through the mediator has a smaller magnitude, holding the total effect magnitude constant.
+<!------- TO DO ---------
+- is this true?
+------------------------->
+<!-- , but unfortunately this estimator does not incorporate the additional uncertainty introduced by the fact that the key independent variable, district-party ideology, is an estimate from a separate measurement model. -->
+Whereas @acharya-blackwell-sen:2016:direct-effects derive an analytical variance estimator for the second stage coefficients or advocate for bootstrapped estimation, the posterior distribution from the Bayesian model captures all variances and covariances among model parameters by its nature.
+Inferences about the ACDE can be expressed by marginalizing the posterior distribution with respect to these auxiliary model parameters, isolating the remaining dimension of the posterior corresponding to the ACDE.
+Letting $\boldsymbol{\pi}$ represent all auxiliary model parameters, and using the definition of the ACDE in Equation \@ref(eq:general-ACDE), the posterior distribution for the ACDE is given by
+\begin{align}
+  \p{\tau \left(\bar{\theta} - \bar{\theta}'\right) \mid \mathbf{y}} 
+  &= 
+  \int \p{\tau \left(\bar{\theta} - \bar{\theta}'\right), \boldsymbol{\pi} \mid \mathbf{y}} \diff \boldsymbol{\pi},
+  (\#eq:post-acde)
+\end{align}
+which is an average of all possible $\tau$ values, each value weighted by the posterior probability of the associated $\boldsymbol{\pi}$ values.
+
+The joint posterior distribution is also essential for incorporating uncertainty in district-party ideal points themselves.
+Recall from the group IRT model in Chapter \@ref(ch:model) that district-party ideal points are not estimated precisely. 
+Instead, ideal points are identified only up to a posterior distribution, with uncertainty that reflects prior ignorance and a finite sample of polling data.
+<!------- TO DO ---------
+- typically, people do propagated uncertainty
+------------------------->
+To estimate the effect of district-party ideology on candidate positioning, the causal analysis incorporates measurement error in ideal points "the Bayesian way," where posterior uncertainty from one analysis becomes prior uncertainty in later analyses.
+This prior is constructed by defining the group ideal point $\bar{\theta}_{g}$ as an element of $\Theta$, the vector of all group ideal points.
+Rather than jointly estimate the ideal point model and all subsequent causal analyses, which would be an overwhelming feat of model-building and estimation, I specify a multivariate Normal prior on the vector of ideal points.
+\begin{align}
+  \Theta &\sim 
+    \mathrm{MultiNormal}\left( \hat{\Theta}, \hat{\Sigma}_{\Theta} \right) %_
+  (\#eq:theta-prior)
+\end{align}
+The parameters in the prior are estimates from MCMC samples from the ideal points. 
+The mean vector $\hat{\Theta}$ contains the estimated means for each ideal point, and the matrix $\hat{\Sigma}_{\Theta}$ contains variances for each ideal point's MCMC samples on the main diagonal and covariances between any two ideal points' MCMC samples on the off-diagonals.
+Because the IRT model partially pools ideal points using a hierarchical Normal regression, it is a reasonable approximation to give the ideal points a Normal prior for subsequent causal analyses.
+
+Specifying priors for ideal points is a method for measurement error 
 
 <!------- TO DO ---------
-- fix me
+- contrast to WLS methods
+- contrast to propagated uncertainty?
+- contrast to ABS
+------------------------->
+@acharya-blackwell-sen:2016:direct-effects derive an analytical variance estimator that deals with this, but unfortunately this estimator does not incorporate the additional uncertainty introduced by the fact that the key independent variable, district-party ideology, is an estimate from a separate measurement model.
+
+
+
+<!------- TO DO ---------
+- priors for other model params
 ------------------------->
 
-One important feature of this dissertation is that our causal variable of interest, the policy ideology of district-party publics, is not measured with certainty. The model in Chapter&nbsp;\@ref(ch:model) estimates this quantity up to a posterior distribution, but the variation in the posterior distribution creates an additional layer of uncertainty in our understanding of causal effects. This creates theoretical issues with the definition of treatment effects as well as practical issues for estimation, which I describe in turn.
+\begin{align}
+  a_0, \eta, \mu, \beta, \gamma &\sim \mathrm{Normal}\left(0, 10 \right)
+  \alpha_{d} &\sim \mathrm{Normal}\left(0, \sigma_{\alpha} \right)
+  \sigma_{\alpha} &\sim \mathrm{Normal}\left(0, 2 \right)
+  \epsilon_{i} &\sim \mathrm{Normal}\left(0, \sigma_{\epsilon} \right)
+  \sigma_{\epsilon} &\sim \mathrm{Normal}\left(0, 5 \right)
+\end{align}
 
-As discussed in Chapter&nbsp;\@ref(ch:causality), it is natural to interpret causal inference as Bayesian updating about a causal parameter using models and data. Following @rubin:1978:bayesian's Bayesian interpretation of his own work with potential outcomes, causal inference is a method for generating counterfactual estimates of an outcome variable as if they were predictive draws from the posterior distribution. Supposing that we seek the causal effect of an intervention on group ideology, $\tau$, and we observe only one potential outcome, $y_{g}(\bar{\theta}_{g})$, how do we specify the posterior distribution if we set group ideology to some other value $\theta'$? Not only do we have posterior uncertainty about $\tau$, but we are also uncertain about the actual value of $\bar{\theta}_{g}$ that we observed in the first place, since the measurement model from Chapter&nbsp;\@ref(ch:model) estimates it only up to a posterior distribution. Our posterior distribution for missing potential outcomes reflects both sources of uncertainty. Econometrics refers to this problem as "errors in variables," but it takes on a special meaning when it comes to the interpretation of causal interventions, since it stresses our understanding of what an "observed" potential outcome is.
+\begin{align}
+  a_{1}, \tau, \omega &\sim \mathrm{Normal}\left(0, 10 \right)
+  \nu_{d}  &\sim \mathrm{Normal}\left(0, \sigma_{\nu} \right)
+  \sigma_{\nu} &\sim \mathrm{Normal}\left(0, 2 \right)
+  u_{i} &\sim \mathrm{Normal}\left(0, \sigma_{u} \right)
+  \sigma_{u} &\sim \mathrm{Normal}\left(0, 5 \right)
+\end{align}
+
+<!-- Because the demediated outcome value in stage two depends on parameter estimates from stage one, our average controlled direct estimate $\tau_{2}$ should reflect parameter uncertainty from both stages. @acharya-blackwell-sen:2016:direct-effects derive an analytical variance estimator that deals with this, but unfortunately this estimator does not incorporate the additional uncertainty introduced by the fact that the key independent variable, district-party ideology, is an estimate from a separate measurement model. To overcome this, I implement a simulation routine that propagates model uncertainty from the ideal point estimate into both stages, as well as stage one uncertainty into the second stage.  -->
+
+
+One important feature of this dissertation is that our causal variable of interest, the policy ideology of district-party publics, is not measured with certainty.
+The model in Chapter&nbsp;\@ref(ch:model) estimates this quantity up to a posterior distribution, but the variation in the posterior distribution creates an additional layer of uncertainty in our understanding of causal effects. 
+This creates theoretical issues with the definition of treatment effects as well as practical issues for estimation, which I describe in turn.
+
+
+As discussed in Chapter&nbsp;\@ref(ch:causality), it is natural to interpret causal inference as Bayesian updating about a causal parameter using models and data.
+Following @rubin:1978:bayesian's Bayesian interpretation of his own work with potential outcomes, causal inference is a method for generating counterfactual estimates of an outcome variable as if they were predictive draws from the posterior distribution.
+Supposing that we seek the causal effect of an intervention on group ideology, $\tau$, and we observe only one potential outcome, $y_{g}(\bar{\theta}_{g})$, how do we specify the posterior distribution if we set group ideology to some other value $\theta'$?
+Not only do we have posterior uncertainty about $\tau$, but we are also uncertain about the actual value of $\bar{\theta}_{g}$ that we observed in the first place, since the measurement model from Chapter&nbsp;\@ref(ch:model) estimates it only up to a posterior distribution. 
+Our posterior distribution for missing potential outcomes reflects both sources of uncertainty. 
+Econometrics refers to this problem as "errors in variables," but it takes on a special meaning when it comes to the interpretation of causal interventions, since it stresses our understanding of what an "observed" potential outcome is.
+
 
 Practically, this means that we will underestimate our uncertainty about causal effects unless we can account for the uncertainty in our treatment variable on top of our uncertainty in its effect on candidate positioning. All ideal point estimates are uncertain, but not many studies confront this uncertainty. Since the usefulness of the ideal point model in Chapter&nbsp;\@ref(ch:model) is important to explore in this dissertation, it feels appropriate not to ignore posterior uncertainty in its applications. As such, I conduct all sequential-$g$ analyses below using raw posterior samples, rather than posterior means. I describe the exact routine in Section&nbsp;\@ref(sec:pos-uncertainty).
 
@@ -731,23 +1014,8 @@ or, written as a probability distribution
 
 
 
-- theta is uncertain
-- we need priors
-- everything is one model, so instead of needing a variance correction that 
 
-$\bar{\theta}_{g}$ is an element of $\bar{\Theta}$, the vector of all group ideal points. 
-The exact value of $\bar{\theta}_{g}$ is unknown—the model in Chapter \@ref(ch:model) used survey data to update our information, but we still only have samples from the probability distribution given our current data.
-This means that the $\bar{\theta}_{g}$ that the sequential-$g$ model sees are parameters with probability distributions, not fixed data.
-As such, they appear in the model with a prior distribution, which is the posterior distribution from the measurement model. 
-\begin{align}
-  \bar{\Theta} &\sim 
-    \mathrm{MultiNormal}\left( \hat{\Theta}, \hat{\Sigma}_{\Theta} \right)
-  (\#eq:theta-prior)
-\end{align}
-
-
-
-### Multilevel Considerations 
+### Multilevel data and causal inference
 
 The research question in this chapter presents us with multilevel data: how is the ideological positioning of primary candidates affected by the policy ideology of partisans in their district, when there are potentially multiple candidates per district?
 In this scenario, the outcome is a variable specific to an individual candidate $i$, but the treatment is fixed for an entire district-partisan group $g$. 
@@ -802,8 +1070,6 @@ Future researchers would make progress on these questions by extending the data 
 
 ### Data
 
-
-
 Pre-treatment confounders consist of district-level demographic indicators for the racial composition, college graduation rate, median income, inequality (Gini), unemployment rate, foreign-born population, and evangelical population, and $\mathbf{z}_{ig}$ currently contains an order-3 polynomial function of candidate $i$'s total campaign receipts.^[
   Note: this isn't a good choice for intermediate confounding, and it should change. Ask me why!
 ]
@@ -857,7 +1123,6 @@ I take data from Boatright on primaries.
 
 `r knit_exit()`
 
-### Move me
 
 ```{r read-g, eval = FALSE}
 g_samples <- 
@@ -910,33 +1175,18 @@ Control variables are measured primarily at the congressional district level and
 
 
 
-### Full Model
-
-
-
-### Algorithm {#sec:pos-uncertainty}
-
-<!------- TO DO ---------
-- How is the model set up in Stan
-- propagating uncertainty
-------------------------->
-
-Because the demediated outcome value in stage two depends on parameter estimates from stage one, our average controlled direct estimate $\tau_{2}$ should reflect parameter uncertainty from both stages. @acharya-blackwell-sen:2016:direct-effects derive an analytical variance estimator that deals with this, but unfortunately this estimator does not incorporate the additional uncertainty introduced by the fact that the key independent variable, district-party ideology, is an estimate from a separate measurement model. To overcome this, I implement a simulation routine that propagates model uncertainty from the ideal point estimate into both stages, as well as stage one uncertainty into the second stage. 
-
-Suppose that we had a matrix of ideal point samples $\Theta$ that had one row for every district-party group and one column for every Markov chain Monte Carlo iteration from the estimation in Chapter&nbsp;\@ref(ch:model). We begin by drawing a set of $m$ columns from this matrix, and then for each column $m$ we perform the following routine:^[
-  The index $m$ represents one MCMC iteration, with all parameters from that iteration sampled simultaneously. This deals with the fact that ideal point parameters will be correlated within iteration, so they should be supplied to the sequential-$g$ algorithm together.
-]
-
-- Estimate the mediator model using the sampled ideal point.
-- To carry uncertainty forward from the mediator model, sample 1 coefficient draw from the implied posterior distribution for the mediator effect. This results in a random draw of the mediator effect that combines the uncertainty in the district-party ideal points with the uncertainty in the mediator's effect on the outcome.
-- Use each sampled mediator effect to demediate the dependent variable. The demediated value reflects uncertainty in the mediator effect and in the initial ideal point draw.
-- Use the demediated outcome to estimate the average controlled direct effect of district-party ideology. Sample one ACDE draw from the implied posterior and store it. 
-
-This routine was performed for $m = `r smart_number(length(unique(direct_samples$.draw)))`$ ideal point draws, so the result is a distribution of `r smart_number(length(unique(direct_samples$.draw)))` ACDE simulations that reflect measurement uncertainty in district-party ideology as well as modeling uncertainty in both stages of sequential-$g$.
-
-
 
 ## Findings
+
+
+
+```{r read-G-data}
+mcmc_dem <- read_rds(here("data", "mcmc", "4-positioning", "g-mcmc_dem.rds"))
+mcmc_rep <- read_rds(here("data", "mcmc", "4-positioning", "g-mcmc_rep.rds"))
+vb_grid <- read_rds(here("data", "mcmc", "4-positioning", "g-grid-vb.rds"))
+```
+
+
 
 ### District-Party Ideology and Primary Candidate Positioning
 
@@ -1061,6 +1311,13 @@ This maybe isn't so crazy, since most of the votes vs. ideal point relationship 
 
 
 
+
+
+
+
+<!------- TO DO ---------
+- old stuff below:...
+------------------------->
 ```{r plot-direct, eval = FALSE}
 ggplot(direct_samples) +
   aes(
@@ -1187,7 +1444,7 @@ ggplot(total_samples) +
 ------------------------->
 
 
-### Primary Rules
+## Primary Rules
 
 
 
