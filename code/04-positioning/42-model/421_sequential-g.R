@@ -46,6 +46,7 @@ if (home) {
 }
 
 
+
 # ---- inspect and clean data -----------------------
 
 names(theta_stats)
@@ -75,6 +76,10 @@ full_data_raw
 
 names(full_data_raw) 
 
+full_data_raw %>%
+  count(cycle, state_abb, primary_rules) %>%
+  select(-n) %>%
+  count(cycle, primary_rules)
 
 # ----------------------------------------------------
 #   compose Stan data

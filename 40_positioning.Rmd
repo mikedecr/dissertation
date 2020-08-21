@@ -94,18 +94,36 @@ The IRT measures of district-party ideology that I create in Chapter \@ref(ch:mo
 Research on primary competition and candidate positioning is also held back by the availability of primary candidate data, which until recently was not available. 
 Past studies of primary competition and polarization typically use ideology scores from legislative roll call votes, which include only incumbent members of congress or state legislators [@brady-han-pope:2007:out-of-step; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems], or they use surveys of general election candidates, which may include non-incumbent candidates for the general election but no candidates who ran in the primary and lost [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning]. 
 Recent ideal point methods that use political financial contributions data have the capacity to scale a much broader universe of political actors, including candidates, political parties, PACS and interest groups, and donors [@bonica:2013:ideology-interests; @bonica:2014:mapping-ideology; @hall-snyder:2015:ideology].
-Few studies have yet put these contribution-based scores to study features of primary politics [@thomsen:2014:moderate-candidates; @hall:2015:extremists; @rogowski-langella:2015:primary-systems; @ahler-citrin-lenz:2016:CA-open-primaries; @hall-thompson:2018:who-punishes; @porter-treul:2020:primary-experience; @thomsen:2020:ideology-gender]. 
+Few notable studies have yet used these contribution-based scores to study primary candidates [@thomsen:2014:moderate-candidates; @rogowski-langella:2015:primary-systems; @ahler-citrin-lenz:2016:CA-open-primaries; @porter-treul:2020:primary-experience; @thomsen:2020:ideology-gender].
+
+Although recent studies of primary candidates tend not to study the overall relationship between voters' policy ideology and candidate positions, there is an enduring interest in the way _primary rules_ shape candidates' positioning incentives through the preferences of the electorate.
+Primary rules refer to regulations in state election law that control which voters can participate in primary elections and the freedoms that parties have to set those participation rules within the scope of the law.
+A state primary is "closed" if only registered members of a political party are allowed to vote in the party's primary election.
+On the other side of the spectrum, an "open" primary allows any registered voter to cast a vote in any party's primary.
+There are states whose primary rules fall between these two extremes, such as "semi-closed" systems that allow party-unaffiliated voters to choose which party primary they want to vote for, but registered partisans can only vote in the primary of their registered party affiliation.
+Political scientists and political observers have speculated that these rules shape candidates' positioning incentives by changing the composition of primary voters.
+Closed primary elections, so the argument goes, are limited to registered party identifiers in a district, so candidates running in closed primaries must appeal to a more ideologically homogeneous primary electorate in order to win the nomination.
+More open systems, especially blanket primary systems where candidates from all parties run for the same finite number of slots on the general election ballot, encourage primary candidates to take more moderate stances to win a primary election among a more ideologically diverse constituency.
+The general hypothesis, therefore, is that more restrictive primary rules exacerbate ideological polarization in congress and in state legislatures.
+
+
+
 
 - @thomsen:2014:moderate-candidates
-- @hall:2015:extremists
-- @rogowski-langella:2015:primary-systems
-- @ahler-citrin-lenz:2016:CA-open-primaries
-- @hall-thompson:2018:who-punishes
+    - moderates less likely to run the less they "fit" the party (farther from CFscore median)
+    - ideological positioning in the form of running vs. not.
+    - candidates are compared to the party, not to partisan voters (district measures of voters are cross-party)
 - @porter-treul:2020:primary-experience
+    - increasing number of inexperienced candidates running in primaries
+    - not an obvious pattern about the ideological extremity of inexperienced candidates
+    - when inexperienced candidates win, they tend to be more ideologically extreme than experienced candidates win
 - @thomsen:2020:ideology-gender 
     - no (significant) evidence that ideology–victory relationship is different for men and women (but the interaction pt estimates are comparable in size to main effects)
-    - Dem women are more liberal than men, advantaged in primaries
+    - Dem women are more liberal than men, slight advantage in primaries
 
+
+- @rogowski-langella:2015:primary-systems
+- @ahler-citrin-lenz:2016:CA-open-primaries
 
 
 
@@ -830,20 +848,22 @@ There are functional form considerations however---biases may remain if the func
 
 ## Bayesian Sequential-$g$ Analysis
 
-what is ACDE
+- What is the problem (defined in the direct effect section above)
+- Contribution: $\bar{\theta}_{g}$ is drawn from a prior and can be updated in the model.
 
-Cite ABS
+### Causal model: controlled direct effects
 
-Keep the notation general enough (expectations) so that there are no explicit linear regression functional forms introduced by accident?
+- what is ACDE 
+- Cite ABS 
+- Keep the notation general enough (expectations) so that there are no explicit linear regression functional forms introduced by accident? 
+- Identification and estimand
 
-Identification and estimand are above?
-
-Contribution: $\bar{\theta}_{g}$ is drawn from a prior and can be updated in the model.
 
 ACDE is posterior distribution of the causal quantity...
 
 
 
+### Linear sequential-$g$
 
 <!-- As mentioned above, I estimate average controlled direct effects separately for incumbents, challengers, and open seat candidates in two parties, totaling six routines altogether.  -->
 I write a general model that applies regardless of which subset of data is being used. 
@@ -947,11 +967,15 @@ As such, it is omitted from the equation.
 Second, intermediate confounders are omitted because they are unnecessary to identify the effect of district-party ideology, and they could induce collider bias if included.
 This new equation is,
 \begin{align}
+\begin{split}
   b\left(\mathrm{CF}\right)_{i} = 
     a_{1} +
     \tau \bar{\theta}_{g} + 
     \mathbf{x}^{\intercal}_{g[i]}\omega + 
     \nu_{d[i]} + u_{i} \\
+  \nu_{d} &\sim \text{Normal}\left(0, \sigma_{\nu}\right) \\
+  u_{i} &\sim \text{Normal}\left(0, \sigma_{u}\right)    
+\end{split}
 (\#eq:trt-model)
 \end{align}
 where $a_{1}$ is a constant, $\tau$ is the coefficient for district-party ideology, $\omega$ are coefficients for district-level pre-treatment confounders $\mathbf{x}_{d}$, $\nu_{d}$ is a district error term, and $u_{i}$ is a candidate error term.
@@ -966,7 +990,7 @@ Again, the formula for the ACDE depends on the model specification.
 The form in \@ref(eq:general-ACDE) applies to a linear model with no interactions, but a more complex model would entail a more complex formula.
 
 
-### Bayesian causal inference
+### Bayesian structural modeling
 
 The key methodological innovation in this chapter is embedding the sequential-$g$ method in a Bayesian framework.
 Chapter \@ref(ch:causality) describes a number of special advantages for Bayesian causal modeling, stemming from the fact that Bayesian inference allows the researcher to describe their information about causal effects using the intuitive of language of probabilistic inference: the treatment effect is _probably_ greater than $x$, where "probably" has a direct translation to approximate cumulative probabilities from posterior samples.
@@ -1042,32 +1066,38 @@ By specifying the prior directly and updating the parameters, there is no need f
 The Bayesian sequential-$g$ approach, of course, requires priors for other model parameters.
 Coefficients for linear predictors in stages 1 and 2 are given Normal priors that are proper but overly diffuse, to avoid biasing treatment effects by over-regularizing covariates [@hahn-et-al:2018:regularization-confounding].
 \begin{align}
+\begin{split}
   a_0, \eta, \mu, \beta, \gamma &\sim \text{Normal}\left(0, 10 \right) \\
   a_{1}, \tau, \omega &\sim \text{Normal}\left(0, 10 \right)
-  (\#eq:g-coef-priors)
+\end{split}
+(\#eq:g-coef-priors)
 \end{align}
 Both modeling stages contain Normal district-level error terms, with estimated variances that facilitate partial pooling. 
 These variances are themselves given half-Normal priors with weakly informative scale parameter values that are about half the range of the raw outcome data within each party.
 \begin{align}
-  \alpha_{d} &\sim \text{Normal}\left(0, \sigma_{\alpha} \right) \\
-  \sigma_{\alpha} &\sim \text{Half-Normal}\left(0, 2 \right) \\
-  \nu_{d}  &\sim \text{Normal}\left(0, \sigma_{\nu} \right) \\
-  \sigma_{\nu} &\sim \text{Normal}\left(0, 2 \right)
-  (\#eq:g-ranef-priors)
+\begin{split}
+  \alpha_{d} &\sim \text{Normal}\left(0, \sigma_{\alpha} \right) &
+    \sigma_{\alpha} &\sim \text{Half-Normal}\left(0, 2 \right) \\
+  \nu_{d}  &\sim \text{Normal}\left(0, \sigma_{\nu} \right) &
+    \sigma_{\nu} &\sim \text{Normal}\left(0, 2 \right)
+\end{split}
+(\#eq:g-ranef-priors)
 \end{align}
 And finally, each stage of the model has a Normal error term for candidates within districts. 
 The variances for these errors are given half-Normal priors with wider scale values that the districts errors, since residual variation between any two candidates is likely larger than the variation between average candidates in any two districts.
 \begin{align}
-  \epsilon_{i} &\sim \text{Normal}\left(0, \sigma_{\epsilon} \right) \\
-  \sigma_{\epsilon} &\sim \text{Half-Normal}\left(0, 5 \right) \\
-  u_{i} &\sim \text{Normal}\left(0, \sigma_{u} \right) \\
-  \sigma_{u} &\sim \text{Normal}\left(0, 5 \right)
-  (\#eq:g-resid-priors)
+\begin{split}
+  \epsilon_{i} &\sim \text{Normal}\left(0, \sigma_{\epsilon} \right) &
+    \sigma_{\epsilon} &\sim \text{Half-Normal}\left(0, 5 \right) \\
+  u_{i} &\sim \text{Normal}\left(0, \sigma_{u} \right) &
+    \sigma_{u} &\sim \text{Normal}\left(0, 5 \right)
+\end{split}
+(\#eq:g-resid-priors)
 \end{align}
 
 
 
-### Multilevel data and causal inference
+### Causal inference with multilevel data
 
 The research question in this chapter presents us with multilevel data: how is the ideological positioning of primary candidates affected by the policy ideology of partisans in their district, when there are potentially multiple candidates per district?
 In this scenario, the outcome is a variable specific to an individual candidate $i$, but the treatment is fixed for an entire district-partisan group $g$. 

@@ -63,7 +63,7 @@ bookdown::render_book("Index.Rmd", "bookdown::html_book")
 xaringan::inf_mr("40_positioning.Rmd")
 
 # preview chapter (static)
-bookdown::preview_chapter('30_causality.Rmd')
+bookdown::preview_chapter('40_positioning.Rmd')
 
 
 
