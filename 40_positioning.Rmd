@@ -940,39 +940,56 @@ Rather than jointly estimate the ideal point model and all subsequent causal ana
     \mathrm{MultiNormal}\left( \hat{\Theta}, \hat{\Sigma}_{\Theta} \right) %_
   (\#eq:theta-prior)
 \end{align}
-The parameters in the prior are estimates from MCMC samples from the ideal points. 
-The mean vector $\hat{\Theta}$ contains the estimated means for each ideal point, and the matrix $\hat{\Sigma}_{\Theta}$ contains variances for each ideal point's MCMC samples on the main diagonal and covariances between any two ideal points' MCMC samples on the off-diagonals.
-Because the IRT model partially pools ideal points using a hierarchical Normal regression, it is a reasonable approximation to give the ideal points a Normal prior for subsequent causal analyses.
+The parameters in the prior are estimated from MCMC samples for the ideal points. 
+The mean vector $\hat{\Theta}$ contains MCMC mean for each ideal point, and the matrix $\hat{\Sigma}_{\Theta}$ contains variances for each ideal point and covariances between any two ideal points.
+Because the IRT model partially pools ideal points using a hierarchical Normal regression, the multivariate Normal prior is a reasonable stand-in for representing prior ideal point uncertainty in causal analyses.
 
-Specifying priors for ideal points is a method for measurement error 
-
+Including ideal point uncertainty as a prior distribution effectively adds a measurement error model overtop to the sequential-$g$ analysis. 
+Although @acharya-blackwell-sen:2016:direct-effects describe a variance estimator and a bootstrap method for dealing with multi-stage modeling uncertainty, neither of these methods is naturally suited to a measurement error context where an additional layer of ideal point uncertainty is represented in MCMC samples.
+Past research has explored the use of inverse-variance weighting to downweight observations with greater ideal point uncertainty,
 <!------- TO DO ---------
-- contrast to WLS methods
-- contrast to propagated uncertainty?
-- contrast to ABS
+- who?
 ------------------------->
-@acharya-blackwell-sen:2016:direct-effects derive an analytical variance estimator that deals with this, but unfortunately this estimator does not incorporate the additional uncertainty introduced by the fact that the key independent variable, district-party ideology, is an estimate from a separate measurement model.
-
-
+but that method accomplishes essentially the same goal as a prior distribution, except it throws away all information about the covariance covariance between any two ideal points.
+<!------- TO DO ---------
+- cite?
+------------------------->
+More recently, researchers have employed methods of "uncertainty propagation" methods, where the researcher estimates an uncertainty quantity, simulates values from the quantity's posterior distribution, and pushes those simulated values through a downstream analysis. 
+Quantities of interest are then averaged across the posterior simulations [see @kastellec-et-al:2015:scotus-electoral-connection p. 791; @caughey-warshaw:2018:dynamic-responsiveness p. 6; @caughey-warshaw:2019:subnational-opinion-review p. 360].
+This is similar in spirit to "multiple overimputation" [@blackwell-et-al:2017:measurement-error], which creates "imputation datasets" by replacing mismeasured observations with posterior draws.
+This project regards these propagation methods as insufficiently Bayesian because they "cut" the flow of information between models: model 1 informs model 2, but model 2 can never inform model 1 [@plummer:2015:bayesian-cuts].
+This can be an undesirable modeling property if the causal model can inform the measurement model [@treier-jackman:2008:latent-democracy].
+In this project, if ideal points are related to candidate positioning, and ideal points are measured with error, then candidate positions can be informative about ideal points.
+Even if the causal analysis does not narrow the marginal distributions for ideal points, the posterior distribution will reflect the correlation between ideal points and other parameters.
+By specifying the prior directly and updating the parameters, there is no need for any additional imputation steps or post-estimation model averaging [@gelman-hill:2006:multilevel p. 542].
 
 <!------- TO DO ---------
 - priors for other model params
 ------------------------->
 
+The Bayesian sequential-$g$ approach, of course, requires priors for other model parameters.
+Coefficients for linear predictors in stages 1 and 2 are given Normal priors that are proper but overly diffuse, to avoid biasing treatment effects by over-regularizing covariates [@hahn-et-al:2018:regularization-confounding].
 \begin{align}
-  a_0, \eta, \mu, \beta, \gamma &\sim \mathrm{Normal}\left(0, 10 \right)
+  a_0, \eta, \mu, \beta, \gamma &\sim \mathrm{Normal}\left(0, 10 \right) \\
+  a_{1}, \tau, \omega &\sim \mathrm{Normal}\left(0, 10 \right)
+  (\#eq:g-coef-priors)
+\end{align}
+Both modeling stages contain Normal district-level error terms, with estimated variances that facilitate partial pooling. 
+These variances are themselves given half-Normal priors with weakly informative scale parameter values that are about half the range of the raw outcome data in each party.
+\begin{align}
   \alpha_{d} &\sim \mathrm{Normal}\left(0, \sigma_{\alpha} \right)
-  \sigma_{\alpha} &\sim \mathrm{Normal}\left(0, 2 \right)
-  \epsilon_{i} &\sim \mathrm{Normal}\left(0, \sigma_{\epsilon} \right)
-  \sigma_{\epsilon} &\sim \mathrm{Normal}\left(0, 5 \right)
+  \sigma_{\alpha} &\sim \mathrm{Half-Normal}\left(0, 2 \right)
+  \nu_{d}  &\sim \mathrm{Normal}\left(0, \sigma_{\nu} \right)
+  \sigma_{\nu} &\sim \mathrm{Normal}\left(0, 2 \right)
+  (\#eq:g-ranef-priors)
 \end{align}
 
 \begin{align}
-  a_{1}, \tau, \omega &\sim \mathrm{Normal}\left(0, 10 \right)
-  \nu_{d}  &\sim \mathrm{Normal}\left(0, \sigma_{\nu} \right)
-  \sigma_{\nu} &\sim \mathrm{Normal}\left(0, 2 \right)
+  \epsilon_{i} &\sim \mathrm{Normal}\left(0, \sigma_{\epsilon} \right)
+  \sigma_{\epsilon} &\sim \mathrm{Half-Normal}\left(0, 5 \right)
   u_{i} &\sim \mathrm{Normal}\left(0, \sigma_{u} \right)
   \sigma_{u} &\sim \mathrm{Normal}\left(0, 5 \right)
+  (\#eq:g-resid-priors)
 \end{align}
 
 <!-- Because the demediated outcome value in stage two depends on parameter estimates from stage one, our average controlled direct estimate $\tau_{2}$ should reflect parameter uncertainty from both stages. @acharya-blackwell-sen:2016:direct-effects derive an analytical variance estimator that deals with this, but unfortunately this estimator does not incorporate the additional uncertainty introduced by the fact that the key independent variable, district-party ideology, is an estimate from a separate measurement model. To overcome this, I implement a simulation routine that propagates model uncertainty from the ideal point estimate into both stages, as well as stage one uncertainty into the second stage.  -->
