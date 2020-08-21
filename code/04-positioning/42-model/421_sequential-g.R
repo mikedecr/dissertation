@@ -6,7 +6,7 @@
 library("here")
 library("magrittr")
 library("tidyverse")
-library("boxr"); box_auth()
+# library("boxr"); box_auth()
 
 library("rstan")
 options(mc.cores = parallel::detectCores())
@@ -136,9 +136,6 @@ g_data %>% select("X_trt")
 
 # - remember this is a thing you can do: x_at_y(x, y)
 # - factoring d again in each party groups group-in-party index
-
-theta_stats$mean_all[1:4, "theta_mean"]
-
 
 # trying to create theta data using raw draws
 testy <- g_data %>%
@@ -278,10 +275,6 @@ g_grid_data <- g_data %$%
 
 g_data_dem %>% lapply(length)
 
-g_grid_data %>%
-  filter(incumbency == "All", primary_rules_co == "All", party_num == 1) %>%
-  (function(x) x$stan_data[[1]]) %>%
-  lapply(length)
 
 
 # ----------------------------------------------------
@@ -319,7 +312,7 @@ mcmc_g <- function(object = NULL, data = list(), ...) {
       max_treedepth = nuts_max_treedepth
     ),
     diagnostic_file = diagnostic_filepath,
-    refresh = 10L,
+    refresh = round(n_iter / 100),
     ...
   )
 }
@@ -334,97 +327,97 @@ mcmc_g <- function(object = NULL, data = list(), ...) {
 # iter
 
 
-# runs democratic test twice to check the convergence stability
-vb_dem <- vb(
-  object = stan_g,
-  data = g_data_dem
-)
-vb_dem_1 <- vb(
-  object = stan_g,
-  data = g_data_dem
-)
-alarm()
+# # runs democratic test twice to check the convergence stability
+# vb_dem <- vb(
+#   object = stan_g,
+#   data = g_data_dem
+# )
+# vb_dem_1 <- vb(
+#   object = stan_g,
+#   data = g_data_dem
+# )
+# alarm()
 
 
-# check stability, compare pt estimates
-list(vb_dem, vb_dem_1) %>%
-  lapply(tidy) %>%
-  bind_rows(.id = "test") %>%
-  pivot_wider(
-    names_from = "test",
-    values_from = c("estimate", "std.error")
-  ) %>%
-  pivot_longer(
-    cols = -term, 
-    names_to = "param",
-    values_to = "value"
-  ) %>%
-  mutate(
-    param = str_remove(param, "[.]"),
-    test = parse_number(param),
-    param = str_split(param, pattern = "_", simplify = TRUE)[,1]
-  ) %>%
-  pivot_wider(
-    names_from = "test",
-    values_from = "value",
-    names_prefix = "test_"
-  ) %>%
-  ggplot() +
-  aes(x = test_1, y = test_2) +
-  geom_point() +
-  facet_wrap(~ param)
+# # check stability, compare pt estimates
+# list(vb_dem, vb_dem_1) %>%
+#   lapply(tidy) %>%
+#   bind_rows(.id = "test") %>%
+#   pivot_wider(
+#     names_from = "test",
+#     values_from = c("estimate", "std.error")
+#   ) %>%
+#   pivot_longer(
+#     cols = -term, 
+#     names_to = "param",
+#     values_to = "value"
+#   ) %>%
+#   mutate(
+#     param = str_remove(param, "[.]"),
+#     test = parse_number(param),
+#     param = str_split(param, pattern = "_", simplify = TRUE)[,1]
+#   ) %>%
+#   pivot_wider(
+#     names_from = "test",
+#     values_from = "value",
+#     names_prefix = "test_"
+#   ) %>%
+#   ggplot() +
+#   aes(x = test_1, y = test_2) +
+#   geom_point() +
+#   facet_wrap(~ param)
 
-# test republican fit
-vb_rep <- vb(
-  object = stan_g,
-  data = g_data_rep
-)
-alarm()
+# # test republican fit
+# vb_rep <- vb(
+#   object = stan_g,
+#   data = g_data_rep
+# )
+# alarm()
 
 
-# tidy Rs and Ds
-vb_tidy <- 
-  list(vb_dem, vb_rep) %>%
-  lapply(tidy, conf.int = TRUE) %>%
-  bind_rows(.id = "party_num") %>%
-  print()
+# # tidy Rs and Ds
+# vb_tidy <- 
+#   list(vb_dem, vb_rep) %>%
+#   lapply(tidy, conf.int = TRUE) %>%
+#   bind_rows(.id = "party_num") %>%
+#   print()
 
-# plot treatment fx
-vb_tidy %>%
-  filter(term %in% c("coef_theta_trt")) %>%
-  ggplot() +
-  aes(x = term, y = estimate, color = as.factor(party_num)) +
-  geom_pointrange(
-    aes(ymin = conf.low, ymax = conf.high),
-    position = position_dodge(width = -0.25)
-  ) +
-  # scale_color_manual(values = party_factor_colors) +
-  coord_flip(ylim = c(-1, 1))
+# # plot treatment fx
+# vb_tidy %>%
+#   filter(term %in% c("coef_theta_trt")) %>%
+#   ggplot() +
+#   aes(x = term, y = estimate, color = as.factor(party_num)) +
+#   geom_pointrange(
+#     aes(ymin = conf.low, ymax = conf.high),
+#     position = position_dodge(width = -0.25)
+#   ) +
+#   # scale_color_manual(values = party_factor_colors) +
+#   coord_flip(ylim = c(-1, 1))
 
-# plot all terms
-vb_tidy %>%
-  filter(
-    str_detect(term, "coef") |
-    str_detect(term, "wt") |
-    str_detect(term, "sigma")
-  ) %>%
-  mutate(
-    prefix = case_when(
-      str_detect(term, "coef") ~ "Coefs of Interest",
-      str_detect(term, "wt") ~ "Nuisance Coefs",
-      str_detect(term, "sigma") ~ "Variance Components"
-    )
-  ) %>%
-  ggplot() +
-  aes(x = term, y = estimate, color = party_num) +
-  geom_pointrange(
-    aes(ymin = conf.low, ymax = conf.high),
-    position = position_dodge(width = -0.25)
-  ) +
-  facet_wrap(~ prefix, scales = "free") +
-  coord_flip() +
-  # scale_color_manual(values = party_factor_colors) +
-  NULL
+# # plot all terms
+# vb_tidy %>%
+#   filter(
+#     str_detect(term, "coef") |
+#     str_detect(term, "wt") |
+#     str_detect(term, "sigma")
+#   ) %>%
+#   mutate(
+#     prefix = case_when(
+#       str_detect(term, "coef") ~ "Coefs of Interest",
+#       str_detect(term, "wt") ~ "Nuisance Coefs",
+#       str_detect(term, "sigma") ~ "Variance Components"
+#     )
+#   ) %>%
+#   ggplot() +
+#   aes(x = term, y = estimate, color = party_num) +
+#   geom_pointrange(
+#     aes(ymin = conf.low, ymax = conf.high),
+#     position = position_dodge(width = -0.25)
+#   ) +
+#   facet_wrap(~ prefix, scales = "free") +
+#   coord_flip() +
+#   # scale_color_manual(values = party_factor_colors) +
+#   NULL
 
 
 
@@ -451,58 +444,58 @@ write_rds(mcmc_dem, here(mcmc_dir, "local_g-mcmc_dem.rds"))
 write_rds(mcmc_rep, here(mcmc_dir, "local_g-mcmc_rep.rds"))
 # box_write(mcmc_rep, "g-mcmc_rep.rds", dir_id = box_mcmc_4)
 
-list(mcmc_dem, mcmc_rep) %>%
-  lapply(tidy, conf.int = TRUE, rhat = TRUE, ess = TRUE) %>%
-  bind_rows(.id = "party_num") %>%
-  arrange((ess)) %>%
-  print(n = 100)
+# list(mcmc_dem, mcmc_rep) %>%
+#   lapply(tidy, conf.int = TRUE, rhat = TRUE, ess = TRUE) %>%
+#   bind_rows(.id = "party_num") %>%
+#   arrange((ess)) %>%
+#   print(n = 100)
 
-list(mcmc_dem, mcmc_rep) %>%
-lapply(check_hmc_diagnostics)
+# list(mcmc_dem, mcmc_rep) %>%
+# lapply(check_hmc_diagnostics)
 
 
 
 # ---- run VB grid -----------------------
 
-g_grid_vb <- g_grid_data %>%
-  mutate(
-    vbfit = map(
-      .x = stan_data,
-      .f = ~ try(vb(
-        object = stan_g,
-        data = .x
-      ))
-    )
-  ) %>%
-  print()
-alarm()
+# g_grid_vb <- g_grid_data %>%
+#   mutate(
+#     vbfit = map(
+#       .x = stan_data,
+#       .f = ~ try(vb(
+#         object = stan_g,
+#         data = .x
+#       ))
+#     )
+#   ) %>%
+#   print()
+# alarm()
 
 
 
-write_rds(g_grid_vb, here(mcmc_dir, "local_g-grid-vb.rds"))
+# write_rds(g_grid_vb, here(mcmc_dir, "local_g-grid-vb.rds"))
 
 # box_write(g_grid_vb, "g-grid-vb.rds", dir_id = box_mcmc_4)
 
-g_grid_vb <- 
-  here("data", "mcmc", "4-positioning", "g-grid-vb.rds") %>%
-  read_rds()
+# g_grid_vb <- 
+#   here("data", "mcmc", "4-positioning", "g-grid-vb.rds") %>%
+#   read_rds()
 
-g_grid_vb %>%
-  mutate(
-    tidy_vb = map(vbfit, tidy, conf.int = TRUE)
-  ) %>%
-  unnest(tidy_vb) %>%
-  filter(str_detect(term, "coef")) %>%
-  ggplot() +
-  aes(x = term, y = estimate, color = as.factor(party_num)) +
-  facet_grid(incumbency ~ primary_rules_co) +
-  geom_hline(yintercept = 0) +
-  geom_pointrange(
-    aes(ymin = conf.low, ymax = conf.high),
-    position = position_dodge(width = -0.25)
-  ) +
-  # scale_color_manual(values = party_factor_colors) +
-  coord_flip()
+# g_grid_vb %>%
+#   mutate(
+#     tidy_vb = map(vbfit, tidy, conf.int = TRUE)
+#   ) %>%
+#   unnest(tidy_vb) %>%
+#   filter(str_detect(term, "coef")) %>%
+#   ggplot() +
+#   aes(x = term, y = estimate, color = as.factor(party_num)) +
+#   facet_grid(incumbency ~ primary_rules_co) +
+#   geom_hline(yintercept = 0) +
+#   geom_pointrange(
+#     aes(ymin = conf.low, ymax = conf.high),
+#     position = position_dodge(width = -0.25)
+#   ) +
+#   # scale_color_manual(values = party_factor_colors) +
+#   coord_flip()
 
 
 
@@ -564,6 +557,9 @@ mcmc_dem_incumbency <- g_grid_data %>%
   print()
 alarm()
 
+write_rds(mcmc_dem_incumbency, here(mcmc_dir, "local_mcmc_dem_incumbency.rds"))
+
+
 mcmc_rep_incumbency <- g_grid_data %>%
   filter(incumbency %in% c("Incumbent", "Challenger", "Open Seat")) %>%
   filter(party_num == 2) %>%
@@ -579,23 +575,22 @@ mcmc_rep_incumbency <- g_grid_data %>%
   print()
 alarm()
 
-write_rds(mcmc_dem_incumbency, here(mcmc_dir, "local_mcmc_dem_incumbency.rds"))
-
-
-mcmc_dem_primary <- g_grid_data %>%
-  mutate(
-    mcmcfit = map(
-      .x = stan_data,
-      .f = ~ try(mcmc_g(
-        object = stan_g,
-        data = .x
-      ))
-    )
-  ) %>%
-  print()
-alarm()
-
 write_rds(mcmc_rep_incumbency, here(mcmc_dir, "local_mcmc_rep_incumbency.rds"))
+
+
+# g_grid_mcmc <- g_grid_data %>%
+#   mutate(
+#     mcmcfit = map(
+#       .x = stan_data,
+#       .f = ~ try(mcmc_g(
+#         object = stan_g,
+#         data = .x
+#       ))
+#     )
+#   ) %>%
+#   print()
+# alarm()
+
 
 # box_write(g_grid_mcmc, "g-grid-mcmc.rds", dir_id = box_mcmc_4)
 
