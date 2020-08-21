@@ -25,6 +25,7 @@ library("latex2exp")
 # }
 
 box_mcmc_4 <- 120779787044
+mcmc_dir <- file.path("data", "mcmc", "4-positioning")
 
 # ----------------------------------------------------
 #   data and helpers
@@ -72,6 +73,7 @@ ggplot(data = full_data_raw) +
 
 full_data_raw
 
+names(full_data_raw) 
 
 
 # ----------------------------------------------------
@@ -80,14 +82,15 @@ full_data_raw
 
 blip_value <- 0.5
 
-names(full_data_raw) 
 
 full_data_raw %>% count(tpo)
+full_data_raw %>% count(pf)
 
 # check mediator_formula and direct_formula 
 #   in naive-regression.R file
 
 # Making matrices for compose_data
+
 g_data <- full_data_raw %>%
   transmute(
     group, party_num,
@@ -100,19 +103,32 @@ g_data <- full_data_raw %>%
     ) %>%
       matrix(nrow = n()),
     X_trt = c(
-      district_white, district_latino, 
-      district_college_educ, district_median_income, district_poverty, 
-      district_unemployment, district_service, district_blue_collar, 
-      district_age_18_to_24, district_over_65,
-      district_pop_density, district_land_area, 
-      tpo, pf
-    ) %>%
-      matrix(nrow = n()) %>%
-      apply(2, function(x) scale(x) %>% as.vector()),
+      as.vector(scale(district_white)), 
+      as.vector(scale(district_latino)),
+      as.vector(scale(district_college_educ)), 
+      as.vector(scale(district_median_income)), 
+      as.vector(scale(district_poverty)),
+      as.vector(scale(district_unemployment)), 
+      as.vector(scale(district_service)), 
+      as.vector(scale(district_blue_collar)),
+      as.vector(scale(district_age_18_to_24)), 
+      as.vector(scale(district_over_65)),
+      as.vector(scale(district_pop_density)), 
+      as.vector(scale(district_land_area)), 
+      as.integer(tpo == 2),
+      as.integer(tpo == 3),
+      as.integer(tpo == 4),
+      as.integer(tpo == 5), 
+      pf
+    ) 
+    %>%
+      matrix(nrow = n())
   ) %>%
   na.omit() %>%
   arrange(group) %>%
   print()
+
+g_data %>% select("X_trt")
 
 
 # ---- by-party files -----------------------
@@ -255,6 +271,7 @@ g_grid_data <- g_data %$%
       }
     )
   ) %>%
+  filter((incumbency == "All" & primary_rules_co == "All") == FALSE) %>%
   print(n = nrow(.))
 # ----
 
@@ -265,6 +282,7 @@ g_grid_data %>%
   filter(incumbency == "All", primary_rules_co == "All", party_num == 1) %>%
   (function(x) x$stan_data[[1]]) %>%
   lapply(length)
+
 
 # ----------------------------------------------------
 #   stan model
@@ -409,8 +427,8 @@ vb_tidy %>%
   NULL
 
 
-# ---- sampling testing -----------------------
 
+# ---- sampling testing -----------------------
 
 mcmc_dem <- mcmc_g(
   object = stan_g,
@@ -427,8 +445,11 @@ mcmc_rep <- mcmc_g(
 )
 alarm()
 
-box_write(mcmc_dem, "g-mcmc_dem.rds", dir_id = box_mcmc_4)
-box_write(mcmc_rep, "g-mcmc_rep.rds", dir_id = box_mcmc_4)
+write_rds(mcmc_dem, here(mcmc_dir, "local_g-mcmc_dem.rds"))
+# box_write(mcmc_dem, "g-mcmc_dem.rds", dir_id = box_mcmc_4)
+
+write_rds(mcmc_rep, here(mcmc_dir, "local_g-mcmc_rep.rds"))
+# box_write(mcmc_rep, "g-mcmc_rep.rds", dir_id = box_mcmc_4)
 
 list(mcmc_dem, mcmc_rep) %>%
   lapply(tidy, conf.int = TRUE, rhat = TRUE, ess = TRUE) %>%
@@ -457,7 +478,10 @@ g_grid_vb <- g_grid_data %>%
 alarm()
 
 
-box_write(g_grid_vb, "g-grid-vb.rds", dir_id = box_mcmc_4)
+
+write_rds(g_grid_vb, here(mcmc_dir, "local_g-grid-vb.rds"))
+
+# box_write(g_grid_vb, "g-grid-vb.rds", dir_id = box_mcmc_4)
 
 g_grid_vb <- 
   here("data", "mcmc", "4-positioning", "g-grid-vb.rds") %>%
@@ -489,7 +513,9 @@ g_grid_vb %>%
 
 # ---- MCMC -----------------------
 
-g_grid_mcmc <- g_grid_data %>%
+mcmc_dem_primary <- g_grid_data %>%
+  filter(primary_rules_co %in% c("closed", "open")) %>%
+  filter(party_num == 1) %>%
   mutate(
     mcmcfit = map(
       .x = stan_data,
@@ -502,8 +528,76 @@ g_grid_mcmc <- g_grid_data %>%
   print()
 alarm()
 
+write_rds(mcmc_dem_primary, here(mcmc_dir, "local_mcmc_dem_primary.rds"))
 
-box_write(g_grid_mcmc, "g-grid-mcmc.rds", dir_id = box_mcmc_4)
+
+mcmc_rep_primary <- g_grid_data %>%
+  filter(primary_rules_co %in% c("closed", "open")) %>%
+  filter(party_num == 2) %>%
+  mutate(
+    mcmcfit = map(
+      .x = stan_data,
+      .f = ~ try(mcmc_g(
+        object = stan_g,
+        data = .x
+      ))
+    )
+  ) %>%
+  print()
+alarm()
+
+write_rds(mcmc_rep_primary, here(mcmc_dir, "local_mcmc_rep_primary.rds"))
+
+
+mcmc_dem_incumbency <- g_grid_data %>%
+  filter(incumbency %in% c("Incumbent", "Challenger", "Open Seat")) %>%
+  filter(party_num == 1) %>%
+  mutate(
+    mcmcfit = map(
+      .x = stan_data,
+      .f = ~ try(mcmc_g(
+        object = stan_g,
+        data = .x
+      ))
+    )
+  ) %>%
+  print()
+alarm()
+
+mcmc_rep_incumbency <- g_grid_data %>%
+  filter(incumbency %in% c("Incumbent", "Challenger", "Open Seat")) %>%
+  filter(party_num == 2) %>%
+  mutate(
+    mcmcfit = map(
+      .x = stan_data,
+      .f = ~ try(mcmc_g(
+        object = stan_g,
+        data = .x
+      ))
+    )
+  ) %>%
+  print()
+alarm()
+
+write_rds(mcmc_dem_incumbency, here(mcmc_dir, "local_mcmc_dem_incumbency.rds"))
+
+
+mcmc_dem_primary <- g_grid_data %>%
+  mutate(
+    mcmcfit = map(
+      .x = stan_data,
+      .f = ~ try(mcmc_g(
+        object = stan_g,
+        data = .x
+      ))
+    )
+  ) %>%
+  print()
+alarm()
+
+write_rds(mcmc_rep_incumbency, here(mcmc_dir, "local_mcmc_rep_incumbency.rds"))
+
+# box_write(g_grid_mcmc, "g-grid-mcmc.rds", dir_id = box_mcmc_4)
 
 
 
