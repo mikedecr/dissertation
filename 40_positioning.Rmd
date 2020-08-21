@@ -804,8 +804,8 @@ This is done with the following multilevel regression model.
     \mathbf{x}_{d[i]}^{\intercal}\beta +
     \mathbf{z}_{d[i]}^{\intercal}\gamma +
     \alpha_{d[i]} + \epsilon_{i} \\
-  \alpha_{d} &\sim \mathrm{Normal}\left(0, \sigma_{\alpha}\right) \\
-  \epsilon_{i} &\sim \mathrm{Normal}\left(0, \sigma_{\epsilon}\right)
+  \alpha_{d} &\sim \text{Normal}\left(0, \sigma_{\alpha}\right) \\
+  \epsilon_{i} &\sim \text{Normal}\left(0, \sigma_{\epsilon}\right)
 \end{split}
 (\#eq:med-model)
 \end{align}
@@ -924,17 +924,25 @@ Letting $\boldsymbol{\pi}$ represent all auxiliary model parameters, and using t
   \int \p{\tau \left(\bar{\theta} - \bar{\theta}'\right), \boldsymbol{\pi} \mid \mathbf{y}} \diff \boldsymbol{\pi},
   (\#eq:post-acde)
 \end{align}
-which is an average of all possible $\tau$ values, each value weighted by the posterior probability of the associated $\boldsymbol{\pi}$ values.
+which is a the distribution of ACDE values that condition on the observed data and marginalize over the associated auxiliary parameter values.
+In practice, we use MCMC samples to approximate this posterior distribution by picking two fixed values of $\bar{\theta}$ and $\bar{\theta}'$, extracting posterior samples for $\tau$, and calculating $\tau \left(\bar{\theta} - \bar{\theta}'\right)$ for each MCMC sample iteration.
+In cases where $\bar{\theta} - \bar{\theta}' = 1$, the ACDE is equal to $\tau$, so posterior samples for $\tau$ are sufficient to characterize that posterior.
+Posterior expectations for the ACDE can be calculated, up to Monte Carlo error, by averaging the ACDE values from a draw of MCMC samples.
 
+<!------- TO DO ---------
+- should this go in Ch 3?
+------------------------->
 The joint posterior distribution is also essential for incorporating uncertainty in district-party ideal points themselves.
-Recall from the group IRT model in Chapter \@ref(ch:model) that district-party ideal points are not estimated precisely. 
-Instead, ideal points are identified only up to a posterior distribution, with uncertainty that reflects prior ignorance and a finite sample of polling data.
+The IRT model in Chapter \@ref(ch:model) does not estimate district-party ideal points exactly. 
+Instead, ideal points are estimated only up to a posterior distribution, with uncertainty that reflects both prior ignorance and a finite sample of polling data.
 <!------- TO DO ---------
 - typically, people do propagated uncertainty
 ------------------------->
 To estimate the effect of district-party ideology on candidate positioning, the causal analysis incorporates measurement error in ideal points "the Bayesian way," where posterior uncertainty from one analysis becomes prior uncertainty in later analyses.
+One way to do this would be to build one joint model for the measurment of 
+Rather than jointly estimate the ideal point model and all subsequent causal analyses, which would be an overwhelming feat of model-building and estimation, 
 This prior is constructed by defining the group ideal point $\bar{\theta}_{g}$ as an element of $\Theta$, the vector of all group ideal points.
-Rather than jointly estimate the ideal point model and all subsequent causal analyses, which would be an overwhelming feat of model-building and estimation, I specify a multivariate Normal prior on the vector of ideal points.
+I then specify a multivariate Normal prior on the vector of ideal points.
 \begin{align}
   \Theta &\sim 
     \mathrm{MultiNormal}\left( \hat{\Theta}, \hat{\Sigma}_{\Theta} \right) %_
@@ -956,7 +964,7 @@ but that method accomplishes essentially the same goal as a prior distribution, 
 ------------------------->
 More recently, researchers have employed methods of "uncertainty propagation" methods, where the researcher estimates an uncertainty quantity, simulates values from the quantity's posterior distribution, and pushes those simulated values through a downstream analysis. 
 Quantities of interest are then averaged across the posterior simulations [see @kastellec-et-al:2015:scotus-electoral-connection p. 791; @caughey-warshaw:2018:dynamic-responsiveness p. 6; @caughey-warshaw:2019:subnational-opinion-review p. 360].
-This is similar in spirit to "multiple overimputation" [@blackwell-et-al:2017:measurement-error], which creates "imputation datasets" by replacing mismeasured observations with posterior draws.
+This is similar in spirit to "multiple overimputation" [@blackwell-et-al:2017:measurement-error], which creates "imputation datasets" by iteratively replacing mismeasured observations with draws from their posterior distribution.
 This project regards these propagation methods as insufficiently Bayesian because they "cut" the flow of information between models: model 1 informs model 2, but model 2 can never inform model 1 [@plummer:2015:bayesian-cuts].
 This can be an undesirable modeling property if the causal model can inform the measurement model [@treier-jackman:2008:latent-democracy].
 In this project, if ideal points are related to candidate positioning, and ideal points are measured with error, then candidate positions can be informative about ideal points.
@@ -970,65 +978,28 @@ By specifying the prior directly and updating the parameters, there is no need f
 The Bayesian sequential-$g$ approach, of course, requires priors for other model parameters.
 Coefficients for linear predictors in stages 1 and 2 are given Normal priors that are proper but overly diffuse, to avoid biasing treatment effects by over-regularizing covariates [@hahn-et-al:2018:regularization-confounding].
 \begin{align}
-  a_0, \eta, \mu, \beta, \gamma &\sim \mathrm{Normal}\left(0, 10 \right) \\
-  a_{1}, \tau, \omega &\sim \mathrm{Normal}\left(0, 10 \right)
+  a_0, \eta, \mu, \beta, \gamma &\sim \text{Normal}\left(0, 10 \right) \\
+  a_{1}, \tau, \omega &\sim \text{Normal}\left(0, 10 \right)
   (\#eq:g-coef-priors)
 \end{align}
 Both modeling stages contain Normal district-level error terms, with estimated variances that facilitate partial pooling. 
-These variances are themselves given half-Normal priors with weakly informative scale parameter values that are about half the range of the raw outcome data in each party.
+These variances are themselves given half-Normal priors with weakly informative scale parameter values that are about half the range of the raw outcome data within each party.
 \begin{align}
-  \alpha_{d} &\sim \mathrm{Normal}\left(0, \sigma_{\alpha} \right)
-  \sigma_{\alpha} &\sim \mathrm{Half-Normal}\left(0, 2 \right)
-  \nu_{d}  &\sim \mathrm{Normal}\left(0, \sigma_{\nu} \right)
-  \sigma_{\nu} &\sim \mathrm{Normal}\left(0, 2 \right)
+  \alpha_{d} &\sim \text{Normal}\left(0, \sigma_{\alpha} \right) \\
+  \sigma_{\alpha} &\sim \text{Half-Normal}\left(0, 2 \right) \\
+  \nu_{d}  &\sim \text{Normal}\left(0, \sigma_{\nu} \right) \\
+  \sigma_{\nu} &\sim \text{Normal}\left(0, 2 \right)
   (\#eq:g-ranef-priors)
 \end{align}
-
+And finally, each stage of the model has a Normal error term for candidates within districts. 
+The variances for these errors are given half-Normal priors with wider scale values that the districts errors, since residual variation between any two candidates is likely larger than the variation between average candidates in any two districts.
 \begin{align}
-  \epsilon_{i} &\sim \mathrm{Normal}\left(0, \sigma_{\epsilon} \right)
-  \sigma_{\epsilon} &\sim \mathrm{Half-Normal}\left(0, 5 \right)
-  u_{i} &\sim \mathrm{Normal}\left(0, \sigma_{u} \right)
-  \sigma_{u} &\sim \mathrm{Normal}\left(0, 5 \right)
+  \epsilon_{i} &\sim \text{Normal}\left(0, \sigma_{\epsilon} \right) \\
+  \sigma_{\epsilon} &\sim \text{Half-Normal}\left(0, 5 \right) \\
+  u_{i} &\sim \text{Normal}\left(0, \sigma_{u} \right) \\
+  \sigma_{u} &\sim \text{Normal}\left(0, 5 \right)
   (\#eq:g-resid-priors)
 \end{align}
-
-<!-- Because the demediated outcome value in stage two depends on parameter estimates from stage one, our average controlled direct estimate $\tau_{2}$ should reflect parameter uncertainty from both stages. @acharya-blackwell-sen:2016:direct-effects derive an analytical variance estimator that deals with this, but unfortunately this estimator does not incorporate the additional uncertainty introduced by the fact that the key independent variable, district-party ideology, is an estimate from a separate measurement model. To overcome this, I implement a simulation routine that propagates model uncertainty from the ideal point estimate into both stages, as well as stage one uncertainty into the second stage.  -->
-
-
-One important feature of this dissertation is that our causal variable of interest, the policy ideology of district-party publics, is not measured with certainty.
-The model in Chapter&nbsp;\@ref(ch:model) estimates this quantity up to a posterior distribution, but the variation in the posterior distribution creates an additional layer of uncertainty in our understanding of causal effects. 
-This creates theoretical issues with the definition of treatment effects as well as practical issues for estimation, which I describe in turn.
-
-
-As discussed in Chapter&nbsp;\@ref(ch:causality), it is natural to interpret causal inference as Bayesian updating about a causal parameter using models and data.
-Following @rubin:1978:bayesian's Bayesian interpretation of his own work with potential outcomes, causal inference is a method for generating counterfactual estimates of an outcome variable as if they were predictive draws from the posterior distribution.
-Supposing that we seek the causal effect of an intervention on group ideology, $\tau$, and we observe only one potential outcome, $y_{g}(\bar{\theta}_{g})$, how do we specify the posterior distribution if we set group ideology to some other value $\theta'$?
-Not only do we have posterior uncertainty about $\tau$, but we are also uncertain about the actual value of $\bar{\theta}_{g}$ that we observed in the first place, since the measurement model from Chapter&nbsp;\@ref(ch:model) estimates it only up to a posterior distribution. 
-Our posterior distribution for missing potential outcomes reflects both sources of uncertainty. 
-Econometrics refers to this problem as "errors in variables," but it takes on a special meaning when it comes to the interpretation of causal interventions, since it stresses our understanding of what an "observed" potential outcome is.
-
-
-Practically, this means that we will underestimate our uncertainty about causal effects unless we can account for the uncertainty in our treatment variable on top of our uncertainty in its effect on candidate positioning. All ideal point estimates are uncertain, but not many studies confront this uncertainty. Since the usefulness of the ideal point model in Chapter&nbsp;\@ref(ch:model) is important to explore in this dissertation, it feels appropriate not to ignore posterior uncertainty in its applications. As such, I conduct all sequential-$g$ analyses below using raw posterior samples, rather than posterior means. I describe the exact routine in Section&nbsp;\@ref(sec:pos-uncertainty).
-
-<!-- 
-
-We observe $y_{g}\left(\bar{\theta}_{g}\right)$, but we don't know $\bar{\theta}_{g}$ with certainty. Instead let $p\left(\bar{\theta}_{g}\right)$ be the posterior distribution of $g$'s average policy ideology as estimated from the group IRT model in Chapter&nbsp;\@ref(ch:model). Our observed outcome is a function of this unknown value, which we represent as $y_{g}\left(p\left(\bar{\theta}_{g}\right)\right)$. 
-
-Thus the causal effect of setting $\mathrm{do}\left(\theta\right)$, as opposed to some $\theta'$, for unit $g$ is
-\begin{align}
-  \tau_g &= y_{g}\left(\theta\right) - y_{g}\left(\bar{\theta}_{g}'\right),
-\end{align}
-
-The posterior distribution for this value is 
-$p\left(\tau_{g}\right) = p\left(\right)$
-
-or, written as a probability distribution 
-\begin{align}
-  p\left(\tau_{g}\right) &= p\left(y_{g}\left(\theta'\right) - y_{g}\left(\bar{\theta}_{g}\right)\right)
-\end{align}
-
- -->
-
 
 
 
@@ -1039,49 +1010,46 @@ In this scenario, the outcome is a variable specific to an individual candidate 
 This introduces a few issues for statistical assumptions and causal assumptions.
 
 On the statistical front, multilevel models bias coefficient estimates when the aggregate errors are not exchangeable.
-Mechanically, this is the same as "omitted variable bias" in a single-level regression: if the errors are not independent, then coefficients will be biased.
+Mechanically, this is similar to "omitted variable bias" in a single-level regression.
 Although this concern is well founded for many multilevel models, for these models we can be less concerned.
 Because all predictors in these regressions are measured at the district level, the district error term is analogous to an error term that we would obtain by averaging every candidate's CF score within a district-party group and running a single-level regression on those averages.
-In other words, we make the same independence assumption either way.
+Both of these model specifications require an exchangeable errors assumption at the district level.
 The only difference for the models in this analysis is the additional candidate-level errors, but this too is a non-issue. 
-Averaging candidate data within each district invokes the same exchangeability assumption as an additional error term, otherwise a simple average wouldn't make sense.
+Averaging candidate data within each district would invoke a similar assumption about the exchangeability of candidates given the district, otherwise it would be inappropriate to average data within a district.
 
-The multilevel model has additional benefits that are convenient for these data.
-Because the number of candidates in a district isn't fixed across all districts, we would expect heteroskedasticity in the model residuals if we averaged the data within each district.
-Furthermore, in districts with only one candidate, there is no way for a naïve estimator to separate district variance from candidate variance. 
-The multilevel model addresses this by modeling the distributions of district errors and candidate errors simultaneously, enhancing the model's ability to recognize when larger district errors are caused by signal versus noise.
-Errors from smaller districts borrow more information from the overall distribution of districts, downweighting the contributions of smaller districts by shrinking their errors toward zero.
-This has a similar intuition as estimating a weighted least squares regression on the district-averaged data, where districts with fewer observations are given less weight to account for heteroskedasticity.
-Because the multilevel model is Bayesian, the posterior distribution naturally captures the negative correlation between the size of a district error and the size of a candidate error, even if these errors are not uniquely identified from data.
-In other words, the Bayesian approach facilitates a much more convenient and feasible modeling approach because the priors provide enough structure to prevent certain pathologies of clustered data.
+Even though the multilevel model has similar assumptions as a regression on averages, it has certain benefits that are convenient for these data.
+Because the number of candidates in a district isn't fixed across all districts, we would expect heteroskedasticity in a regression-on-averages model, since some districts would have higher variances due to fewer candidates.
+In the extreme case, if a district contained only one unopposed primary candidate, a naïve estimator would be unable to distinguish district-level variance from candidate-level variance.
+The multilevel model addresses this by estimating the distributions of district errors and candidate errors simultaneously, enhancing the model's ability to recognize when larger district errors are caused by signal versus noise.
+Errors from smaller districts borrow more information from the overall distribution of districts, downweighting the contributions of smaller districts by shrinking their errors toward a mean of zero.
+This has a similar intuition as a weighted least squares regression on the district-averaged data, where districts with more candidates are more informative and receive greater weight.
+Because the multilevel model is Bayesian, however, the model can handle single-candidate districts by drawing district and candidate error terms from their respective prior distributions. 
+This is yet another example where priors stabilize pathological model behavior, and underscores how the flexibility afforded by Bayesian model-building allows us to confront the idiosyncrasies of a dataset with tactics that are both intuitive and feasible.
 
-The multilevel data also raise causal inference issues that should be clarified.
-As with many causal model where treatments are assigned to clusters of observations, it makes sense to consider SUTVA as violated within a cluster: there is no way for one candidate in a district to be treated by a different district-party ideology than other candidates.^[
-  Candidates may vary in their ability to perceive district-party ideology, which might better be described as an issue of treatment compliance rather than hidden versions of treatment.
+The multilevel data structure also raises causal inference issues that are worth clarifying.
+As with many causal models where treatments are assigned to clusters of observations, it makes sense to consider SUTVA as violated within a cluster: there is no way for one candidate in a district to be treated by a different district-party ideology than other candidates.^[
+  Candidates may vary in their ability to perceive district-party ideology, but that might also be described as an issue of treatment compliance or treatment effect heterogeneity.
 ]
 The positioning of one candidate may also affect the positioning of another, which could violate the "no interference" component of SUTVA. 
 Under this violation, the treatment effect at the individual level is not identified.
 If SUTVA holds _between_ groups, however, it is possible to identify a treatment effect by considering average effects across groups [@Hill:2013:multilevel-causal-inf]. 
-In potential outcomes notation, even if we can define potential outcomes at the individual level ($\mathit{CF}_{i}(\bar{\theta}_{g[i]})$), the lowest level where we could credibly identify treatment effects would be at the group level, where the potential outcome for a group is the average outcome within the group ($\overline{\mathit{CF}}_{g}\left(\bar{\theta}_{g}\right)$).
-This is consistent with the multilevel model setup that we have so far, where the treatment effect is captured using district-level data and district-level predictors only (see Equation \@ref(eq:general-ACDE)).
+In potential outcomes notation, even if we can define potential outcomes at the individual level ($\mathit{CF}_{i}(\bar{\theta}_{g[i]})$), the lowest level where we could credibly _identify_ treatment effects would be the group level, where the potential outcome for a group is the average outcome within the group ($\overline{\mathit{CF}}_{g}\left(\bar{\theta}_{g}\right)$).
+This is consistent with the multilevel model setup that we have so far, where the ACDE is a function of aggregate data and aggregate parameters only (see Equation \@ref(eq:general-ACDE)).
 
 There are a few additional considerations for causal inference with hierarchical data that, although I do not pursue these threads in this project, could be relevant for future work with similar data.
-If treatment effects are correlated with group size, then the average causal effect will not be equivalent to the average difference among groups.
-Instead, the average effect should be thought of as a size-weighted average of group effects [@Hill:2013:multilevel-causal-inf].
 A correlation between treatment effects and group size may arise if a crowded primary field causes larger treatment effects because stiffer competition leads candidates to be more responsive to district-party ideology.
 On the other hand, more crowded fields would lead to smaller treatment effects if candidates take heterogeneous ideological positions to differentiate themselves.
-These dynamics are not identifiable with the raw data in this project, as incumbents may take ideological positions to deter challengers, even if no challengers actually emerge.
-As such, the observed number of challengers may not capture the true degree of primary threat [@hirano-et-al:2010:primary-polarization].
+If treatment effects are correlated with group size, then the average causal effect for a candidate is not equivalent to average difference among groups.
+Instead, the average effect for candidates must be a size-weighted average of group effects [@Hill:2013:multilevel-causal-inf].
+I do not pursue this possibility in this project because these dynamics are not identifiable with data on primary candidates only, since incumbents may take ideological positions to deter challengers even if no challengers actually emerge.
+As such, the observed number of candidates in a district may not capture the true degree of primary threat [@hirano-et-al:2010:primary-polarization; @maisel-stone:1997:candidate-emergence; @stone-mailsel:2003:potential-candidate-calculus].
 
 One additional consideration for group-level effects is the possibility that group size affects treatment assignment.
-This may indirectly be the case if the dynamics of primary competition within a district-party have feedback effects on local ideology, for instance if partisan constituents become more ideological after experiencing a history of strong primary competition in their district, or less ideological after a long period representation by one incumbent with little primary competition.
-Given the still-nascent state of the research on ideological primary competition, it is safe to say that political scientists have little idea which of these propositions is more likely. 
-Future researchers would make progress on these questions by extending the data and methods in this project to cover a greater number of election cycles and more detailed investigations of these causal and modeling assumptions.
-
+This may be true if the long-run dynamics of primary competition within a district-party have feedback effects on local ideology, for instance if partisan constituents become more ideologically aware by experiencing stronger intra-party competition in their district, or less ideological after a long period of representation by a single incumbent with little primary competition.
+There is evidence that primaries contain more ideological campaign content in certain periods of heightened partisan mobilization [@boatright:2013:getting-primaried], which could increase voters' ideological awareness as well.
+Whether voters are responding to primary competition in the district _per se_ or to a national state of partisan agitation is an interesting but thoroughly challenging question for future researchers to explore, were they to extend the data and methods in this project to a greater number of election cycles and dynamic causal modeling approaches [e.g. @blackwell-glynn:2018:causal-TSCS; @imai-kim:2019:fixed-effects-causal-inference].
 
 <!-- If treatment is correlated with X _by design_(?) or otherwise(?), such as blocking along a key covariate like income, can include block-specific means of the treatment variable [@Hill:2013:multilevel-causal-inf]; Bafumi and Gelman, Raudenbush -->
-
-<!-- ranefs assumption is similar to averaging w/in group...? -->
 
 
 
