@@ -122,7 +122,7 @@ What to do with the Hopkins/Sniderman theory
 
 
 
-```{r read-dime, eval = TRUE}
+```{r read-data, eval = TRUE}
 full_data <- read_rds(here("data", "_clean", "candidates-x-irt.rds"))
 ```
 
@@ -144,19 +144,7 @@ party_fits <- full_data %>%
       .f = ~ lm(recipient_cfscore_dyn ~ theta_mean_raw, data = .x)
     ),
     lmtidy = map(lmfit, tidy, conf.int = TRUE),
-    lmglance = map(lmfit, glance),
-    lmhat = map2(
-      .x = lmfit, 
-      .y = lmglance,
-      .f = ~ {
-        tstat <- qt(p = 0.975, df = .y$df.residual) 
-        augment(.x) %>%
-        mutate(
-          lower = .fitted - tstat*.se.fit,
-          upper = .fitted + tstat*.se.fit
-        )
-      }
-    )
+    lmglance = map(lmfit, glance)
   ) %>%
   print()
 
@@ -171,7 +159,9 @@ byparty_labels <- party_fits %>%
   select(party, n, correlation, p.value) %>%
   ungroup() %>%
   print()
+```
 
+```{r plot-by-party}
 ggplot(full_data) +
   aes(x = theta_mean_raw, y = recipient_cfscore_dyn) +
   geom_point(
@@ -205,42 +195,36 @@ ggplot(full_data) +
   ) 
 ```
 
+```{r plot-by-party, include = TRUE, fig.width = 8, fig.height = 5, fig.cap = "Topline relationship between district-party ideology and candidate positions. The horizontal axis plots the posterior mean for a group ideology, and the vertical axis is the dynamic CF score for primary candidates included in the DIME congressional candidate database.", fig.scap = "Topline relationship between district-party ideology and candidate positions."}
+```
+
 
 ```{r by-incumbency}
-# incumbency_fits <- full_data %>%
-#   group_by(incumbency) %>%
-#   nest() %>%
-#   mutate(
-#     correlation = map(
-#       .x = data,
-#       .f = ~ cor(
-#         .x$recipient_cfscore_dyn, 
-#         .x$theta_mean_raw,
-#         use = "pairwise.complete.obs"
-#       )
-#     ),
-#     lmfit = map(
-#       .x = data,
-#       .f = ~ lm(recipient_cfscore_dyn ~ theta_mean_raw, data = .x)
-#     ),
-#     lmtidy = map(lmfit, tidy, conf.int = TRUE),
-#     lmglance = map(lmfit, glance),
-#     lmhat = map2(
-#       .x = lmfit, 
-#       .y = lmglance,
-#       .f = ~ {
-#         tstat <- qt(p = 0.975, df = .y$df.residual) 
-#         augment(.x) %>%
-#         mutate(
-#           lower = .fitted - tstat*.se.fit,
-#           upper = .fitted + tstat*.se.fit
-#         )
-#       }
-#     )
-#   ) %>%
-#   print()
+incumbency_fits <- full_data %>%
+  group_by(incumbency) %>%
+  nest() %>%
+  mutate(
+    correlation = map(
+      .x = data,
+      .f = ~ cor(
+        .x$recipient_cfscore_dyn, 
+        .x$theta_mean_raw,
+        use = "pairwise.complete.obs"
+      )
+    ),
+    lmfit = map(
+      .x = data,
+      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean_raw, data = .x)
+    ),
+    lmtidy = map(lmfit, tidy, conf.int = TRUE),
+    lmglance = map(lmfit, glance)
+  ) %>%
+  print()
+```
 
 
+
+```{r plot-by-incumbency}
 ggplot(full_data) +
   aes(x = theta_mean_raw, y = recipient_cfscore_dyn) +
   facet_wrap(~ fct_relevel(str_glue("{incumbency}s"), "Incumbents", "Challengers")) +
@@ -266,8 +250,33 @@ ggplot(full_data) +
   theme(legend.position = "none")
 ```
 
+```{r plot-by-incumbency, include = TRUE, out.width = "100%", fig.width = 8, fig.height = 4, fig.cap = "District-party ideology and candidate positioning across candidate incumbency status.", fig.scap = "District-party ideology and candidate positioning for incumbents, challengers, and open-seat candidates."}
+```
 
 ```{r by-cycle}
+cycle_fits <- full_data %>%
+  group_by(cycle) %>%
+  nest() %>%
+  mutate(
+    correlation = map(
+      .x = data,
+      .f = ~ cor(
+        .x$recipient_cfscore_dyn, 
+        .x$theta_mean_raw,
+        use = "pairwise.complete.obs"
+      )
+    ),
+    lmfit = map(
+      .x = data,
+      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean_raw, data = .x)
+    ),
+    lmtidy = map(lmfit, tidy, conf.int = TRUE),
+    lmglance = map(lmfit, glance)
+  ) %>%
+  print()
+```
+
+```{r plot-by-cycle}
 ggplot(full_data) +
   aes(x = theta_mean_raw, y = recipient_cfscore_dyn) +
   facet_wrap(~ str_glue("{cycle} Campaign")) +
@@ -293,6 +302,8 @@ ggplot(full_data) +
   theme(legend.position = "none")
 ```
 
+```{r plot-by-cycle, include = TRUE, out.width = "100%", fig.width = 8, fig.height = 4, fig.cap = "District-party ideology and candidate positioning across election cycles within the 2010s districting cycle.", fig.scap = "District-party ideology and candidate positioning in 2012, 2014, and 2016."}
+```
 
 
 
@@ -548,14 +559,14 @@ ggplot(problem_dag) +
     label = 
       TeX("Controlling for $V_{d}$ opens $\\theta_{g} \\rightarrow V_{d} \\rightarrow U \\rightarrow CF_{i}$"),
     parse = TRUE,
-    x = 1.15, y = 0,
+    x = 1.2, y = 0,
     size = 3
   ) +
   theme_dag(
     legend.position = "none"
   ) + 
   expand_plot(
-    expand_x = expand_scale(c(0.25, 0.25)), 
+    expand_x = expand_scale(c(0.3, 0.3)), 
     expand_y = expand_scale(c(0.2, 0.4))
   ) +
   NULL  
@@ -570,7 +581,7 @@ Consider a potential outcome where candidate positioning $C$ is affected by dist
   CDE_{i}(t, t', v) &= C_{i}(t, v) - C_{i}(t', v),
   (\#eq:PO-CDE)
 \end{align}
-or, how would $C_{i}$ change if we could vary $t$ without influencing $v$ in the process? The dependence of district voting $V$ on district-party ideology $T$ is shown by the causal graph in Figure&nbsp;\@ref(fig:plot-problem-dag). A model that estimates the _total_ effect of district-party ideology will fail to differentiate the fraction of the effect flowing through path $T \rightarrow C$ from the fraction of the effect through path $T \rightarrow V \rightarrow C$. However, simply controlling for $V$ will not isolate the direct effect, since it can open back-door paths from $T$ to $C$ through confounders represented by $U$ [@montgomery-et-al:2018:colliders]. If there are variables that affect aggregate district voting that are independent of district-party ideology, such as valence features from unrelated prior candidates, post-treatment conditioning on the district vote can create confounders unintentionally. Sequential-$g$ is a special case of a broader class of models (structural nested mean models) that measure direct effects by subtracting intermediary effects without creating collider bias [@acharya-blackwell-sen:2016:direct-effects; @vansteelandt:2009:direct-effects]. 
+or, how would $C_{i}$ change if we could vary $t$ without influencing $v$ in the process? The dependence of district voting $V$ on district-party ideology $T$ is shown by the causal graph in Figure \@ref(fig:plot-problem-dag). A model that estimates the _total_ effect of district-party ideology will fail to differentiate the fraction of the effect flowing through path $T \rightarrow C$ from the fraction of the effect through path $T \rightarrow V \rightarrow C$. However, simply controlling for $V$ will not isolate the direct effect, since it can open back-door paths from $T$ to $C$ through confounders represented by $U$ [@montgomery-et-al:2018:colliders]. If there are variables that affect aggregate district voting that are independent of district-party ideology, such as valence features from unrelated prior candidates, post-treatment conditioning on the district vote can create confounders unintentionally. Sequential-$g$ is a special case of a broader class of models (structural nested mean models) that measure direct effects by subtracting intermediary effects without creating collider bias [@acharya-blackwell-sen:2016:direct-effects; @vansteelandt:2009:direct-effects]. 
 
 ```{r plot-problem-dag, include = TRUE, fig.width = 5, fig.height = 3,out.width = "70%", fig.cap = "A DAG that presents district partisanship as a collider along the path from district-party preferences to candidate positioning. Controlling for district partisanship can bias the causal estimate of district-party preferences in several ways. If there is a path $\\theta \\rightarrow P \\rightarrow Y$, then the effect of $\\theta$ does not represent the total effect. In the presence of intermediate confounder $U$, controlling for district partisanship induces collider bias by unblocking the path $\\theta \\leftarrow U \\rightarrow Y$."}
 ```
