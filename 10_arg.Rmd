@@ -332,7 +332,7 @@ Classic formal models highlight a strategic logic for candidates to position the
   In my opinion, this misrepresents the formal work.
   @downs:1957:economic-theory in particular explains the logic of candidate convergence, but he also explores many circumstances that would prevent the convergent equilibrium from appearing in the real world.
   This is important to clarify because, although it is common to describe candidate convergence as a "Downsian result" or a "Downsian prediction," we should recognize that the convergent equilibrium is an oversimplification.
-  The incentives for moderation are more theoretically important than the whether we observe perfect candidate convergence at the median voter. 
+  Understanding the theoretical incentives that promote candidate moderation is more important than the whether we observe perfect candidate convergence empirically. 
 ]
 
 Empirical work finds evidence in partial support of both convergent and divergent candidate incentives.
@@ -780,7 +780,7 @@ Assuming all constituents vote according to single-peaked and symmetric utility 
 The aggregate election result, therefore, is equal to the cumulative distribution function of the combined distribution evaluated at the candidate midpoint.
 In the bottom-left panel, the vote share for the Democrat is $50$%, with some Democrats voting for the Republican candidate, and some Republicans voting for the Democratic candidate.
 
-```{r plot-non-id, include = TRUE, fig.width = 10, fig.height = 10, out.width = "100%", fig.scap = "Non-identifiability of partisan group preferences from district vote shares", fig.cap = "Demonstrating how district vote shares from a single election are insufficient to identify underlying policy-ideological features of the district. The left side shows how the policy preference distributions for two parties in a district (top panel) combine to form an aggregate preference distribution for the district as a whole (bottom panel). The right side shows how the Democratic vote share is affected by changes to either the locations, the scales, or the population sizes of the underlying partisan distributions."}
+```{r plot-non-id, include = TRUE, fig.width = 10, fig.height = 10, out.width = "100%", fig.scap = "Non-identifiability of partisan group preferences from district vote shares.", fig.cap = "Demonstrating how district vote shares from a single election are insufficient to identify underlying policy-ideological features of the district. The left side shows how the policy preference distributions for two parties in a district (top panel) combine to form an aggregate preference distribution for the district as a whole (bottom panel). The right side shows how the Democratic vote share is affected by changes to either the locations, the scales, or the population sizes of the underlying partisan distributions."}
 ```
 
 The panels on the right side of Figure \@ref(fig:plot-non-id) show how slight changes to one party's preference distribution affects the aggregate distribution of preferences in the combined constituency and, as a result, the presidential vote share in the district.
@@ -1085,7 +1085,7 @@ Among Democratic identifiers, however, ideological self-placement is not as stro
 The final panel of loess fits is included to show that this pattern appears in all CCES years and is not particular to 2018 CCES responses: a strong relationship between vote shares and self-placement _on average_, and weak or non-relationships within each party.
 
 
-```{r plot-compare-measures, include = TRUE, fig.width = 10.5, fig.height = 6, out.width = "100%", fig.scap = "The relationship between average ideological self-placement and district vote share in congressional districts", fig.cap = "Average ideological self placement (vertical axis) and Republican vote share (horizontal axis) in all 435 congressional districts. Mean self-placement is calculated by numerically coding CCES ideological self-placement responses before averaging. The first panel plots average self-placement among all CCES respondents in each congressional districts. The middle panel breaks respondents in each congressional district into Republican and Democratic subgroups before averaging. The final panel plots loess fits for the same relationship measured over all CCES years."}
+```{r plot-compare-measures, include = TRUE, fig.width = 10.5, fig.height = 6, out.width = "100%", fig.scap = "The relationship between average ideological self-placement and district vote share in congressional districts.", fig.cap = "Average ideological self placement (vertical axis) and Republican vote share (horizontal axis) in all 435 congressional districts. Mean self-placement is calculated by numerically coding CCES ideological self-placement responses before averaging. The first panel plots average self-placement among all CCES respondents in each congressional districts. The middle panel breaks respondents in each congressional district into Republican and Democratic subgroups before averaging. The final panel plots loess fits for the same relationship measured over all CCES years."}
 ```
 
 The substantive takeaway from Figure \@ref(fig:plot-compare-measures) is further evidence that we should doubt the use of aggregate voting in a district is a reliable proxy of ideological variation within partisan primaries.

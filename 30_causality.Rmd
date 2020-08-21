@@ -431,20 +431,24 @@ where we would integrating over the posterior distribution of the parameters, in
 
 The Bayesian causal approach is sensible for causal inference because it facilitates _direct inference_ about treatment effects given the data: which effect sizes are more likely or less likely than others.
 While confidence intervals are often misused to make probabilistic statements about parameters, the posterior distribution and posterior intervals actually enable the researcher to state the probability of positive treatment effects, negligible treatment effects, and more.
-Making positivistic statements about model conclusions is a natural way to think about the scientific aims of any discipline engaged causal inference: the world probably works in this or that way, given this evidence.
+Making positivistic statements about plausible causal effects is a natural way to think about the scientific aims of any discipline engaged causal inference: "the world probably works in this way, given the evidence."
 This is the view espoused by Don Rubin himself, the namesake of the Rubin causal model commonly employed in causal political science, who writes in the context of causal inference that "a posterior distribution with clearly stated prior distributions is the most natural way to summarize evidence for a scientific question" [@rubin:2005:potential-outcomes, p. 327].
-It isn't statistically coherent to invoke similar language under a non-Bayesian inference paradigm, since we can't directly characterize the plausibility of a causal effect without a posterior belief, which entails a prior belief.
-Rather than conducting inferences about the plausibility of unknown parameters, non-Bayesian methods typically conduct inference about the plausibility of data given fixed parameters. 
-Namely, a $p$-value is a measure of the plausibility of data under a null hypothesis that the researcher usually does not find credible to begin with, and usually with no corresponding measure of the relative plausibility of an alternative hypothesis [@gill:1999:NHST].
-Restated formally, conventional inference methods estimate $\p{\mathbf{y} \mid H_{0}}$, when scientists are actually interested in $\p{\boldsymbol{\pi} \mid \mathbf{y}}$.
+It is not formally coherent to invoke similar language under a non-Bayesian inference paradigm, since we cannot statistically describe the plausibility of a causal effect without a posterior belief, which entails a prior belief.
+This is why non-Bayesian methods formally conduct inference about the plausibility of _data_ given fixed parameters, and inferences about parameters must be done indirectly with an additional layer of decision theory.
+Statistical decisions under non-Bayesian analysis can be awkward—for instance, using a $p$-value to measure whether the data are inconsistent with a null hypothesis that the researcher usually does not find credible at the outset, and usually with no corresponding measure of the relative plausibility of an alternative hypothesis [@gill:1999:NHST].
+Restated more formally, researchers routinely perform statistical inference by estimating $\p{\mathbf{y} \mid H_{0}}$ (for null hypothesis $H_{0}$), when they are are probably more interested in $\p{\boldsymbol{\pi} \mid \mathbf{y}}$ or even $\p{H_{a} \mid \mathbf{y}}$ (for alternative hypothesis $H_{a}$).
 
-The notion of direct inference is especially valuable when the observed data represent the whole population, which is common for causal inference in political science.
-Under a "frequentist" inference approach, estimators inherit their statistical properties from the sampling distribution of the estimator: the theoretical probability distribution of estimates obtained by computing the estimator in each of an infinite number of independent samples from the population.
+The notion of direct inference is especially valuable when the observed data represent the whole population, which is common for observational causal inference in political science.
+Under a "frequentist" inference approach, estimators inherit their statistical properties from the sampling distribution of the estimator: the theoretical probability distribution of estimates in an infinite number of independent samples from the population.
 Many causal questions in political science conflict with this inferential framework, however, because the data come from events that have no possibility of future sampling.
-Instead, the data come from one-off events in history and often contain the entire population of relevant units, so uncertainty about statistical inferences bears no resemblance to the randomness of a sampling mechanism [@western-jackman:1994:comparative-bayes].
-There is non-Bayesian work on methods for incorporating uncertainty without sampling, such as "randomization inference" where the source of uncertainty is treatment assignment itself [@keele-et-al:2012:RI; @abadie-et-al:2020:design-uncertainty]
-The foundations of uncertainty in Bayesian inference are parametric families that represent imperfect information about the generative processes underlying model variables.
-Whether this imperfect information reflects sampling randomness or other epistemic uncertainty, such as randomization, can be subsumed in the Bayesian framework [@rubin:1978:bayesian].
+Instead, the data come from one-off events in history and often contain the entire population of relevant units, so the epistemic uncertainty about statistical inferences bears little resemblance to frequentist uncertainty about a sampling mechanism [@western-jackman:1994:comparative-bayes].^[
+  To be sure, there is non-Bayesian theory for statistical uncertainty without resampling, namely "design-based uncertainty" where the source of uncertainty is the treatment assignment mechanism itself [@keele-et-al:2012:RI; @abadie-et-al:2020:design-uncertainty].
+  This framework is rarely invoked in political science except among researchers on the cutting edge of "agnostic" causal inference.
+  For more on agnostic statistics, see @aronow-miller:2019:agnostic-statistics.
+  It is also common for Bayesian statisticians to be interested in frequentist properties of their methods such interval coverage [@rubin:1984:bayes-frequency], which partially motivates an interest in "objective Bayesian inference" [@berger:2006:objective-bayes; @fienberg:2006:objective-bayes-comments].
+]
+The foundations of uncertainty in Bayesian inference are probability distributions that represent imperfect pre-data information about the generative processes underlying the variables in a model.
+Whether this imperfect information corresponds sampling randomness or other epistemic uncertainty can be subsumed in the Bayesian framework [@rubin:1978:bayesian].
 
 Another reason why Bayesian methods make sense for causal modeling is because causal models, at their core, are models for counterfactual data. 
 Because the Bayesian model is a _generative_ model for parameters and data, the model contains all machinery required to directly quantify counterfactual potential outcomes using probability distributions.
