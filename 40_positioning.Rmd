@@ -28,15 +28,18 @@ source(here::here("assets-bookdown", "knitr-helpers.R"))
 
 ```{r packages-04-positioning, cache = FALSE}
 library("knitr")
+
 library("here")
 library("magrittr")
 library("tidyverse")
-library("tidybayes")
+
 library("scales")
 library("patchwork")
-library("broom")
 library("ggdag")
 library("latex2exp")
+
+library("broom")
+library("tidybayes")
 
 theme_dag <- theme_dag(base_family = font_fam)
 ```
@@ -60,7 +63,7 @@ This chapter investigates the effect of district-party ideology on primary candi
 Substantively, I translate the primary candidate's strategic positioning dilemma into the language of causal graphs, highlighting how aggregate districting voting mediates a relationship between district-party ideology and candidate positioning.
 Methodologically, I take the sequential-$g$ method as it appears in political science [@acharya-blackwell-sen:2016:direct-effects] and embed it in a Bayesian framework.
 The Bayesian framework estimates all components of the structural model simultaneously, quantifying uncertainty in all model parameters in a single posterior distribution.
-Total model uncertainty includes the measurement error in district-party ideal points, whose posterior distributions from the IRT model in Chapter \@ref(ch:model) serve as priors in the causal analysis.
+This includes measurement uncertainty in ideal point estimates from the IRT model in Chapter \@ref(ch:model), which is included as a prior distribution over ideal points.
 The key payoff for the Bayesian structure, therefore, is a unified framework for conducting inference about treatment effects by marginalizing over other sources of uncertainty, be they design parameters or imprecise data.
 
 <!------- TO DO ---------
@@ -72,8 +75,55 @@ The key payoff for the Bayesian structure, therefore, is a unified framework for
 
 ## Candidate Positioning and Voters' Policy Preferences
 
+How do constituent preferences affect candidate positioning?
+This project explores the implications of what @brady-han-pope:2007:out-of-step call the "strategic positioning dilemma" (SPD), striking a balance between moderate position-taking to appease the general election constituency and ideological positioning taking to appease the partisan primary election constituency.
+Existing research contains plenty of studies that support the general theoretical intuition of the SPD theory, although I review some conflicts and ambiguities in detail in Chapter \@ref(ch:arg).
+To briefly review, general election candidates are rewarded at the ballot box for taking more moderate campaign stances [@canes-wrone-et-al:2002:out-of-step; @hall:2015:extremists] and aligning themselves with local public opinion on specific issues [@fenno:1978:home-style; @canes-wrone-et-al:2011:issue-accountability; though see @fowler-hall:2016:convergence].
+Nevertheless, no candidate makes it to the general election without first winning a primary nomination, where many scholars theorize that candidates benefit by taking more ideological positions that represent conventional views within the party.
+This could be a within-party Downsian incentive: the median primary voter is a ideological partisan with off-median policy preferences, so candidates take more extreme positions to appeal to partisan constituency preferences
+[@aldrich:1983:downsian-parties; @burden:2001:polarizing-primaries].
+This is consistent with evidence from safe congressional districts, where candidates experience less general election threat and can more freely position their campaigns to target the primary electorate [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning].
+Pressures for primary candidates to take non-median stances may come through mechanisms unrelated to bottom-up voter pressures, instead reflecting candidates' need to organize committed staff and volunteers for their campaigns [@mcclosky-et-al:1960:conventions; @layman-et-al:2010:activists-conflict-extension; @aldrich:2011:why-parties], seek campaign funds from policy-seeking contributors [@laraja-schaffner:2015:campaign-finance-polarization; @barber:2016:contributions-polarization; @barber-et-al:2016:ideological-donors], or garner support from policy-demanding groups that control access to connections and resources to support candidates [@cohen-et-al:2009:party-decides; @koger-et-al:2009-partisan-webs; @masket:2009:no-middle-ground].
+
+As I explained in more detail in Chapter \@ref(ch:arg), the explicit evidence about the SPD from primary elections themselves is surprisingly weak.
+This is mainly because most studies do not explicitly measure the ideological preferences of primary voters, instead using aggregate measures of voting that neither identify policy preferences nor differentiate between partisan constituencies within a district [@kernell:2009:districts].
+The IRT measures of district-party ideology that I create in Chapter \@ref(ch:model) are, to my knowledge, the first ideal point scores for district-party groups to be applied to the study of congressional primaries.^[
+  For IRT estimates of partisan constituencies at the U.S. state level, see @caughey-et-al:2018:ideological-nationalization.
+]
+
+Research on primary competition and candidate positioning is also held back by the availability of primary candidate data, which until recently was not available. 
+Past studies of primary competition and polarization typically use ideology scores from legislative roll call votes, which include only incumbent members of congress or state legislators [@brady-han-pope:2007:out-of-step; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems], or they use surveys of general election candidates, which may include non-incumbent candidates for the general election but no candidates who ran in the primary and lost [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning]. 
+Recent ideal point methods that use political financial contributions data have the capacity to scale a much broader universe of political actors, including candidates, political parties, PACS and interest groups, and donors [@bonica:2013:ideology-interests; @bonica:2014:mapping-ideology; @hall-snyder:2015:ideology].
+Few studies have yet put these contribution-based scores to study features of primary politics [@thomsen:2014:moderate-candidates; @hall:2015:extremists; @rogowski-langella:2015:primary-systems; @ahler-citrin-lenz:2016:CA-open-primaries; @hall-thompson:2018:who-punishes; @porter-treul:2020:primary-experience; @thomsen:2020:ideology-gender]. 
+
+- @thomsen:2014:moderate-candidates
+- @hall:2015:extremists
+- @rogowski-langella:2015:primary-systems
+- @ahler-citrin-lenz:2016:CA-open-primaries
+- @hall-thompson:2018:who-punishes
+- @porter-treul:2020:primary-experience
+- @thomsen:2020:ideology-gender 
+    - no (significant) evidence that ideology–victory relationship is different for men and women (but the interaction pt estimates are comparable in size to main effects)
+    - Dem women are more liberal than men, advantaged in primaries
+
+
+
+
+primary positioning [@rogowski-langella:2015:primary-systems]
+
+Primary systems
+    - redistricting, same district, divergent candidates [@mccarty-poole-rosenthal:2009:gerrymandering; @brunell-grofman-merrill:2016:polarization-components]
+
+- not everything: miller and stokes
+- other things: 
+    - partisan organization [ @mcclosky-et-al:1960:conventions; @layman-et-al:2010:activists-conflict-extension]
+    - party network
+- issue-by-issue, mixed evidence.
+
+
 - classic models of electoral competition view candidate moderation as an electoral benefit. You can make non-moderate positions make sense if you incorporate campaign volunteers, primaries, etc. 
 - Researchers find evidence that candidate positioning is related to district-level aggregate voting (e.g.\ the presidential vote) and to voter preferences [@ansolabehere-et-al:2001:candidate-positioning; @clinton:2006:constituent-representation; @ansolabehere-et-al:2008:voter-ideology].
+
 - Why do candidates take non-moderate stances in reality? Studies that look into the polarizing effects of primaries find little evidence that primaries matter for candidate positioning, but many of these studies are focused on Congressional incumbents. 
 - Studies that include non-incumbent candidates show that many of the empirical implications of the "strategic positioning dilemma" don't receive a lot of evidence. For instance, studies of primary "openness" consistently show basically zero or even reversed relationships to candidate ideology as you would expect from theory.  
 
@@ -106,7 +156,10 @@ What to do with the Hopkins/Sniderman theory
 - THINK about abortion as a toy case
   + if weighting... if not weighting...
 
-
+<!------- TO DO ---------
+- causal inference...
+- what isn't in the lit, what is, and what this project is doing
+------------------------->
 
 
 ### Exploratory analysis
