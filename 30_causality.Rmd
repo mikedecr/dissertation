@@ -653,12 +653,11 @@ Many points discussed below touch on more than one level of the hierarchy, so th
 
 ## Understanding Priors in Causal Inference {#sec:causal-priors}
 
-What are priors for?
-
-What do priors do?
-
-
-This is because a prior's flatness is only relative to the parameterization of a model, and functions of parameters are not likely to have flat densities even if the underlying parameters have flat densities
+The distinguishing feature of Bayesian analysis that attracts most of its controversy is the prior distribution over model parameters.
+At the same time, priors also deliver most of the benefits of Bayesian modeling.
+This section unravels several common confusions about priors as they relate to modeling in general and especially for causal inference.
+What do priors do, and how can they be used responsibly?
+This discussion has two main goals: a defensive goal of clearing up misunderstandings and criticisms of priors, and an offensive goal to argue that priors are omnipresent and valuable for thinking coherently about drawing inferences from causal models.
 
 
 ### Information, belief, and data falsification
@@ -668,70 +667,50 @@ This is because a prior's flatness is only relative to the parameterization of a
 DATA FALSIFICATION digression
 ------------------------->
 
-Data falsification versus unavoidable choice:
-imagine a study with a posterior distribution $p(\mu \mid \mathbf{y})$ that is proportional to the likelihood times the prior. 
-  \begin{align}
-    (\#eq:propto)
-    p(\mu \mid \mathbf{y}) &\propto p(\mathbf{y} \mid \mu)p(\mu)
-  \end{align}
-Rewrite the right side in product notation for $n$ observations of $y_{i}$ for units indexed by $i$, letting $l(y_{i}) = p(y_{i} \mid \mu)$
-  \begin{align}
-    p(\mu \mid \mathbf{y}) &\propto \prod\limits_{i = 1}^{n}l(y_{i})p(\mu)
-    (\#eq:propto-index)
-  \end{align}
-Suppose that we express this proportionality on the log scale, where the log posterior is proportional to the log likelihood plus the log posterior.
-  \begin{align}
-    \begin{split}
-      \log p(\mu \mid \mathbf{y}) 
-        &\propto \sum\limits_{i = 1}^{n} \log l(y_{i}) 
-          + \sum\limits_{i = 1}^{n} \log p(\mu) \\[12pt]
-        &\propto \log l(y_{1}) + \log p(\mu)
-                 + \log l(y_{2}) + \log p(\mu)
-                 + \ldots
-                 + \log l(y_{n}) + \log p(\mu)
-    \end{split}
-  (\#eq:log-propto-index)
-  \end{align}
+Bayesian analysis is often characterized as overly subjective. 
+If priors are a way for researchers to insert their "beliefs" into a statistical analysis, what is the point of data? 
+Can't the researcher sneak in enough prior information to get any answer they want?
+This argument accords with an interpretation that Bayesian analysis with informative priors is analytically equivalent to "data falsification," since priors influence the posterior distribution through the same mechanism as additional observations do: adding information to the log posterior distribution [@garcia-perez:2019:bayes-data-falsification].
+
+This hesitation can be eased with two lines of thought. 
+First, it is helpful to think of priors as _information_, not "belief."
+Broadly, we can view a prior as any assumption that brings information into a model.
+This information can take the form of plausible parameter values, but almost all modeling, even so-called "non-Bayesian" modeling, adds information to a model as assumptions about the residual distribution of observations, functional forms, and so on. 
+These assumptions do not come from data.
+Priors are "beliefs" in a pragmatic sense: they are "belief functions" in that the height of the prior represents the degree of epistemic support for some parameter value.
+The actual degree of a researcher's sincere belief in any prior is essentially zero—priors are about as believable that residuals are exactly Normally distributed or that functional forms are exactly linear [@gelman-shalizi:2013:bayes-philosophy, p. 19].
+These assumptions are represent reasonable approximations that structure a model in such a way to efficiently extract information from data.
+As such, it is common for Bayesian statisticians to care about the frequency properties of their estimators, designing noninformative priors for optimal learning from data, [@rubin:1984:bayes-frequency; @berger:2006:objective-bayes; @fienberg:2006:objective-bayes-comments], and to engage in workflow practices that "fall outside the scope of Bayesian theory" such as model checking with diagnostic graphics [@gelman-shalizi:2013:bayes-philosophy; @betancourt:2018:workflow-blog; @gabry-et-al:2019:visualization].
+
+A prior is an assumption that brings in information that is external to the raw algebra of the model. Although there are subjectivist schools of Bayesian theory, applied work views priors as "just part of the model" and should be "chosen, evaluated, and revised just like all of the other components of the model" [@mcelreath:2015:stats-rethink]. Since any model is an inaccurate depiction of the world, the researcher's actual degree of belief in any prior is zero; priors should instead be understood as part of the *science* of the model because they can be tested by comparing new data against the model's posterior predictions [@gelman-shalizi:2013:bayes-philosophy].
 
 
-The setup in \@ref(eq:log-propto-index) highlights a few appealing intuitions.
-First, it shows how each observation "adds information" to the log posterior distribution.
-Data that are more likely to be observed given the parameter (larger $l(y_{i})$ values) increase the posterior probability that parameter. 
-We also see that the prior probability "adds information" to the posterior in the same way data add information, captured by the addition of each $p(\mu)$ term. 
-Parameters that are more probable in the prior are more probable in the posterior.
+"randomness" is missing information.
+The connection between randomness and information is a key foundation of information theory, where randomness that cannot be further distilled is thought to be "pure information," and patterns that can be distilled 
 
-The proportionality \@ref(eq:log-propto-index) also reveals how the posterior "learns" from flat priors.
-A flat priors implies that prior probability $p(\mu)$ is constant for all potential values of $\mu$.
-Because \@ref(eq:log-propto-index) is a proportionality, this lets us disregard $p(\mu)$ entirely by factoring it out of the proportionality, leaving us with an expression that the log posterior is proportional to the likelihood of the data only if the prior is flat.
-\begin{align}
-  \log p(\mu \mid \mathbf{y}) 
-        &\propto
-        \log l(y_{1}) + \log l(y_{2}) + \ldots + \log l(y_{n})
-  (\#eq:log-propto-flat)
-\end{align}
-If $p(\mu)$ is not flat, however, and $p(\mu)$ varies across values of $\mu$, we can no longer ignore $p(\mu)$ in \@ref(eq:log-propto-index) shows that $p(\mu)$ varies across values $\mu$.
-Not only does this prevent us from dropping $p(\mu)$ from the proportionality, but it also reveals how the prior "adds information" to the posterior by the same mechanism that observations do: adding to the log posterior distribution. 
-This general expression where both data and priors contribute to the posterior distribution has led some researchers to argue the Bayesian inference with non-flat priors is analytically indistinguishable from data falsification [@garcia-perez:2019:bayes-data-falsification].
-We can highlight this behavior by obscuring each $p(\mu)$ term with a square $\square$.
-\begin{align}
-  \log p(\mu \mid \mathbf{y}) 
-        &\propto
-        \log l(y_{1}) + \square + \log l(y_{2}) + \square \ldots + \log l(y_{n}) + \square
-  (\#eq:log-propto-falsification)
-\end{align}
-Behind each square is _some contribution_ to the log posterior.
-The fact that it adds information to the log posterior is unaffected by whether the hidden term is the probability of an additional observation $l(y_{i})$ or the prior probability of a parameter value $p(\mu)$.
-<!------- TO DO ---------
-- END FALSIFICATION
-------------------------->
+Information theory cite...
 
+
+
+How does any model learn from data?
+By imposing structure on what data _can_ say about parameters.
+
+
+model structure subtracts randomness from the system, subtracts "pure information," says that "this is information that I already have, and the data won't teach me it." 
+What the data _can_ teach me about is the parameter, which is why they are represented as random variables with probability distributions.
+
+The idea that data are drawn from a distribution is a prior, and the extent that we structure that prior represents external information injected into the model.
+
+Generalization is all priors.
+Similarity of sample and population is akin to a prior that any residual variation is none.
+If we allow for the sample to vary from the population in some systematic way that we might correct for either by modeling study effects or post-stratification, these represent information laid overtop data.
+[free lunch].
 
 <!------- TO DO ---------
 - but where was I going with this?
 ------------------------->
 
 
-### Priors are not for de-confounding
 
 
 ### Flatness is a relative, not an absolute, property of priors {#sec:prior-flatness}
@@ -1291,6 +1270,10 @@ A general orientation toward priors in this dissertation:
 Priors are not de-confounders
 
 - downweighting, not upweighting
+
+
+### Priors are not for de-confounding
+
 
 
 ### Statistical Bias
