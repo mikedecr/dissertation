@@ -644,6 +644,29 @@ ggplot(problem_dag) +
 ```
 
 
+```{r plot-problem-dag, include = TRUE, fig.width = 5, fig.height = 3,out.width = "70%", fig.cap = "A DAG that presents district partisanship as a collider along the path from district-party preferences to candidate positioning. Controlling for district partisanship can bias the causal estimate of district-party preferences in several ways. If there is a path $\\theta \\rightarrow P \\rightarrow Y$, then the effect of $\\theta$ does not represent the total effect. In the presence of intermediate confounder $U$, controlling for district partisanship induces collider bias by unblocking the path $\\theta \\leftarrow U \\rightarrow Y$."}
+```
+
+
+
+## Bayesian Sequential-$g$ Analysis
+
+- What is the problem (defined in the direct effect section above)
+- Contribution: $\bar{\theta}_{g}$ is drawn from a prior and can be updated in the model.
+
+### Causal model: controlled direct effects
+
+- what is the problem
+- what is ACDE 
+- Cite ABS 
+- Keep the notation general enough (expectations) so that there are no explicit linear regression functional forms introduced by accident? 
+- Identification and estimand
+
+
+ACDE is posterior distribution of the causal quantity...
+
+
+
 
 This section describes the causal estimand and estimation routine that follows. Sequential-$g$ estimates a quantity called the _average controlled direct effect_, the average effect of a treatment on an outcome, holding fixed a mediator variable for all units under consideration.
 
@@ -653,9 +676,6 @@ Consider a potential outcome where candidate positioning $C$ is affected by dist
   (\#eq:PO-CDE)
 \end{align}
 or, how would $C_{i}$ change if we could vary $t$ without influencing $v$ in the process? The dependence of district voting $V$ on district-party ideology $T$ is shown by the causal graph in Figure \@ref(fig:plot-problem-dag). A model that estimates the _total_ effect of district-party ideology will fail to differentiate the fraction of the effect flowing through path $T \rightarrow C$ from the fraction of the effect through path $T \rightarrow V \rightarrow C$. However, simply controlling for $V$ will not isolate the direct effect, since it can open back-door paths from $T$ to $C$ through confounders represented by $U$ [@montgomery-et-al:2018:colliders]. If there are variables that affect aggregate district voting that are independent of district-party ideology, such as valence features from unrelated prior candidates, post-treatment conditioning on the district vote can create confounders unintentionally. Sequential-$g$ is a special case of a broader class of models (structural nested mean models) that measure direct effects by subtracting intermediary effects without creating collider bias [@acharya-blackwell-sen:2016:direct-effects; @vansteelandt:2009:direct-effects]. 
-
-```{r plot-problem-dag, include = TRUE, fig.width = 5, fig.height = 3,out.width = "70%", fig.cap = "A DAG that presents district partisanship as a collider along the path from district-party preferences to candidate positioning. Controlling for district partisanship can bias the causal estimate of district-party preferences in several ways. If there is a path $\\theta \\rightarrow P \\rightarrow Y$, then the effect of $\\theta$ does not represent the total effect. In the presence of intermediate confounder $U$, controlling for district partisanship induces collider bias by unblocking the path $\\theta \\leftarrow U \\rightarrow Y$."}
-```
 
 In order to implement a sequential-$g$ routine, we need to specify valid models that separately identify the mediator-outcome relationship (the total effect of district voting on candidate positioning) and the treatment-outcome relationship (the total effect of district-party ideology on candidate positioning). This twin identification is formalized using an assumption of _sequential ignorability_, or sequential unconfoundedness [@robins-greenland:1994:sequential-ignorability]. This means that unit potential outcomes $C_{i}(t, v)$ are independent of treatment, conditional on pre-treatment covariates $X_{i}$,
 \begin{align}
@@ -845,23 +865,6 @@ There are functional form considerations however---biases may remain if the func
 - Discuss potential violations of assumptions
 - Simulate violated assumptions by way of correlated error parameters?
 ------------------------->
-
-## Bayesian Sequential-$g$ Analysis
-
-- What is the problem (defined in the direct effect section above)
-- Contribution: $\bar{\theta}_{g}$ is drawn from a prior and can be updated in the model.
-
-### Causal model: controlled direct effects
-
-- what is ACDE 
-- Cite ABS 
-- Keep the notation general enough (expectations) so that there are no explicit linear regression functional forms introduced by accident? 
-- Identification and estimand
-
-
-ACDE is posterior distribution of the causal quantity...
-
-
 
 ### Linear sequential-$g$
 
