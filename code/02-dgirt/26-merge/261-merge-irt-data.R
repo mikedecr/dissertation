@@ -467,8 +467,8 @@ theta_draws <- mcmc_draws %>%
   spread_draws(theta[group]) %>%
   group_by(.draw) %>%
   mutate(
-    theta_raw = theta,
-    theta = (theta_raw - mean(theta_raw)) / sd(theta_raw)) %>%
+    theta = theta,
+    theta_scale = (theta - mean(theta)) / sd(theta)) %>%
   ungroup() %>%
   select(-starts_with("theta"), starts_with("theta")) %>%
   left_join(dpt_model_data, by = "group") %>%
@@ -483,7 +483,7 @@ theta_nest <- theta_draws %>%
   nest("theta_draws" = -group_vars(.)) %>%
   mutate(
     theta_mean = map_dbl(theta_draws, ~ mean(.x$theta)),
-    theta_mean_raw = map_dbl(theta_draws, ~ mean(.x$theta_raw))
+    theta_mean_scale = map_dbl(theta_draws, ~ mean(.x$theta_scale))
   ) %>%
   ungroup() %>%
   print()
@@ -571,7 +571,7 @@ lapply(theta_stats, length)
 # compare raw and rescaled thetas
 # (rescaling in each iteration)
 ggplot(data = theta_nest) +
-  aes(x = theta_mean_raw,  y = theta_mean) +
+  aes(x = theta_mean,  y = theta_mean_scale) +
   geom_point() +
   geom_abline()
 

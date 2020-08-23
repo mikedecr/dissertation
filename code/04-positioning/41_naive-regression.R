@@ -193,7 +193,7 @@ full_data
 
 # overall
 ggplot(full_data) +
-  aes(x = theta_mean_raw, y = recipient_cfscore_dyn, 
+  aes(x = theta_mean, y = recipient_cfscore_dyn, 
       color = party, fill = party) +
   geom_point(alpha = 0.2) +
   geom_smooth(method = "lm", color = "black") +
@@ -203,7 +203,7 @@ ggplot(full_data) +
 
 # primary 3-code (change to coef plots)
 ggplot(full_data) +
-  aes(x = theta_mean_raw, y = recipient_cfscore_dyn, 
+  aes(x = theta_mean, y = recipient_cfscore_dyn, 
       color = party, fill = party, linetype = primary_rules_cso) +
   geom_point(alpha = 0.2) +
   geom_smooth(method = "lm", color = "black") +
@@ -213,7 +213,7 @@ ggplot(full_data) +
 
 # primary binary
 ggplot(full_data) +
-  aes(x = theta_mean_raw, y = recipient_cfscore_dyn, 
+  aes(x = theta_mean, y = recipient_cfscore_dyn, 
       color = party, fill = party, linetype = primary_rules_co) +
   geom_point(alpha = 0.2) +
   geom_smooth(method = "lm", color = "black") +
@@ -224,7 +224,7 @@ ggplot(full_data) +
 
 # primary binary x incumbency
 ggplot(full_data) +
-  aes(x = theta_mean_raw, y = recipient_cfscore_dyn, 
+  aes(x = theta_mean, y = recipient_cfscore_dyn, 
       color = party, fill = party, linetype = primary_rules_co) +
   geom_point(alpha = 0.2) +
   facet_grid(. ~ fct_relevel(incumbency, "Incumbent")) +
