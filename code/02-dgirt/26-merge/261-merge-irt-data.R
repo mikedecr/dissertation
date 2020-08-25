@@ -510,10 +510,10 @@ theta_cov <- theta_draws %>%
   cov()
 
 # democrats indexed
-theta_cov[seq(1, nrow(theta_cov), 2), seq(1, nrow(theta_cov), 2) ]
+# theta_cov[seq(1, nrow(theta_cov), 2), seq(1, nrow(theta_cov), 2) ]
 
 # republicans indexed
-theta_cov[seq(2, nrow(theta_cov), 2), seq(2, nrow(theta_cov), 2) ]
+# theta_cov[seq(2, nrow(theta_cov), 2), seq(2, nrow(theta_cov), 2) ]
 
 theta_cov_dem <- theta_draws %>%
   filter(party_num == 1) %>%
@@ -557,6 +557,7 @@ dim(theta_cov_rep)
 
 theta_stats <- list(
   cov_all = theta_cov,
+  prec_all = solve(theta_cov, diag(1, nrow(theta_cov))),
   cov_dem = theta_cov_dem,
   cov_rep = theta_cov_rep,
   mean_all = theta_nest %>% select(group, state_abb, state_num, district_num, party_num, theta_mean),
@@ -564,9 +565,10 @@ theta_stats <- list(
   mean_rep = theta_nest %>% filter(party_num == 2) %>% pull(theta_mean)
 )
 
-lapply(theta_stats, tail)
+names(theta_stats)
 lapply(theta_stats, dim)
 lapply(theta_stats, length)
+lapply(theta_stats, tail)
 
 # compare raw and rescaled thetas
 # (rescaling in each iteration)
@@ -605,6 +607,7 @@ full_data <- full_raw %>%
     ),
     rep_pres_vs = 1 - dem_pres_vs
   ) %>%
+  select(-theta_draws) %>%
   print()
 
 
