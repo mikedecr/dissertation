@@ -48,6 +48,9 @@ if (home) {
 
 
 
+
+
+
 # ---- inspect and clean data -----------------------
 
 names(theta_stats)
@@ -149,7 +152,7 @@ testy <- g_data %>%
   select(-c(starts_with("primary_rules"), party_num, incumbency)) %>%
   compose_data(
     ideal_means = theta_stats$mean_all$theta_mean[sort(unique(.$group))],
-    ideal_cov = theta_stats$cov_all[sort(unique(group)), sort(unique(group))]
+    ideal_prec = theta_stats$prec_all[sort(unique(group)), sort(unique(group))]
   )
 
 
@@ -169,7 +172,7 @@ g_data_dem <- g_data %>%
     K_trt = ncol(X_trt),
     blip_value = blip_value,
     ideal_means = theta_stats$mean_all$theta_mean[sort(unique(.$group))], 
-    ideal_cov = theta_stats$cov_all[sort(unique(group)), sort(unique(group))],
+    ideal_prec = theta_stats$prec_all[sort(unique(group)), sort(unique(group))],
     joint_prior = 0,
     lkj_value = 50
     # group = NULL
@@ -186,7 +189,7 @@ g_data_rep <- g_data %>%
     K_trt = ncol(X_trt),
     blip_value = blip_value,
     ideal_means = theta_stats$mean_all$theta_mean[sort(unique(.$group))], 
-    ideal_cov = theta_stats$cov_all[sort(unique(group)), sort(unique(group))],
+    ideal_prec = theta_stats$prec_all[sort(unique(group)), sort(unique(group))],
     joint_prior = 0,
     lkj_value = 50
   )
@@ -260,8 +263,8 @@ g_grid_data <- g_data %$%
           blip_value = blip_value,
           ideal_means = 
             theta_stats$mean_all$theta_mean[sort(unique(.x$group))], 
-          ideal_cov = 
-            theta_stats$cov_all[sort(unique(.x$group)), sort(unique(.x$group))],
+          ideal_prec = 
+            theta_stats$prec_all[sort(unique(.x$group)), sort(unique(.x$group))],
           joint_prior = 0,
           lkj_value = 50
         )
@@ -284,11 +287,77 @@ g_grid_data %>%
 #   stan model
 # ----------------------------------------------------
 
+
+# ---- does woodbury work -----------------------
+
+N <- g_data_rep$N
+D <- g_data_rep$D
+
+L <- matrix(rep(0, N * D), nrow = N)
+
+for (i in 1:N) {
+  L[i, g_data_rep$d[i]] <- 1
+}
+
+L[1:20, 1:10]
+(L %*% t(L))[1:20, 1:10]
+(t(L) %*% L)[1:10, 1:10]
+
+sig <- .5
+tau <- .1
+
+sig^(-2)
+tau^(-2)
+1 / tau^(2)
+
+NI <- diag(rep(1, N))
+DI <- diag(rep(1, D))
+
+
+big_inv <- 
+  matlib::inv(
+    ( tau^(-2) * DI ) +
+    (t(L) * sig^(-2)) %*% L
+  )
+
+cov_woodbury <- (sig^2*NI) + L %*% (tau^2*DI) %*% t(L)
+prec_woodbury <- sig^(-2)*NI - sig^(-2) * L %*% big_inv %*% t(L) * sig^(-2)
+
+
+cov_woodbury[1:15, 1:15]
+prec_woodbury[1:15, 1:15]
+(cov_woodbury %*% prec_woodbury)[1:15, 1:15] %>% round(5)
+
+length(prec_woodbury[prec_woodbury != 0])
+
+ # prec_med = 
+ #    pow(sigma_med, -2) * NI - 
+ #    pow(sigma_med, -2) * L * 
+ #    inv(
+ #      (pow(hypersigma_med, -2) * DI) + 
+ #      (pow(sigma_med, -2) * L' * L) 
+ #    ) * 
+ #    L' * pow(sigma_med, -2);
+
+
+
+# ---- end woodbury -----------------------
+
 # ---- compile model -----------------------
 
-stan_g <- 
+G_FREE <- 
   stan_model(
     here("code", "04-positioning", "stan", "sequential-G-linear.stan")
+  )
+
+g_ID <-
+  stan_model(
+    here("code", "04-positioning", "stan", "g-identified.stan")
+  )
+
+g_marginal <- 
+  stan_model(
+    here("code", "04-positioning", "stan", "g-marginalizing.stan")
   )
 
 
@@ -302,7 +371,7 @@ nuts_adapt_delta <- 0.9
 nuts_max_treedepth <- 15
 
 
-mcmc_g <- function(object = NULL, data = list(), ...) {
+sample_g <- function(object = NULL, data = list(), ...) {
   diagnostic_filepath <- here(
     "data", "mcmc", "4-positioning", "logs", 
     str_glue("{deparse(substitute(data))}_{lubridate::now()}.txt") 
@@ -317,6 +386,8 @@ mcmc_g <- function(object = NULL, data = list(), ...) {
     ),
     diagnostic_file = diagnostic_filepath,
     refresh = round(n_iter / 100),
+    pars = ("theta_raw"),
+    include = FALSE,
     ...
   )
 }
@@ -330,14 +401,25 @@ mcmc_g <- function(object = NULL, data = list(), ...) {
 # importance_resampling (default = FALSE)
 # iter
 
+# inits via list: Set inital values by providing a list equal
+#               in length to the number of chains. The elements of this
+#               list should themselves be named lists, where each of
+#               these named lists has the name of a parameter and is used
+#               to specify the initial values for that parameter for the
+#               corresponding chain.
+
+
+
 
 # runs democratic test twice to check the convergence stability
 vb_dem <- vb(
-  object = stan_g,
-  data = g_data_dem
+  object = g_marginal,
+  data = g_data_dem,
+  init = list(sigma_med = .5, sigma_trt = .5, hypersigma_med = .1, hypersigma_trt = .1)
 )
+
 vb_dem_1 <- vb(
-  object = stan_g,
+  object = g_marginal,
   data = g_data_dem
 )
 alarm()

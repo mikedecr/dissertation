@@ -1148,6 +1148,14 @@ Whether voters are responding to primary competition in the district _per se_ or
 
 <!-- If treatment is correlated with X _by design_(?) or otherwise(?), such as blocking along a key covariate like income, can include block-specific means of the treatment variable [@Hill:2013:multilevel-causal-inf]; Bafumi and Gelman, Raudenbush -->
 
+### Model parametrization in Stan
+
+- identifiability of district random effects
+- marginalize over the random effects
+- this retains the added variance, but without the need to explicitly sample random effects, which creates identifiability problems
+- variance-covariance matrix is like so
+- precision is better
+- 
 
 
 ### Data
