@@ -86,9 +86,17 @@ This is consistent with evidence from safe congressional districts, where candid
 Pressures for primary candidates to take non-median stances may come through mechanisms unrelated to bottom-up voter pressures, instead reflecting candidates' need to organize committed staff and volunteers for their campaigns [@mcclosky-et-al:1960:conventions; @layman-et-al:2010:activists-conflict-extension; @aldrich:2011:why-parties], seek campaign funds from policy-seeking contributors [@laraja-schaffner:2015:campaign-finance-polarization; @barber:2016:contributions-polarization; @barber-et-al:2016:ideological-donors], or garner support from policy-demanding groups that control access to connections and resources to support candidates [@cohen-et-al:2009:party-decides; @koger-et-al:2009-partisan-webs; @masket:2009:no-middle-ground].
 
 As I explained in more detail in Chapter \@ref(ch:arg), the explicit evidence about the SPD from primary elections themselves is surprisingly weak.
-This is mainly because most studies do not explicitly measure the ideological preferences of primary voters, instead using aggregate measures of voting that neither identify policy preferences nor differentiate between partisan constituencies within a district [@kernell:2009:districts].
-The IRT measures of district-party ideology that I create in Chapter \@ref(ch:model) are, to my knowledge, the first ideal point scores for district-party groups to be applied to the study of congressional primaries.^[
-  For IRT estimates of partisan constituencies at the U.S. state level, see @caughey-et-al:2018:ideological-nationalization.
+This is mainly because most studies do not explicitly measure the ideological preferences of primary voters, instead using aggregate measures of voting that are not able to identify policy preferences [@kernell:2009:districts].
+Furthermore, most aggregate-level measures of policy ideology do not differentiate between partisan constituencies in the same district [e.g. @tausanovitch-warshaw:2013:constituent-prefs], which is important for understanding how candidates respond to their specific primary constituency.
+Without data that more closely resembles the theoretical story in question, studies that claim to demonstrate that candidates "handle the [strategic positioning] dilemma by positioning themselves closer to the primary electorate" rarely show anything of the sort [@brady-han-pope:2007:out-of-step, p. 79].
+@brady-han-pope:2007:out-of-step show that among incumbent members of Congress, more liberal Democrats and more conservative Republicans attract fewer primary challenges and perform better in primary elections, but neither of these findings say anything specific lessons about how candidates are positioned relative to primary constituencies.
+@hirano-et-al:2010:primary-polarization get closer to this project's contribution by creating a statewide measure of primary electorate ideology from exit poll questions on ideological self-placement.
+They find that incumbent NOMINATE scores are more strongly related to general electorate ideological self-placement than primary electorate self-placement, a similar pattern as shown in Chapter \@ref(ch:arg), Figure \@ref(fig:plot-compare-measures). 
+They further find no evidence that incumbent members of Congress do not have more extreme NOMINATE scores under greater threats of primary competition or higher primary turnout.
+This finding conflicts partially with @clinton:2006:constituent-representation, who uses a large opinion survey of partisan voters in every congressional district to show that Republican members of Congress have NOMINATE scores that are more strongly related to the median Republican in their district, while Democrats' NOMINATE scores are more strongly related to the overall district median constituent.
+The IRT measures of district-party ideology that I create in Chapter \@ref(ch:model) is a more direct measure of policy preferences than ideological self-placement scores or additive issue scores, which respectively tap a large amount of "symbolic" or identity-focused conceptions of political ideology or do not accord for differential measurement error across policy issues [@ellis-stimson:2012:symbolic-ideology; @treier-hillygus:2009:ideology].
+My IRT ideal point scores, to my knowledge, are the first ideology scores for district-party groups to be applied to the study of congressional primaries.^[
+  For IRT estimates of partisan constituencies and "ideological nationalization" at the U.S. state level, see @caughey-et-al:2018:ideological-nationalization.
 ]
 
 Research on primary competition and candidate positioning is also held back by the availability of primary candidate data, which until recently was not available. 
@@ -96,101 +104,86 @@ Past studies of primary competition and polarization typically use ideology scor
 Recent ideal point methods that use political financial contributions data have the capacity to scale a much broader universe of political actors, including candidates, political parties, PACS and interest groups, and donors [@bonica:2013:ideology-interests; @bonica:2014:mapping-ideology; @hall-snyder:2015:ideology].
 Few notable studies have yet used these contribution-based scores to study primary candidates [@thomsen:2014:moderate-candidates; @rogowski-langella:2015:primary-systems; @ahler-citrin-lenz:2016:CA-open-primaries; @porter-treul:2020:primary-experience; @thomsen:2020:ideology-gender].
 
-Although recent studies of primary candidates tend not to study the overall relationship between voters' policy ideology and candidate positions, there is an enduring interest in the way _primary rules_ shape candidates' positioning incentives through the preferences of the electorate.
-Primary rules refer to regulations in state election law that control which voters can participate in primary elections and the freedoms that parties have to set those participation rules within the scope of the law.
+Even with better measures of district-party ideology and candidate positions, there are some reasons to suspect that district-party ideology does not have a straightforward effect on candidate extremism. 
+@thomsen:2014:moderate-candidates finds that politicians are less likely to run for Congress (versus a state office) if their moderate stances make them a weaker "fit" for their party, measured as a greater distance between a candidate's CFscore and the average CFscore in their state-party.
+This process could weaken the relationship between district-party ideology and candidate positioning because moderate candidates select themselves out of the campaign, even if they might appeal to district partisan voters.
+@porter-treul:2020:primary-experience find that the number of primary candidates who lack prior elected experience is increasing over time.
+Interestingly, they find no pattern between candidate experience and candidate extremism.
+This non-relationship may indicate that the positioning of inexperienced candidates may be less related to district-party ideology, either because the candidates are not adept at perceiving local ideology, they do not have the resources to conduct or acquire surveys of their constituencies, or emphasize non-ideological appeals in their campaigns. 
+Incumbents, in turn, may be more responsive to local ideology as a result of their political skills and survivorship bias—ill-fitting candidates don't become incumbents in the first place—although incumbents systematically misperceive public opinion as well [@broockman-skovron:2018:bias].
+
+
+### Primary rules
+
+More recent studies of primary candidates tend not to focus on the overall relationship between voters' policy ideology and candidate positions. 
+Instead, there is an enduring interest in the way primary rules affect candidates' positioning incentives by altering the composition of the primary electorate.
+Primary "rules" refer to regulations in state election law that control which voters can participate in primary elections and which inclusion criteria parties can define within those legal confines.
 A state primary is "closed" if only registered members of a political party are allowed to vote in the party's primary election.
 On the other side of the spectrum, an "open" primary allows any registered voter to cast a vote in any party's primary.
-There are states whose primary rules fall between these two extremes, such as "semi-closed" systems that allow party-unaffiliated voters to choose which party primary they want to vote for, but registered partisans can only vote in the primary of their registered party affiliation.
-Political scientists and political observers have speculated that these rules shape candidates' positioning incentives by changing the composition of primary voters.
+There are many more states whose primary rules fall between these two extremes, such as "semi-closed" systems that allow party-unaffiliated voters to choose which party primary they want to vote for, even if registered partisans must vote in the primary of their party registration [@mcghee-et-al:2014:nomination-systems].
+Political scientists and political observers speculate that these rules shape candidates' positioning incentives by changing the composition of primary voters.
 Closed primary elections, so the argument goes, are limited to registered party identifiers in a district, so candidates running in closed primaries must appeal to a more ideologically homogeneous primary electorate in order to win the nomination.
-More open systems, especially blanket primary systems where candidates from all parties run for the same finite number of slots on the general election ballot, encourage primary candidates to take more moderate stances to win a primary election among a more ideologically diverse constituency.
-The general hypothesis, therefore, is that more restrictive primary rules exacerbate ideological polarization in congress and in state legislatures.
+More open systems, especially "blanket" systems where candidates from all parties run on the same primary ballot to advance to the general election, encourage primary candidates to take more moderate stances to attract a more ideologically diverse primary coalition.
+The general hypothesis, therefore, is that more restrictive primary rules exacerbate ideological polarization in congress and in state legislatures, and furthermore that polarization might be combated by moving primary elections to more open rules.
 
-
-
-
-- @thomsen:2014:moderate-candidates
-    - moderates less likely to run the less they "fit" the party (farther from CFscore median)
-    - ideological positioning in the form of running vs. not.
-    - candidates are compared to the party, not to partisan voters (district measures of voters are cross-party)
-- @porter-treul:2020:primary-experience
-    - increasing number of inexperienced candidates running in primaries
-    - not an obvious pattern about the ideological extremity of inexperienced candidates
-    - when inexperienced candidates win, they tend to be more ideologically extreme than experienced candidates win
-- @thomsen:2020:ideology-gender 
-    - no (significant) evidence that ideology–victory relationship is different for men and women (but the interaction pt estimates are comparable in size to main effects)
-    - Dem women are more liberal than men, slight advantage in primaries
-
-
-- @rogowski-langella:2015:primary-systems
-- @ahler-citrin-lenz:2016:CA-open-primaries
-
-
-
-primary positioning [@rogowski-langella:2015:primary-systems]
-
-Primary systems
-    - redistricting, same district, divergent candidates [@mccarty-poole-rosenthal:2009:gerrymandering; @brunell-grofman-merrill:2016:polarization-components]
-
-- not everything: miller and stokes
-- other things: 
-    - partisan organization [ @mcclosky-et-al:1960:conventions; @layman-et-al:2010:activists-conflict-extension]
-    - party network
-- issue-by-issue, mixed evidence.
-
-
-- classic models of electoral competition view candidate moderation as an electoral benefit. You can make non-moderate positions make sense if you incorporate campaign volunteers, primaries, etc. 
-- Researchers find evidence that candidate positioning is related to district-level aggregate voting (e.g.\ the presidential vote) and to voter preferences [@ansolabehere-et-al:2001:candidate-positioning; @clinton:2006:constituent-representation; @ansolabehere-et-al:2008:voter-ideology].
-
-- Why do candidates take non-moderate stances in reality? Studies that look into the polarizing effects of primaries find little evidence that primaries matter for candidate positioning, but many of these studies are focused on Congressional incumbents. 
-- Studies that include non-incumbent candidates show that many of the empirical implications of the "strategic positioning dilemma" don't receive a lot of evidence. For instance, studies of primary "openness" consistently show basically zero or even reversed relationships to candidate ideology as you would expect from theory.  
-
-
-<!------- TO DO ---------
-- from the prospectus:
-------------------------->
-
-The second obstacle preventing a more complete study of primary representation is the failure to incorporate primary candidates' ideal points into the analysis. 
-Although ideal point estimates derived from roll-call votes such as [Nominate]{.smallcaps} are a popular tool for measuring politicians' ideological locations [@poole-rosenthal:1997:roll-call-history; @poole:2005:spatial-models], only incumbents cast roll call votes, so these measures are unavailable for non-incumbent candidates.^[
-  Studies of candidate positioning that go beyond incumbents sometimes use survey data from challenger candidates [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning], but the surveys only interview general election candidates. Furthermore, the rarity of these surveys limits the generalizability of their findings over time.
+This "primary rules hypothesis" receives essentially zero support across several studies of U.S. elections.
+@hill:2015:nominating-institution studies the relationship between primary rules and the ideological makeup of the primary electorate, asking if primary voters in states with more open primary rules are in fact more moderate on average than primary voters under closed primary rules.
+Estimating an IRT ideal point model on individual CCES respondents in each congressional district and validated voter turnout data, Hill finds that primary voters are more ideologically consistent than general election voters in the same party, but primary voters are no more extreme in closed primary states than in open primary states.
+Even if primary electorates are not affected by state primary rules, candidates may still suspect that primary rules matter and position themselves accordingly.
+@rogowski-langella:2015:primary-systems study the relationship between primary rules and candidate positioning as measured with CFscores.
+They find no systematic evidence that either congressional candidates or state legislative candidates are more extreme in closed primary states or more moderate in open primary states. 
+@mcghee-et-al:2014:nomination-systems also study state legislators but using ideology scores that bridge the NOMINATE ideal point space to state legislative voting [@shor-mccarty:2011:mapping-state-legs], again finding no convincing evidence that primary systems matter for polarization in state legislatures.
+Within-state studies of changes to primary rules over time find mixed and highly qualified results, focused primarily on California's change to a "top two" primary system.^[
+  In a top-two system, candidates from all parties compete in a single primary for two spots on the general election ballot, which are awarded to the top two plurality winners in the primary.
 ]
-Further, when non-incumbents enter the picture, researchers tend to focus on the positioning of general election candidates rather than primary candidates [@ansolabehere-et-al:2001:candidate-positioning; @canes-wrone-et-al:2002:out-of-step; @burden:2004:candidate-positioning]. Some studies have argued that primary competition leads incumbent legislators to take non-median positions, but these studies do not observe primary candidate positions directly, instead observing the presence or threat of challengers [@burden:2004:candidate-positioning; @brady-han-pope:2007:out-of-step]. Recent advances in ideal point modeling using campaign contributions are a promising path forward [@hall-snyder:2015:ideology; @bonica:2013:ideology-interests; @bonica:2014:mapping-ideology], but they are not designed for the careful study of primary competition and thus contain many "post-treatment" measurement artifacts.
+@bullock-clinton:2011:CA-blanket-primary find that the shift to the top-two primary promoted the election of more moderate candidates in California in competitive districts, measured using the two-party presidential vote, but no effects in more lopsided districts.
+Looking at the mechanisms underlying this, however, @hill:2015:nominating-institution, who finds no effect on the ideological composition of primary voters after California's reforms, and survey experiments by @ahler-citrin-lenz:2016:CA-open-primaries broadly show that voters are unable to identify which candidates are more ideological and which are more moderate.
+
+I leverage my new data on district-party ideology to revisit the primary rules hypothesis in Section \@ref(sec:pos-rules) below.
+Unlike most studies, I find that more candidates are less responsive to district-party ideology in states with more open primary rules, consistent with the primary rules hypothesis.
 <!------- TO DO ---------
-- weaken
+- come back
+- discuss "effect modification" (kam-trussler) interpretation below.
 ------------------------->
-<!-- don't diss Bonica if we're going to use him! -->
 
+### Ideology inside the two major parties
 
+What to do we think we know about ideology and the parties, and how should it condition our expectations and interpretations of the evidence that we see here?
 
-
-What to do with the Hopkins/Sniderman theory
-
+- Hopkins vs. Sniderman theory
 - does party's issue emphasis mean parties should collapse, or that variation should track
 - Grossman-Hopkins; parties care about issues so they try to position themselves on it
   + read their stuff to see how they quality this
   + do they think districts collapse?
 - weighting issues: left groups see fine variation in left members, but republicans are all bunched at zero (Brunell? Linda Fowler?)
-- or Sniderman conflicted theory: Democrats are conflicted about appeasing groups, so variation matters. Republicans are conflicted
+- or Sniderman conflicted theory: Democrats are conflicted about appeasing groups, so variation matters. Republicans are not conflicted
 - THINK about abortion as a toy case
   + if weighting... if not weighting...
+
+
+
+
+### Exploratory analysis
+
+The analysis begins by examining the topline correlation between district-party ideology and candidate positions.
+For the dependent variable, I use the dynamic CF score included in the DIME congressional candidate database for 2012, 2014, and 2016 candidates [@bonica:2019:dime]. 
+For district-party ideology, I use the mean from the MCMC samples of the IRT model in Chapter \@ref(ch:model), which are estimated from polling data over the 2010s districting cycle.
+Using only the mean understates the amount of uncertainty in the ensuing analysis, which is later corrected in the full analysis.
+For now, these initial investigations serve only to give us an impression of the raw data.
+
+<!------- TO DO ---------
+- - what is the relationship
+- let's control for the thing
+- what does this imply?
+------------------------->
+
+
+
 
 <!------- TO DO ---------
 - causal inference...
 - what isn't in the lit, what is, and what this project is doing
 ------------------------->
-
-
-### Exploratory analysis
-
-- introduce the data first.
-    - DIME candidate scores
-    - posterior means only
-    - we will do a more complete modeling routine later
-- what is the relationship
-- let's control for the thing
-- what does this imply?
-
-
 
 
 ```{r read-data, eval = TRUE}
@@ -202,27 +195,51 @@ party_fits <- full_data %>%
   group_by(party_num) %>%
   nest() %>%
   mutate(
-    correlation = map(
+    correlation = map_dbl(
       .x = data,
       .f = ~ cor(
         .x$recipient_cfscore_dyn, 
-        .x$theta_mean_raw,
+        .x$theta_mean,
         use = "pairwise.complete.obs"
       )
     ),
     lmfit = map(
       .x = data,
-      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean_raw, data = .x)
+      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean, data = .x)
     ),
-    lmtidy = map(lmfit, tidy, conf.int = TRUE),
+    lmtidy = map(.x = lmfit, .f = tidy, conf.int = TRUE),
+    lmfit_std = map(
+      .x = data, 
+      .f = ~ {
+        .x %>%
+        select(recipient_cfscore_dyn, theta_mean) %>%
+        na.omit() %>%
+        mutate_at(
+          .vars = vars(recipient_cfscore_dyn, theta_mean),
+          .funs = ~ scale(.) %>% as.vector()
+        ) %>%
+        lm(recipient_cfscore_dyn ~ theta_mean, data = .) 
+      }
+    ),
+    stidy = map(.x = lmfit_std, .f = tidy, conf.int = TRUE),
     lmglance = map(lmfit, glance)
   ) %>%
   print()
 
-party_fits$lmglance
+party_coefs <- party_fits %>% 
+  unnest(lmtidy) %>%
+  split(.$party_num) %>%
+  lapply(function(x) x %>% split(.$term)) %>%
+  print()
+
+party_coefs_std <- party_fits %>% 
+  unnest(stidy) %>%
+  split(.$party_num) %>%
+  lapply(function(x) x %>% split(.$term)) %>%
+  print()
 
 byparty_labels <- party_fits %>%
-  unnest(c(correlation, lmglance)) %>%
+  unnest(lmglance) %>%
   mutate(
     n = df + df.residual,
     party = names(party_colors)[party_num]
@@ -234,7 +251,7 @@ byparty_labels <- party_fits %>%
 
 ```{r plot-by-party}
 ggplot(full_data) +
-  aes(x = theta_mean_raw, y = recipient_cfscore_dyn) +
+  aes(x = theta_mean, y = recipient_cfscore_dyn) +
   geom_point(
     aes(color = as.factor(party_num)), 
     size = 2.5, shape = 16, alpha = 0.25
@@ -258,37 +275,90 @@ ggplot(full_data) +
   geom_text(
     data = byparty_labels %>%
       mutate(
-        theta_mean_raw = c(-1.75, 0.05),
+        theta_mean = c(-1.75, 0.05),
         recipient_cfscore_dyn = c(3, -3)
       ),
-    aes(label = str_glue("{party} (n = {comma(n)})")),
+    aes(label = str_glue("{party} (n = {comma(n)})\nr = {round(correlation, 2)}")),
     hjust = 0
   ) 
 ```
 
-```{r plot-by-party, include = TRUE, fig.width = 8, fig.height = 5, fig.cap = "Topline relationship between district-party ideology and candidate positions. The horizontal axis plots the posterior mean for a group ideology, and the vertical axis is the dynamic CF score for primary candidates included in the DIME congressional candidate database.", fig.scap = "Topline relationship between district-party ideology and candidate positions."}
+Figure \@ref(fig:plot-by-party) shows the topline relationship between primary candidate CF scores and the ideal point mean for the district-party they ran to represent.
+The figure contains candidates from 2012, 2014, and 2016 congressional primaries, including incumbents, challengers, and open-seat candidates.
+This totals `r byparty_labels %>% filter(party == "Democrats") %>% pull(n) %>% comma()` Democratic candidates and `r byparty_labels %>% filter(party == "Republicans") %>% pull(n) %>% comma()` Republican candidates over three election cycles.
+The figure shows a weak but decisively positive relationship between ideal point means and CF scores; district-parties that are more conservative see more conservative primary candidates. 
+The relationship is stronger for Democrats than for Republicans in slope (`r party_coefs[["1"]]$theta_mean$estimate %>% round(2)` versus `r party_coefs[["2"]]$theta_mean$estimate %>% round(2)`) and in correlation (`r party_coefs_std[["1"]]$theta_mean$estimate %>% round(2)` versus `r party_coefs_std[["2"]]$theta_mean$estimate %>% round(2)`).
+Because one-unit increases are large on the ideal-point scale, it is convenient to interpret the correlation coefficients as standardized coefficients, where each party is standardized separately.
+Increasing district-party ideology by one within-party standard deviation is associated with a CF scores increase `r party_coefs_std[["1"]]$theta_mean$estimate %>% round(2)` standard deviations among Democrats and `r party_coefs_std[["2"]]$theta_mean$estimate %>% round(2)` standard deviations among Republicans.
+A small number of outlier CF scores exist for each party, but these outliers are few compared to the approximately 2,000 observations in each party.
+The regression lines track the center of each party's ideal point distribution, so these outliers do not appear to be large influences on the topline relationship.
+
+
+```{r plot-by-party, include = TRUE, fig.width = 7, fig.height = 5, fig.cap = "Topline relationship between district-party ideology and candidate positions. The horizontal axis plots the posterior mean for a group ideology, and the vertical axis is the dynamic CF score for primary candidates included in the DIME congressional candidate database.", fig.scap = "Topline relationship between district-party ideology and candidate positions."}
 ```
 
 
 ```{r by-incumbency}
 incumbency_fits <- full_data %>%
-  group_by(incumbency) %>%
+  group_by(party_num, incumbency) %>%
   nest() %>%
   mutate(
-    correlation = map(
+    correlation = map_dbl(
       .x = data,
       .f = ~ cor(
         .x$recipient_cfscore_dyn, 
-        .x$theta_mean_raw,
+        .x$theta_mean,
         use = "pairwise.complete.obs"
       )
     ),
     lmfit = map(
       .x = data,
-      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean_raw, data = .x)
+      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean, data = .x)
     ),
-    lmtidy = map(lmfit, tidy, conf.int = TRUE),
+    lmtidy = map(.x = lmfit, .f = tidy, conf.int = TRUE),
+    lmfit_std = map(
+      .x = data, 
+      .f = ~ {
+        .x %>%
+        select(recipient_cfscore_dyn, theta_mean) %>%
+        na.omit() %>%
+        mutate_at(
+          .vars = vars(recipient_cfscore_dyn, theta_mean),
+          .funs = ~ scale(.) %>% as.vector()
+        ) %>%
+        lm(recipient_cfscore_dyn ~ theta_mean, data = .) 
+      }
+    ),
+    stidy = map(.x = lmfit_std, .f = tidy, conf.int = TRUE),
     lmglance = map(lmfit, glance)
+  ) %>%
+  print()
+
+incumbency_coefs <- incumbency_fits %>% 
+  unnest(lmtidy) %>%
+  filter(term == "theta_mean") %>%
+  split(.$party_num) %>%
+  lapply(function(x) x %>% split(.$incumbency)) %>%
+  print()
+
+incumbency_coefs_std <- incumbency_fits %>% 
+  unnest(stidy) %>%
+  filter(term == "theta_mean") %>%
+  split(.$party_num) %>%
+  lapply(function(x) x %>% split(.$incumbency)) %>%
+  print()
+
+incumbency_labels <- incumbency_fits %>%
+  unnest(lmglance) %>%
+  mutate(
+    n = df + df.residual,
+    party = names(party_colors)[party_num]
+  ) %>%
+  select(party, n, correlation, p.value) %>%
+  ungroup() %>%
+  arrange(
+    party, 
+    fct_relevel(str_glue("{incumbency}s"), "Incumbents", "Challengers")
   ) %>%
   print()
 ```
@@ -297,7 +367,7 @@ incumbency_fits <- full_data %>%
 
 ```{r plot-by-incumbency}
 ggplot(full_data) +
-  aes(x = theta_mean_raw, y = recipient_cfscore_dyn) +
+  aes(x = theta_mean, y = recipient_cfscore_dyn) +
   facet_wrap(~ fct_relevel(str_glue("{incumbency}s"), "Incumbents", "Challengers")) +
   geom_point(
     aes(color = as.factor(party_num)), 
@@ -318,38 +388,92 @@ ggplot(full_data) +
     x = "District-Party Ideal Point\n(Posterior Mean)", 
     y = "Candidate CF Score"
   ) +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+   geom_text(
+     data = incumbency_labels %>%
+       mutate(
+         theta_mean = c(rep(-1.75, 3), rep(-0.25, 3)),
+         recipient_cfscore_dyn = c(rep(3, 3), rep(-3, 3))
+       ),
+     aes(label = str_glue("{party}\nn = {comma(n, accuracy = 1)}\nr = {round(correlation, 2)}")),
+     hjust = 0
+   ) 
 ```
 
-```{r plot-by-incumbency, include = TRUE, out.width = "100%", fig.width = 8, fig.height = 4, fig.cap = "District-party ideology and candidate positioning across candidate incumbency status.", fig.scap = "District-party ideology and candidate positioning for incumbents, challengers, and open-seat candidates."}
+Figure \@ref(fig:plot-by-incumbency) plots the same relationship with candidates divided into incumbents, challengers of incumbents, and candidates running for a district with no incumbent running for reelection.
+It is immediately noticeable that CFscores have lower variance among incumbent candidates than among non-incumbent incumbents, and the correlations between CF scores and ideal point means are markedly higher: `r incumbency_coefs_std[["1"]]$Incumbent$correlation %>% round(2)` among Democrats and `r incumbency_coefs_std[["2"]]$Incumbent$correlation %>% round(2)`.
+The overall higher correlation suggests incumbents are either more capable at positioning themselves for their primary electorates or that elections screen out ill-fitting incumbents. 
+The higher correlation among Democrats also disappears among incumbent candidates, suggesting that no party is obviously more responsive to primary constituencies than the other, contrary to @clinton:2006:constituent-representation's finding that Republican incumbents were uniquely sensitive to ideological variation within their partisan bases.
+Although CF scores are higher variance among challengers and open-seat candidates, and their relationship to district-party ideology is weaker, we still observe a generally positive relationship that candidates of all status have some awareness, on average, of how to take more conservative or liberal positions in response to their local constituencies.
+
+```{r plot-by-incumbency, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 5, fig.cap = "District-party ideology and candidate positioning across candidate incumbency status.", fig.scap = "District-party ideology and candidate positioning for incumbents, challengers, and open-seat candidates."}
 ```
 
 ```{r by-cycle}
 cycle_fits <- full_data %>%
-  group_by(cycle) %>%
+  group_by(party_num, cycle) %>%
   nest() %>%
   mutate(
-    correlation = map(
+    correlation = map_dbl(
       .x = data,
       .f = ~ cor(
         .x$recipient_cfscore_dyn, 
-        .x$theta_mean_raw,
+        .x$theta_mean,
         use = "pairwise.complete.obs"
       )
     ),
     lmfit = map(
       .x = data,
-      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean_raw, data = .x)
+      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean, data = .x)
     ),
-    lmtidy = map(lmfit, tidy, conf.int = TRUE),
+    lmtidy = map(.x = lmfit, .f = tidy, conf.int = TRUE),
+    lmfit_std = map(
+      .x = data, 
+      .f = ~ {
+        .x %>%
+        select(recipient_cfscore_dyn, theta_mean) %>%
+        na.omit() %>%
+        mutate_at(
+          .vars = vars(recipient_cfscore_dyn, theta_mean),
+          .funs = ~ scale(.) %>% as.vector()
+        ) %>%
+        lm(recipient_cfscore_dyn ~ theta_mean, data = .) 
+      }
+    ),
+    stidy = map(.x = lmfit_std, .f = tidy, conf.int = TRUE),
     lmglance = map(lmfit, glance)
   ) %>%
+  print()
+
+cycle_coefs <- cycle_fits %>% 
+  unnest(lmtidy) %>%
+  filter(term == "theta_mean") %>%
+  split(.$party_num) %>%
+  lapply(function(x) x %>% split(.$cycle)) %>%
+  print()
+
+cycle_coefs_std <- cycle_fits %>% 
+  unnest(stidy) %>%
+  filter(term == "theta_mean") %>%
+  split(.$party_num) %>%
+  lapply(function(x) x %>% split(.$cycle)) %>%
+  print()
+
+cycle_labels <- cycle_fits %>%
+  unnest(lmglance) %>%
+  mutate(
+    n = df + df.residual,
+    party = names(party_colors)[party_num]
+  ) %>%
+  select(party, n, correlation, p.value) %>%
+  ungroup() %>%
+  arrange(party, cycle) %>%
   print()
 ```
 
 ```{r plot-by-cycle}
 ggplot(full_data) +
-  aes(x = theta_mean_raw, y = recipient_cfscore_dyn) +
+  aes(x = theta_mean, y = recipient_cfscore_dyn) +
   facet_wrap(~ str_glue("{cycle} Campaign")) +
   geom_point(
     aes(color = as.factor(party_num)), 
@@ -370,10 +494,30 @@ ggplot(full_data) +
     x = "District-Party Ideal Point\n(Posterior Mean)", 
     y = "Candidate CF Score"
   ) +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  geom_text(
+    data = cycle_labels %>% 
+      mutate(
+        theta_mean = c(rep(-1.75, 3), rep(-0.25, 3)), 
+        recipient_cfscore_dyn = c(rep(3, 3), rep(-3, 3)) 
+      ), 
+    aes(label = str_glue("{party}\nn = {comma(n, accuracy = 1)}\nr = {round(correlation, 2)}")), 
+    hjust = 0
+  ) 
 ```
 
-```{r plot-by-cycle, include = TRUE, out.width = "100%", fig.width = 8, fig.height = 4, fig.cap = "District-party ideology and candidate positioning across election cycles within the 2010s districting cycle.", fig.scap = "District-party ideology and candidate positioning in 2012, 2014, and 2016."}
+
+Finally, Figure \@ref(fig:plot-by-cycle) shows how the relationship between district-party ideology and CF scores varies by election year, splitting the 2012, 2014, and 2016 campaign cycles into three panels.
+There is no definitive trend toward increasing polarization or increasing responsiveness to partisan ideology in more recent years, which which is inconsistent with notions that candidates have become more hyper-focused on primary electorates in the past few election cycles.
+The same weak but positive relationship appears in all years.
+The flattest relationship actually appears most recently for Republicans in 2016, among whom the relationship is relatively flat.
+I hesitate to interpret too much out of a single observation, but future researchers might investigate whether financial contributions by Republican donors had a different ideological character in 2016, either because Donald Trump's unusual campaign platform altered which donors wanted to support which causes, or if moderate donors directed their money away from Republican candidates in anticipation of a Clinton presidential win. 
+
+<!------- TO DO ---------
+- why is this
+------------------------->
+
+```{r plot-by-cycle, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 5, fig.cap = "District-party ideology and candidate positioning across election cycles within the 2010s districting cycle.", fig.scap = "District-party ideology and candidate positioning in 2012, 2014, and 2016."}
 ```
 
 
