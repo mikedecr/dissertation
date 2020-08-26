@@ -19,10 +19,6 @@ data {
   vector[D] ideal_means;
   matrix[D, D] ideal_prec;
 
-  // joint prior
-  int<lower = 0, upper = 1> joint_prior;
-  real<lower = 1> lkj_value;
-
 }
 
 transformed data {
@@ -59,19 +55,9 @@ parameters {
   // outcome dispersion under independence
   real<lower = 0> sigma_med;
   real<lower = 0> sigma_trt;
-  // outcome dispersion under correlation
-  corr_matrix[2] joint_corr;
   
 }
 
-transformed parameters {
- 
-  vector<lower = 0>[2] joint_scales;
-  cov_matrix[2] joint_cov;
-  joint_scales = [sigma_med, sigma_trt]';
-  joint_cov = quad_form_diag(joint_corr, joint_scales);
-
-}
 
 model {
 
@@ -80,9 +66,6 @@ model {
   vector[N] blipdown_function;
   vector[N] blip_y;  
   vector[N] yhat_trt;
-
-  vector[2] joint_y[N];
-  vector[2] joint_yhat[N];
 
 
   // loop over N to get each theta and ranef where it belongs
@@ -100,35 +83,18 @@ model {
       (theta[d[i]] * coef_theta_trt) + 
       (X_trt[i, ] * wt_trt) + 
       ranef_trt[d[i]];
-    
-    // 2-vector = row 2-vector transpose
-    joint_y[i] = [y[i], blip_y[i]]';
-    joint_yhat[i] = [yhat_med[i], yhat_trt[i]]';
+
   }
   
   blipdown_function = coef_mediator * (mediator - blip_value);
   blip_y = y - blipdown_function;
 
-  // how to do joint model?
-  if (joint_prior == 0) {
+  y ~ normal(yhat_med, sigma_med);
+  blip_y ~ normal(yhat_trt, sigma_trt);    
 
-    y ~ normal(yhat_med, sigma_med);
-    blip_y ~ normal(yhat_trt, sigma_trt);  
-  
-  } else if (joint_prior == 1) {
-
-    for (n in 1:N) {
-      joint_y[n] ~ multi_normal(joint_yhat[n], joint_cov);
-    }
-    
-
-  }
-  
-  
   // outcome dispersion
   sigma_med ~ cauchy(0, 1);
   sigma_trt ~ cauchy(0, 1);
-  joint_corr ~ lkj_corr(lkj_value);
   
   // multivariate ideal point prior
   theta ~ multi_normal_prec(ideal_means, ideal_prec);

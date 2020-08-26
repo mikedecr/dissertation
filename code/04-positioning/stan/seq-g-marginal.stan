@@ -31,6 +31,7 @@ transformed data {
 
   // NxD district identifiers (initialized 0)
   matrix[N, D] L = rep_matrix(0, N, D);
+  row_vector[D] diag_LtL;
 
   // N and D identity matrices
   matrix[N, N] NI = diag_matrix(rep_vector(1, N));
@@ -40,6 +41,10 @@ transformed data {
   for (i in 1:N) {
     L[i, d[i]] = 1;
   }
+
+  // calc column sums as vector
+  diag_LtL = columns_dot_self(L);
+
   
   // combined stage 1 predictor matrix
   X_med = append_col(X_trt, Z_med);
@@ -63,8 +68,8 @@ parameters {
   vector[K_trt] wt_trt;         // confounder weights
 
   // dispersion terms, district and candidate
-  real<lower = 0> hypersigma_med;
-  real<lower = 0> hypersigma_trt;
+  real<lower = 0> tau_med;
+  real<lower = 0> tau_trt;
   real<lower = 0> sigma_med;
   real<lower = 0> sigma_trt;
   
@@ -85,19 +90,17 @@ transformed parameters {
   // using woodbury identity
   prec_med = 
     (pow(sigma_med, -2) * NI) - 
-      pow(sigma_med, -2) * L * 
-        inv(
-          (pow(hypersigma_med, -2) * DI) + (pow(sigma_med, -2) * L' * L) 
-      ) * 
-      L' * pow(sigma_med, -2);
+    diag_post_multiply(
+      L, pow(sigma_med, -2) ./ (pow(sigma_med / tau_med,  2) + diag_LtL)
+    ) * L';
 
   prec_trt = 
     (pow(sigma_trt, -2) * NI) - 
-      pow(sigma_trt, -2) * L * 
-      inv(
-        (pow(hypersigma_trt, -2) * DI) + (pow(sigma_trt, -2) * L' * L) 
-      ) * 
-      L' * pow(sigma_trt, -2);
+    diag_post_multiply(
+      L, 
+      pow(sigma_trt, -2) ./ 
+        (pow(sigma_trt / tau_trt,  2) + diag_LtL)
+    ) * L';
 
 }
 
@@ -133,24 +136,29 @@ model {
   // outcomes are MVNorm w/ precision matrix
   y ~ multi_normal_prec(yhat_med, prec_med);
   blip_y ~ multi_normal_prec(yhat_trt, prec_trt);
+
+
+  // multivariate prior on RAW theta (also precision setup)
+  theta_raw ~ multi_normal_prec(ideal_means, ideal_prec);
   
 
   // outcome and district scales
   sigma_med ~ cauchy(0, 1);
   sigma_trt ~ cauchy(0, 1);
-  hypersigma_med ~ cauchy(0, 1);
-  hypersigma_trt ~ cauchy(0, 1);
-  
-  // multivariate prior on RAW theta (also precision setup)
-  theta_raw ~ multi_normal_prec(ideal_means, ideal_prec);
+
+  tau_med ~ cauchy(0, 1);
+  tau_trt ~ cauchy(0, 1);
+
 
   // regression weights
   const_med ~ normal(0, 5); 
   const_trt ~ normal(0, 5); 
+  
   coef_mediator ~ normal(0, 1); 
-  coef_theta_trt ~ normal(0, 1); 
   coef_theta_med ~ normal(0, 1); 
-  wt_med ~ normal(0, 1); 
+  coef_theta_trt ~ normal(0, 1); 
+
+  wt_med ~ normal(0, 1);
   wt_trt ~ normal(0, 1);
 
 }
