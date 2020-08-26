@@ -89,8 +89,7 @@ full_data_raw %>%
 #   compose Stan data
 # ----------------------------------------------------
 
-blip_value <- 0.5
-
+blip_value <- 50
 
 full_data_raw %>% count(tpo)
 full_data_raw %>% count(pf)
@@ -104,8 +103,9 @@ g_data <- full_data_raw %>%
   transmute(
     group, party_num,
     primary_rules_cso, primary_rules_co, incumbency,
+    theta_mean,
     y = recipient_cfscore_dyn,
-    mediator = (rep_pres_vs - blip_value) / sd(rep_pres_vs, na.rm = TRUE),
+    mediator = ((rep_pres_vs*100) - blip_value) / 10,
     Z_med = c(
       out_theta_mean, 
       as.numeric(cycle == 2014), as.numeric(cycle == 2016)
@@ -170,7 +170,7 @@ g_data_dem <- g_data %>%
     N = length(y),
     K_med = ncol(Z_med),
     K_trt = ncol(X_trt),
-    blip_value = blip_value,
+    blip_value = 0,
     ideal_means = theta_stats$mean_all$theta_mean[sort(unique(.$group))], 
     ideal_prec = theta_stats$prec_all[sort(unique(group)), sort(unique(group))],
     joint_prior = 0,
@@ -187,12 +187,13 @@ g_data_rep <- g_data %>%
     N = length(y),
     K_med = ncol(Z_med),
     K_trt = ncol(X_trt),
-    blip_value = blip_value,
+    blip_value = 0,
     ideal_means = theta_stats$mean_all$theta_mean[sort(unique(.$group))], 
     ideal_prec = theta_stats$prec_all[sort(unique(group)), sort(unique(group))],
     joint_prior = 0,
     lkj_value = 50
   )
+
 
 sum(g_data_dem$group %% 2 != 1)
 sum(g_data_rep$group %% 2 != 0)
@@ -215,6 +216,12 @@ lapply(g_data_rep, head)
 lapply(g_data_rep, length)
 lapply(g_data_rep, dim)
 lapply(g_data_rep, n_distinct)
+
+
+
+
+
+
 
 # ---- create a data grid with all data and subsets -----------------------
 
@@ -260,7 +267,7 @@ g_grid_data <- g_data %$%
           N = length(y),
           K_med = ncol(Z_med),
           K_trt = ncol(X_trt),
-          blip_value = blip_value,
+          blip_value = 0,
           ideal_means = 
             theta_stats$mean_all$theta_mean[sort(unique(.x$group))], 
           ideal_prec = 
@@ -394,6 +401,7 @@ sample_g <- function(object = NULL, data = list(), ...) {
 
 
 
+
 # ---- variational testing -----------------------
 
 # vb args to consider...
@@ -485,13 +493,15 @@ vb_tidy %>%
   filter(
     str_detect(term, "coef") |
     str_detect(term, "wt") |
-    str_detect(term, "sigma")
+    str_detect(term, "sigma") |
+    str_detect(term, "const")
   ) %>%
   mutate(
     prefix = case_when(
       str_detect(term, "coef") ~ "Coefs of Interest",
       str_detect(term, "wt") ~ "Nuisance Coefs",
-      str_detect(term, "sigma") ~ "Variance Components"
+      str_detect(term, "sigma") ~ "Variance Components",
+      str_detect(term, "const") ~ "Nuisance Coefs"
     )
   ) %>%
   ggplot() +
@@ -695,7 +705,7 @@ bind_rows(
   mcmc_dem_incumbency,
   mcmc_rep_incumbency  
 ) %>%
-  write_rds(here(mcmc_dir, "local_mcmc_grid.rds"))
+  write_rds(here(mcmc_dir, "local_sample_grid.rds"))
 
 
 # this would be everything all at once
