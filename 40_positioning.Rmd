@@ -390,10 +390,10 @@ simple_regs <-
 full_data %>%
   filter(
     is.na(recipient_cfscore_dyn) == FALSE &
-    is.na(theta_mean_raw) == FALSE
+    is.na(theta_mean) == FALSE
   ) %>%
   ggplot() +
-  aes(x = scale(theta_mean_raw), y = recipient_cfscore_dyn) +
+  aes(x = scale(theta_mean), y = recipient_cfscore_dyn) +
   facet_grid(
     str_glue("{cycle} Campaign") ~ fct_relevel(incumbency, "Incumbent")
   ) +
@@ -417,7 +417,7 @@ full_data %>%
   theme(panel.grid = element_line(color = "gray90")) +
   geom_text(
     data = tibble(
-      theta_mean_raw = c(-1.25, 0.25),
+      theta_mean = c(-1.25, 0.25),
       recipient_cfscore_dyn = c(-3, 3),
       text = c("Democrats", "Republicans"),
       cycle = 2012, 
@@ -1076,24 +1076,24 @@ Coefficients for linear predictors in stages 1 and 2 are given Normal priors tha
 (\#eq:g-coef-priors)
 \end{align}
 Both modeling stages contain Normal district-level error terms, with estimated variances that facilitate partial pooling. 
-These variances are themselves given half-Normal priors with weakly informative scale parameter values that are about half the range of the raw outcome data within each party.
+These variances are themselves given half-Cauchy priors with weakly informative scale parameter values that are about half the range of the raw outcome data within each party.
 \begin{align}
 \begin{split}
   \alpha_{d} &\sim \text{Normal}\left(0, \sigma_{\alpha} \right) &
-    \sigma_{\alpha} &\sim \text{Half-Normal}\left(0, 2 \right) \\
+    \sigma_{\alpha} &\sim \text{Half-Cauchy}\left(0, 2 \right) \\
   \nu_{d}  &\sim \text{Normal}\left(0, \sigma_{\nu} \right) &
-    \sigma_{\nu} &\sim \text{Normal}\left(0, 2 \right)
+    \sigma_{\nu} &\sim \text{Half-Cauchy}\left(0, 2 \right)
 \end{split}
 (\#eq:g-ranef-priors)
 \end{align}
 And finally, each stage of the model has a Normal error term for candidates within districts. 
-The variances for these errors are given half-Normal priors with wider scale values that the districts errors, since residual variation between any two candidates is likely larger than the variation between average candidates in any two districts.
+The variances for these errors are given half-Cauchy priors with wider scale values than the districts errors, since residual variation between any two candidates is likely larger than the variation between average candidates in any two districts.
 \begin{align}
 \begin{split}
   \epsilon_{i} &\sim \text{Normal}\left(0, \sigma_{\epsilon} \right) &
-    \sigma_{\epsilon} &\sim \text{Half-Normal}\left(0, 5 \right) \\
+    \sigma_{\epsilon} &\sim \text{Half-Cauchy}\left(0, 5 \right) \\
   u_{i} &\sim \text{Normal}\left(0, \sigma_{u} \right) &
-    \sigma_{u} &\sim \text{Normal}\left(0, 5 \right)
+    \sigma_{u} &\sim \text{Half-Cauchy}\left(0, 5 \right)
 \end{split}
 (\#eq:g-resid-priors)
 \end{align}
@@ -1118,10 +1118,10 @@ Even though the multilevel model has similar assumptions as a regression on aver
 Because the number of candidates in a district isn't fixed across all districts, we would expect heteroskedasticity in a regression-on-averages model, since some districts would have higher variances due to fewer candidates.
 In the extreme case, if a district contained only one unopposed primary candidate, a naïve estimator would be unable to distinguish district-level variance from candidate-level variance.
 The multilevel model addresses this by estimating the distributions of district errors and candidate errors simultaneously, enhancing the model's ability to recognize when larger district errors are caused by signal versus noise.
-Errors from smaller districts borrow more information from the overall distribution of districts, downweighting the contributions of smaller districts by shrinking their errors toward a mean of zero.
-This has a similar intuition as a weighted least squares regression on the district-averaged data, where districts with more candidates are more informative and receive greater weight.
-Because the multilevel model is Bayesian, however, the model can handle single-candidate districts by drawing district and candidate error terms from their respective prior distributions. 
-This is yet another example where priors stabilize pathological model behavior, and underscores how the flexibility afforded by Bayesian model-building allows us to confront the idiosyncrasies of a dataset with tactics that are both intuitive and feasible.
+Errors from smaller districts borrow more information from the overall distribution of districts, downweighting the contributions of smaller districts by shrinking their error terms toward a mean of zero.
+This has a similar intuition as a weighted least squares regression on the district-averaged data, where groups with more observations are more informative about global parameters and receive greater weight.
+This is yet another example where priors stabilize pathological model behavior, underscoring the flexibility afforded by Bayesian model-building for confronting the idiosyncrasies of a dataset with tactics that are both intuitive and feasible.
+At a technical level, the model is able to avoid estimating individual random effects at all through a clever model parameterization that marginalizes over the distribution of district effects, which I explain in Section \@ref(sec:stan-g).
 
 The multilevel data structure also raises causal inference issues that are worth clarifying.
 As with many causal models where treatments are assigned to clusters of observations, it makes sense to consider SUTVA as violated within a cluster: there is no way for one candidate in a district to be treated by a different district-party ideology than other candidates.^[
@@ -1148,15 +1148,75 @@ Whether voters are responding to primary competition in the district _per se_ or
 
 <!-- If treatment is correlated with X _by design_(?) or otherwise(?), such as blocking along a key covariate like income, can include block-specific means of the treatment variable [@Hill:2013:multilevel-causal-inf]; Bafumi and Gelman, Raudenbush -->
 
-### Model parametrization in Stan
+### Model implementation in Stan {#sec:stan-g}
 
-- identifiability of district random effects
-- marginalize over the random effects
-- this retains the added variance, but without the need to explicitly sample random effects, which creates identifiability problems
-- variance-covariance matrix is like so
-- precision is better
-- 
+As is common with Bayesian modeling, the flexibility to tackle idiosyncrasies in data require careful computational implementations.
+The Bayesian sequential $g$ model can be fitted to multilevel data with many small groups thanks to stabilizing priors, but implementation in Markov chain Monte Carlo algorithms can present additional complications.
+For individual districts containing few candidates, the district error terms are only weakly identified against the candidate error terms, inducing correlations in the posterior distribution that lead to slower MCMC exploration of the parameter space. 
 
+I expedite MCMC performance through a multilevel model parameterization that marginalizes over the distribution of district random effects, recovering the same likelihood without the need to sample each district effect separately.
+The original model laid out in Equations \@ref(eq:med-model) through \@ref(eq:trt-model) draws the outcome variable as a univariate Normal variable conditional on the regression function and district membership. 
+In other words, candidates ideal points are independent Normal variables, after conditioning on group membership.
+By marginalizing over the distribution of district random effects instead of conditioning on a specific group, candidate ideal points are correlated multivariate Normal draws, with covariances that reflect the correlation among candidates within the same district. 
+This parameterization retains the same variance decomposition as before, without the need to explicit sample random effects that burden the MCMC algorithm.
+
+I walk through the multivariate parameterization beginning with the first stage model.
+Instead of drawing the CF score for each candidate, I draw CF scores for all candidates as an $N$-vector $\overrightarrow{CF}$ from a multivariate Normal distribution with a mean vector given by the linear regression in Equation \@ref(eq:med-model) and an $N \times N$ variance–covariance matrix $\mathbf{V}_{1}$.
+\begin{align}
+\begin{split}
+  \overrightarrow{CF} &\sim \text{MultiNormal}\left( 
+    a_0 + 
+    \eta \bar{\theta}_{g[i]} + 
+    \mu \mathrm{pvote}_{d[i]} + 
+    \mathbf{x}_{d[i]}^{\intercal}\beta +
+    \mathbf{z}_{d[i]}^{\intercal}\gamma,
+    \mathbf{V}_{1} %_
+  \right)
+\end{split}
+(\#eq:multinorm-y)
+\end{align}
+The regression omits the district effect, since it is mean $0$ and does not directly affect the conditional mean.
+The random effect distribution instead appears in the covariance structure of $\mathbf{V}_{i}$ in accordance with the multilevel model's variance assumptions.
+The total variance for each candidate $i$, located along the diagonal, is the sum of the the district variance $\sigma^{2}_{\alpha}$ and the residual candidate error variance $\sigma^{2}_{\epsilon}$.
+The off-diagonal elements are determined by the group membership of any two candidates.
+If two primary candidates run in the same district, their ideal point covariance is $\sigma^{2}_{\alpha}$.
+Two candidates in different districts are assumed to be independent with a covariance of $0$, since they share no correlated district-level error.
+This gives the covariance matrix a block-diagonal structure: total variance along the diagonal, and blocks of off-diagonal covariance terms that model correlated error between candidates in the same district.
+\begin{align}
+\begin{split}
+  \mathbf{V} &= \begin{bmatrix}
+    \sigma^{2}_{\epsilon} + \sigma^{2}_{\alpha} & 
+      \sigma^{2}_{\alpha} & 
+      0 & \dots & 0 \\
+    \sigma^{2}_{\alpha} & \sigma^{2}_{\epsilon} + \sigma^{2}_{\alpha} & 
+      0 &  & \vdots \\
+    0 & 0 & \sigma^{2}_{\epsilon} + \sigma^{2}_{\alpha} &  & 0 \\
+    \vdots & & & \ddots & \sigma^{2}_{\alpha} \\
+    0 & \dots & 0 & \sigma^{2}_{\alpha} & \sigma^{2}_{\epsilon} + \sigma^{2}_{\alpha}
+  \end{bmatrix}
+\end{split}
+(\#eq:multinorm-sigmas)
+\end{align}
+This covariance matrix models the data with the same variance assumptions as the original model parameterization, reducing both the number of parameters explored by the MCMC algorithm and the complexity of the posterior geometry.
+
+Computationally, sampling a multivariate Normal distribution requires inverting the covariance matrix, an operation that grows unfeasibly slow in high dimensional problems.
+It is computationally easier to sample a multivariate Normal distribution parameterized by a precision matrix, $\mathbf{Q}_{1} = \mathbf{V}^{-1}$, if an analytical matrix inversion is known.
+Fortunately for multilevel models of this sort, the precision matrix can be obtained through the Woodbury matrix identity.
+First, let $\mathbf{V}_{1} = \sigma^{2}_{\epsilon}I_{N} + \sigma^{2}_{\alpha}A$, where $I_{N}$ is an $N \times N$ identity matrix, and $A$ is an $N \times N$ symmetric adjacency matrix with cells representing pairs of candidates, equaling $1$ if the candidates run for the same district primary and $0$ if they run in different districts.
+This adjacency matrix has the same block-diagonal structure as the covariance matrix $\mathbf{V}_{1}$.
+The adjacency matrix can be further decomposed as $A = LL^{\intercal}$, where $L$ is an $N \times D$ matrix whose elements $L_{i, d}$ equal $1$ if candidate $i$ belongs to district $d$ and $0$ if not.
+The Woodbury identity states that we can invert this decomposition of $\mathbf{V}_{1}$ as
+\begin{align}
+  \mathbf{Q}_{1} = \left(\sigma^{2}_{\epsilon}I_{N} + L\sigma^{2}_{\alpha}L^{\intercal}\right)^{-1}
+  &= 
+  \frac{1}{\sigma^{2}_{\epsilon}}I_{N} - \frac{1}{\sigma^{2}_{\epsilon}}L
+  \left(
+    \frac{1}{\sigma^{2}_{\alpha}}I_{D} + \frac{1}{\sigma^{2}_{\epsilon}}L^{\intercal}L
+  \right)^{-1}
+  L^{\intercal}\frac{1}{\sigma^{2}_{\epsilon}}
+  (\#eq:woodbury)
+\end{align}
+where $I_{D}$ is a $D \times D$ identity matrix.
 
 ### Data
 
@@ -1275,6 +1335,7 @@ mcmc_dem <- read_rds(here("data", "mcmc", "4-positioning", "g-mcmc_dem.rds"))
 mcmc_rep <- read_rds(here("data", "mcmc", "4-positioning", "g-mcmc_rep.rds"))
 vb_grid <- read_rds(here("data", "mcmc", "4-positioning", "g-grid-vb.rds"))
 ```
+
 
 
 
@@ -1534,11 +1595,14 @@ ggplot(total_samples) +
 ------------------------->
 
 
-## Primary Rules
+### Effect modification by primary rules {#sec:pos-rules}
 
 
 
-## Points of Improvement
+## Discussion
+
+
+
 
 ### Primary Representation
 

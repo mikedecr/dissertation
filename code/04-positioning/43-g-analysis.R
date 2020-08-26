@@ -16,9 +16,9 @@ library("latex2exp")
 
 (home <- system("whoami", intern = TRUE) == "michaeldecrescenzo")
 
-# if (home) {
-  # source(here::here("code", "helpers", "call-R-helpers.R"))
-# }
+if (home) {
+  source(here::here("code", "helpers", "call-R-helpers.R"))
+}
 
 box_mcmc_4 <- 120779787044
 mcmc_dir <- file.path("data", "mcmc", "4-positioning")
@@ -41,122 +41,157 @@ if (home) {
   theta_stats <- box_read(706620258916)
 }
 
-global_mcmc_fits <- 
-  list("local_g-mcmc_dem.rds", "local_g-mcmc_rep.rds") %>% 
-  lapply(
-    function(x) {
-      read_rds(here("data", "mcmc", "4-positioning", x)) 
-    } 
-  )
 
-global_data <- here("data", "mcmc", "4-positioning", "stan-data_all.rds") %>%
+
+
+
+
+
+# stan fits and data
+mc_fits <- here(mcmc_dir, "local_mcmc_grid.rds") %>%
   read_rds() %>%
   ungroup() %>%
+  arrange(party_num, incumbency, primary_rules_co) %>%
   mutate(
-    mcmcfit = 
-      list("local_g-mcmc_dem.rds", "local_g-mcmc_rep.rds") %>% 
-      lapply(
-        function(x) {
-          read_rds(here("data", "mcmc", "4-positioning", x)) 
-        } 
-      )
+    tidymc = map(mcmcfit, tidy, conf.int = TRUE, ess = TRUE, rhat = TRUE)
   ) %>%
-  print()
+  print(n = nrow(.))
 
-mcmc_fits <- list(
-  "local_mcmc_dem_incumbency.rds", 
-  "local_mcmc_dem_primary.rds", 
-  "local_mcmc_rep_incumbency.rds", 
-  "local_mcmc_rep_primary.rds"
-) %>%
-  lapply(
-    function(x) {
-      read_rds(here("data", "mcmc", "4-positioning", x)) 
-    }
-  ) %>%
-  bind_rows() %>%
-  print()
-
-      
-vb_grid <- here("data", "mcmc", "4-positioning", "g-grid-vb.rds") %>%
+vb_fits <- here("data", "mcmc", "4-positioning", "local_g-grid-vb.rds") %>%
   read_rds() %>%
   ungroup() %>%
+  arrange(party_num, incumbency, primary_rules_co) %>%
   mutate(
-    vbtidy = map(
-      .x = vbfit,
-      .f = tidy, conf.int = TRUE
-    )
+    tidyvb = map(vbfit, tidy, conf.int = TRUE)
   ) %>%
   print(n = nrow(.))
 
 
-mcmc_grid <- bind_rows(global_data, mcmc_fits) %>%
-  mutate(
-    mctidy = map(
-      .x = mcmcfit,
-      .f = tidy, conf.int = TRUE, ess = TRUE, rhat = TRUE
-    )
-  ) %>%
+# ---- ad hoc data joining -----------------------
+
+
+# temp <- here(mcmc_dir, "local_mcmc_party.rds") %>%
+#   read_rds() %>%
+#   ungroup() %>%
+#   mutate(
+#     tidymc = map(mcmcfit, tidy, conf.int = TRUE, ess = TRUE, rhat = TRUE)
+#   ) %>%
+#   print()
+
+# mc_fits <- mc_fits %>%
+#   filter((incumbency == "All" & primary_rules_co == "All") == FALSE) %>%
+#   bind_rows(temp)
+
+
+# join stan stuff
+g_wide <- full_join(mc_fits, vb_fits) %>%
   print()
 
-tidy_coefs <- mcmc_grid %>%
-  select(-c(stan_data, mcmcfit, data)) %>%
-  unnest(mctidy) %>%
+
+
+
+# ----------------------------------------------------
+#   rhat, etc
+# ----------------------------------------------------
+
+g_wide %>% 
+  select(party_num:primary_rules_co, tidymc) %>% 
+  unnest(tidymc) %>%
+  filter(str_detect(term, "coef") | str_detect(term, "const")) %>%
+  arrange(term) %>%
+  print(n = nrow(.))
+
+
+g_wide %>% 
+  select(party_num:primary_rules_co, tidymc) %>% 
+  unnest(tidymc) %>%
+  filter(str_detect(term, "sigma")) %>%
+  arrange(term) %>%
+  print(n = nrow(.))
+
+
+g_wide %>% 
+  select(party_num:primary_rules_co, tidymc) %>%
+  unnest(tidymc) %>%
+  arrange(desc(rhat)) %>%
+  print(n = 500)
+
+# ----------------------------------------------------
+#   look at coefficients
+# ----------------------------------------------------
+
+# categorize params
+tidy_coefs <- g_wide %>%
+  select(-contains('fit')) %>%
+  pivot_longer(
+    cols = contains("tidy"), 
+    names_to = "algo",
+    values_to = "tidy",
+    names_transform = list(algo = ~ str_remove(., "tidy"))
+  ) %>%
+  unnest(tidy) %>%
   mutate(
     prefix = case_when(
       str_detect(term, "coef") ~ "Coefs of Interest",
-      str_detect(term, "wt") ~ "Nuisance Coefs",
+      str_detect(term, "med") & 
+        (str_detect(term, "wt") | str_detect(term, "const")) ~ 
+        "Med Nuisance",
+      str_detect(term, "trt") & 
+        (str_detect(term, "wt") | str_detect(term, "const")) ~ 
+        "Trt Nuisance",
       str_detect(term, "sigma") ~ "Variance Components"
     )
   ) %>%
   filter(is.na(prefix) == FALSE) %>%
   print()
 
+# compare key params
 tidy_coefs %>%
-  filter(primary_rules_co == "All" & incumbency == "All") %>%
+  filter(prefix == "Coefs of Interest") %>%
   ggplot() +
-  aes(x = term, y = estimate, color = as.factor(party_num)) +
-  facet_wrap(~ prefix, scales = "free") +
+  aes(x = str_glue("{incumbency}-{primary_rules_co}"),
+      y = estimate,
+      color = as.factor(party_num),
+      shape = algo
+  ) +
+  facet_wrap(~ term, scales = "free") +
   geom_pointrange(
     aes(ymin = conf.low, ymax = conf.high),
     position = position_dodge(width = -0.25)
   ) +
+  scale_color_manual(values = party_factor_colors) +
   coord_flip()
 
-tidy_coefs %>%
-  filter(term == "coef_mediator")
 
-
+# big caterpillar plot
 tidy_coefs %>%
-  filter(prefix == "Coefs of Interest") %>%
+  filter(primary_rules_co == "All" & incumbency == "All") %>%
+  # filter(algo == "vb") %>%
   ggplot() +
-  aes(x = term, y = estimate, color = as.factor(party_num)) +
+  aes(x = term, y = estimate, color = as.factor(party_num), shape = algo) +
+  facet_wrap(~ prefix, scales = "free", nrow = 1) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.25)
+  ) +
+  scale_color_manual(values = party_factor_colors) +
+  coord_flip()
+
+
+# grid of trt effects
+tidy_coefs %>%
+  filter(prefix == "Coefs of Interest" | str_detect(term, "const")) %>%
+  ggplot() +
+  aes(x = term, y = estimate, color = as.factor(party_num), shape = algo) +
   facet_grid(incumbency ~ primary_rules_co) +
   geom_hline(yintercept = 0) +
   geom_pointrange(
     aes(ymin = conf.low, ymax = conf.high),
     position = position_dodge(width = -0.25)
   ) +
+  scale_color_manual(values = party_factor_colors) +
   coord_flip()
 
-
-
-tidy_coefs %>%
-  filter(primary_rules_co == "All" & incumbency == "All") %>%
-  ggplot() +
-  aes(x = term, y = estimate, color = as.factor(party_num)) +
-  facet_wrap(~ prefix, scales = "free") +
-  geom_pointrange(
-    aes(ymin = conf.low, ymax = conf.high),
-    position = position_dodge(width = -0.25)
-  ) +
-  coord_flip()
-
-
-# full_join(mcmc_grid, vb_grid) %>%
-#   arrange(party_num, incumbency, primary_rules_co) %>%
-#   slice(1:2) %>%
-#   unnest(data)
 
 
 
@@ -167,9 +202,44 @@ tidy_coefs %>%
 #   Theta updates
 # ----------------------------------------------------
 
-theta_prepost <- vb_grid %>%
-  unnest(vbtidy) %>%
-  filter(str_detect(term, "theta") & (str_detect(term, "coef") == FALSE)) %>%
+full_data_raw %>%
+  group_by(party) %>%
+  summarize(
+    mean_theta = mean(theta_mean, na.rm = TRUE),
+    sd_theta = sd(theta_mean, na.rm = TRUE),
+    min_theta = min(theta_mean, na.rm = TRUE),
+    max_theta = max(theta_mean, na.rm = TRUE),
+    range_theta = max_theta - min_theta
+  )
+
+
+
+g_wide %>%
+  filter(incumbency == "All", primary_rules_co == "All") %>%
+  select(-c(party_num, incumbency, primary_rules_co)) %>%
+  unnest(data) %>%
+  group_by(party_num) %>%
+  summarize(
+    y_mean = mean(y),
+    y_sd = sd(y),
+    y_min = min(y),
+    y_max = max(y),
+    y_range = max(y) - min(y),
+    mediator_mean = mean(mediator),
+    mediator_sd = sd(mediator),
+    mediator_min = min(mediator),
+    mediator_max = max(mediator),
+  ) 
+
+
+# match each theta to its group
+# scale each prior theta within model subset to match model rescaling
+theta_prepost <- 
+  g_wide %>%
+# CHECK IF VB
+  unnest(tidymc) %>%
+# CHECK IF VB
+  filter(str_detect(term, "theta\\[") & (str_detect(term, "coef") == FALSE)) %>%
   mutate(
     stangroup = parse_number(term),
     group = map2_dbl(
@@ -194,7 +264,41 @@ theta_prepost <- vb_grid %>%
     )
   ) %>%
   unnest(cols = prior_mean) %>%
+  group_by(party_num, incumbency, primary_rules_co) %>% 
+  mutate(
+    prior_id = (prior_mean - mean(prior_mean)) / sd(prior_mean),
+    lower_id = (lower - mean(prior_mean)) / sd(prior_mean),
+    upper_id = (upper - mean(prior_mean)) / sd(prior_mean),
+  ) %>%
+  ungroup() %>%
   print()
+
+
+
+theta_prepost %>% 
+  # filter(incumbency == "All" & primary_rules_co == "All") %>%
+  ggplot(aes(x = prior_id, y = estimate, color = as.factor(party_num))) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high)
+  ) +
+  geom_pointrange(
+    aes(xmin = lower_id, xmax = upper_id),
+    shape = 21
+  ) +
+  geom_point(size = 0.5, color = "black") +
+  geom_abline() +
+  scale_color_manual(values = party_factor_colors) +
+  facet_wrap(~ party_num + incumbency + primary_rules_co) +
+  labs(
+    x = TeX("Ideal Point Prior (mean $\\pm$ 2 sd)"),
+    y = TeX("Ideal Point Posterior (mean and 90% interval)"),
+    title = "How Sequential-g Model Updates Ideal Points",
+    subtitle = "Multivariate ideal point prior calculated from IRT model draws"
+  ) +
+  theme(legend.position = "none")
+  
+
+
 
 theta_prepost %>%
   group_by(party_num) %>% 
@@ -211,29 +315,3 @@ theta_prepost %>%
     nudge_x = 10
   ) +
   facet_wrap(~ party_num, scales = "free", ncol = 1)
-
-theta_prepost %>% 
-  filter(incumbency == "All" & primary_rules_co == "All") %>% 
-  ggplot(aes(x = prior_mean, y = estimate, color = as.factor(party_num))) +
-  geom_pointrange(
-    aes(ymin = conf.low, ymax = conf.high)
-  ) +
-  geom_pointrange(
-    aes(xmin = lower, xmax = upper),
-    shape = 21
-  ) +
-  geom_point(size = 0.5, color = "black") +
-  geom_abline() +
-  scale_color_manual(values = party_factor_colors) +
-  coord_fixed() +
-  labs(
-    x = TeX("Ideal Point Prior (mean $\\pm$ 2 sd)"),
-    y = TeX("Ideal Point Posterior (mean and 90% interval)"),
-    title = "How Sequential-g Model Updates Ideal Points",
-    subtitle = "Multivariate ideal point prior calculated from IRT model draws"
-  ) +
-  theme(legend.position = "none")
-  
-
-
-

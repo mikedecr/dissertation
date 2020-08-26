@@ -49,8 +49,6 @@ if (home) {
 
 
 
-
-
 # ---- inspect and clean data -----------------------
 
 names(theta_stats)
@@ -421,13 +419,12 @@ sample_g <- function(object = NULL, data = list(), ...) {
 
 # runs democratic test twice to check the convergence stability
 vb_dem <- vb(
-  object = g_marginal,
-  data = g_data_dem,
-  init = list(sigma_med = .5, sigma_trt = .5, hypersigma_med = .1, hypersigma_trt = .1)
+  object = g_ID,
+  data = g_data_dem
 )
 
 vb_dem_1 <- vb(
-  object = g_marginal,
+  object = g_ID,
   data = g_data_dem
 )
 alarm()
@@ -461,9 +458,10 @@ list(vb_dem, vb_dem_1) %>%
   geom_point() +
   facet_wrap(~ param)
 
+
 # test republican fit
 vb_rep <- vb(
-  object = stan_g,
+  object = g_ID,
   data = g_data_rep
 )
 alarm()
@@ -525,15 +523,14 @@ g_grid_vb <- g_grid_data %>%
   mutate(
     vbfit = map(
       .x = stan_data,
-      .f = ~ try(vb(
-        object = stan_g,
+      .f = ~ vb(
+        object = g_ID,
         data = .x
-      ))
+      )
     )
   ) %>%
   print()
 alarm()
-
 
 
 write_rds(g_grid_vb, here(mcmc_dir, "local_g-grid-vb.rds"))
@@ -567,7 +564,7 @@ write_rds(g_grid_vb, here(mcmc_dir, "local_g-grid-vb.rds"))
 # ---- sampling testing -----------------------
 
 mcmc_dem <- sampling(
-  object = stan_g,
+  object = g_ID,
   data = g_data_dem,
   iter = 10,
   refresh = 10L
@@ -576,12 +573,13 @@ alarm()
 
 # test republican fit
 mcmc_rep <- sampling(
-  object = stan_g,
+  object = g_ID,
   data = g_data_rep,
   iter = 10,
   refresh = 10L
 )
 alarm()
+
 
 # write_rds(mcmc_dem, here(mcmc_dir, "local_g-mcmc_dem.rds"))
 # box_write(mcmc_dem, "g-mcmc_dem.rds", dir_id = box_mcmc_4)
@@ -613,10 +611,10 @@ mcmc_party <- g_grid_data %>%
   mutate(
     mcmcfit = map(
       .x = stan_data,
-      .f = ~ try(mcmc_g(
-        object = stan_g,
+      .f = ~ sample_g(
+        object = g_ID,
         data = .x
-      ))
+      )
     )
   ) %>%
   print()
@@ -632,10 +630,10 @@ mcmc_dem_primary <- g_grid_data %>%
   mutate(
     mcmcfit = map(
       .x = stan_data,
-      .f = ~ try(mcmc_g(
-        object = stan_g,
+      .f = ~ sample_g(
+        object = g_ID,
         data = .x
-      ))
+      )
     )
   ) %>%
   print()
@@ -650,10 +648,10 @@ mcmc_rep_primary <- g_grid_data %>%
   mutate(
     mcmcfit = map(
       .x = stan_data,
-      .f = ~ try(mcmc_g(
-        object = stan_g,
+      .f = ~ sample_g(
+        object = g_ID,
         data = .x
-      ))
+      )
     )
   ) %>%
   print()
@@ -668,10 +666,10 @@ mcmc_dem_incumbency <- g_grid_data %>%
   mutate(
     mcmcfit = map(
       .x = stan_data,
-      .f = ~ try(mcmc_g(
-        object = stan_g,
+      .f = ~ sample_g(
+        object = g_ID,
         data = .x
-      ))
+      )
     )
   ) %>%
   print()
@@ -686,10 +684,10 @@ mcmc_rep_incumbency <- g_grid_data %>%
   mutate(
     mcmcfit = map(
       .x = stan_data,
-      .f = ~ try(mcmc_g(
-        object = stan_g,
+      .f = ~ sample_g(
+        object = g_ID,
         data = .x
-      ))
+      )
     )
   ) %>%
   print()
@@ -713,8 +711,8 @@ bind_rows(
 #   mutate(
 #     mcmcfit = map(
 #       .x = stan_data,
-#       .f = ~ try(mcmc_g(
-#         object = stan_g,
+#       .f = ~ sample_g(
+#         object = g_ID,
 #         data = .x
 #       ))
 #     )
