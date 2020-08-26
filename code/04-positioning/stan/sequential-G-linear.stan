@@ -17,7 +17,7 @@ data {
 
   // prior hyperparameters for ideal points
   vector[D] ideal_means;
-  matrix[D, D] ideal_cov;
+  matrix[D, D] ideal_prec;
 
   // joint prior
   int<lower = 0, upper = 1> joint_prior;
@@ -95,9 +95,6 @@ model {
       (X_med[i, ] * wt_med) + 
       ranef_med[d[i]];  
 
-    blipdown_function[i] = coef_mediator * (mediator[i] - blip_value);
-    blip_y[i] = y[i] - blipdown_function[i];
-
     yhat_trt[i] = 
       const_trt + 
       (theta[d[i]] * coef_theta_trt) + 
@@ -109,6 +106,9 @@ model {
     joint_yhat[i] = [yhat_med[i], yhat_trt[i]]';
   }
   
+  blipdown_function = coef_mediator * (mediator - blip_value);
+  blip_y = y - blipdown_function;
+
   // how to do joint model?
   if (joint_prior == 0) {
 
@@ -126,29 +126,29 @@ model {
   
   
   // outcome dispersion
-  sigma_med ~ normal(0, 5);
-  sigma_trt ~ normal(0, 5);
+  sigma_med ~ cauchy(0, 1);
+  sigma_trt ~ cauchy(0, 1);
   joint_corr ~ lkj_corr(lkj_value);
   
   // multivariate ideal point prior
-  theta ~ multi_normal(ideal_means, ideal_cov);
+  theta ~ multi_normal_prec(ideal_means, ideal_prec);
 
   // weights
-  const_med ~ normal(0, 10); 
-  const_trt ~ normal(0, 10); 
-  coef_mediator ~ normal(0, 10); 
-  coef_theta_trt ~ normal(0, 10); 
-  coef_theta_med ~ normal(0, 10); 
-  wt_med ~ normal(0, 10); 
-  wt_trt ~ normal(0, 10);
+  const_med ~ normal(0, 5); 
+  const_trt ~ normal(0, 5); 
+  coef_mediator ~ normal(0, 1); 
+  coef_theta_trt ~ normal(0, 1); 
+  coef_theta_med ~ normal(0, 1); 
+  wt_med ~ normal(0, 1); 
+  wt_trt ~ normal(0, 1);
   
   // ranefs 
   ranef_med ~ normal(0, hypersigma_med);
   ranef_trt ~ normal(0, hypersigma_trt);
 
   // ranef dispersion 
-  hypersigma_med ~ normal(0, 2);
-  hypersigma_trt ~ normal(0, 2);
+  hypersigma_med ~ normal(0, 1);
+  hypersigma_trt ~ normal(0, 1);
   
 
 }

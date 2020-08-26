@@ -86,8 +86,8 @@ transformed parameters {
   prec_med = 
     (pow(sigma_med, -2) * NI) - 
       pow(sigma_med, -2) * L * 
-      inv(
-        (pow(hypersigma_med, -2) * DI) + (pow(sigma_med, -2) * L' * L) 
+        inv(
+          (pow(hypersigma_med, -2) * DI) + (pow(sigma_med, -2) * L' * L) 
       ) * 
       L' * pow(sigma_med, -2);
 
