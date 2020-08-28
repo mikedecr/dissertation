@@ -156,7 +156,8 @@ What to do we think we know about ideology and the parties, and how should it co
   + read their stuff to see how they quality this
   + do they think districts collapse?
 - weighting issues: left groups see fine variation in left members, but republicans are all bunched at zero (Brunell? Linda Fowler?)
-- or Sniderman conflicted theory: Democrats are conflicted about appeasing groups, so variation matters. Republicans are not conflicted
+- or Sniderman conflicted theory: Democrats are conflicted about appeasing groups, so variation matters. Republicans are NOT conflicted because many rationales point to the same policy prescription
+    - lelkes sniderman 2016: ideological asymmetry
 - THINK about abortion as a toy case
   + if weighting... if not weighting...
 
@@ -1362,6 +1363,7 @@ The Woodbury identity states that we can invert this decomposition of $\mathbf{V
 \end{align}
 where $I_{D}$ is a $D \times D$ identity matrix.
 
+
 ### Data
 
 Pre-treatment confounders consist of district-level demographic indicators for the racial composition, college graduation rate, median income, inequality (Gini), unemployment rate, foreign-born population, and evangelical population, and $\mathbf{z}_{ig}$ currently contains an order-3 polynomial function of candidate $i$'s total campaign receipts.^[
@@ -1380,6 +1382,7 @@ Pre-treatment confounders consist of district-level demographic indicators for t
 <!-- Primary Candidacies -->
 
 <!-- CF scores -->
+<!-- better than interest group ratings? -->
 
 CF scoreswork by assuming that a donor $i$ contributes to recipient $j$ by maximizing their donation utility over all potential recipients.
 The donor chooses a dollar amount $y_{ij}$ subject to contribution limits that maximizes
