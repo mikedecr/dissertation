@@ -315,23 +315,56 @@ sig^(-2)
 tau^(-2)
 1 / tau^(2)
 
-NI <- diag(rep(1, N))
-DI <- diag(rep(1, D))
+NI <- diag(N)
+DI <- diag(D)
+
+cov_woodbury <- (sig^2*diag(N)) + L %*% (tau^2*diag(D)) %*% t(L)
+cov_woodbury[1:15, 1:15]
 
 
+# --- original setup ---
 big_inv <- 
   matlib::inv(
-    ( tau^(-2) * DI ) +
-    (t(L) * sig^(-2)) %*% L
+    ( tau^(-2) * diag(D) ) +
+    (sig^(-2) * t(L)) %*% L
   )
 
-cov_woodbury <- (sig^2*NI) + L %*% (tau^2*DI) %*% t(L)
-prec_woodbury <- sig^(-2)*NI - sig^(-2) * L %*% big_inv %*% t(L) * sig^(-2)
+prec_woodbury <- sig^(-2)*diag(N) - sig^(-2) * L %*% big_inv %*% t(L) * sig^(-2)
 
 
-cov_woodbury[1:15, 1:15]
+# --- factor inner sigma out (move trailing sigma to front) ---
+big_inv <- 
+  matlib::inv(
+    ( (sig/tau)^(2) * diag(D) ) +
+    (t(L) %*% L)
+  )
+prec_woodbury <- sig^(-2)*diag(N) - sig^(-2) * L %*% big_inv %*% t(L)
+
+
+# --- big_inv is diag bc L'L is diag, so don't need the inv() ---
+
+(t(L) %*% L)[1:15, 1:15]
+
+colSums(L) # vector of column dot products with themselves
+           # (in our case, the number of 1s per column)
+           # diag of L'L
+
+sig^(-2) / ((sig^4 / tau^2) + colSums(L)) # end-around inverting
+                                        # must be element division in stan
+                                        # (because colsums(L) will be row-vec)
+
+prec_woodbury <- (sig^(-2) * diag(N) - L %*% diag(sig^(-2) / ((sig / tau)^2 + colSums(L))) %*% t(L))
+
+
+# checking
+big_inv[1:15, 1:15]
 prec_woodbury[1:15, 1:15]
 (cov_woodbury %*% prec_woodbury)[1:15, 1:15] %>% round(5)
+
+# prec_woodbury <- sig^(-2)*NI - L %*% big_inv %*% t(L) * sig^(-2)
+
+
+
 
 length(prec_woodbury[prec_woodbury != 0])
 
@@ -350,21 +383,30 @@ length(prec_woodbury[prec_woodbury != 0])
 
 # ---- compile model -----------------------
 
-G_FREE <- 
+# original scale everything
+g_FREE <- 
   stan_model(
-    here("code", "04-positioning", "stan", "sequential-G-linear.stan")
+    here("code", "04-positioning", "stan", "seq-g.stan")
   )
 
+# theta and Y standardized
 g_ID <-
   stan_model(
-    here("code", "04-positioning", "stan", "g-identified.stan")
+    here("code", "04-positioning", "stan", "seq-g-identified.stan")
   )
 
+g_FIX <- 
+  stan_model(
+    here("code", "04-positioning", "stan", "seq-g-fixtheta.stan")
+  )
+
+# ranefs marginalized (slow slow slow)
 g_marginal <- 
   stan_model(
-    here("code", "04-positioning", "stan", "g-marginalizing.stan")
+    here("code", "04-positioning", "stan", "seq-g-marginal.stan")
   )
-
+g_marginal
+alarm()
 
 # ---- sampler wrapper function  -----------------------
 
@@ -419,13 +461,17 @@ sample_g <- function(object = NULL, data = list(), ...) {
 
 # runs democratic test twice to check the convergence stability
 vb_dem <- vb(
-  object = g_ID,
-  data = g_data_dem
+  object = g_FIX,
+  data = g_data_dem,
+  algorithm = "meanfield",
+  pars = c("theta_raw", "prec_med", "prec_trt"),
+  include = FALSE
 )
 
 vb_dem_1 <- vb(
-  object = g_ID,
-  data = g_data_dem
+  object = g_FIX,
+  data = g_data_dem,
+  algorithm = "meanfield"
 )
 alarm()
 
@@ -461,8 +507,9 @@ list(vb_dem, vb_dem_1) %>%
 
 # test republican fit
 vb_rep <- vb(
-  object = g_ID,
-  data = g_data_rep
+  object = g_FIX,
+  data = g_data_rep,
+  output_samples = 2000
 )
 alarm()
 
@@ -473,6 +520,7 @@ vb_tidy <-
   lapply(tidy, conf.int = TRUE) %>%
   bind_rows(.id = "party_num") %>%
   print()
+
 
 # plot treatment fx
 vb_tidy %>%
@@ -521,11 +569,34 @@ vb_tidy %>%
 
 g_grid_vb <- g_grid_data %>%
   mutate(
-    vbfit = map(
+    vb_fix = map(
+      .x = stan_data,
+      .f = ~ vb(
+        object = g_FIX,
+        data = .x,
+        pars = c("theta_raw", "prec_med", "prec_trt"),
+        include = FALSE,
+        output_samples = 3000
+      )
+    ),
+    vb_random = map(
+      .x = stan_data,
+      .f = ~ vb(
+        object = g_FREE,
+        data = .x,
+        pars = c("theta_raw", "prec_med", "prec_trt"),
+        include = FALSE,
+        output_samples = 3000
+      )
+    ), 
+    vb_id = map(
       .x = stan_data,
       .f = ~ vb(
         object = g_ID,
-        data = .x
+        data = .x,
+        pars = c("theta_raw", "prec_med", "prec_trt"),
+        include = FALSE,
+        output_samples = 3000
       )
     )
   ) %>%
@@ -564,7 +635,7 @@ write_rds(g_grid_vb, here(mcmc_dir, "local_g-grid-vb.rds"))
 # ---- sampling testing -----------------------
 
 mcmc_dem <- sampling(
-  object = g_ID,
+  object = g_FIX,
   data = g_data_dem,
   iter = 10,
   refresh = 10L
@@ -573,7 +644,7 @@ alarm()
 
 # test republican fit
 mcmc_rep <- sampling(
-  object = g_ID,
+  object = g_FIX,
   data = g_data_rep,
   iter = 10,
   refresh = 10L
@@ -612,7 +683,7 @@ mcmc_party <- g_grid_data %>%
     mcmcfit = map(
       .x = stan_data,
       .f = ~ sample_g(
-        object = g_ID,
+        object = g_FIX,
         data = .x
       )
     )
@@ -631,7 +702,7 @@ mcmc_dem_primary <- g_grid_data %>%
     mcmcfit = map(
       .x = stan_data,
       .f = ~ sample_g(
-        object = g_ID,
+        object = g_FIX,
         data = .x
       )
     )
@@ -649,7 +720,7 @@ mcmc_rep_primary <- g_grid_data %>%
     mcmcfit = map(
       .x = stan_data,
       .f = ~ sample_g(
-        object = g_ID,
+        object = g_FIX,
         data = .x
       )
     )
@@ -667,7 +738,7 @@ mcmc_dem_incumbency <- g_grid_data %>%
     mcmcfit = map(
       .x = stan_data,
       .f = ~ sample_g(
-        object = g_ID,
+        object = g_FIX,
         data = .x
       )
     )
@@ -685,7 +756,7 @@ mcmc_rep_incumbency <- g_grid_data %>%
     mcmcfit = map(
       .x = stan_data,
       .f = ~ sample_g(
-        object = g_ID,
+        object = g_FIX,
         data = .x
       )
     )
@@ -712,7 +783,7 @@ bind_rows(
 #     mcmcfit = map(
 #       .x = stan_data,
 #       .f = ~ sample_g(
-#         object = g_ID,
+#         object = g_FIX,
 #         data = .x
 #       ))
 #     )
