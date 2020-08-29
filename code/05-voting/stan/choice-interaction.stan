@@ -75,14 +75,14 @@ model {
 
 generated quantities {
 
-  vector[S] set_loglik; // prob for winning candidate in g
-  int pos = 1;         // for segmenting
+  // vector[S] set_loglik; // prob for winning candidate in g
+  // int pos = 1;         // for segmenting
 
-  // loglik from every GROUP (keep winning candidate only)
-  for (s in 1:S) {
-    set_loglik[s] = 
-      segment(y, pos, n_set[s])' * log(softmax(segment(util, pos, n_set[s])));
-    pos = pos + n_set[s];
-  }
+  // // loglik from every GROUP (keep winning candidate only)
+  // for (s in 1:S) {
+  //   set_loglik[s] = 
+  //     segment(y, pos, n_set[s])' * log(softmax(segment(util, pos, n_set[s])));
+  //   pos = pos + n_set[s];
+  // }
 
 }
