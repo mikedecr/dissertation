@@ -156,121 +156,71 @@ The Bayesian approach also has the power to extend the meaning of identification
 ### Bayesian inference {#sec:bayes-inf}
 
 Bayesian inference is a contentious and misunderstood topic in empirical political science, so it is important to establish some foundations and intuitions before melding it with causal modeling.
-This section introduces Bayesian methods by skipping past the common descriptions that are often unhelpful and confusing—subjective probability, prior "beliefs," the posterior is proportional to the prior times the likelihood—and instead describes an "inside view" of of Bayesian analysis on its own terms [@mcelreath:2017:decolonized-bayes]. 
+This section introduces Bayesian methods by skipping past the common descriptions that are often unhelpful and confusing—subjective probability, prior "beliefs," the posterior is proportional to the prior times the likelihood—and instead describes an "inside view" of of Bayesian analysis on its own terms [@mcelreath:2017:decolonized-bayes].
 
-<!------- TO DO ---------
-Inside view:
-- Conditional probability isn't up for debate (except in a quantum sense).
-  It works mathematically. 
-  Bayes is "just counting," how many ways can the data come about?
-  p(theta, y) intersections of parameters and data, conditioning on $y$ gives you p(theta | y).
-  Disputes are about what we choose to describe with probabilities, since p(theta, y) = p(theta | y)p(y) or, gasp, p(theta)p(y | theta)
-- Here's the Bayes view: Nothing different about parameters vs. data. 
-  Just variables that have probability distributions.
-  Likelihoods are priors: quantifying uncertainty with a probability distribution.
-- Priors and likelihoods are STRUCTURE for learning from data,
-  All learning happens through this structure.
-  There is no basis for generalization without priors that relate studies to populations (this is the basis for meta-analysis).
-  We have another word for "structure that facilitates learning": a model.
-------------------------->
-
-Bayesian analysis is the use of conditional probability to conduct statistical inference.
-The controversy surrounding Bayesian methods in political science is not mechanical: probability theory tells us how the probability of an event changes by conditioning on known information.
-The controversy arises from different perspectives about which modeling constructs we choose to describe using probabilities.
-
-Whereas many statistical methods begin with a model of data given fixed parameters, Bayesian inference consists of a joint model for all components in a system.
-The "joint model" is simply a probability model for more than one event.
-For example, suppose that we are interested in the joint probability distribution of age and vote choice in a population.
-The joint distribution of these two variables as $p(\mathit{Age}, \mathit{Vote})$, which can be equivalently expressed by factoring it in two ways:
+Bayesian analysis uses conditional probability to conduct statistical inference.
+It begins with a joint probability for all variables in a model.
+In most cases these variables are denoted as data $\mathbf{y}$ and parameters $\boldmath{\pi}$, but in Bayesian analysis, the distinction between data and parameters has only to do with which variables are observed or unobserved.^[
+  The semantic distinction between "data" and "parameter" is often sloppier in practice than many researchers would like to think.
+  Many statistical analyses use aggregate estimates of lower-level processes as if they were known, such as per-capita income or the percentage of women who vote for the Democratic presidential candidate.
+  These quantities are not knowable from finite data, and instead behave like random variables in that their values could differ under repeated sampling, so it might make sense to view their "true values" as parameters.
+  From a Bayesian point of view, these are meaningless semantics, since data and parameters are both simply random variables modeled with probability distributions.
+  The Bayesian view has a similar spirit to the @blackwell-et-al:2017:measurement-error view of measurement uncertainty, where "measurement error" falls on a spectrum between fully observed data and missing data.
+]
 \begin{align}
-  p(\mathit{Vote} \mid \mathit{Age})p(\mathit{Age}) 
-    &= p(\mathit{Age} \mid \mathit{Vote})p(\mathit{Vote})
-  (\#eq:condition-prob-vote-age)
-\end{align}
-If we observe an individual's vote choice, how does this affect the probability distribution of age? 
-Probability theory says that we divide the joint probability by the probability of the conditioning event.
-\begin{align}
-\begin{split}
-  \frac{p(\mathit{Vote} \mid \mathit{Age})p(\mathit{Age})}{p(\mathit{Vote})}
-   &= \frac{p(\mathit{Age} \mid \mathit{Vote})p(\mathit{Vote})}{p(\mathit{Vote})} \\
-  \frac{p(\mathit{Vote} \mid \mathit{Age})}{p(\mathit{Age})}
-  &= p(\mathit{Age} \mid \mathit{Vote})
-\end{split}
-(\#eq:updated-vote-age)
-\end{align}
-This maneuver reveals Bayes' theorem: the probability of $A$ given $B$, expressed in terms of $B$ given $A$.
-Bayes' theorem provides a formal method for rationally updating a joint probability distribution by conditioning on known information.
-
-The Bayesian paradigm of applied statistical modeling applies Bayes' theorem to data $\mathbf{y}$ and parameters $\boldsymbol{\pi}$.
-The joint model for the data and the parameters takes the form
-\begin{align}
-  p(\mathbf{y}, \boldsymbol{\pi}) = p(\mathbf{y} \cap \boldsymbol{\pi}) = p(\mathbf{y} \mid \boldsymbol{\pi})p(\boldsymbol{\pi}),
+  \p{\mathbf{y}, \boldsymbol{\pi}} = \p{\mathbf{y} \cap \boldsymbol{\pi}}
   (\#eq:joint-model)
 \end{align}
-where $p(\mathbf{y} \mid \boldsymbol{\pi})$ represents the probability distribution of the data, conditioning on parameters, and $p(\boldsymbol{\pi})$ represents the probability distribution of parameters, marginalizing over the data.
-The marginal parameter distribution is usually referred to as a "prior distribution," since it describes the researcher's prior information (or, controversially, prior "beliefs") about the parameter.
-The joint model provides machinery for learning about parameters by conditioning the parameters on the data,
+The joint probability model represents the multitude of ways that the variables could be configured in the world.
+Conditioning on observed variables rules out many configurations of the unobserved variables, leaving behind only the unobserved variables that are consistent with observed data.
 \begin{align}
-  p(\boldsymbol{\pi} \mid \mathbf{y}) &= \frac{p(\mathbf{y} \mid \boldsymbol{\pi})p(\boldsymbol{\pi})}{p(\mathbf{y})}
-  (\#eq:joint-model-post)
+  \p{\boldsymbol{\pi} \mid \mathbf{y}} &= 
+  \frac{\p{\mathbf{y} \cap \boldsymbol{\pi}}}{\p{\mathbf{y}}}
+  (\#eq:condition-joint-model)
 \end{align}
-also known as obtaining the _posterior distribution_ of the parameters.
+From this perspective, Bayesian analysis is "just counting" [@mcelreath:2020:bayes-counting]—counting the number of model configurations that are remain after conditioning on known information.
 
-These basic concepts of conditional probability and Bayesian updating are not foreign to political science, but it will be important to establish an interpretation of Bayesian thinking and Bayesian modeling that is productive for causal inference. 
-This project invokes what @mcelreath:2017:decolonized-bayes calls an "inside view" of Bayesian statistics---Bayesian statistics on its own terms.
-The inside view is a response to an "outside view" of Bayesian statistics as penalized maximum likelihood.
-Under the outside view, data follow probability distributions, while parameters are fixed.
-Bayesian estimation, in turn, is a likelihood model with an additional penalty on the parameters, and because the penalty represents the researcher's subjective beliefs, the penalty feels _ad hoc_ and anti-scientific.
-This view of Bayesian statistics is admittedly confusing, and if we take it at face value, it is no wonder that causal inference in political science has largely avoided Bayesian tools other than for computational convenience.
+Bayes' Theorem is an expression for this conditioning process based on a particular factorization of the joint model,
+\begin{align}
+  \p{\boldsymbol{\pi} \mid \mathbf{y}} &= 
+  \frac{
+    \p{\mathbf{y} \mid \boldsymbol{\pi}}\p{\boldmath{\pi}}
+  }{
+    \p{\mathbf{y}}
+  }
+  (\#eq:bayes)
+\end{align}
+which reveals how researchers commonly interface with Bayesian analysis: specifying a model for data conditional on parameters, $\p{\mathbf{y} \mid \boldsymbol{\pi}}$,
+and a model for the marginal distribution of parameters, $\p{\boldmath{\pi}}$. 
+These models are often called the "likelihood" and "prior distribution," respectively.
 
-The inside view, as mentioned above, construes a Bayesian model as a joint model for all variables in a system.
-The use of the word "variables" to encompass both data and parameters is crucial.
-The technology of a Bayesian model does not regard data and parameters as distinct from one another.
-They follow the same rules, just as age and vote choice followed the same rules in the above example.
-Data and parameters are both instantiations of uncertain processes, with the only semantic difference between the two being that observed variables are called "data" while unobserved variables are called "parameters" [@mcelreath:2017:decolonized-bayes].^[
-  The semantic conventions are often sloppier in practice than many researchers would like to think.
-  Many analyses use data that summarize lower-level processes, such as per-capita income in U.S or the percentage of women who vote for the Democratic presidential candidate, which behave like random variables in that their values could differ under repeated sampling.
-  The semantic distinction between data and parameters has a similar spirit to the @blackwell-et-al:2017:measurement-error view of measurement uncertainty, where "measurement error" falls on a spectrum between fully observed data and missing data.
-]
-Prior distributions and likelihood functions are the same thing: probability distributions that quantify uncertainty about a variable.
-If I were to observe a new data point from a model, I would be unable to predict its value exactly, but some values are more probable than others, given the parameters that condition the data.
-The same premise holds for parameters: if I could observe a parameter, I would have been unable to anticipate it exactly, but I could bet that some parameters are more likely than others, given the data that I have already seen.
-The joint model for all variables encapsulates the probabilistic relationships between data and parameters.
-Starting with the prior model, $p(\mathbf{y}, \boldsymbol{\pi})$, we can condition the model on chosen parameters to obtain a rationalizable distribution of data, $p(\mathbf{y} \mid \boldsymbol{\pi})$.
-Or we can condition the model on data to obtain a rationalizable distribution of parameters, $p(\boldsymbol{\pi} \mid \mathbf{y})$. 
-@mcelreath:2020:bayes-counting calls these maneuvers "running the model forward" (updating data given parameters) or "running the model backward" (updating parameters given data). 
-<!-- It can be helpful to think of the model as a machine with many interlocking parts, where if you crank the machine, the pieces that you choose to constrain will affect which pieces do and do not move. -->
-
+The controversy surrounding Bayesian analysis arises from different perspectives about which constructs we choose to describe using probabilities.
+Researchers routinely model data given parameters, but many feel that modeling the marginal distribution of parameters feels unscientific.
+This is because the marginal parameter distribution often represents "prior information" about which parameter values are plausible before conditioning on observed data.
+The inside view demystifies priors by acknowledging that a prior and a likelihood are the same thing: using a probability distribution to quantify uncertainty about the exact value of a model variable [@mcelreath:2017:decolonized-bayes].
+As data are collected, these probability distributions collapse to known values, in the case of observed data, or concentrate on a narrower range of unknown parameter values that can rationalize the observed data.
+In the extreme, the only way to make inferences about unobserved data from observed data is by through prior assumptions about the relationship between observed and unobserved variables [@lemm:1996:priors-generalization].  
+This is similar to the fundamental problem of causal inference: causal judgments are never possible without assumptions that are external to the data. 
 
 <!------- TO DO ---------
-- plot a prior, predictive, and inferential distribution
+- meta-analysis?
 ------------------------->
 
-From the inside view, Bayesian updating proceeds by considering a variety of possible scenarios that create data and evaluating which scenarios are consistent with the data.
-The joint prior model, $p(\mathbf{y} \mid \boldsymbol{\pi})p(\boldsymbol{\pi})$ describes an overly broad set of possible configurations of the world. These configurations contain a distribution of possible parameters, $p(\boldsymbol{\pi})$, and possible data given parameters, $p(\mathbf{y} \mid \boldsymbol{\pi})$.
-Bayesian updating decides which configurations of the world are consistent with the data and are therefore more plausible.
-The plausibility, or posterior probability, of a parameter value is greater if the observed data are more likely to occur under that parameter value versus another value.
-In turn, the posterior distribution downweights model configurations that are implausible, or inconsistent with the data [@mcelreath:2020:rethinking-2, chapter 2].
-This is an important distinction from non-Bayesian statistical inference, since there can is no formal notion of "plausible parameters given the data" without a posterior distribution, which necessitates a prior distribution.
+Bayesian updating, From the inside view, means considering a multitude of model configurations and judging which configurations are consistent or inconsistent with the data.
+The joint prior model, $p(\mathbf{y} \mid \boldsymbol{\pi})p(\boldsymbol{\pi})$ describes an overly broad set of possible assumptions about the world. 
+These assumptions cover a distribution of possible parameters, $p(\boldsymbol{\pi})$, and possible data given parameters, $p(\mathbf{y} \mid \boldsymbol{\pi})$.
+Bayesian updating decides which configurations of the world are more plausible based on how likely it would be to observe our data under those configurations.
+The plausibility of a parameter value—its posterior probability—is greater if the observed data are more likely to occur under that parameter value versus another value.
+In turn, the posterior distribution downweights parameter values that are implausible or inconsistent with the data [@mcelreath:2020:rethinking-2, chapter 2].
+This is an important distinction from non-Bayesian statistical inference, since there is no formal notion of "plausible parameters given the data" without conditioning parameters on data, which necessitates prior and posterior distributions.
 <!------- TO DO ---------
 - is this true?
 ------------------------->
-For causal inference, this means there can be no formal notion of "plausible causal effects" without a probability distribution over causal effects.
+As it connects to causal inference, this means there is no formal notion of "plausible causal effects" without a probability distribution over causal effects.
 The mission in the remainder of this chapter is to establish a framework for causal inference in terms of plausible effects and plausible counterfactuals.
 
-The inside view of Bayesian modeling, and the philosophical unity that it brings to statistical machinery and inference, is possible even if using uninformative prior distributions that are indifferent to possible parameters  _a priori_.
-This is how Bayesian methods tend to appear in political science to date, with noninformative priors that exist primarily to facilitate Bayesian computation for difficult estimation problems.
-The infamy of Bayesian methods, however, is owed to the ability of the researcher to specify "informative" priors that concentrate probability density on model configurations that are thought to be more plausible even before data are analyzed.
-There are many modeling scenarios where this concentration of probability delivers results that are almost unthinkable without prior structure: multilevel models that allocate variance to different layers of hierarchy, highly parameterized models with correlated parameters such as spline regression, and sparse regressions where regularizing priors are used to shrink coefficients and preserve degrees of freedom to overcome the "curse of dimensionality" [@bishop:2006:pattern-rec; @gelman-et-al:2013:BDA].
-At the same time, many researchers are skeptical of Bayesian methods because supplying a model with non-data information can be spun as data falsification [@garcia-perez:2019:bayes-data-falsification].
-As I elaborate in Section \@ref(sec:causal-priors), it is a mistake to equate flat prior "flatness" with prior "uninformativeness," and there are many legitimate sources of prior information that have nothing to do with subjective beliefs.
 
 
-<!------- TO DO ---------
-- Furthermore, the mere non-flatness of a prior is often less consequential than the parameter's structural relationship to other parameters.
-For instance, whether a prior has a scale of $10$ versus $30$ almost always matters less than whether the prior contains hierarchical structure for borrowing information from other groups of data.
-It is no coincidence the Bayesian contributions in this dissertation and in other areas of applied statistics are concerned with different prior structures more than the precision of otherwise equal prior structures. 
-------------------------->
 
 <!------- TO DO ---------
 - "random variable"
@@ -615,6 +565,17 @@ Many points discussed below touch on more than one level of the hierarchy, so th
 
 
 ## Understanding Priors in Causal Inference {#sec:causal-priors}
+
+<!------- TO DO ---------
+- from earlier section:
+
+It is important to note at the outset that this "inside view" of Bayesian modeling, and its implications for causal inference, are coherent even if using uninformative prior distributions for parameters.
+This is how Bayesian methods tend to appear in political science to date, with noninformative priors that exist primarily to facilitate Bayesian computation for difficult estimation problems.
+The infamy of Bayesian methods, however, is owed to the ability of the researcher to specify "informative" priors that concentrate probability density on model configurations that are thought to be more plausible even before data are analyzed.
+There are many modeling scenarios where this concentration of probability delivers results that are almost unthinkable without prior structure: multilevel models that allocate variance to different layers of hierarchy, highly parameterized models with correlated parameters such as spline regression, and sparse regressions where regularizing priors are used to shrink coefficients and preserve degrees of freedom to overcome the "curse of dimensionality" [@bishop:2006:pattern-rec; @gelman-et-al:2013:BDA].
+At the same time, many researchers are skeptical of Bayesian methods because supplying a model with non-data information can be spun as data falsification [@garcia-perez:2019:bayes-data-falsification].
+As I elaborate in Section \@ref(sec:causal-priors), it is a mistake to equate flat prior "flatness" with prior "uninformativeness," and there are many legitimate sources of prior information that have nothing to do with subjective beliefs.
+------------------------->
 
 The distinguishing feature of Bayesian analysis that attracts most of its controversy is the prior distribution over model parameters.
 At the same time, priors also deliver most of the benefits of Bayesian modeling.
@@ -1210,6 +1171,12 @@ tibble(
 
 
 ### Principled and pragmatic approaches to Bayesian modeling {#sec:bayes-how-to}
+
+<!------- TO DO ---------
+- Furthermore, the mere non-flatness of a prior is often less consequential than the parameter's structural relationship to other parameters.
+For instance, whether a prior has a scale of $10$ versus $30$ almost always matters less than whether the prior contains hierarchical structure for borrowing information from other groups of data.
+It is no coincidence the Bayesian contributions in this dissertation and in other areas of applied statistics are concerned with different prior structures more than the precision of otherwise equal prior structures. 
+------------------------->
 
 Degrees of informativeness
 
