@@ -6,8 +6,9 @@
 # regular
 library("here")   
 library("magrittr")
-library("tidyverse")   
+library("tidyverse")
 # bayesian modeling
+library("splines")
 library("broom")
 library("tidybayes")
 library("rstan")
@@ -42,6 +43,11 @@ cands_raw <-
 
 # we trust Boatright most
 # NAs become 0 if we know there is another winner in primary
+
+# create theta splines
+num_knots <- 10 
+spline_degree <- 3
+# creating the B-splines
 
 cands <- cands_raw %>%
   mutate(
@@ -85,7 +91,30 @@ cands %>%
     win_prefer_dime, win_prefer_boat
   )
 
+cands %>%
+  mutate(
+    theta_splines = bs(
+      theta_mean, 
+      knots = seq(
+        min(theta_mean, na.rm = TRUE), 
+        max(theta_mean, na.rm = TRUE), 
+        length.out = 12
+      ), 
+      degree = 3, 
+      intercept = FALSE
+    ) 
+  ) %>%
+  pull(theta_splines) %>% class()
 
+    %>%
+  pivot_longer(
+    cols = contains("spline"), 
+    names_to = "spline",
+    values_to = "value"
+  )
+
+dim(B)
+head(B)
 
 # ---- keep only valid matchups -----------------------
 
@@ -307,6 +336,15 @@ model_interaction <- stan_model(
   file = here("code", "05-voting", "stan", "choice-interaction.stan")
 )
 
+# mean-reverting spline interaction
+model_spline <- stan_model(
+  file = here("code", "05-voting", "stan", "choice-spline.stan")
+)
+
+# gaussian process interaction
+# model_GP <- stan_model(
+#   file = here("code", "05-voting", "stan", "choice-GP.stan")
+# )
 
 # create identifiers, covariates...
 bayes_df <- matchups %>% 
@@ -341,10 +379,22 @@ bayes_grid <- bayes_df %>%
       .f = ~ {
         compose_data(
           .x,
+          i = 1:nrow(.x),
           set = as.factor(set),
           S = length(unique(set)),
           n_set = distinct(., set, n_set) %>% pull(n_set),
           p = ncol(X),
+          b_theta = bs(
+            theta - mean(theta), 
+            knots = seq(
+              min(theta, na.rm = TRUE), 
+              max(theta, na.rm = TRUE), 
+              length.out = 12 
+            ), 
+            degree = 3, 
+            intercept = FALSE 
+          ) %>% matrix(nrow = n),
+          B = ncol(b_theta),
           prior_sd = 10
         )
       }
@@ -354,13 +404,15 @@ bayes_grid <- bayes_df %>%
 
 # investigate data lists
 bayes_grid$stan_data[[1]] %>% lapply(head)
+bayes_grid$stan_data[[1]] %>% lapply(dim)
+bayes_grid$stan_data[[1]] %>% lapply(length)
 
 
 # ---- VB tests -----------------------
 
 
 
-vb_fits <- bayes_grid %>% 
+vb_simple <- bayes_grid %>% 
   mutate(
     vb_simple = map(
       .x = stan_data,
@@ -369,7 +421,12 @@ vb_fits <- bayes_grid %>%
         object = model_simple,
         pars = "pos", include = FALSE
       )
-    ),
+    )
+  ) %>%
+  print()
+
+vb_int <- bayes_grid %>%
+  mutate(
     vb_int = map(
       .x = stan_data,
       .f = ~ vb(
@@ -382,9 +439,228 @@ vb_fits <- bayes_grid %>%
   print()
 
 
-vb_fits %>%
-  write_rds("~/Box Sync/research/thesis/data/mcmc/5-voting/simple_vb.rds")
+vb_spline <- bayes_grid %>%
+  mutate(
+    vb_spline = map(
+      .x = stan_data,
+      .f = ~ vb(
+        data = .x, 
+        object = model_spline,
+        pars = c("pos", "wt_spline_raw"), include = FALSE
+      )
+    )
+  ) %>%
+  print()
 alarm()
+
+# vb_gp <- bayes_grid %>%
+#   mutate(
+#     vb_int = map(
+#       .x = stan_data,
+#       .f = ~ vb(
+#         data = .x, 
+#         object = model_GP,
+#         pars = c("pos", "gp_cov", "gp_L"), include = FALSE
+#       )
+#     )
+#   ) %>%
+#   print()
+
+vb_fits <- 
+  left_join(vb_simple, vb_int) %>% 
+  left_join(vb_spline) %>%
+  print()
+
+vb_fits %>%
+  write_rds("~/Box Sync/research/thesis/data/mcmc/5-voting/vb_clogits.rds")
+alarm()
+
+
+ints <- vb_spline %>% 
+  mutate(
+    vbtidy = map(vb_spline, tidy, conf.int = TRUE)
+  ) %>%
+  mutate(
+    ints = map2(
+      .x = vbtidy, 
+      .y = data,
+      .f = ~ {
+        coefs <- .x %>%
+          filter(str_detect(term, "coef_int")) %>%
+          mutate(
+            i = parse_number(term)
+          )
+        joined <- .y %>%
+          mutate(i = row_number()) %>%
+          left_join(coefs, by = "i") %>%
+          mutate(
+            effect = CF * estimate,
+            lower = CF * conf.low,
+            upper = CF * conf.high,
+          ) %>%
+          return()
+      }
+    )
+  ) %>%
+  print() 
+
+ints %>%
+  unnest(vbtidy) %>%
+  filter(
+    str_detect(term, "wt_spline") |
+    term == "coef_CF"
+  ) %>%
+  group_by(party) %>% 
+  ggplot() +
+  aes(x = fct_reorder(term, parse_number(term)), y = estimate) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.25)
+  ) +
+  facet_wrap(~ party) +
+  coord_flip()
+
+
+
+# z = partial effect
+ints %>% 
+  unnest(ints) %>%
+  filter(party == "D") %>%
+  ggplot() +
+  aes(x = CF, y = theta) +
+  geom_point(aes(color = estimate)) +
+  ggtitle("Response surface: Democrats")
+
+ints %>% 
+  unnest(ints) %>%
+  filter(party == "R") %>%
+  ggplot() +
+  aes(x = theta, y = CF) +
+  geom_point(aes(color = estimate)) +
+  ggtitle("Response surface: Republicans")
+
+
+# z = theta?
+ints %>% 
+  unnest(ints) %>%
+  filter(party == "D") %>%
+  ggplot() +
+  aes(x = CF, y = estimate) +
+  geom_point(aes(color = theta)) +
+  facet_wrap(~ party) +
+  ggtitle("Conditional effects: Democrats")
+
+ints %>% 
+  unnest(ints) %>%
+  filter(party == "R") %>%
+  ggplot() +
+  aes(x = CF, y = estimate) +
+  geom_point(aes(color = theta)) +
+  facet_wrap(~ party) +
+  ggtitle("Conditional effects: Republicans")
+
+
+
+# representative quantiles
+ints %>%
+  mutate(
+    selections = map2(
+      .x = data,
+      .y = vbtidy,
+      .f = ~ {
+        .x %>%
+        mutate(i = row_number()) %>%
+        filter(theta %in% quantile(theta, probs = seq(0, 1, 0.25))) %>%
+        group_by(theta) %>%
+        sample_n(1) %>%
+        ungroup() %>%
+        select(pick_theta = theta, i) %>%
+        arrange(pick_theta) %>%
+        mutate(percentile = seq(0, 1, 0.25)) %>%
+        inner_join(
+          .y %>%
+          filter(str_detect(term, "coef_int")) %>%
+          mutate(i = parse_number(term)),
+          by = "i"
+        )
+      }
+    )
+    # selection_int = map2(
+    #   .x = vbtidy,
+    #   .y = ints,
+    #   .f = ~ {
+    #     coefs <- .x %>%
+    #       filter(str_detect(term, "coef_int")) %>%
+    #       mutate(
+    #         i = parse_number(term)
+    #       )
+    #     inner_join(.y, coefs, by = "i") 
+    #     # %>% select(effect, lower, upper, pick_theta, percentile)
+    #   }
+    # )
+  ) %>%
+  unnest(selections) %>%
+  unnest(data) %>%
+  mutate(
+    across(
+      .cols = c(estimate, conf.low, conf.high),
+      .fns = ~ .*CF
+    )
+  ) %>%
+  ggplot() +
+  aes(x = CF, y = estimate) +
+  geom_line(aes(group = as.factor(percentile))) +
+  # geom_pointrange(
+  #   aes(ymin = conf.low, ymax = conf.high, color = as.factor(percentile)),
+  #   position = position_dodge(width = -0.25)
+  # ) +
+  facet_wrap(~ party)
+
+ints %>%
+  unnest(ints) %>%
+  ggplot() +
+  aes(x = theta, color = party, fill = party) +
+  geom_hline(yintercept = 0, color = "gray50") +
+  geom_ribbon(
+    aes(ymin = conf.low, ymax = conf.high),
+    size = 2,
+    alpha = 0.3, 
+    color = NA
+  ) +
+  geom_rug(
+    data = ints %>% unnest(data) %>% distinct(set, theta),
+    size = .1
+  ) +
+  geom_line(aes(y = estimate), size = 0.75) +
+  facet_wrap(
+    ~ party, 
+    scales = "free_x",
+    labeller = as_labeller(c("D" = "Democrats", "R" = "Republicans"))
+  ) +
+  scale_color_manual(values = party_code_colors) +
+  scale_fill_manual(values = party_code_colors) +
+  labs(
+    x = "Group Ideal Point",
+    y = "Marginal Effect of\nCandidate Conservatism",
+    title = "How Constituencies Weight\nPrimary Candidate Conservatism",
+    subtitle = "Conditional on District-Party Ideology"
+  ) +
+  theme(legend.position = "none")
+
+
+
+  %>%
+  unnest(data) %>%
+  ggplot() +
+  aes(x = CF, y = effect) +
+  geom_line(aes(group = percentile)) +
+  facet_wrap(~ party)
+
+
+ints$stan_data[[1]]$theta %>% quantile(probs = seq(0, 1, 0.25))
+
+
+  [["theta_mean"]]
 
 
 
@@ -412,6 +688,19 @@ mc_int <- bayes_grid %>%
         data = .x, 
         object = model_interaction,
         pars = "pos", include = FALSE
+      )
+    )
+  ) %>%
+  print()
+
+mc_gp <- bayes_grid %>%
+  mutate(
+    mc_int = map(
+      .x = stan_data,
+      .f = ~ sampling(
+        data = .x, 
+        object = model_GP,
+        pars = c("pos", "gp_cov", "gp_L"), include = FALSE
       )
     )
   ) %>%

@@ -6,7 +6,13 @@ knitr::knit_exit()
 
 What is the research question
 
-- choice as f(ideology)
+- do more ideological district-parties elect more ideological primary candidates?
+    - CF of general election nominee as f(ideology)
+        - similar to Clinton (2006)
+        - problem: selects on the DV, don't know the alternatives
+    - primary winner as f(ideology, CFscore)
+        - what's the effect of CFScore on winning (could be nonlinear)
+        - how does local ideology change that?
 - stratify on primary type?
 - stratify in open seats?
 
@@ -25,6 +31,23 @@ covariates:
     - party of incumbent
     - cycle
 
+    
+- @thomsen:2014:moderate-candidates
+    - moderates less likely to run the less they "fit" the party (farther from CFscore median)
+    - ideological positioning in the form of running vs. not.
+    - _we don't see variation because of a self-selection process?_
+    - candidates are compared to the party, not to partisan voters (district measures of voters are cross-party)
+- @porter-treul:2020:primary-experience
+    - increasing number of inexperienced candidates running in primaries
+    - not an obvious pattern about the ideological extremity of inexperienced candidates, not always more extreme than experienced incumbents.
+    - relation weakens because inexperienced candidates aren't great at positioning themselves (but maybe incumbents are better?)
+    - when inexperienced candidates win, they tend to be more ideologically extreme than experienced candidates win
+- @thomsen:2020:ideology-gender 
+    - no (significant) evidence that ideology–victory relationship is different for men and women (but the interaction pt estimates are comparable in size to main effects)
+    - Dem women are more liberal than men, slight advantage in primaries
+
+
+    
 
 ## Machine Learning and Causal Inference
 
@@ -191,5 +214,14 @@ LOO results
 
 
 
+## Discussion
 
+### Other nonparametric Bayes approaches for flexible causal inference
+
+Matching under measurement error in the covariates: <https://amstat.tandfonline.com/doi/full/10.1080/01621459.2015.1122601?casa_token=an-4oMYQN1AAAAAA%3AcmZp5oIxAb5Hs2kkR53JgHrrSXOd1HrLYDwQiuXOw_BaJVWcgG7ADtFcSQrIUQ2qRJTT999k4D-n>
+
+### Causal inference with latent variables and measurement models
+
+latent confounders with proxy measures:
+<http://papers.nips.cc/paper/7223-causal-effect-inference-with-deep-latent-variable-models.pdf>
 
