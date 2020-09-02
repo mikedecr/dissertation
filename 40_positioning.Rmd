@@ -640,17 +640,51 @@ ggplot(dime) +
 
 
 
-### The direct effect of district-party ideology
+## The Causal Effect of District-Party Ideology
 
-Make the argument for the direct effect setup
+The descriptive picture in Figures \@ref(fig:plot-by-party) through \@ref(fig:plot-by-rules) are suggestive about the relationship between district-party ideology and candidate ideology, but the correlational analysis is insufficient to identify the causal effect of the partisan constituency.
+As with many regression-based analyses using observational data, we are concerned about variables that confound the relationship between district-party ideology and candidate positioning—district characteristics that affect the degree of conservatism among both voters and candidates simultaneously.
+Even more troublesome than confounding is the causal structure linking theoretical components of the strategic positioning dilemma: how the ideological locations of the partisan constituency _and_ the total district constituency affect one another, and how they jointly influence a candidate's positioning calculus.
 
-- appeal to SPD theory
-- connect to spatial theory: we don't get different voting _but for_ different voter distributions
-- this may be unrealistic, but that is perhaps the point, since this is theory testing.
+```{r plot-barry}
+tribble(
+  ~ x, ~ actor, ~ symbol,
+  1, "Partisan\nConstituency", "bar(theta)[g]",
+  2.2, "Primary\nCandidate", "CF[i]",
+  4, "District\nConstituency", "V[d]"
+) %>%
+  ggplot() +
+  aes(x = x, y = 0) +
+  annotate(
+    geom = "segment", 
+    x = 0, xend = 5, 
+    y = 0, yend = 0
+  ) +
+  geom_point(size = 2) +
+  geom_text(aes(y = -2, label = actor)) +
+  geom_text(aes(y = 1, label = symbol), parse = TRUE) +
+  coord_cartesian(xlim = c(0, 5), ylim = c(-4, 4)) +
+  theme_void() +
+  NULL
+```
+
+The strategic positioning dilemma (SPD) describes the campaign incentives that arise when a candidate chooses their campaign's ideological location for a multi-stage campaign season. 
+Let $\text{CF}_{i}$ represent the campaign position for candidate $i$ in left-right ideological space. 
+The theory states that candidates optimize their chances of winning by taking a position between the ideological location of their partisan constituency, denoted $\bar{\theta}_{g}$ for the district-party group $g$ in which the candidate runs, and the ideological median among the district constituency, denoted $V_{d}$ for the district $d$ where group $g$ resides.^[
+  We distinguish individual candidates $i$ from district-party groups $g$ and districts $d$, because every district contains two major party groups, and every group can contain multiple primary candidates in a given election cycle.
+]
+Figure \@ref(fig:plot-barry) plots a hypothetical candidate's location between the partisan and district constituencies.
+Whether the candidate positions themselves closer to the partisan constituency or to the district constituency is a function of the candidate's perceived degree of electoral threat from each constituency.
+In an electorally safe district, the candidate of the advantaged party is reasonably assured to win the general election, so they may take a campaign position closer to the partisan constituency in order to neutralize the threat from other partisan candidates in the primary election.
+In a competitive district, the candidate faces greater general election competition, so they position themselves closer to the district constituency to avoid alienating moderate voters who could decide the election [@aldrich:1983:downsian-parties; @burden:2001:polarizing-primaries].
+As it relates to causal inference, the theoretical setup implies a causal effect of the primary constituency on candidate positioning (a causal path $\bar{\theta}_{g} \rightarrow \text{CF}_{i}$) and a causal effect of the district constituency on candidate positioning ($V_{d} \rightarrow \text{CF}_{i}$).
+
+```{r plot-barry, include = TRUE, fig.scap = "Key variables in the strategic positioning theory.", fig.cap = "Spatial representation of key variables affecting the strategic positioning dilemma. ", out.width = "100%", fig.width = 7, fig.height = 3}
+``` 
 
 
 ```{r problem-dag}
-problem_dag <- 
+dag_data <- 
   dagify(
     CF ~ I + V + U,
     V ~ I + U,
@@ -682,13 +716,45 @@ problem_dag <-
   print()
 ```
 
-```{r plot-problem-dag}
-ggplot(problem_dag) +
+```{r structure-dag}
+structure_dag <- dag_data %>%
+  filter(name != "U") %>% 
+  ggplot() +
   aes(x = x, y = y, xend = xend, yend = yend) +
-  geom_dag_edges() +
-  geom_dag_point(
-    aes(color = (name == "U"))
+  geom_dag_edges() + 
+  geom_dag_point(color = "gray80") +
+  geom_dag_text(
+    aes(label = pt_label), 
+    parse = TRUE, 
+    color = "black",
+    family = font_fam
   ) +
+  theme_mgd_dag() +
+  theme(legend.position = "none") +
+  expand_plot(
+    expand_x = expansion(c(0.1, 0.1)), 
+    expand_y = expansion(c(0.35, 0.2))
+  ) +
+  labs(
+    x = NULL, y = NULL,
+    title = "SPD Causal Structure"
+  ) +
+  NULL  
+```
+
+```{r plot-problem-dag}
+problem_dag <- 
+  ggplot(dag_data) +
+  aes(x = x, y = y, xend = xend, yend = yend) +
+  geom_dag_edges(
+    data_directed = 
+      filter(dag_data, ((to == "V") | (name == "U")) == FALSE),
+  ) +
+  geom_dag_edges(
+    data_directed = filter(dag_data, (to == "V") | (name == "U")),
+    edge_color = primary
+  ) +
+  geom_dag_point(aes(color = (name == "U"))) +
   geom_dag_text(
     aes(label = pt_label), 
     parse = TRUE, 
@@ -698,73 +764,62 @@ ggplot(problem_dag) +
   scale_color_manual(values = c("TRUE" = primary, "FALSE" = "gray80")) +
   annotate(
     geom = "text",
-    label = "Group Ideology \naffects District Voting \nand Candidate Positioning",
-    x = 1.25, y = 1,
-    hjust = 0, vjust = -0.4,
-    size = 3
+    label = TeX("Controlling for $V_{d}$ opens path through U"),
+    x = 3, y = 0,
+    hjust = 1, vjust = 4,
+    size = 4
   ) +
-  annotate(
-    geom = "text",
-    label = 
-      TeX("Controlling for $V_{d}$ opens $\\theta_{g} \\rightarrow V_{d} \\rightarrow U \\rightarrow CF_{i}$"),
-    parse = TRUE,
-    x = 1.2, y = 0,
-    size = 3
-  ) +
-  theme_dag(
-    legend.position = "none"
-  ) + 
+  theme_mgd_dag() +
+  theme(legend.position = "none") +
   expand_plot(
-    expand_x = expand_scale(c(0.3, 0.3)), 
-    expand_y = expand_scale(c(0.2, 0.4))
+    expand_x = expansion(c(0.1, 0.1)), 
+    expand_y = expansion(c(0.35, 0.2))
+  ) +
+  labs(
+    x = NULL, y = NULL,
+    title = "Why Conditioning Fails"
   ) +
   NULL  
 ```
 
 
-```{r plot-problem-dag, include = TRUE, fig.width = 5, fig.height = 3,out.width = "70%", fig.cap = "A DAG that presents district partisanship as a collider along the path from district-party preferences to candidate positioning. Controlling for district partisanship can bias the causal estimate of district-party preferences in several ways. If there is a path $\\theta \\rightarrow P \\rightarrow Y$, then the effect of $\\theta$ does not represent the total effect. In the presence of intermediate confounder $U$, controlling for district partisanship induces collider bias by unblocking the path $\\theta \\leftarrow U \\rightarrow Y$."}
+```{r combo-dag}
+structure_dag + problem_dag
 ```
 
+This analysis proposes an even more specific causal structure, the details of which are crucial for the research design and statistical approach.
+I invoke a causal model where the party constituency location affects both the district constituency location and the candidate location, but the district location only affects the candidate location.
+The diagram in the left half of Figure \@ref(fig:combo-dag) captures this structure.
+A causal structure where the party location affects the district location, but not the other way around, makes sense by appealing to the spatial theory underpinnings of the SPD. 
+The party location and the district location are aggregations of many individual constituents who each have ideological ideal points. 
+The district constituency contains all of the party constituency as well as any other constituent who has a different party affiliation or no party affiliation.
+This means that if we could causally intervene on the party constituency location by, for example, shifting it to the left, this is entails a leftward shift among the individual partisans in that constituency.
+Because these partisan individuals are also members of the district constituency, this _ceteris paribus_ intervention on the party location also directly affects the district location, justifying the causal path $\bar{\theta}_{g} \rightarrow V_{d}$.
+From a spatial theory point of view, the only way to intervene on a party location with no downstream effect on the district location would be to introduce an offsetting shift in the ideal points of constituents outside that party or an offsetting change in the partisan composition of constituents in district overall, neither of which is entailed by a causal intervention on the party location.
+Furthremore, intervening on the location of the _district_ has no necessary effect on the party location.
+This is because the district location is affected by factors other than the partisan constituency, namely the ideal points of constituents outside that partisan constituency or the relative sizes of partisan constituencies within the district.
 
+```{r combo-dag, include = TRUE, fig.width = 10, fig.height = 5, out.width = "100%", fig.scap = "Causal diagram of the strategic positioning dilemma", fig.cap = "Left: A causal diagram for the strategic positioning dilemma. The district location $V_{d}$ is a collider between district-party ideology $\\bar{\\theta}_{g}$ and the candidate position $\\text{CF}_{i}$. Right: Conditioning on post-treatment variables can bias causal estimates by creating artificial associations through unobserved confounders."}
+```
 
-## Bayesian Sequential-$g$ Analysis
+If our primary interest is the treatment effect of district-party ideology on candidate positioning, but the district location also affects candidate positioning, it is a natural impulse to want to condition on some measure of district preferences.
+For instance, the previous two-party presidential vote share is an available signal of district-level preferences that candidates can consult when they position themselves, so researchers may control for presidential voting in a district in order to isolate the effect of district-party ideology on candidate positioning.
+This is similar to the motivation of @clinton:2006:constituent-representation, who compared incumbent responsiveness to district median preferences vs party median preferences by including measures of each variable in a regression.
+Because the district location is a post-treatment variable, or a "collider" [@pearl:2009:causality] on the causal path from the party location to candidate location ($\bar{\theta}_{g} \rightarrow V_{d} \rightarrow \text{CF}_{i}$), identifying the effect of district-party ideology separately from the overall district effect is more complicated than controlling for the presidential vote in a regression.
+This is because conditioning on a collider variable can bias causal effects by opening unblocked causal paths from treatment to outcome through unobserved confounders.
+This problem is diagrammed in the left half of Figure \@ref(fig:combo-dag), which shows how conditioning on the presidential vote, a measure of $V_{d}$, opens a new pathway $\bar{\theta}_{g} \rightarrow V_{d} \rightarrow U \rightarrow \text{CF}_{i}$, biasing the estimated causal effect of $\bar{\theta}_{g}$.
+At the same time, doing nothing to adjust for aggregate district preferences may identify the total effect of the district-party constituency under certain assumptions, but it would not detect whether presidential voting absorbs all of the effect of the partisan constituency.
+There would be no way to contrast the unique impact of the partisan constituency from its downstream effect on overall district voting.
 
-- What is the problem (defined in the direct effect section above)
-- Contribution: $\bar{\theta}_{g}$ is drawn from a prior and can be updated in the model.
-
-### Causal model: controlled direct effects
-
-- what is the problem
-- what is ACDE 
-- Cite ABS 
-- Keep the notation general enough (expectations) so that there are no explicit linear regression functional forms introduced by accident? 
-- Identification and estimand
-
-
-ACDE is posterior distribution of the causal quantity...
-
-
-
-
-This section describes the causal estimand and estimation routine that follows. Sequential-$g$ estimates a quantity called the _average controlled direct effect_, the average effect of a treatment on an outcome, holding fixed a mediator variable for all units under consideration.
-
-Consider a potential outcome where candidate positioning $C$ is affected by district voting $V$ and district-party ideology $T$, or $C(T, V)$. The controlled direct effect imagines that we can intervene on both $T$ and $V$, varying the value of $T$ between $t$ and $t'$ while fixing $V = v$. The controlled direct effect is defined for a single unit $i$ as,
+This analysis resolves this problem by using sequential $g$-estimation to identify a quantity called the average controlled direct effect (ACDE) of district-party ideology on candidate positioning [@vansteelandt:2009:direct-effects; @acharya-blackwell-sen:2016:direct-effects].
+In terms of potential outcomes, let $\text{CF}_{i}\left( \bar{\theta}_{g}, V_{d}(\bar{\theta}_{g}) \right)$ be candidate $i$'s CF score as a function of district-party ideology and the past presidential vote, which represents district-level preferences $V_{d}$ and is itself a function of district-party ideology.
+The controlled direct effect (CDE) for a unit $i$ is the difference in CF scores for different district-party ideology treatments, holding the presidential vote fixed at some value $v$.
 \begin{align}
-  CDE_{i}(t, t', v) &= C_{i}(t, v) - C_{i}(t', v),
-  (\#eq:PO-CDE)
+  \text{CDE}_{i}\left(\theta, \theta', m \right) &= 
+    \text{CF}_{i}\left(\bar{\theta}_{g} = \theta, V_{d} = v \right) - \text{CF}_{i}\left(\bar{\theta}_{g} = \theta', V_{d} = v \right)
+(\#eq:cde-unit)
 \end{align}
-or, how would $C_{i}$ change if we could vary $t$ without influencing $v$ in the process? The dependence of district voting $V$ on district-party ideology $T$ is shown by the causal graph in Figure \@ref(fig:plot-problem-dag). A model that estimates the _total_ effect of district-party ideology will fail to differentiate the fraction of the effect flowing through path $T \rightarrow C$ from the fraction of the effect through path $T \rightarrow V \rightarrow C$. However, simply controlling for $V$ will not isolate the direct effect, since it can open back-door paths from $T$ to $C$ through confounders represented by $U$ [@montgomery-et-al:2018:colliders]. If there are variables that affect aggregate district voting that are independent of district-party ideology, such as valence features from unrelated prior candidates, post-treatment conditioning on the district vote can create confounders unintentionally. Sequential-$g$ is a special case of a broader class of models (structural nested mean models) that measure direct effects by subtracting intermediary effects without creating collider bias [@acharya-blackwell-sen:2016:direct-effects; @vansteelandt:2009:direct-effects]. 
-
-In order to implement a sequential-$g$ routine, we need to specify valid models that separately identify the mediator-outcome relationship (the total effect of district voting on candidate positioning) and the treatment-outcome relationship (the total effect of district-party ideology on candidate positioning). This twin identification is formalized using an assumption of _sequential ignorability_, or sequential unconfoundedness [@robins-greenland:1994:sequential-ignorability]. This means that unit potential outcomes $C_{i}(t, v)$ are independent of treatment, conditional on pre-treatment covariates $X_{i}$,
-\begin{align}
-  C_{i}(t, v) \perp \!\!\! \perp T \mid X_{i} = x
-\end{align}
-and secondly that potential outcomes are independent of the mediator, conditional on treatment, pre-treatment covariates, and _intermediate covariates_ $Z_{i}$ that may affect the mediator separately from $T$ and $X$. 
-\begin{align}
-  C_{i}(t, v) \perp \!\!\! \perp M \mid T_{i} = t, X_{i} = x, Z_{i} = z
-\end{align}
-
-
+The ACDE is the average of the CDEs if all units were fixed at the same mediator value $v$.
 
 ```{r create-g-dag}
 g_dag <- 
@@ -905,33 +960,85 @@ wrap_plots(
 )
 ```
 
-Figure&nbsp;\@ref(fig:plot-g-dag) visualizes the modeling assumptions for sequential-$g$ estimation using causal graphs, which helps explain how to implement the routine. The left panel shows the stage-one model, which estimates the effect of past voting $V$ (the mediator) on candidate positioning $C$ (the outcome). This first stage conditions on district-party preferences $T$, pre-treatment confounders $X$, and intermediate confounders $Z$, all of which are necessary to identify the causal effect of the mediator. 
 
-```{r plot-g-dag, include = TRUE, fig.width = 9, fig.height = 10, out.width = "100%", fig.cap = "Causal graphs describing the modeling problem and sequential-$g$ estimation. The stage 1 graph identifies the effect of the past district voting ($V_{d}$) on candidate positioning ($CF_{i}$). The stage 2 treatment-outcome model subtracts the district vote effect from candidate positions and identifies the effect of district-party ideology $\\bar{\\theta}_{g}$ on the demediated CF score $b(CF)_{i}$, which is equivalent to the controlled direct effect on the raw CF score. The final graph shows where unadjusted confounders violate the nonparametric causal identification assumptions in stage 1 ($U1$) and in stage 2 ($U2$)."}
+Sequential $g$-estimation is a structural modeling routine that estimates ACDEs by subtracting intermediary causal effects without creating collider bias [@acharya-blackwell-sen:2016:direct-effects; @vansteelandt:2009:direct-effects].
+The routine requires adjusting for two sets of confounders: pre-treatment confounders $X_{d}$ that affect both district-party ideology and CF scores, and intermediate confounders $Z_{d}$ that affect both the presidential vote and CF scores.
+Intermediate confounders are allowed to be affected by both pre-treatment confounders and district-party ideology.
+The first graph in Figure \@ref(fig:plot-g-dag) diagrams the stipulated causal structure among the district-party ideology treatment, the presidential vote mediator, and both sets of confounders.
+In the first stage of the model, the researcher estimates the effect of the mediator on the outcome variable, conditional on all confounders.
+\begin{align}
+\begin{split}  
+  \E{\text{CF}_{i}\left(\theta, v\right) - 
+     \text{CF}_{i}\left(\theta, v'\right) \mid 
+   \bar{\theta}_{g} = \theta, X_{d} = x, Z_{d} = z
+   } \\
+   \qquad =
+    \E{\text{CF}_{i} \mid V_{d} = v, \bar{\theta}_{g} = \theta, X_{d} = x, Z_{d} = z} - 
+    \E{\text{CF}_{i} \mid V_{d} = v', \bar{\theta}_{g} = \theta, X_{d} = x, Z_{d} = z}
+\end{split}
+(\#eq:po-stage-1)
+\end{align}
+The left side of Equation \@ref(eq:eq:po-stage-1) represents the conditional effect of the mediator in terms of potential outcomes, and the right side is the quantity that can be estimated from observed data assuming that the mediator is conditionally ignorable given all confounders and has positive assignment probability [@acharya-blackwell-sen:2016:direct-effects;].
+This specification blocks all back-door paths from $V_{d}$ to $\text{CF}_{i}$, which can be seen in the first panel of Figure \@ref(fig:plot-g-dag). 
+
+The next step of sequential $g$-estimation is to subtract the effect of the mediator from the outcome, also known as "demediation" or "blip-down."
+Demediation removes all variation in the outcome variable that is attributable to the causal effect of mediator.
+This stage is algebraically equivalent to subtracting a _demediation function_ from the observed outcome.
+The mediation function in terms of potential outcomes is as follows:
+\begin{align}
+  \delta_{d}\left(\theta, v, \bar{v}, x\right) &= 
+  \E{\text{CF}_{i}\left(\theta, \bar{v} = 0.5 \right) - \text{CF}_{i}\left(\theta, \bar{v} = 0.5 \right) \mid X_{d} = x}
+  (\#eq:po-demediation-fn)
+\end{align}
+which represents the expected effect on CF scores by setting the presidential vote to its observed value versus some fixed reference value $\bar{v}$ for all units, conditional on $X_{d}$ [@acharya-blackwell-sen:2016:direct-effects].^[
+  The model specification below functionally assumes to interactions between the presidential vote and intermediate confounders $Z_{d}$, so the specification of the demediation function in Equation \@ref(eq:po-demediation) does not depend on $Z_{d}$, although this assumption is not strictly necessary for nonparametric identification of the ACDE [@robins:1997:complex-longitudinal-data].
+]
+In this analysis, I fix the two-party presidential vote to $0.5$, an even split between Republicans and Democrats in the district. 
+We subtract the demediation function from the original outcome to obtain the demediated CF score, $b\left(\text{CF}\right)_{i}$, which is equivalent to the potential CF score if all units had a presidential vote of $0.5$.
+\begin{align}
+\begin{split}
+  b\left(\text{CF}\right)_{i} &= 
+    \text{CF}_{i} - \delta_{d}\left(\bar{\theta}_{g}, V_{d}, \bar{v} = 0.5, x\right) \\
+  E{b\left(\text{CF}\right)_{i}}  &= E\{b\left(\text{CF}\right)_{i}\left(\theta, V_{d} = \bar{v}\right)}
+\end{split}
+(\#eq:po-demediation)
+\end{align}
+
+
+```{r plot-g-dag, include = TRUE, fig.width = 9, fig.height = 10, out.width = "100%", fig.cap = "Causal graphs describing the modeling problem and sequential $g$ estimation. The stage 1 graph identifies the effect of the past district voting ($V_{d}$) on candidate positioning ($\\text{CF}_{i}$). The stage 2 treatment-outcome model subtracts the district vote effect from candidate positions and identifies the effect of district-party ideology $\\bar{\\theta}_{g}$ on the demediated CF score $b(\\text{CF})_{i}$, which is equivalent to the controlled direct effect on the raw CF score. The final graph shows where unadjusted confounders violate the nonparametric causal identification assumptions in stage 1 ($U1$) and in stage 2 ($U2$)."}
 ```
 
+Finally, the researcher estimates the effect of the treatment on the demediated outcome, which is equivalent to the controlled direct effect on the original outcome.
+\begin{align}
+\begin{split}
+  \E{\text{CF}_{i}\left(\theta, \bar{v}\right) - 
+     \text{CF}_{i}\left(\theta', \bar{v}\right) 
+     \mid X_{d} = x 
+   } \\
+    \qquad =
+    \E{b\left(\text{CF}\right)_{i}\left(\theta\right) - 
+       b\left(\text{CF}\right)_{i}\left(\theta'\right) 
+       \mid X_{d} = x 
+    } \\
+   \qquad =
+    \E{b\left(\text{CF}\right)_{i} \mid \bar{\theta}_{g} = \theta, x} - 
+    \E{b\left(\text{CF}\right)_{i} \mid \bar{\theta}_{g} = \theta', x}
+\end{split}
+(\#eq:po-stage-2)
+\end{align}
+The first statement in Equation \@ref(eq:po-stage-2) relates the controlled direct effect in terms of CF scores to the total effect on demediated CF scores. 
+The second statement defines how the ACDE can be estimated with observable data under the assumption that assignment to district-party ideology ignorable and with positive probability given pre-treatment covariates [@acharya-blackwell-sen:2016:direct-effects].
+The top-right graph in Figure \@ref(fig:plot-g-dag) shows how the demediation step recovers the controlled direct effect of district-party ideology.
+Demediating the outcome removes all variation in CF scores caused by the presidential vote, so it deletes the path $V_{d} \rightarrow \text{CF}_{i}$ in the diagram.
+In turn, there is no need to condition on the presidential vote $V_{d}$ in Equation \@ref(eq:po-stage-2) to identify the ACDE, even though the diagram shows that district-party ideology has an effect on the presidential vote.
+Furthermore, the graph contains remains a causal path from the intermediate confounders $Z_{d}$ to the CF score, the stage-two model does not condition on these confounders because these pathways are a part of the district-party ideology's ACDE on CF scores.
+It is worth noting here that if we estimate the stage-two model using the original CF score rather than the demediated CF score, this would estimate the total effect of district-party ideology.
+This quantity can be valuable because valuable because the difference between the total effect and the controlled direct effect shows how much of the total effect flows is carried by a mediating mechanism.
 
-After estimating the mediator's effect on the outcome, the outcome variable is _demediated_ by subtracting the mediator effect from the outcome variable. The center panel represents this demediation step by rewriting the outcome variable as $b(C)$, the demediated value of $C$.^[
-  The exact demediation operation is shown below in Equation&nbsp;\@ref(eq:blipdown-function).
-]
-The stage-two model then estimates the effect of district-party preferences $T$ on the demediated candidate positions, controlling for pre-treatment covariates $X$.
-Demediating the outcome suppresses the path from $V$ to $b(C)$ because (by sequential unconfoundedness) there is no longer any systematic variation between the mediator and the outcome. As such, there is no need to adjust for $V$, since it has no systematic effect on $b(C)$ after demediation. 
-Furthermore, although there remains a causal effect from the intermediate confounders $Z$ to candidate positions, the stage-two model does not adjust for these confounders to avoid post-treatment bias in the estimate of the CDE.
-This stage-two model recovers the controlled direct effect of $T$ on $C$.
-
-It is worth noting here that if we estimate the stage-two model using the natural value of $C$ rather than the demediated $b(C)$, we would obtain the total effect of $T$ (the conditional average treatment effect) rather than the controlled direct effect. This can be valuable, since the difference between the total effect and the controlled direct effect are an indirect indicator of how much of the total effect flows through a mediator variable.
-
-The final panel shows where unmeasured confounding can violate the sequential unconfoundedness assumption. The stage-one model identifies the causal effect of the mediator, so if an unmeasured variable (represented in the future by $U1$) affects both the mediator and the outcome, the mediator's effect is not identified. Similarly, the stage-two model does not identify the effect of $T$ on $b(C)$ if they share an unmeasured confounder $U2$.
-Unmeasured variables in other locations of the graph certainly exist, but they do not violate sequential unconfoundedness unless they can be represented by an open back-door path through $U1$ or $U2$.^[
-  For instance, a variable $W$ may be a common cause of $X$ and $C$, thus creating the path $T \rightarrow X \rightarrow W \rightarrow C$, but it does not confound the effect of $T$ because conditioning on $X$ blocks the path. 
-  Additionally, although intermediate confounders $Z$ are presented as descendants of group policy ideology $T$, intermediate confounders do not necessarily have to be affected by $T$ (though they can be). They only need to be confounders of the mediator-outcome relationship.
-]
-There are functional form considerations however---biases may remain if the functional forms for confounders $X$ and $Z$ are inappropriate.^[
-  I plan to investigate more flexible functional forms in the near future.
-]
-<!------- TO DO ---------
-- functional forms comment
-------------------------->
+The bottom graph in Figure \@ref(fig:plot-g-dag) shows where unmeasured confounding can violate the two ignorability assumptions required to estimate the ACDE. 
+The stage-one model identifies the causal effect of the past presidential vote, so if an unmeasured variable (represented in the figure by $U1$) affects both district voting and CF scores, the mediator's effect is not identified. 
+Similarly, the stage-two model does not identify the effect of district party ideology on the demediated CF score if they share an unmeasured cause $U2$.
+Unmeasured variables in other locations of the graph certainly exist, but they do not violate the sequential ignorability assumptions unless they can be represented by an unblocked back-door path through $U1$ or $U2$.
 
 <!------- TO DO ---------
 - way bigger emphasis on the contribution of the design.
