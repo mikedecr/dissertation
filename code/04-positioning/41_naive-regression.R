@@ -12,6 +12,7 @@ library("boxr"); box_auth() # needed?
 library("lme4")
 library("tidybayes")
 library("broom")
+library("estimatr")
 
 library("scales")
 library("latex2exp")
@@ -22,7 +23,8 @@ source(here::here("code", "helpers", "call-R-helpers.R"))
 
 # box: data/_model-output/04-positioning
 #      estimates for voting models
-model_output_dir <- 102977578033
+box_dir_model_out <- 102977578033
+local_dir_model_out <- file.path("data", "_model-output", "04-positioning")
 # clean_data_dir <- 112745864917
 
 
@@ -232,6 +234,83 @@ ggplot(full_data) +
   scale_color_manual(values = party_code_colors) +
   scale_fill_manual(values = party_code_colors)
 
+
+# ---- tables of regressions -----------------------
+
+eda_fits <- bind_rows(
+    full_data %>% 
+      group_by(party_num) %>% 
+      nest() %>%
+      mutate(incumbency = "All", primary_rules_cso = "All", cycle = "All"),
+    full_data %>%
+      group_by(party_num, incumbency) %>%
+      nest() %>%
+      mutate(cycle = "All", primary_rules_cso = "All")
+  ) %>%
+  bind_rows(
+    full_data %>%
+      mutate(cycle = as.character(cycle)) %>%
+      group_by(party_num, cycle) %>%
+      nest() %>%
+      mutate(incumbency = "All", primary_rules_cso = "All")
+  ) %>%
+  bind_rows(
+    full_data %>%
+      group_by(party_num, primary_rules_cso) %>%
+      nest() %>%
+      mutate(incumbency = "All", cycle = "All")
+  ) %>%
+  filter(is.na(primary_rules_cso) == FALSE) %>%
+  group_by_all() %>%
+  mutate(
+    lmfit = map(
+      .x = data,
+      .f = ~ {
+        lm_robust(
+          recipient_cfscore_dyn ~ theta_mean, 
+          clusters = group,
+          data = .x
+        )
+      }
+    ),
+    lm_tidy = map(.x = lmfit, .f = tidy, conf.int = TRUE),
+    lm_glance = map(
+      .x = lmfit, 
+      .f = ~ {
+        signed <- sign(coef(.x)["theta_mean"])
+        glance(.x) %>% mutate(r = signed * sqrt(r.squared))
+      }
+    ),
+    lm_predict = map2(
+      .x = lmfit, 
+      .y = data, 
+      .f = ~ {
+        predict(.x, newdata = .y, interval = "confidence") %>%
+        (function(x) x$fit) %>%
+        as_tibble() %>%
+        mutate(theta_mean = .y$theta_mean)
+      }
+    )
+  ) %>%
+  ungroup() %>%
+  print()
+
+eda_fits %>%
+  unnest(lm_predict)
+
+lm_robust(recipient_cfscore_dyn ~ theta_mean, data = full_data, clusters = group) %>%
+  predict(newdata = full_data, interval = "confidence") %>%
+  (function(x) x$fit) %>%
+  as_tibble() 
+
+eda_fits %>%
+  select(-data) %>%
+  box_write("eda-fits.rds", dir_id = box_dir_model_out)
+alarm()
+
+# eda_fits %>%
+#   select(-data) %>%
+#   write_rds(eda_fits, here(local_dir_model_out, "eda-fits.rds"))
 
 
 

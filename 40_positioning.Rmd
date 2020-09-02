@@ -33,13 +33,14 @@ library("here")
 library("magrittr")
 library("tidyverse")
 
+library("estimatr")
+library("broom")
+library("tidybayes")
+
 library("scales")
 library("patchwork")
 library("ggdag")
 library("latex2exp")
-
-library("broom")
-library("tidybayes")
 
 theme_dag <- theme_dag(base_family = font_fam)
 ```
@@ -59,9 +60,9 @@ We cannot directly compare the "explanatory power" of district-party ideology an
 This is because aggregate policy ideology and aggregate voting are causally related: if a district contains a voter base with more conservative policy preferences, these policy preferences should influence aggregate voting behavior in the district as well as the positioning of candidates who try to respond to those policy preferences.
 Simply controlling for district voting in a regression will likely introduce collider bias by conditioning on a post-treatment variable [@greenland-et-al:1999:dags-epidemiology; @montgomery-et-al:2018:colliders].
 
-This chapter investigates the effect of district-party ideology on primary candidate positions using a sequential-$g$ analysis, a multistage modeling approach that estimates the direct effect of district-party ideology while fixing district-level voting, which mediates the effect of local ideology.
+This chapter investigates the effect of district-party ideology on primary candidate positions using sequential $g$-estimation, a structural modeling approach that estimates the direct effect of district-party ideology while fixing the mediating effect of district-level voting.
 Substantively, I translate the primary candidate's strategic positioning dilemma into the language of causal graphs, highlighting how aggregate districting voting mediates a relationship between district-party ideology and candidate positioning.
-Methodologically, I take the sequential-$g$ method as it appears in political science [@acharya-blackwell-sen:2016:direct-effects] and embed it in a Bayesian framework.
+Methodologically, I take the sequential $g$ method as it appears in political science [@acharya-blackwell-sen:2016:direct-effects] and embed it in a Bayesian framework.
 The Bayesian framework estimates all components of the structural model simultaneously, quantifying uncertainty in all model parameters in a single posterior distribution.
 This includes measurement uncertainty in ideal point estimates from the IRT model in Chapter \@ref(ch:model), which is included as a prior distribution over ideal points.
 The key payoff for the Bayesian structure, therefore, is a unified framework for conducting inference about treatment effects by marginalizing over other sources of uncertainty, be they design parameters or imprecise data.
@@ -105,7 +106,7 @@ Recent ideal point methods that use political financial contributions data have 
 Few notable studies have yet used these contribution-based scores to study primary candidates [@thomsen:2014:moderate-candidates; @rogowski-langella:2015:primary-systems; @ahler-citrin-lenz:2016:CA-open-primaries; @porter-treul:2020:primary-experience; @thomsen:2020:ideology-gender].
 
 Even with better measures of district-party ideology and candidate positions, there are some reasons to suspect that district-party ideology does not have a straightforward effect on candidate extremism. 
-@thomsen:2014:moderate-candidates finds that politicians are less likely to run for Congress (versus a state office) if their moderate stances make them a weaker "fit" for their party, measured as a greater distance between a candidate's CFscore and the average CFscore in their state-party.
+@thomsen:2014:moderate-candidates finds that politicians are less likely to run for Congress (versus a state office) if their moderate stances make them a weaker "fit" for their party, measured as a greater distance between a candidate's CF score and the average CF score in their state-party.
 This process could weaken the relationship between district-party ideology and candidate positioning because moderate candidates select themselves out of the campaign, even if they might appeal to district partisan voters.
 @porter-treul:2020:primary-experience find that the number of primary candidates who lack prior elected experience is increasing over time.
 Interestingly, they find no pattern between candidate experience and candidate extremism.
@@ -130,7 +131,7 @@ This "primary rules hypothesis" receives essentially zero support across several
 @hill:2015:nominating-institution studies the relationship between primary rules and the ideological makeup of the primary electorate, asking if primary voters in states with more open primary rules are in fact more moderate on average than primary voters under closed primary rules.
 Estimating an IRT ideal point model on individual CCES respondents in each congressional district and validated voter turnout data, Hill finds that primary voters are more ideologically consistent than general election voters in the same party, but primary voters are no more extreme in closed primary states than in open primary states.
 Even if primary electorates are not affected by state primary rules, candidates may still suspect that primary rules matter and position themselves accordingly.
-@rogowski-langella:2015:primary-systems study the relationship between primary rules and candidate positioning as measured with CFscores.
+@rogowski-langella:2015:primary-systems study the relationship between primary rules and candidate positioning as measured with CF scores.
 They find no systematic evidence that either congressional candidates or state legislative candidates are more extreme in closed primary states or more moderate in open primary states. 
 @mcghee-et-al:2014:nomination-systems also study state legislators but using ideology scores that bridge the NOMINATE ideal point space to state legislative voting [@shor-mccarty:2011:mapping-state-legs], again finding no convincing evidence that primary systems matter for polarization in state legislatures.
 Within-state studies of changes to primary rules over time find mixed and highly qualified results, focused primarily on California's change to a "top two" primary system.^[
@@ -187,66 +188,29 @@ For now, these initial investigations serve only to give us an impression of the
 ------------------------->
 
 
-```{r read-data, eval = TRUE}
+```{r read-data}
 full_data <- read_rds(here("data", "_clean", "candidates-x-irt.rds"))
 ```
 
+```{r read-eda-fits}
+eda_fits <- 
+  read_rds(here("data", "_model-output", "04-positioning", "eda-fits.rds"))
+```
+
+
 ```{r by-party}
-party_fits <- full_data %>%
-  group_by(party_num) %>%
-  nest() %>%
-  mutate(
-    correlation = map_dbl(
-      .x = data,
-      .f = ~ cor(
-        .x$recipient_cfscore_dyn, 
-        .x$theta_mean,
-        use = "pairwise.complete.obs"
-      )
-    ),
-    lmfit = map(
-      .x = data,
-      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean, data = .x)
-    ),
-    lmtidy = map(.x = lmfit, .f = tidy, conf.int = TRUE),
-    lmfit_std = map(
-      .x = data, 
-      .f = ~ {
-        .x %>%
-        select(recipient_cfscore_dyn, theta_mean) %>%
-        na.omit() %>%
-        mutate_at(
-          .vars = vars(recipient_cfscore_dyn, theta_mean),
-          .funs = ~ scale(.) %>% as.vector()
-        ) %>%
-        lm(recipient_cfscore_dyn ~ theta_mean, data = .) 
-      }
-    ),
-    stidy = map(.x = lmfit_std, .f = tidy, conf.int = TRUE),
-    lmglance = map(lmfit, glance)
-  ) %>%
+party_sum <- eda_fits %>%
+  filter(incumbency == primary_rules_cso) %>%
+  filter(incumbency == cycle) %>%
+  unnest(lm_tidy) %>%
+  filter(term == "theta_mean") %>%
+  rename_at(vars(term:outcome), ~ str_glue("b_{.}")) %>%
+  unnest(lm_glance) %>%
+  mutate(party = names(party_colors)[party_num]) %>%
   print()
 
-party_coefs <- party_fits %>% 
-  unnest(lmtidy) %>%
-  split(.$party_num) %>%
-  lapply(function(x) x %>% split(.$term)) %>%
-  print()
-
-party_coefs_std <- party_fits %>% 
-  unnest(stidy) %>%
-  split(.$party_num) %>%
-  lapply(function(x) x %>% split(.$term)) %>%
-  print()
-
-byparty_labels <- party_fits %>%
-  unnest(lmglance) %>%
-  mutate(
-    n = df + df.residual,
-    party = names(party_colors)[party_num]
-  ) %>%
-  select(party, n, correlation, p.value) %>%
-  ungroup() %>%
+party_fit <- party_sum %>%
+  unnest(lm_predict) %>%
   print()
 ```
 
@@ -255,112 +219,79 @@ ggplot(full_data) +
   aes(x = theta_mean, y = recipient_cfscore_dyn) +
   geom_point(
     aes(color = as.factor(party_num)), 
-    size = 2.5, shape = 16, alpha = 0.25
+    size = 2.75, shape = 16, alpha = 0.25
   ) + 
-  geom_smooth(
-    aes(group = as.factor(party_num)), 
-    color = "black",
-    method = "lm",
-    size = 0.25
+  geom_ribbon(
+    data = party_fit,
+    aes(y = NULL, ymin = lwr, ymax = upr, group = as.factor(party_num)),
+    alpha = 0.7,
+    fill = "gray", 
+    color = NA
+  ) +
+  geom_line(
+    data = party_fit, 
+    aes(y = fit, group = as.factor(party_num)),
+    color = "black"
   ) +
   scale_y_continuous(breaks = seq(-4, 4, 2)) +
   scale_color_manual(values = party_factor_colors) +
   scale_fill_manual(values = party_factor_colors) +
+  scale_shape_manual(values = c("1" = "D", "2" = "R")) +
   labs(
-    title = "Primary Candidate Positioning and Group Ideology",
+    title = "Candidate Positioning and Group Ideology",
     subtitle = "Candidates from 2012, 2014, and 2016",
     x = "District-Party Ideal Point\n(Posterior Mean)", 
     y = "Candidate CF Score"
   ) +
   theme(legend.position = "none") +
   geom_text(
-    data = byparty_labels %>%
+    size = 3.5,
+    data = party_sum %>%
       mutate(
         theta_mean = c(-1.75, 0.05),
         recipient_cfscore_dyn = c(3, -3)
       ),
-    aes(label = str_glue("{party} (n = {comma(n)})\nr = {round(correlation, 2)}")),
+    aes(label = str_glue("{party} (N = {comma(N)})\nr = {round(r, 2)}")),
     hjust = 0
   ) 
 ```
 
 Figure \@ref(fig:plot-by-party) shows the topline relationship between primary candidate CF scores and the ideal point mean for the district-party they ran to represent.
-The figure contains candidates from 2012, 2014, and 2016 congressional primaries, including incumbents, challengers, and open-seat candidates.
-This totals `r byparty_labels %>% filter(party == "Democrats") %>% pull(n) %>% comma()` Democratic candidates and `r byparty_labels %>% filter(party == "Republicans") %>% pull(n) %>% comma()` Republican candidates over three election cycles.
-The figure shows a weak but decisively positive relationship between ideal point means and CF scores; district-parties that are more conservative see more conservative primary candidates. 
-The relationship is stronger for Democrats than for Republicans in slope (`r party_coefs[["1"]]$theta_mean$estimate %>% round(2)` versus `r party_coefs[["2"]]$theta_mean$estimate %>% round(2)`) and in correlation (`r party_coefs_std[["1"]]$theta_mean$estimate %>% round(2)` versus `r party_coefs_std[["2"]]$theta_mean$estimate %>% round(2)`).
-Because one-unit increases are large on the ideal-point scale, it is convenient to interpret the correlation coefficients as standardized coefficients, where each party is standardized separately.
-Increasing district-party ideology by one within-party standard deviation is associated with a CF scores increase `r party_coefs_std[["1"]]$theta_mean$estimate %>% round(2)` standard deviations among Democrats and `r party_coefs_std[["2"]]$theta_mean$estimate %>% round(2)` standard deviations among Republicans.
+Each point represents a primary candidate for Congress in either the Democratic or Republican Party primary in years 2012, 2014, and 2016 as they appear in the DIME congressional database.
+This totals `r party_sum %>% filter(party == "Democrats") %>% pull(N) %>% comma()` Democratic candidates and `r party_sum %>% filter(party == "Republicans") %>% pull(N) %>% comma()` Republican candidates over three election cycles.
+In addition to each candidate, I plot least-squares regression lines calculated separately for each party.
+Confidence intervals reflect standard errors that are clustered at the district-party level to capture correlated error among candidates who run in the same primary race.
+
+```{r plot-by-party, include = TRUE, fig.width = 6, fig.height = 5, fig.cap = "Topline relationship between district-party ideology and candidate positions. The horizontal axis plots the posterior mean for a group ideology, and the vertical axis is the dynamic CF score for primary candidates included in the DIME congressional candidate database.", fig.scap = "Topline relationship between district-party ideology and candidate positions."}
+```
+
+
+The figure shows a weak but decisively positive relationship between ideal point means and CF scores; district-parties that are more conservative see more conservative primary candidates.
+The relationship is stronger for Democrats than for Republicans in slope (`r filter(party_sum, party_num == 1) %>% pull(b_estimate) %>% round(2)` versus `r filter(party_sum, party_num == 2) %>% pull(b_estimate) %>% round(2)`) and in correlation (`r filter(party_sum, party_num == 1) %>% pull(r) %>% round(2)` versus `r filter(party_sum, party_num == 2) %>% pull(r) %>% round(2)`).
+Because one-unit increases are large on the ideal-point scale, it is helpful to standardize these coefficients in terms of standard deviations in the raw data.
+Conveniently for a bivariate regression, the standardized coefficient is equivalent to the correlation coefficient.
+Increasing district-party ideology by one within-party standard deviation is associated with a CF score increase of `r filter(party_sum, party_num == 1) %>% pull(r) %>% round(2)` standard deviations among Democrats (`r dem_p <- filter(party_sum, party_num == 1) %>% pull(b_p.value) %>% round(2); stopifnot(dem_p < .01)` $p < .01$) and `r filter(party_sum, party_num == 2) %>% pull(r) %>% round(2)` standard deviations among Republicans ($p = `r filter(party_sum, party_num == 2) %>% pull(b_p.value) %>% round(2)`$).
 A small number of outlier CF scores exist for each party, but these outliers are few compared to the approximately 2,000 observations in each party.
 The regression lines track the center of each party's ideal point distribution, so these outliers do not appear to be large influences on the topline relationship.
 
 
-```{r plot-by-party, include = TRUE, fig.width = 7, fig.height = 5, fig.cap = "Topline relationship between district-party ideology and candidate positions. The horizontal axis plots the posterior mean for a group ideology, and the vertical axis is the dynamic CF score for primary candidates included in the DIME congressional candidate database.", fig.scap = "Topline relationship between district-party ideology and candidate positions."}
-```
-
-
-```{r by-incumbency}
-incumbency_fits <- full_data %>%
-  group_by(party_num, incumbency) %>%
-  nest() %>%
-  mutate(
-    correlation = map_dbl(
-      .x = data,
-      .f = ~ cor(
-        .x$recipient_cfscore_dyn, 
-        .x$theta_mean,
-        use = "pairwise.complete.obs"
-      )
-    ),
-    lmfit = map(
-      .x = data,
-      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean, data = .x)
-    ),
-    lmtidy = map(.x = lmfit, .f = tidy, conf.int = TRUE),
-    lmfit_std = map(
-      .x = data, 
-      .f = ~ {
-        .x %>%
-        select(recipient_cfscore_dyn, theta_mean) %>%
-        na.omit() %>%
-        mutate_at(
-          .vars = vars(recipient_cfscore_dyn, theta_mean),
-          .funs = ~ scale(.) %>% as.vector()
-        ) %>%
-        lm(recipient_cfscore_dyn ~ theta_mean, data = .) 
-      }
-    ),
-    stidy = map(.x = lmfit_std, .f = tidy, conf.int = TRUE),
-    lmglance = map(lmfit, glance)
-  ) %>%
-  print()
-
-incumbency_coefs <- incumbency_fits %>% 
-  unnest(lmtidy) %>%
+```{r by-incumbency, eval = TRUE}
+incum_sum <- eda_fits %>%
+  filter(primary_rules_cso == cycle) %>%
+  filter(incumbency != "All") %>%
+  unnest(lm_tidy) %>%
   filter(term == "theta_mean") %>%
-  split(.$party_num) %>%
-  lapply(function(x) x %>% split(.$incumbency)) %>%
-  print()
-
-incumbency_coefs_std <- incumbency_fits %>% 
-  unnest(stidy) %>%
-  filter(term == "theta_mean") %>%
-  split(.$party_num) %>%
-  lapply(function(x) x %>% split(.$incumbency)) %>%
-  print()
-
-incumbency_labels <- incumbency_fits %>%
-  unnest(lmglance) %>%
+  rename_at(vars(term:outcome), ~ str_glue("b_{.}")) %>%
+  unnest(lm_glance) %>%
   mutate(
-    n = df + df.residual,
-    party = names(party_colors)[party_num]
+    party = names(party_colors)[party_num],
+    p_lab = ifelse(b_p.value < .01, 'p < .01', str_glue("p = {round(b_p.value, 2)}"))
   ) %>%
-  select(party, n, correlation, p.value) %>%
-  ungroup() %>%
-  arrange(
-    party, 
-    fct_relevel(str_glue("{incumbency}s"), "Incumbents", "Challengers")
-  ) %>%
+  arrange(party_num) %>%
+  print()
+
+incum_fit <- incum_sum %>%
+  unnest(lm_predict) %>%
   print()
 ```
 
@@ -369,17 +300,24 @@ incumbency_labels <- incumbency_fits %>%
 ```{r plot-by-incumbency}
 ggplot(full_data) +
   aes(x = theta_mean, y = recipient_cfscore_dyn) +
-  facet_wrap(~ fct_relevel(str_glue("{incumbency}s"), "Incumbents", "Challengers")) +
+  facet_wrap(
+    ~ fct_relevel(incumbency, "Incumbent"), 
+    labeller = as_labeller(function(x) str_glue("{x}s"))
+  ) +
   geom_point(
     aes(color = as.factor(party_num)), 
     size = 2.5, shape = 16, alpha = 0.25
   ) + 
-  geom_smooth(
-    aes(group = as.factor(party_num)), 
-    color = "black",
-    method = "lm",
-    size = 0.25
-  ) +
+  geom_ribbon(
+      data = incum_fit,
+      aes(y = NULL, ymin = lwr, ymax = upr, group = as.factor(party_num)),
+      alpha = 0.7,
+      fill = "gray", color = NA
+    ) +
+    geom_line(
+      data = incum_fit, 
+      aes(y = fit, group = as.factor(party_num))
+    ) +
   scale_y_continuous(breaks = seq(-4, 4, 2)) +
   scale_color_manual(values = party_factor_colors) +
   scale_fill_manual(values = party_factor_colors) +
@@ -390,85 +328,60 @@ ggplot(full_data) +
     y = "Candidate CF Score"
   ) +
   theme(legend.position = "none") +
-   geom_text(
-     data = incumbency_labels %>%
-       mutate(
-         theta_mean = c(rep(-1.75, 3), rep(-0.25, 3)),
-         recipient_cfscore_dyn = c(rep(3, 3), rep(-3, 3))
-       ),
-     aes(label = str_glue("{party}\nn = {comma(n, accuracy = 1)}\nr = {round(correlation, 2)}")),
-     hjust = 0
+  geom_text(
+    size = 3.5,
+    data = incum_sum %>% 
+      mutate(
+        theta_mean = c(rep(-1.75, 3), rep(-0.25, 3)), 
+        recipient_cfscore_dyn = c(rep(3, 3), rep(-3, 3)) 
+      ), 
+      aes(label = str_glue("{party}\nn = {comma(N, accuracy = 1)}\nr = {round(r, 2)}\n{p_lab}")), 
+      hjust = 0
    ) 
 ```
 
 Figure \@ref(fig:plot-by-incumbency) plots the same relationship with candidates divided into incumbents, challengers of incumbents, and candidates running for a district with no incumbent running for reelection.
-It is immediately noticeable that CFscores have lower variance among incumbent candidates than among non-incumbent incumbents, and the correlations between CF scores and ideal point means are markedly higher: `r incumbency_coefs_std[["1"]]$Incumbent$correlation %>% round(2)` among Democrats and `r incumbency_coefs_std[["2"]]$Incumbent$correlation %>% round(2)`.
-The overall higher correlation suggests incumbents are either more capable at positioning themselves for their primary electorates or that elections screen out ill-fitting incumbents. 
+It is immediately noticeable that CF scores have lower variance among incumbent candidates than among non-incumbent incumbents, and the correlations between CF scores and ideal point means are markedly higher: `r filter(incum_sum, party_num == 1, incumbency == "Incumbent") %>% pull(r) %>% round(2)` among Democrats and `r filter(incum_sum, party_num == 2, incumbency == "Incumbent") %>% pull(r) %>% round(2)`.
+The overall higher correlation suggests incumbents could be more capable at positioning themselves for their primary electorates or that prior elections are effective at screening out ill-fitting candidates to represent the district.
 The higher correlation among Democrats also disappears among incumbent candidates, suggesting that no party is obviously more responsive to primary constituencies than the other, contrary to @clinton:2006:constituent-representation's finding that Republican incumbents were uniquely sensitive to ideological variation within their partisan bases.
-Although CF scores are higher variance among challengers and open-seat candidates, and their relationship to district-party ideology is weaker, we still observe a generally positive relationship that candidates of all status have some awareness, on average, of how to take more conservative or liberal positions in response to their local constituencies.
+CF scores are higher variance among challengers and open-seat candidates, and their relationship to district-party ideology is weaker but still positive. 
+This may be because challengers and open seat candidates must seek other ways to appeal to candidates aside from ideological fit.
+This would be consistent with @boatright:2013:getting-primaried's key finding that primary challenges focused purely on ideological fit to the district are relatively rare.
+A more mechanical explanation could be that CF scores are higher variance for challengers and open seat candidates because they struggle to raise from the same concentrated network of donors as incumbents do, attenuating the relationship between CF scores and district-party ideologies.
+Even still, the data generally suggest that candidates of all statuses have some awareness, on average, of how to position themselves as more conservative or progressive to corner their local partisan constituencies.
+Almost all relationships are statistical significant at a $1$% level except among open seat candidates, whose sample sizes are also smaller.
 
-```{r plot-by-incumbency, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 5, fig.cap = "District-party ideology and candidate positioning across candidate incumbency status.", fig.scap = "District-party ideology and candidate positioning for incumbents, challengers, and open-seat candidates."}
+Another notable finding among incumbents is the appearance of a much smaller "intercept shift" between the two parties.
+While other studies typically find a large gap between Republicans and Democrats who represent otherwise equivalent districts [@mccarty-poole-rosenthal:2009:gerrymandering; among others], the predicted CF scores for Democratic and Republican incumbents appear to diverge less dramatically if each regression line were extrapolated to meet at moderate values of district-party ideology.
+This interpretation comes with several caveats, naturally.
+First, there is no way to know if a linear extrapolation is an appropriate method for comparing parties in "otherwise equivalent districts," since there are no districts whose partisan constituencies are similar enough to make that extrapolation without strict functional form assumptions.
+Second, a cursory regression analysis of CF scores on district-party ideology and party still finds mean difference between the two parties, even though it is smaller among incumbents.
+Nevertheless, the data broadly reinforce the theoretical notion responsiveness to partisan constituencies partially explains at least some of the ideological distance between Republican and Democratic candidates running in the same district.
+Future research on inter-party divergence could incorporate district-party ideology scores and address this issue more directly.
+
+
+```{r plot-by-incumbency, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 4.5, fig.cap = "District-party ideology and candidate positioning across candidate incumbency status.", fig.scap = "District-party ideology and candidate positioning for incumbents, challengers, and open-seat candidates."}
 ```
 
-```{r by-cycle}
-cycle_fits <- full_data %>%
-  group_by(party_num, cycle) %>%
-  nest() %>%
-  mutate(
-    correlation = map_dbl(
-      .x = data,
-      .f = ~ cor(
-        .x$recipient_cfscore_dyn, 
-        .x$theta_mean,
-        use = "pairwise.complete.obs"
-      )
-    ),
-    lmfit = map(
-      .x = data,
-      .f = ~ lm(recipient_cfscore_dyn ~ theta_mean, data = .x)
-    ),
-    lmtidy = map(.x = lmfit, .f = tidy, conf.int = TRUE),
-    lmfit_std = map(
-      .x = data, 
-      .f = ~ {
-        .x %>%
-        select(recipient_cfscore_dyn, theta_mean) %>%
-        na.omit() %>%
-        mutate_at(
-          .vars = vars(recipient_cfscore_dyn, theta_mean),
-          .funs = ~ scale(.) %>% as.vector()
-        ) %>%
-        lm(recipient_cfscore_dyn ~ theta_mean, data = .) 
-      }
-    ),
-    stidy = map(.x = lmfit_std, .f = tidy, conf.int = TRUE),
-    lmglance = map(lmfit, glance)
-  ) %>%
-  print()
-
-cycle_coefs <- cycle_fits %>% 
-  unnest(lmtidy) %>%
+```{r by-cycle, eval = TRUE}
+cycle_sum <- eda_fits %>%
+  filter(primary_rules_cso == incumbency) %>%
+  filter(cycle != "All") %>%
+  unnest(lm_tidy) %>%
   filter(term == "theta_mean") %>%
-  split(.$party_num) %>%
-  lapply(function(x) x %>% split(.$cycle)) %>%
-  print()
-
-cycle_coefs_std <- cycle_fits %>% 
-  unnest(stidy) %>%
-  filter(term == "theta_mean") %>%
-  split(.$party_num) %>%
-  lapply(function(x) x %>% split(.$cycle)) %>%
-  print()
-
-cycle_labels <- cycle_fits %>%
-  unnest(lmglance) %>%
+  rename_at(vars(term:outcome), ~ str_glue("b_{.}")) %>%
+  unnest(lm_glance) %>%
   mutate(
-    n = df + df.residual,
-    party = names(party_colors)[party_num]
+    party = names(party_colors)[party_num],
+    p_lab = ifelse(b_p.value < .01, 'p < .01', str_glue("p = {round(b_p.value, 2)}"))
   ) %>%
-  select(party, n, correlation, p.value) %>%
-  ungroup() %>%
-  arrange(party, cycle) %>%
+  arrange(party_num) %>%
+  print()
+
+select(cycle_sum, p_lab)
+
+cycle_fit <- cycle_sum %>%
+  unnest(lm_predict) %>%
   print()
 ```
 
@@ -480,12 +393,16 @@ ggplot(full_data) +
     aes(color = as.factor(party_num)), 
     size = 2.5, shape = 16, alpha = 0.25
   ) + 
-  geom_smooth(
-    aes(group = as.factor(party_num)), 
-    color = "black",
-    method = "lm",
-    size = 0.25
-  ) +
+  geom_ribbon(
+      data = cycle_fit,
+      aes(y = NULL, ymin = lwr, ymax = upr, group = as.factor(party_num)),
+      alpha = 0.7,
+      fill = "gray", color = NA
+    ) +
+    geom_line(
+      data = cycle_fit, 
+      aes(y = fit, group = as.factor(party_num))
+    ) +
   scale_y_continuous(breaks = seq(-4, 4, 2)) +
   scale_color_manual(values = party_factor_colors) +
   scale_fill_manual(values = party_factor_colors) +
@@ -497,98 +414,114 @@ ggplot(full_data) +
   ) +
   theme(legend.position = "none") +
   geom_text(
-    data = cycle_labels %>% 
+    size = 3.5,
+    data = cycle_sum %>% 
       mutate(
         theta_mean = c(rep(-1.75, 3), rep(-0.25, 3)), 
         recipient_cfscore_dyn = c(rep(3, 3), rep(-3, 3)) 
       ), 
-    aes(label = str_glue("{party}\nn = {comma(n, accuracy = 1)}\nr = {round(correlation, 2)}")), 
-    hjust = 0
-  ) 
+      aes(label = str_glue("{party}\nn = {comma(N, accuracy = 1)}\nr = {round(r, 2)}\n{p_lab}")), 
+      hjust = 0
+   ) 
 ```
 
-
 Finally, Figure \@ref(fig:plot-by-cycle) shows how the relationship between district-party ideology and CF scores varies by election year, splitting the 2012, 2014, and 2016 campaign cycles into three panels.
-There is no definitive trend toward increasing polarization or increasing responsiveness to partisan ideology in more recent years, which which is inconsistent with notions that candidates have become more hyper-focused on primary electorates in the past few election cycles.
-The same weak but positive relationship appears in all years.
-The flattest relationship actually appears most recently for Republicans in 2016, among whom the relationship is relatively flat.
-I hesitate to interpret too much out of a single observation, but future researchers might investigate whether financial contributions by Republican donors had a different ideological character in 2016, either because Donald Trump's unusual campaign platform altered which donors wanted to support which causes, or if moderate donors directed their money away from Republican candidates in anticipation of a Clinton presidential win. 
+There is no definitive trend toward increasing polarization or increasing responsiveness to partisan ideology in more recent years, which which is inconsistent with theoretical speculation that candidates have become more sensitive to primary electorates over the past few elections.
+Instead, the same weak but positive relationship appears in nearly all subsets of data with no overwhelming explanation for differences over time or between parties.
+The flattest relationship actually appears most recently for Republicans in 2016, among whom the relationship is nearly flat.
+We should hesitate to interpret too much from one estimate, but future researchers could investigate whether financial contributions by Republican donors had a different ideological character in 2016, if perhaps Donald Trump's unusual campaign platform altered which donors wanted to support which candidates, or if moderate donors directed their money away from Republican candidates in anticipation of a Democratic national victory.
 
 <!------- TO DO ---------
 - why is this
 ------------------------->
 
-```{r plot-by-cycle, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 5, fig.cap = "District-party ideology and candidate positioning across election cycles within the 2010s districting cycle.", fig.scap = "District-party ideology and candidate positioning in 2012, 2014, and 2016."}
+```{r plot-by-cycle, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 4.5, fig.cap = "District-party ideology and candidate positioning across election cycles within the 2010s districting cycle.", fig.scap = "District-party ideology and candidate positioning in 2012, 2014, and 2016."}
 ```
 
-
-
-
-```{r simple-regs, eval = FALSE}
-simple_regs <- 
-  read_rds(here("data", "_model-output", "04-positioning", "simple-regs.rds"))
-```
-
-
-
-```{r plot-first-look, eval = FALSE}
-full_data %>%
-  filter(
-    is.na(recipient_cfscore_dyn) == FALSE &
-    is.na(theta_mean) == FALSE
+```{r by-rules, eval = TRUE}
+primary_sum <- eda_fits %>%
+  filter(cycle == incumbency) %>%
+  filter(primary_rules_cso != "All" & is.na(primary_rules_cso) == FALSE) %>%
+  unnest(lm_tidy) %>%
+  filter(term == "theta_mean") %>%
+  rename_at(vars(term:outcome), ~ str_glue("b_{.}")) %>%
+  unnest(lm_glance) %>%
+  mutate(
+    party = names(party_colors)[party_num],
+    p_lab = ifelse(b_p.value < .01, 'p < .01', str_glue("p = {round(b_p.value, 2)}"))
   ) %>%
+  arrange(party_num) %>%
+  print()
+
+select(primary_sum, p_lab)
+select(primary_sum, r)
+
+primary_fit <- primary_sum %>%
+  unnest(lm_predict) %>%
+  print()
+```
+
+```{r plot-by-rules}
+full_data %>%
+  filter(is.na(primary_rules_cso) == FALSE) %>%
   ggplot() +
-  aes(x = scale(theta_mean), y = recipient_cfscore_dyn) +
-  facet_grid(
-    str_glue("{cycle} Campaign") ~ fct_relevel(incumbency, "Incumbent")
+  aes(x = theta_mean, y = recipient_cfscore_dyn) +
+  facet_wrap(
+    ~ fct_relevel(primary_rules_cso, "closed", "semi"),
+    labeller = 
+      c("closed" = "Closed", "semi" = "Semi-Closed", "open" = "Open") %>%
+      as_labeller()
   ) +
-  # facet_wrap(
-  #   ~ str_glue("{cycle} Campaign")
-  # ) +
   geom_point(
-    aes(color = as.factor(party)), 
-    size = 1, shape = 1, alpha = 0.5
+    aes(color = as.factor(party_num)), 
+    size = 2.5, shape = 16, alpha = 0.25
   ) + 
-  geom_smooth(
-    aes(fill = as.factor(party)), 
-    color = "black",
-    method = "lm",
-    size = 0.25
-  ) +
-  scale_y_continuous(breaks = seq(-4, 4, 4)) +
+  geom_ribbon(
+      data = primary_fit,
+      aes(y = NULL, ymin = lwr, ymax = upr, group = as.factor(party_num)),
+      alpha = 0.7,
+      fill = "gray", color = NA
+    ) +
+    geom_line(
+      data = primary_fit, 
+      aes(y = fit, group = as.factor(party_num))
+    ) +
+  scale_y_continuous(breaks = seq(-4, 4, 2)) +
   scale_color_manual(values = party_factor_colors) +
   scale_fill_manual(values = party_factor_colors) +
-  labs(x = "District-Party Ideal Point", y = "Candidate Dime Score") +
-  theme(panel.grid = element_line(color = "gray90")) +
-  geom_text(
-    data = tibble(
-      theta_mean = c(-1.25, 0.25),
-      recipient_cfscore_dyn = c(-3, 3),
-      text = c("Democrats", "Republicans"),
-      cycle = 2012, 
-      incumbency = factor("Incumbent")
-    ),
-    aes(label = text)
+  labs(
+    title = "Ideological Responsiveness Across Primary Rules",
+    subtitle = "Collapsed coding of primary rules",
+    x = "District-Party Ideal Point\n(Posterior Mean)", 
+    y = "Candidate CF Score"
   ) +
-  # geom_label(
-  #   data = simple_regs,
-  #   aes(x = (party - 1.5), y = -5 * (party - 1.5), 
-  #       label = str_glue("r = {number(sqrt(r.squared), accuracy = .01)}\nb = {number(estimate, accuracy = .01)}\nn = {df + df.residual}")),
-  #   color = "black", size = 3
-  # ) +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  geom_text(
+    size = 3.5,
+    data = primary_sum %>% 
+      mutate(
+        theta_mean = c(rep(-1.75, 3), rep(-0.25, 3)), 
+        recipient_cfscore_dyn = c(rep(3, 3), rep(-3, 3)) 
+      ), 
+      aes(label = str_glue("{party}\nn = {comma(N, accuracy = 1)}\nr = {round(r, 2)}\n{p_lab}")), 
+      hjust = 0
+   ) 
 ```
 
-With direct measures of district-party policy ideology, do we get a different topline picture of within-party representation in primaries? Figure&nbsp;\@ref(fig:plot-first-look) shows a descriptive picture of the relationship between district-party ideology and candidate ideology for House primary candidates, the latter measured with dynamic ideal point scores derived from campaign contributions [@bonica:2014:mapping-ideology]. Across incumbents, challengers, and open-seat candidates, in both parties, and across several election cycles, we observe a generally positive relationship between these two measures. As partisan citizens in a district become more conservative, so too do the candidates who run in those districts.
 
+<!------- TO DO ---------
+- primary rules
+------------------------->
 
-```{r plot-first-look, include = TRUE, fig.width = 8, fig.height = 6, eval = FALSE, out.width= "100%", fig.cap = "Simple comparison of candidate Dime scores against their respective district-party ideal points. Results generally indicate a positive relationship: as partisan constituents in a district hold more conservative policy preferences, candidates running for that party's nomination in the House are also more conservative."}
+```{r plot-by-rules, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 4.5, fig.cap = "District-party ideology and candidate positioning in states with closed, semi-closed, and open primary rules.", fig.scap = "District-party ideology and candidate positioning in states with different primary rules."}
 ```
 
 
-The strength of these relationships vary most dramatically by candidate incumbency status, which could be owed to competitive positioning incentives when, for example, challengers attempt to differentiate themselves ideologically from incumbents in ways that aren't entirely explained by bottom-up ideological pressure from voters [c.f. @ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning]. Incumbent candidates' ideal points are most strongly related to district-party ideology, consistent with a notion that ideological consistency creates a selection effect into incumbency in previous election. 
-
-This descriptive picture informs a few modeling choices during the sequential-$g$ routine. Because incumbency status appears to be a substantial modifier of the relationship between citizen and candidate ideology, I estimate the direct effect of district-party ideology separately for incumbents, challengers, and open seat candidates. By comparison, estimates are quite similar across election cycles, so I pool election cycles into one model with cycle fixed effects rather than estimating entirely separate models for different cycles. And although the descriptive relationships vary modestly across parties, the variables that could confound the relationship between citizen and candidate ideology could differ dramatically across parties. I therefore estimate models for Democrats and Republicans separately. This results in six groups of sequential-$g$ estimates: three incumbency categories $\times$ two major parties.
+This descriptive picture informs a few modeling choices during the sequential $g$ routine. 
+Because incumbency status appears to modify the relationship between citizen and candidate ideology, some of the analysis below estimates the effect of district-party ideology separately for incumbents, challengers, and open seat candidates. 
+By comparison, estimates exhibit overwhelming time trend that needs to be considered, so I choose to pool election cycles into one model, using fixed effects where appropriate to the design, rather than estimating entirely separate models for different cycles. 
+And although the descriptive relationships were similar for both parties, the variables that could confound the relationship between district-party ideology and candidate ideology could differ dramatically across parties.
+In order to increase the credibility of the selection-on-observables regression design, I therefore estimate models for Democrats and Republicans separately.
 
 
 <!------- TO DO ---------
