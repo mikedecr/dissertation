@@ -11,6 +11,7 @@ title: Overall thesis notes
 - model data/covariates
 - other party ideal point prior (currently mean only)
 - regularization confounding (reading, writing, analysis)
+- ch 5:
 
 
 

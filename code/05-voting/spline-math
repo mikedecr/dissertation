@@ -1,0 +1,20 @@
+library("here")
+library("magrittr")
+library("tidyverse")
+library("broom")
+# library("scales")
+# library("latex2exp")
+
+tibble(a_raw = runif(1000), b_raw = runif(1000)) %>%
+  mutate(
+    k = a_raw^2 + b_raw^2
+  ) 
+
+
+x <- matrix(rnorm(100 * 3), nrow = 100) 
+
+r <- x / sqrt(rowSums(x * x))
+
+apply(r, 1, function(x) sum(x^2))
+
+

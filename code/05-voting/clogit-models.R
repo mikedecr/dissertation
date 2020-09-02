@@ -27,6 +27,8 @@ library("boxr"); box_auth()
 mcmc_path <- file.path("data", "mcmc", "5-voting")
 box_dir_mcmc <- 121691306731
 
+
+
 # ----------------------------------------------------
 #   data
 # ----------------------------------------------------
@@ -45,8 +47,9 @@ cands_raw <-
 # NAs become 0 if we know there is another winner in primary
 
 # create theta splines
-num_knots <- 10 
-spline_degree <- 3
+num_knots <- 12
+spline_degree <- 4
+
 # creating the B-splines
 
 cands <- cands_raw %>%
@@ -91,30 +94,9 @@ cands %>%
     win_prefer_dime, win_prefer_boat
   )
 
-cands %>%
-  mutate(
-    theta_splines = bs(
-      theta_mean, 
-      knots = seq(
-        min(theta_mean, na.rm = TRUE), 
-        max(theta_mean, na.rm = TRUE), 
-        length.out = 12
-      ), 
-      degree = 3, 
-      intercept = FALSE
-    ) 
-  ) %>%
-  pull(theta_splines) %>% class()
 
-    %>%
-  pivot_longer(
-    cols = contains("spline"), 
-    names_to = "spline",
-    values_to = "value"
-  )
 
-dim(B)
-head(B)
+
 
 # ---- keep only valid matchups -----------------------
 
@@ -175,58 +157,122 @@ matchups %>%
   )
 
 
-cands_raw %>%
-  transmute(
-    cycle, state_abb, district_num, party, 
-    group, party_num, 
-    primary_rules_cso, primary_rules_co,
-    win_primary = case_when(
-      pwinner == "W" ~ 1,
-      pwinner == "L" ~ 0
-    ),
-    theta_mean, recipient_cfscore_dyn, 
-    incumbency,
-    # C = c(
-      challenger = as.numeric(incumbency == "Challenger")
-      , openseat = as.numeric(incumbency == "Open Seat")
-      # , incumbent = as.numeric(incumbency == "Incumbent")
-      , log_receipts = log(total_receipts + 1)
-      , log_self_contribs = log(contribs_from_candidate + 1)
-      , log_pac_contribs = log(total_pac_contribs +  1)
-      , cycle_2014 = as.numeric(cycle == 2014)
-      , cycle_2012 = as.numeric(cycle == 2012)
-      , cycle_2016 = as.numeric(cycle == 2016)
-    # ) %>%
-      # matrix(nrow = n()),
-      ,
-    # X = c(
-      rep_pres_vs = as.vector(scale(rep_pres_vs)),
-      district_white = as.vector(scale(district_white)), 
-      district_latino = as.vector(scale(district_latino)),
-      district_college_educ = as.vector(scale(district_college_educ)), 
-      district_median_income = as.vector(scale(district_median_income)), 
-      district_poverty = as.vector(scale(district_poverty)),
-      district_unemployment = as.vector(scale(district_unemployment)), 
-      district_service = as.vector(scale(district_service)), 
-      district_blue_collar = as.vector(scale(district_blue_collar)),
-      district_age_18_to_24 = as.vector(scale(district_age_18_to_24)), 
-      district_over_65 = as.vector(scale(district_over_65)),
-      district_pop_density = as.vector(scale(district_pop_density)), 
-      district_land_area = as.vector(scale(district_land_area)), 
-      tpo_2 = as.integer(tpo == 2),
-      tpo_3 = as.integer(tpo == 3),
-      tpo_4 = as.integer(tpo == 4),
-      tpo_5 = as.integer(tpo == 5), 
-      pf = pf
-    # ) %>%
-    #   matrix(nrow = n())
+
+# ---- experiment w/ splines -----------------------
+
+matchups %>%
+  mutate(
+    theta_splines = bs(
+      theta_mean, 
+      knots = seq(
+        min(theta_mean, na.rm = TRUE), 
+        max(theta_mean, na.rm = TRUE), 
+        length.out = num_knots
+      ), 
+      degree = spline_degree, 
+      intercept = FALSE
+    ) 
   ) %>%
-  # na.omit() %>%
-  group_by(cycle, group, party) %>% 
-  filter(sum(win_primary) == 1) %>%
-  filter(n() > 1) %>%
-  ungroup() %>%
+  select(theta_splines)
+  # class()
+
+dim(B)
+head(B)
+
+
+
+linear_params <- 
+  tibble(alpha = seq(-1, 1, .001)) %>%
+  crossing(sign = c(-1, 1)) %>%
+  mutate(
+    beta = sign * sqrt(1 - alpha^2),
+    norm = beta^2 + alpha^2
+  ) %>%
+  crossing(
+    cf = matchups %$% c(
+      min(recipient_cfscore_dyn, na.rm = TRUE), 
+      max(recipient_cfscore_dyn, na.rm = TRUE)
+    ) %>% 
+      (function(x) x - mean(x))
+    ,
+    theta = matchups %$% c(
+      min(theta_mean, na.rm = TRUE), 
+      max(theta_mean, na.rm = TRUE)
+    ) %>% 
+      (function(x) x - mean(x))
+  ) %>%
+  mutate(
+    cf_component = alpha*cf,
+    theta_component = beta*theta,
+    combo = cf_component + theta_component
+  ) %>%
+  print(n = 100)
+
+
+# cool graphics you could make
+# 1. Unit circle of coefficient combinations
+ggplot(linear_params) +
+  aes(x = alpha, y = beta) +
+  geom_line(aes(group = as.factor(sign))) +
+  coord_fixed()
+
+# 2. partial component of each variable (y) over variable (x)
+# 3. total combination over each input variable 
+linear_params %>%
+  pivot_longer(
+    cols = c(cf_component, theta_component), 
+    names_to = "xname",
+    values_to = "xvalue"
+  ) %>%
+  print() %>%
+  ggplot() +
+  aes(x = xvalue, y = combo) +
+  scale_color_viridis_d(option = "plasma", end = 0.8) +
+  facet_wrap(~ xname)
+
+
+linear_params %>%
+  # filter(alpha == sample(alpha, size = 1)) %>%
+  # filter(beta == sample(beta, size = 1)) %>%
+  print() %>%
+  ggplot() +
+  aes(x = cf_component, y = combo) +
+  geom_line(aes(color = as.factor(alpha)), show.legend = FALSE)
+
+# linkers <- 
+linker_samples <- 
+  matrix(rnorm(100 * 2), nrow = 100) %>% 
+  (function(x) x / sqrt(rowSums(x * x))) %>% 
+  as_tibble() %>%
+  set_names(c("a", "b")) %>%
+  mutate(iter = row_number()) %>%
   print()
+
+g_samples <- matchups %>%
+  select(party, recipient_cfscore_dyn, theta_mean) %>%
+  na.omit() %>% 
+  mutate(i = row_number()) %>%
+  crossing(linker_samples) %>%
+  arrange(i, iter) %>%
+  rename(cf = recipient_cfscore_dyn, theta = theta_mean) %>%
+  group_by(i, iter) %>%
+  mutate(
+    linear = (as.matrix(cf, theta) %*% t(as.matrix(a, b))) %>% as.vector
+  ) %>%
+  print()
+
+ggplot(g_samples) +
+  aes(x = linear) +
+  geom_histogram()
+
+
+ggplot(g_samples) +
+  aes(x = theta, y = linear, color = party) +
+  geom_line() +
+  scale_color_manual(values = party_code_colors)
+
+  as.matrix() %>%
+  function(x) (x %*% linker_samples)
 
 
 
@@ -234,7 +280,6 @@ cands_raw %>%
 # ----------------------------------------------------
 #   simple MLE
 # ----------------------------------------------------
-
 
 matchups %$% mgcv::spline(recipient_cfscore_dyn)
 
@@ -341,6 +386,13 @@ model_spline <- stan_model(
   file = here("code", "05-voting", "stan", "choice-spline.stan")
 )
 
+# mean-reverting spline interaction
+model_combo <- stan_model(
+  file = here("code", "05-voting", "stan", "choice-combo.stan")
+)
+
+
+
 # gaussian process interaction
 # model_GP <- stan_model(
 #   file = here("code", "05-voting", "stan", "choice-GP.stan")
@@ -369,6 +421,7 @@ bayes_df <- matchups %>%
   ungroup() %>%
   print()
 
+
 # arrange into datalists for Stan
 bayes_grid <- bayes_df %>%
   group_by(party) %>%
@@ -395,6 +448,8 @@ bayes_grid <- bayes_df %>%
             intercept = FALSE 
           ) %>% matrix(nrow = n),
           B = ncol(b_theta),
+          num_knots = 30,
+          spline_deg = 4,
           prior_sd = 10
         )
       }
@@ -409,8 +464,6 @@ bayes_grid$stan_data[[1]] %>% lapply(length)
 
 
 # ---- VB tests -----------------------
-
-
 
 vb_simple <- bayes_grid %>% 
   mutate(
@@ -438,7 +491,6 @@ vb_int <- bayes_grid %>%
   ) %>%
   print()
 
-
 vb_spline <- bayes_grid %>%
   mutate(
     vb_spline = map(
@@ -451,7 +503,108 @@ vb_spline <- bayes_grid %>%
     )
   ) %>%
   print()
+
+
+vb_combo <- bayes_grid %>%
+  mutate(
+    vb_combo = map(
+      .x = stan_data,
+      .f = ~ vb(
+        data = .x, 
+        object = model_combo,
+        pars = c("pos", "wt_spline_raw", "ideal_distance", "B"),
+        include = FALSE
+      )
+    )
+  ) %>%
+  print()
 alarm()
+
+
+
+
+vb_fits <- 
+  left_join(vb_simple, vb_int) %>% 
+  left_join(vb_spline) %>%
+  left_join(vb_combo) %>%
+  print()
+
+vb_fits %>%
+  write_rds("~/Box Sync/research/thesis/data/mcmc/5-voting/vb_clogits.rds")
+alarm()
+
+
+
+# get linear pred effect
+spline_data <- vb_combo %>%
+  mutate(
+    tidy = map(vb_combo, tidy, conf.int = TRUE),
+    lincom = map2(
+      .x = tidy,
+      .y = data,
+      .f = ~ {
+        partials <- .x %>%
+          filter(str_detect(term, "spline_function")) %>%
+          mutate(i = parse_number(term))
+        joined <- .y %>%
+          mutate(i = row_number()) %>%
+          left_join(partials, by = "i")
+      }
+    )
+  ) %>%
+  print()
+
+spline_data %>%
+  unnest(lincom) %>%
+  ggplot(aes(x = CF, y = estimate, color = party)) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.25)
+  )
+
+
+
+spline_data %>%
+  unnest(lincom) %>%
+  ggplot(aes(x = CF, y = estimate, color = party)) +
+  geom_ribbon(
+    aes(ymin = conf.low, ymax = conf.high, fill = party),
+    color = NA, 
+    alpha = 0.3
+  ) +
+  geom_line() +
+  # geom_pointrange(
+  #   aes(ymin = conf.low, ymax = conf.high),
+  #   position = position_dodge(width = -0.25)
+  # ) +
+  scale_color_manual(values = party_code_colors) +
+  scale_fill_manual(values = party_code_colors) +
+  labs(
+    title = "Value of Ideological Proximity in Primary Elections",
+    subtitle = "Effect Hetergeneity by CFscores and District-Party Ideology",
+    x = "Candidate CF Score",
+    y = "Primary Candidate Utility"
+  ) +
+  annotate(
+    geom = "text",
+    label = "Democratic candidates benefit\nfrom ideological positioning",
+    x = -4, y = 1.5
+  ) +
+  annotate(geom = "segment", x = -4, xend= -1.5, y = 1, yend = 0.9) +
+  annotate(
+    geom = "text",
+    label = "Negligible impact of voter ideology",
+    x = 0, y = 2.5
+  ) +
+  annotate(geom = "segment", x = -0.5, xend= -1, y = 2.1, yend = 0.5) +
+  annotate(
+    geom = "text",
+    label = "No clear patterns in\nRepublican primary contests",
+    x = 4, y = -0.8
+  ) +
+  coord_cartesian(xlim = c(-5.5, 5.5))
+
+
 
 # vb_gp <- bayes_grid %>%
 #   mutate(
@@ -465,15 +618,6 @@ alarm()
 #     )
 #   ) %>%
 #   print()
-
-vb_fits <- 
-  left_join(vb_simple, vb_int) %>% 
-  left_join(vb_spline) %>%
-  print()
-
-vb_fits %>%
-  write_rds("~/Box Sync/research/thesis/data/mcmc/5-voting/vb_clogits.rds")
-alarm()
 
 
 ints <- vb_spline %>% 
@@ -679,6 +823,10 @@ mc_simple <- bayes_grid %>%
   ) %>%
   print()
 
+write_rds(
+  mc_simple,
+  here(mcmc_path, "local_mc-simple.rds")
+)
 
 mc_int <- bayes_grid %>%
   mutate(
@@ -693,18 +841,62 @@ mc_int <- bayes_grid %>%
   ) %>%
   print()
 
-mc_gp <- bayes_grid %>%
+write_rds(
+  mc_int,
+  here(mcmc_path, "local_mc-int.rds")
+)
+
+mc_spline <- bayes_grid %>%
   mutate(
-    mc_int = map(
+    mc_spline = map(
       .x = stan_data,
       .f = ~ sampling(
         data = .x, 
-        object = model_GP,
-        pars = c("pos", "gp_cov", "gp_L"), include = FALSE
+        object = model_spline,
+        pars = c("pos", "wt_spline_raw"), include = FALSE
       )
     )
   ) %>%
   print()
+
+write_rds(
+  mc_spline,
+  here(mcmc_path, "local_mc-spline.rds")
+)
+
+mc_combo <- bayes_grid %>%
+  mutate(
+    mc_combo = map(
+      .x = stan_data,
+      .f = ~ sampling(
+        data = .x, 
+        object = model_combo,
+        pars = c("pos", "wt_spline_raw", "ideal_distance", "B"), 
+        include = FALSE
+      )
+    )
+  ) %>%
+  print()
+alarm()
+
+write_rds(
+  mc_combo,
+  here(mcmc_path, "local_mc-combo.rds")
+)
+
+
+# mc_gp <- bayes_grid %>%
+#   mutate(
+#     mc_int = map(
+#       .x = stan_data,
+#       .f = ~ sampling(
+#         data = .x, 
+#         object = model_GP,
+#         pars = c("pos", "gp_cov", "gp_L"), include = FALSE
+#       )
+#     )
+#   ) %>%
+#   print()
 
 mc_fits <- full_join(mc_simple, mc_int) %>% print()
 

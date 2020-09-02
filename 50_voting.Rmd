@@ -1,8 +1,21 @@
-# How District-Party Ideology Affects Primary Election Outcomes: Combining Subposteriors for Honest Bayesian Causal Inference {#ch:voting}
+# District-Party Ideology and Primary Election Outcomes {#ch:voting}
 
-```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
+```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
 knitr::knit_exit()
 ```
+
+```{r knitr-05-1-voting, include = FALSE, cache = FALSE}
+source(here::here("assets-bookdown", "knitr-helpers.R"))
+```
+
+```{r}
+library("here")
+library("magrittr")
+library("tidyverse")
+library("broom")
+```
+
+## Voting in Primaries
 
 What is the research question
 
@@ -49,166 +62,151 @@ covariates:
 
     
 
-## Machine Learning and Causal Inference
-
-
-ML is basically just different methods for $E[Y | X]$
-
-
-### Why ML and Causal Inference
-
-ID assumptions are all about $E[Y | X]$.
-
-- models are post-identification
-- if we have to model, we like robustness and flexibility
-- we are specification and functional form dependences
-
-
-Problems:
-
-- don't know the covariates
-- even if we did, don't know the model
-
-
-
-Solution: ML
-
-- regularization and other covariate selection methods (not necessarily the purview of "machine learning")
-- many models are set up for interactions, nonlinearities
-- The causal models themselves are derived in terms of expectations, not in terms of regression functions.
-
-
-
-### how does ML work?
-
-workflow: 
-
-- model tuning, train/test split
-- penalize overfitting
-- regularization and shrinkage priors
-
-
-
-### Bayesian causal ML
-
-Notation:
-
-- model predictions are inherently posterior predictions
-
-
-Natural analogs:
-
-- ridge
-- lasso
-- extensions
-
-
-Benefits:
-
-- uncertainty in ML predictions has been a problem
-- Bayes gives a straightforward, unified framework for characterizing uncertainty in model parameters (feeding forward into model predictions)
-
-
-
-- handles non-identifiability in certain models pretty naturally!
+## Empirical Approach
 
 
 
 
-## Bias and Variance in Causal Identification
 
+### Modeling Candidate Choice
 
-### Regularization and Shrinkage Priors
+Explain conditional logit
 
-Regular parameterization:
+data <- probability <- utility
+
 \begin{align}
-  y_{g} &= \tau\theta_{g} + \mathbf{x}^{\intercal}_{g}\beta + \epsilon_{g}
+\begin{split}
+  y_{ir} &\sim \text{Bernoulli}\left(\psi_{ij} \right) \\
+  \psi_{ij} &= \frac{\text{exp}\left(u_{ij}\right) }{\sum\limits_{i \in j}u_{ij}}
+\end{split}
+(\#eq:clogit-likelihood)
+\end{align}
+  <!-- -->
+
+
+### Causal and statistical identifiability
+
+
+DAG: theta -> candidate features
+
+Can't measure direct effect of theta but through candidate features
+
+We don't want it anyway...we want to know how candidate positioning matters given theta?
+
+Model: p(effect of CF | theta = h)
+
+CATE: p(effect | theta)p(theta) 
+
+
+### Modeling continuous causal heterogeneity
+
+Utility is single-peaked
+
+Required: some nonlinearity that keeps theta in the equation
+
+- no: random effects conditional logit
+- no: continuous interaction
+- yes: spline model.
+
+For heterogeneous effects: flexibility is good but overfitting is bad.
+This is a long-standing tenet of heterogeneous treatment effects literature:
+
+- Regularized tree models for shrinkage prior.
+- Conjoint experiments using $p$-values with multiple test corrections.
+- Bayesian models gives us both: shrinkage prior for regularization "shrink toward homogeneity," hierarchical model and posterior samples for simultaneous inference.
+
+Spline models are not the most common in political science, but generally have the same benefits for fitting nonlinear relationships but with more flexible function form (than, say, log transformations) and fewer problematic extrapolation behaviors (than, say, polynomial regression).
+
+Reiterate the likelihood.
+
+\begin{align}
+\begin{split}
+  y_{ir} &\sim \text{Bernoulli}\left(\psi_{ij} \right) \\
+  \psi_{ij} &= \text{softmax}\left(u_{ij}, \mathbf{u}_{j}\right) %_
+\end{split}
+(\#eq:clogit-again)
 \end{align}
 
-Orthogonalized parameterization:
+Utility is a flexible function of CF score and district-party public ideology, with additional controls for candidate-level features.
+
 \begin{align}
-  \theta_{g} &= \mathbf{x}^{\intercal}_{g}\gamma_{1} + \nu_{g}
-  y_{g} &= \tau\left(\theta_{g} - \hat{\theta}_{g}\right)_ + \mathbf{x}^{\intercal}_{g}\gamma_{2} + \epsilon_{g}
+  u_{ij} &= f\left(\text{CF}_{ij}, \bar{\theta}_{g[j]}\right) + C_{ij}\beta
+  (\#eq:vague-predictor)
 \end{align}
 
-In an unbiased regression, estimates of $\tau$ would be identical. With regularization applied to the covariate effects, however, the estimates would differ. By explicitly modeling $\theta_{g}$ as a function of $\mathbf{x}_{g}$ and residualizing, we explicitly make all of the identifying variation $\theta_{g} - \mathrm{E}\left[\theta_{g} \mid \mathbf{x_{g}}\right]$ independent of the regression function, allowing shrinkage in the selection model to behave freely without biasing the estimate of $\tau$ by direct consequence. The researcher is then able to set up whatever priors on $\tau$ make sense. 
+We construct $f()$ as a flexible interactive function.
+Nonlinear relationship to candidate ideology, such as symmetric utility loss as ideological distance increases.
+However, the two ideal points are not on the same scale.
+We set up a flexible interactive function $f$ that estimates a common mapping between ideal point scales and measures candidate and district locations in that space affect choice utility.
 
-
-
-### Neyman Orthogonalization
-
-We can regularize in the first stage, then we try to be more agnostic in the second stage?
-
-
-
-
-## Empirical Setup
-
-### Data
-
-### Neural Network Choice Model
-
-
-
-Regression with Gaussian errors:
+Begin with a simple assumption that one ideal point space is a linear transformation of the other space.
+This is similar to Aldrich–McKelvey.
+Construct a new measure $\Delta_{ij}$ that is a linear combination of $\text{CF}_{ij}$ and $\bar{\theta}_{g}$.
 \begin{align}
-  (\#eq:normal-reg)
-  y_{i} 
-  &\sim \text{Normal}\left(
-    \mathbf{x}^{\intercal}_i\beta, %_ 
-    \sigma 
-  \right)
+\begin{split} 
+  \Delta_{ij} &= \alpha_{1} \text{CF}_{ij} + \alpha_{2}\bar{\theta}_{g[j]} \\
+  1 &= \alpha_{1}^{2} + \alpha_{2}^{2}
+\end{split}
+(\#eq:linear-combo)
 \end{align}
-where $\mathbf{x}_{i}$ is a $P$-vector of predictors for unit $i$, and $\beta$ is a $P$-vector of coefficients.
-
-We write a one-layer neural network with slightly more general notation that evokes a basis-function interpretation of a regression model:
+The second line restricts the coefficients to have a norm of $1$. 
+This places an identifiability restriction on the location and scale of the $\Delta$ space.
+Furthermore it enables a direct mapping between $\text{CF}$ space and $\bar{\theta}_{g}$ space, since we can define $\alpha_{2}$ in terms of $\alpha_{1}$...
 \begin{align}
-  (\#eq:normal-nn)
-  y_{i} &\sim 
-    \text{Normal}\left(
-      \eta\right(\mathbf{x}_{i}\left) %_
-      \boldsymbol{\alpha},
-      \sigma
-    \right)
+\begin{split}
+  1 &= \alpha_{1}^{2} + \alpha_{2}^{2} \\
+  \alpha_{2} &= \sqrt{(1 - \alpha_{1}^{2})}
+\end{split}
 \end{align}
-where $\eta\left(\mathbf{x}_{i}\right)$ is a neural network basis function of $\mathbf{x}_{i}$ with coefficients $\alpha$. This basis function is specified as a transformed regression of the predictors,
+
+So ultimately we're estimating only one effective parameter: the scale factor between the two spaces.
+
+With the linear transformation, we can interpret $\Delta_{ij}$ algebraically as a distance measure between the candidate's CF score and the district-party public ideology in the shared ideology space.
+This is possible because even though $\Delta_{ij}$ is the sum $\alpha_{1} \text{CF}_{ij} + \alpha_{2}\bar{\theta}_{g[j]}$, we can construe it as a distance if we simply flip the sign of $\alpha_{2}$, which still satisfies the unit norm.
+
+We then use $\Delta_{ij}$ to construct a set of basis functions, using $4$^th^ order bases with $30$ knots across the range of $\Delta_{ij}$.
+Let $b_{k}(\Delta_{i})$ be the $k$^th^ out of $K$ total basis functions, each with a coefficient $\phi_{k}$.
+The function $f$ is then just a spline function
+
 \begin{align}
-  (\#eq:nn-prediction)
-  \eta\left(\mathbf{x}_{i}\right) %_
-    &= \text{tanh}\left(
-    \mathbf{x}_{i}^{\intercal}%_
-    \mathbf{\omega}
-  \right)
+\begin{split}
+  f\left(\text{CF}_{ij}, \bar{\theta}_{g[j]}\right) %_
+    &= \sum\limits_{k} b_{k}\left(\Delta_{ij}\right)\phi_{k}
+\end{split}
+(\#eq:spline-function)
 \end{align}
-which is commonly referred to as a "neuron" in the neural network parlance. The neuron basis differs from linear regression in two ways. First, the coefficients $\boldsymbol{\omega}$ contain $M$ columns rather than $1$ column as in simple regression. The resulting linear combination $\mathbf{x}_{i}^{\intercal}\mathbf{\omega}$ is therefore a $1 \times M$. This is a generalization of regression, and if $M = 1$, the network essentially reduces to linear regression as $\mathbf{x}_{i}^{\intercal}\mathbf{\omega}$ would be a scalar prediction for unit $i$. The second innovation is an element-wise transformation of $\mathbf{x}_{i}^{\intercal}\mathbf{\omega}$ using the hyperbolic tangent function, which is a scaled logistic function.^[
-  Traditionally, the hyperbolic tangent function is written as $\text{tanh}\left(x\right) = \dfrac{e^{x} - e^{-x}}{e^{x} + e^{-x}} = \dfrac{e^{2x} - 1}{e^{2x} + 1}$. It is related to the logistic function by $\text{tanh}\left(x\right) = 2g(2x) - 1$, where $g(\cdot)$ is the standard logistic function. The hyperbolic tangent function is more commonly used for neural networks than the standard logistic function because its output lies in the interval $(-1, 1)$ rather than $(0, 1)$. This is convenient for certain neural network models that "deactivate" 
-]
-<!------- TO DO ---------
-- ReLU
-------------------------->
+
+In order to penalize an overly flexible spline function, I add a hierarchical prior to the spline coefficients that shrinks coefficients toward zero and regularizes against overfitting.
+Each coefficient $\phi_{k}$ is the product of a standard normal variate $\tilde{\phi}_{k}$ and a scale factor $\sigma$, the latter of which has a half-Cauchy prior.
+\begin{align}
+\begin{split}
+  \phi_{k} &= \tilde{\phi}_{k}\sigma \\ %_ 
+  \tilde{\phi}_{k} &\sim \text{Normal}\left(0, 1\right) \\ %_ 
+  \sigma &\sim \text{Half-Cauchy}\left(0, 1\right) %_
+\end{split}
+(\#eq:spline-shrinkage)
+\end{align}
+The marginal prior distribution for $\phi_{k}$ then is a scale mixture of Normal distributions, which pulls coefficients toward zero but has flat tails to allow strong enough data to overcome the prior.
+
+```{r, include = TRUE, echo = FALSE, warning = FALSE}
+tibble(
+  raw = rnorm(10000),
+  sigma = abs(rcauchy(10000)),
+  phi = raw*sigma,
+) %>%
+ggplot() +
+  aes(x = phi) +
+  geom_histogram(boundary = 0, bins = 500) +
+  xlim(c(-10, 10))
+```
+
+\begin{align}
+  \beta &\sim \text{Normal}\left(0, 1\right)
+  (\#eq:clogit-wt-priors)
+\end{align}
 
 
 
-The conditional mean is given by $\text{tanh}\left(\mathbf{x}^{T}_{i}\boldsymbol{\omega}\right)\boldsymbol{\alpha}$. The predictor matrix $\mathbf{x}^{\intercal}_{i}$, instead of being multiplied by a vector of coefficients, is multiplied by a $P \times M$ matrix of coefficients $\boldsymbol{\omega}$, resulting in a $1 \times M$ matrix that is nothing more than $M$ linear regression functions of the form 
-
-
-
-Conditional choice likelihood
-
-Linear Index is Neyman-Parameterized
-
-Neural net in the selection stage
-
-
-### Merging Model Subposteriors
-
-### Modeling Testing Workflow
-
-Model validation with LOO
-
-Searched Parameters
-
-LOO results
 
 ## Findings
 
