@@ -101,10 +101,6 @@ model {
   y_scale ~ normal(yhat_med, sigma_med);
   blip_y ~ normal(yhat_trt, sigma_trt);
   
-  // outcome dispersion
-  sigma_med ~ cauchy(0, 1);
-  sigma_trt ~ cauchy(0, 1);
-  
   // multivariate prior on RAW theta
   theta_raw ~ multi_normal_prec(ideal_means, ideal_prec);
 
@@ -124,6 +120,10 @@ model {
   // ranef dispersion 
   hypersigma_med ~ cauchy(0, 1);
   hypersigma_trt ~ cauchy(0, 1);
+
+  // outcome dispersion
+  sigma_med ~ cauchy(0, 2);
+  sigma_trt ~ cauchy(0, 2);
 
 }
 
