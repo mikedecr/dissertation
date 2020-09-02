@@ -10,6 +10,7 @@ $\renewcommand{\p}[1]{p\left(#1\right)}$
 <!------- TO DO ---------
 - what's the latent relationship between local ideology and primary rules?
 - does this explain the weird findings by McGhee et al?
+- take credit for CDE interpretation
 - take credit for the Bayesian setup:
     - multilevel setup has a number of advantages for statistical identifiability and estimation
     - priors on ideal points
@@ -147,7 +148,7 @@ Unlike most studies, I find that more candidates are less responsive to district
 - discuss "effect modification" (kam-trussler) interpretation below.
 ------------------------->
 
-### Ideology inside the two major parties
+### Ideology within the two major parties
 
 What to do we think we know about ideology and the parties, and how should it condition our expectations and interpretations of the evidence that we see here?
 
@@ -537,33 +538,34 @@ In order to increase the credibility of the selection-on-observables regression 
 ------------------------->
 
 ```{r, eval = FALSE}
-ggplot(dime) +
+ggplot(full_data) +
   aes(
-    y = district_pres_vs, x = theta, 
+    y = rep_pres_vs, x = theta_mean, 
     color = as.factor(party)
   ) +
-  geom_point(alpha = 1, shape = 1) +
+  geom_point() +
+  geom_smooth(method = "lm") +
   theme(legend.position = "none") +
-  scale_color_manual(values = party_factor_colors) +
+  scale_color_manual(values = party_code_colors) +
   labs(
     y = "Past Republican Presidential Vote",
     x = "District-Party Ideology"
   ) +
-  facet_wrap(~ cycle, ncol = 1) +
+  facet_wrap(~ incumbency, ncol = 1) +
   # scale_x_continuous(labels = percent_format(digits = 1), limits = c(0, 1))
   NULL
 ```
 
 ```{r plot-scattering, eval = FALSE}
 (
-  ggplot(dime) +
+  ggplot(full_data) +
   aes(
-    x = district_pres_vs, y = recipient_cfscore_dyn, 
+    x = rep_pres_vs, y = recipient_cfscore_dyn, 
     color = as.factor(party)
   ) +
   geom_point(alpha = 1, shape = 1) +
   theme(legend.position = "none") +
-  scale_color_manual(values = party_factor_colors) +
+  scale_color_manual(values = party_code_colors) +
   labs(
     x = "Past Republican Presidential Vote",
     y = "Dynamic Dime Score"
@@ -571,14 +573,14 @@ ggplot(dime) +
   scale_x_continuous(labels = percent_format(digits = 1), limits = c(0, 1))
 ) /
 ((
-  ggplot(dime) +
+  ggplot(full_data) +
   aes(
-    x = district_pres_vs, y = dwnom1, 
+    x = rep_pres_vs, y = dwnom1, 
     color = as.factor(party)
   ) +
   geom_point(alpha = 1, shape = 1) +
   theme(legend.position = "none") +
-  scale_color_manual(values = party_factor_colors) +
+  scale_color_manual(values = party_code_colors) +
   labs(
     x = "Past Republican Presidential Vote",
     y = "DW-Nominate (D1)"
@@ -587,14 +589,14 @@ ggplot(dime) +
    scale_y_continuous(limits = c(-1, 1))
 ) +
 (
-  ggplot(dime) +
+  ggplot(full_data) +
   aes(
     x = dwnom1, y = recipient_cfscore_dyn, 
     color = as.factor(party)
   ) +
   geom_point(alpha = 1, shape = 1) +
   theme(legend.position = "none") +
-  scale_color_manual(values = party_factor_colors) +
+  scale_color_manual(values = party_code_colors) +
   labs(
     y = "Dynamic Dime Score", 
     x = "DW-Nominate (D1)"
@@ -603,7 +605,6 @@ ggplot(dime) +
 ))
 ```
 
-Although this descriptive picture is suggestive about the relationship between district-party ideology and candidate ideology, we need more rigorous methods to interrogate a causal relationship. In particular, we should be concerned that district features that promote conservative voters also promote conservative candidates, so background features of districts are important to control. Furthermore, if it is worthwhile for researchers to consider the unique effect of district-party ideology, it is important to demonstrate that it affects candidate positioning above and beyond its intermediate effect on district voting. The sequential-$g$ approach confronts both of these threats to inference. 
 
 <!-- Figure&nbsp;\@ref(fig:plot-scattering) shows... -->
 
@@ -613,14 +614,14 @@ Although this descriptive picture is suggestive about the relationship between d
 
 
 ```{r plot-scatter-by-incumbency, eval = FALSE}
-ggplot(dime) +
+ggplot(full_data) +
   aes(
-    x = district_pres_vs, y = recipient_cfscore_dyn, 
+    x = rep_pres_vs, y = recipient_cfscore_dyn, 
     color = as.factor(party)
   ) +
   geom_point(alpha = 1, shape = 1) +
   theme(legend.position = "none") +
-  scale_color_manual(values = party_factor_colors) +
+  scale_color_manual(values = party_code_colors) +
   labs(
     x = "Past Republican Presidential Vote",
     y = "Dynamic Dime Score"
@@ -1040,39 +1041,38 @@ The stage-one model identifies the causal effect of the past presidential vote, 
 Similarly, the stage-two model does not identify the effect of district party ideology on the demediated CF score if they share an unmeasured cause $U2$.
 Unmeasured variables in other locations of the graph certainly exist, but they do not violate the sequential ignorability assumptions unless they can be represented by an unblocked back-door path through $U1$ or $U2$.
 
-<!------- TO DO ---------
-- way bigger emphasis on the contribution of the design.
-  other analysis do this kind of observables setup, but they don't
-  deal with the causal estimand and the explication of assumptions.
-------------------------->
+With few exceptions, it is not typical for research on primary politics to incorporate explicit causal inference methodologies [@hall:2015:extremists; @fowler-hall:2016:convergence; @hall-thompson:2018:who-punishes; @doherty-et-al:2019:party-chairs].
+Although many other studies use a selection-on-observables research design to study candidate positioning in primary elections, a major contribution of this study's research design is the use of structural causal modeling to define, identify, and estimate a specific causal quantity.
 
 <!------- TO DO ---------
 - Discuss potential violations of assumptions
 - Simulate violated assumptions by way of correlated error parameters?
 ------------------------->
 
-### Linear sequential-$g$
+### Sequential $g$ implementation
 
-<!-- As mentioned above, I estimate average controlled direct effects separately for incumbents, challengers, and open seat candidates in two parties, totaling six routines altogether.  -->
-I write a general model that applies regardless of which subset of data is being used. 
-Because the estimation in every data subset proceeds in two stages, I use subscript some parameters $1$ and $2$ to indicate that they are not fixed across model stages.
+The average controlled direct effect of district-party ideology on primary candidate CF scores is _nonparametrically_ identifying under SUTVA, sequential ignorability, and positivity.
+I estimate the sequential $g$ model using a linear model specification laid out by @acharya-blackwell-sen:2016:direct-effects.
+As with any linear model, this specification imposes additional functional form and distributional assumptions on the data, which are helpful for confounder adjustment in the absence of other design-based variation from instruments or discontinuities, but could lead to incorrect inferences if assumptions are false.
+One goal for future work in this literature would be to combine the sequential $g$ structural model with semi- and non-parameteric estimation methods, an nascent area of work that exists largely outside of political science [@hill:2011:bart; @athey-at-al:2016:residual-balancing; @samii-et-al:2016:retrospective-causal-inference-ML; @chernozhukov-et-al:2017:double-ML; @wager-athey:2018:honest-causal-forests; @ratkovic:2019:rehabilitating-regression; @hahn-et-al:2020:bayesian-causal-forests]
 
-<!------- TO DO ---------
-- separate parties
-- incumbency
-------------------------->
+This section lays out the linear specification for sequential $g$-estimation.
+I define the model using notation that is general enough to apply to any subset of data where the model is estimated.
+As mentioned above, I investigate subsets of data by incumbency and primary rules, and I estimate each model separately for Republicans and Democrats. 
+The data contain measures of candidates $i$ in district-party groups $g$ in districts $g$.
+Because all models are estimated separately for each party, groups and districts perfectly overlap.
+Nonetheless, I use $g$ for variables that can vary across party within a district and $d$ for variables that are fixed for both parties in a district.
+Because the estimation contains in two stages of regression modeling, I sometimes subscript some parameters with $1$ or $2$ to indicate which equation they belong to.
 
-The first stage is a mediator-outcome model, predicting the CF score of candidate $i$ within group $g$, where a group is a combination of district $d$ and party. 
-Because I estimate separate models for each party, each model sees data from only one group per district.
-Nonetheless, I use separate $g$ and $d$ subscripts to denote which variables have the potential to vary by groups within districts.
-We set up the sequential-$g$ method to control for the previous Republican presidential vote share in district $d$, denoted $\mathit{pvote}_{g}$.
+The first stage is a mediator–outcome model that estimates how the Republican two-party presidential vote in the past election $V_{d}$ affects the CF score of candidate $i$ within group $g$.
+We set up the sequential $g$ method to control for the previous Republican presidential vote share in district $d$, denoted $\mathit{pvote}_{g}$.
 This is done with the following multilevel regression model.
 \begin{align}
 \begin{split}
   \mathrm{CF}_{i} &= 
     a_0 + 
+    \mu \mathrm{V}_{d[i]} + 
     \eta \bar{\theta}_{g[i]} + 
-    \mu \mathrm{pvote}_{d[i]} + 
     \mathbf{x}_{d[i]}^{\intercal}\beta +
     \mathbf{z}_{d[i]}^{\intercal}\gamma +
     \alpha_{d[i]} + \epsilon_{i} \\
@@ -1081,78 +1081,33 @@ This is done with the following multilevel regression model.
 \end{split}
 (\#eq:med-model)
 \end{align}
-This model identifies the effect of the presidential vote, $\mu$, under the identification assumption of sequential ignorability and the statistical assumptions of linearity and no interactions.
 <!------- TO DO ---------
 - check on these assumptions
 ------------------------->
-The group ideal point $\bar{\theta}_{g}$ is included in the regression as a control, so the coefficient $\eta$ is estimated as a nuisance parameter, as are the coefficients $\beta$ for district-level pre-treatment confounders $\mathbf{x}_{d}$, the coefficients $\gamma$ for district-level intermediate confounders $\mathbf{z}_{d}$, and constant $a_{0}$.
+The group ideal point $\bar{\theta}_{g}$ is included in the regression as a control, so its coefficient $\eta$ is estimated as a nuisance parameter, as are the coefficients $\beta$ for district-level pre-treatment confounders $\mathbf{x}_{d}$, the coefficients $\gamma$ for district-level intermediate confounders $\mathbf{z}_{d}$, and the constant $a_{0}$.
 Because the mediator is measured at the district level, I include a district error term $\alpha_{d}$ in addition to the candidate-level error term $\epsilon_{i}$.
-The multilevel model accounts correlated error among candidates in the same district, similar to clustering standard errors when a treatment is dosed at the cluster level.
+This multilevel model accounts correlated error among candidates in the same district-party group, similar to clustering standard errors when a treatment is dosed at the cluster level.
 
-
-Sequential-$g$ estimates the controlled direct effect of treatment by purging the DV of the mediator effect.
-This is done by predicting the outcome variable as if the mediator were fixed for all units, which purges the outcome of all systematic variation caused by the mediator variable. 
-This can be done by predicting the outcome under a fixed mediator value directly or by demediating the outcome directly using an estimate of the demediation function.
+We then use the estimates from the stage-1 model to demediate the CF score variable.
 Because the first stage is a linear model, the demediation function has a straightforward parametric definition,
 \begin{align}
-  \delta_{d} &= \mu \left(\mathrm{pvote}_{d} - \mathrm{pvote}'\right)
+  \delta_{d} &= \mu \left(\mathrm{V}_{d} - \bar{v} \right)
   (\#eq:blipdown-function)
 \end{align}
-where $\mathit{pvote}'$ is the reference value for the mediator where all units are fixed, and $\mu$ is the mediator's effect from Equation \@ref(eq:med-model).
-The demediation function represents the effect setting district $d$'s presidential vote to its observed value compared to the reference value $\mathit{pvote}'$.
-Because the previous presidential vote varies across districts, so too does the demediation function.^[
-  In any case where the reference value for the mediator is zero, this expression reduces to $\mu \mathit{pvote}_{d}$, and an observed value of zero implied a demediation function of zero.
+where $\bar{v}$ is the reference value for the mediator where all units are fixed, which I set equal to $0.5$ to represent a 50-50 split in the previous two-party presidential vote.^[
+  The demediation function can be more complex if the mediator's effect on the outcome is modeled with a more complex model containing interactions or nonlinearities.
 ]
-We choose a reference value of $0.5$, an even vote split between the Republican and Democratic presidential vote shares in the previous election.
-The demediation function can be more complex if the mediator's effect on the outcome is modeled with a more complex model containing interactions or nonlinearities.
-We calculate the demediated outcome $b(CF)_{i}$ by subtracting each district's demediation function from its observed outcome value,
+The demediation function is subscripted $d$ because it varies across districts according to the observed value of the previous Republican vote share, which also entails that the demediation function is equivalent for all candidates in the same district-party group, regardless of their original CF score.
+We calculate the demediated outcome $b(\text{CF})_{i}$ by subtracting each district's demediation function from its observed outcome value,
 \begin{align}
   b\left(\mathrm{CF}\right)_{i} &= \mathrm{CF}_{i} - \delta_{d}
   (\#eq:blipdown-outcome)
 \end{align}
-Because the mediator is fixed for a given district, all candidates in a district have the same demediation function, regardless of their original CF score.
-The demediated outcome value is equivalent to the outcome under a fixed mediator value,
-\begin{align}
-\begin{split}
-  b\left(\mathrm{CF}\right)_{i} &= \mathrm{CF}_{i} - \delta_{d} \\
-  b\left(\mathrm{CF}\right)_{i} &= 
-    a_{0} + 
-    \eta \bar{\theta}_{g[i]} +
-    \mu \mathrm{pvote}_{d[i]} + 
-    \mathbf{x}_{d[i]}^{\intercal}\beta + %_
-    \mathbf{z}_{d[i]}^{\intercal}\gamma + %_
-    \alpha_{d[i]} + \epsilon_{i} -
-    \mu \left(\mathrm{pvote}_{d[i]} - \mathrm{pvote}'\right) \\
-  &= 
-    a_{0} + 
-    \eta \bar{\theta}_{g[i]} +
-    \mu \left(\mathrm{pvote}_{d[i]} - \mathrm{pvote}_{d[i]} + \mathrm{pvote}'\right) +
-    \mathbf{x}_{d[i]}^{\intercal}\beta + %_
-    \mathbf{z}_{d[i]}^{\intercal}\gamma + %_
-    \alpha_{d[i]} + \epsilon_{i} \\
-  &= 
-    a_{0} + 
-    \eta \bar{\theta}_{g[i]} +
-    \mu \mathrm{pvote}' + 
-    \mathbf{x}_{d[i]}^{\intercal}\beta + %_
-    \mathbf{z}_{d[i]}^{\intercal}\gamma + %_
-    \alpha_{d[i]} + \epsilon_{i} \\
-  &= 
-    a' + 
-    \eta \bar{\theta}_{g[i]} +
-    \mathbf{x}_{d[i]}^{\intercal}\beta + %_
-    \mathbf{z}_{d[i]}^{\intercal}\gamma + %_
-    \alpha_{d[i]} + \epsilon_{i} \\
-\end{split}
-(\#eq:med-model-blipped)
-\end{align}
-which makes it clearer to see how the demediation step subtracts the mediator variation from the outcome, absorbing the non-varying mediator into the new constant $a'$.
 
 The demediated outcome is then used in the second stage estimation of the controlled direct effect.
 The second stage is different from the first stage in two ways.
-First, because we fixed the mediator value in calculating the transformed outcome variable, there is no more variation across observations that can be attributed to the mediator.
-As such, it is omitted from the equation.
-Second, intermediate confounders are omitted because they are unnecessary to identify the effect of district-party ideology, and they could induce collider bias if included.
+First, because the demediated outcome fixes the value of the mediator, there is no more variation across observations that can be attributed to the mediator, so $V_{d}$ is omitted from the equation.
+Second, intermediate confounders are omitted because they can be affected by district-party ideology, and as such should be left unadjusted in order to identify the ACDE.
 This new equation is,
 \begin{align}
 \begin{split}
@@ -1167,43 +1122,38 @@ This new equation is,
 (\#eq:trt-model)
 \end{align}
 where $a_{1}$ is a constant, $\tau$ is the coefficient for district-party ideology, $\omega$ are coefficients for district-level pre-treatment confounders $\mathbf{x}_{d}$, $\nu_{d}$ is a district error term, and $u_{i}$ is a candidate error term.
-Because the presidential vote effect has been removed from the dependent variable, any treatment effect mediated by the presidential vote is not recoverable by the second stage equation.
-As such, $\tau$ measures the average controlled direct effect of a one-unit increase in district-party ideology.
-More generally, the ACDE of setting district-party ideology from $\bar{\theta}'$ to $\bar{\theta}$ is as follows.
+In a linear model specification, $\tau$ measures the average total effect of a one-unit increase in district-party ideology on demediated CF scores, which is equivalent to the ACDE on the original CF scores.
+More generally, the ACDE of setting district-party ideology from $\bar{\theta}'$ to $\bar{\theta}$ is as follows.^[
+  Again, the exact formula for the ACDE depends on the model specification. 
+  The linear model with no treatment interactions produces a simple linear ACDE definition, but a more complex model would entail a more complex formula.
+]
 \begin{align}
   ACDE(\tau, \bar{\theta}, \bar{\theta}') &= \tau \left(\bar{\theta} - \bar{\theta}'\right)
   (\#eq:general-ACDE)
 \end{align}
-Again, the formula for the ACDE depends on the model specification.
-The form in \@ref(eq:general-ACDE) applies to a linear model with no interactions, but a more complex model would entail a more complex formula.
 
 
-### Bayesian structural modeling
 
-The key methodological innovation in this chapter is embedding the sequential-$g$ method in a Bayesian framework.
-Chapter \@ref(ch:causality) describes a number of special advantages for Bayesian causal modeling, stemming from the fact that Bayesian inference allows the researcher to describe their information about causal effects using the intuitive of language of probabilistic inference: the treatment effect is _probably_ greater than $x$, where "probably" has a direct translation to approximate cumulative probabilities from posterior samples.
+### Bayesian modeling and interpretation
 
-The most important feature of Bayesian causal inference for this chapter is the fact that one posterior distribution quantifies uncertainty in all parameters from the multi-stage sequential-$g$ method.
-This is valuable because uncertainty in stages 1 and 2 are directly related to one another. 
-The average controlled direct effect of district-party ideology in stage 2 is estimated using demediated CF score, which is calculated using the demediation function, which is itself a function of stage 1 model coefficients.
-Substantively, the ACDE should have a larger magnitude whenever the indirect effect through the mediator has a smaller magnitude, holding the total effect magnitude constant.
-<!------- TO DO ---------
-- is this true?
-------------------------->
-<!-- , but unfortunately this estimator does not incorporate the additional uncertainty introduced by the fact that the key independent variable, district-party ideology, is an estimate from a separate measurement model. -->
-Whereas @acharya-blackwell-sen:2016:direct-effects derive an analytical variance estimator for the second stage coefficients or advocate for bootstrapped estimation, the posterior distribution from the Bayesian model captures all variances and covariances among model parameters by its nature.
-Inferences about the ACDE can be expressed by marginalizing the posterior distribution with respect to these auxiliary model parameters, isolating the remaining dimension of the posterior corresponding to the ACDE.
+Another key methodological innovation in this chapter is embedding sequential $g$-estimation in a Bayesian framework.
+Chapter \@ref(ch:causality) describes a number of special advantages for Bayesian causal modeling, stemming from the fact that Bayesian inference allows the researcher to conduct posterior inference about causal effects using probabilities: the treatment effect is _probably_ greater than $x$, where "probably" is defined in relation to an empirical cumulative probability distribution function of posterior samples.
+
+The most important feature of Bayesian causal inference for this chapter is the fact that one posterior distribution quantifies uncertainty in all parameters from the multi-stage sequential $g$ method.
+This is valuable because uncertainty in stages 1 and 2 are directly related to one another by way of the demediation function. 
+Whereas non-Bayesian analysis requires either ad-hoc variance corrections for the multistage model or a bootstrapping approach [@acharya-blackwell-sen:2016:direct-effects], the posterior distribution from the Bayesian model captures all variances and covariances among model parameters by its very nature.
+Inferences about the ACDE can then be expressed by marginalizing the posterior distribution with respect to these auxiliary model parameters, isolating the remaining dimension of the posterior corresponding to the ACDE.
 Letting $\boldsymbol{\pi}$ represent all auxiliary model parameters, and using the definition of the ACDE in Equation \@ref(eq:general-ACDE), the posterior distribution for the ACDE is given by
 \begin{align}
-  \p{\tau \left(\bar{\theta} - \bar{\theta}'\right) \mid \mathbf{y}} 
+  \p{\tau \left(\bar{\theta} - \bar{\theta}'\right) \mid \mathbf{CF}} 
   &= 
-  \int \p{\tau \left(\bar{\theta} - \bar{\theta}'\right), \boldsymbol{\pi} \mid \mathbf{y}} \diff \boldsymbol{\pi},
+  \int \p{\tau \left(\bar{\theta} - \bar{\theta}'\right), \boldsymbol{\pi} \mid \mathbf{CF}} \diff \boldsymbol{\pi},
   (\#eq:post-acde)
 \end{align}
 which is a the distribution of ACDE values that condition on the observed data and marginalize over the associated auxiliary parameter values.
-In practice, we use MCMC samples to approximate this posterior distribution by picking two fixed values of $\bar{\theta}$ and $\bar{\theta}'$, extracting posterior samples for $\tau$, and calculating $\tau \left(\bar{\theta} - \bar{\theta}'\right)$ for each MCMC sample iteration.
-In cases where $\bar{\theta} - \bar{\theta}' = 1$, the ACDE is equal to $\tau$, so posterior samples for $\tau$ are sufficient to characterize that posterior.
+In practice, we use MCMC samples to approximate this posterior distribution by picking any two values of $\bar{\theta}$ and $\bar{\theta}'$, extracting posterior samples for $\tau$, and calculating the ACDE for each MCMC sample iteration. 
 Posterior expectations for the ACDE can be calculated, up to Monte Carlo error, by averaging the ACDE values from a draw of MCMC samples.
+Uncertainty intervals for the ACDE can be estimated by noting which MCMC samples bound the inner 90 or 95% of posterior samples.
 
 <!------- TO DO ---------
 - should this go in Ch 3?
@@ -1215,43 +1165,42 @@ Instead, ideal points are estimated only up to a posterior distribution, with un
 - typically, people do propagated uncertainty
 ------------------------->
 To estimate the effect of district-party ideology on candidate positioning, the causal analysis incorporates measurement error in ideal points "the Bayesian way," where posterior uncertainty from one analysis becomes prior uncertainty in later analyses.
-One way to do this would be to build one joint model for the measurment of 
-Rather than jointly estimate the ideal point model and all subsequent causal analyses, which would be an overwhelming feat of model-building and estimation, 
-This prior is constructed by defining the group ideal point $\bar{\theta}_{g}$ as an element of $\Theta$, the vector of all group ideal points.
-I then specify a multivariate Normal prior on the vector of ideal points.
+One way to implement this "full uncertainty" would be to build one joint model containing both the IRT measurement model and causal inferential models, although this would be a burdensome feat of computer programming and computationally expensive to run each model. 
+Instead, I approximate the joint model by constructing a prior for $\bar{\theta}_{g}$ in the causal model by approximating the posterior distribution from the IRT model.
+This prior is constructed by defining the group ideal point $\bar{\theta}_{g}$ as an element of $\Theta$, the vector of all group ideal points, which gets a multivariate Normal prior.
 \begin{align}
   \Theta &\sim 
     \mathrm{MultiNormal}\left( \hat{\Theta}, \hat{\Sigma}_{\Theta} \right) %_
   (\#eq:theta-prior)
 \end{align}
-The parameters in the prior are estimated from MCMC samples for the ideal points. 
-The mean vector $\hat{\Theta}$ contains MCMC mean for each ideal point, and the matrix $\hat{\Sigma}_{\Theta}$ contains variances for each ideal point and covariances between any two ideal points.
+The hyperparameters in the prior are estimated from MCMC samples for the ideal points.
+The mean vector $\hat{\Theta}$ contains MCMC means for each ideal point, and the matrix $\hat{\Sigma}_{\Theta}$ contains variances for each ideal point on the diagonal and covariances between any two ideal points on the off-diagonals.
 Because the IRT model partially pools ideal points using a hierarchical Normal regression, the multivariate Normal prior is a reasonable stand-in for representing prior ideal point uncertainty in causal analyses.
 
-Including ideal point uncertainty as a prior distribution effectively adds a measurement error model overtop to the sequential-$g$ analysis. 
+Including ideal point uncertainty as a prior distribution effectively adds a measurement error model overtop to the sequential $g$ analysis. 
 Although @acharya-blackwell-sen:2016:direct-effects describe a variance estimator and a bootstrap method for dealing with multi-stage modeling uncertainty, neither of these methods is naturally suited to a measurement error context where an additional layer of ideal point uncertainty is represented in MCMC samples.
 Past research has explored the use of inverse-variance weighting to downweight observations with greater ideal point uncertainty,
 <!------- TO DO ---------
 - who?
 ------------------------->
-but that method accomplishes essentially the same goal as a prior distribution, except it throws away all information about the covariance covariance between any two ideal points.
+which accomplishes a similar goal as the prior distribution but throws away all prior information about the covariance between ideal points.
 <!------- TO DO ---------
 - cite?
 ------------------------->
-More recently, researchers have employed methods of "uncertainty propagation" methods, where the researcher estimates an uncertainty quantity, simulates values from the quantity's posterior distribution, and pushes those simulated values through a downstream analysis. 
+More recently, researchers have employed numerical methods for "uncertainty propagation," where the researcher estimates an uncertain quantity, simulates values from the quantity's posterior distribution, and pushes those simulated values through a downstream analysis. 
 Quantities of interest are then averaged across the posterior simulations [see @kastellec-et-al:2015:scotus-electoral-connection p. 791; @caughey-warshaw:2018:dynamic-responsiveness p. 6; @caughey-warshaw:2019:subnational-opinion-review p. 360].
-This is similar in spirit to "multiple overimputation" [@blackwell-et-al:2017:measurement-error], which creates "imputation datasets" by iteratively replacing mismeasured observations with draws from their posterior distribution.
-This project regards these propagation methods as insufficiently Bayesian because they "cut" the flow of information between models: model 1 informs model 2, but model 2 can never inform model 1 [@plummer:2015:bayesian-cuts].
+This is similar in spirit to "multiple overimputation" [@blackwell-et-al:2017:measurement-error], which extends multiple imputation to a measurement error setting by iteratively replacing mismeasured observations with draws from their posterior distribution.
+This project regards these propagation methods as insufficiently Bayesian because they "cut" the flow of information between models. 
+Posterior cutting allows model 1 to inform model 2, but model 2 can never inform model 1 [@plummer:2015:bayesian-cuts].
 This can be an undesirable modeling property if the causal model can inform the measurement model [@treier-jackman:2008:latent-democracy].
-In this project, if ideal points are related to candidate positioning, and ideal points are measured with error, then candidate positions can be informative about ideal points.
-Even if the causal analysis does not narrow the marginal distributions for ideal points, the posterior distribution will reflect the correlation between ideal points and other parameters.
+For instance, if ideal points are related to candidate positioning, and ideal points are measured with error, then observing candidate positions can update our information about ideal points.
 By specifying the prior directly and updating the parameters, there is no need for any additional imputation steps or post-estimation model averaging [@gelman-hill:2006:multilevel p. 542].
 
 <!------- TO DO ---------
 - priors for other model params
 ------------------------->
 
-The Bayesian sequential-$g$ approach, of course, requires priors for other model parameters.
+The Bayesian sequential $g$ approach, of course, requires priors for other model parameters as well.
 Coefficients for linear predictors in stages 1 and 2 are given Normal priors that are proper but overly diffuse, to avoid biasing treatment effects by over-regularizing covariates [@hahn-et-al:2018:regularization-confounding].
 \begin{align}
 \begin{split}
@@ -1264,9 +1213,9 @@ Both modeling stages contain Normal district-level error terms, with estimated v
 These variances are themselves given half-Cauchy priors with weakly informative scale parameter values that are about half the range of the raw outcome data within each party.
 \begin{align}
 \begin{split}
-  \alpha_{d} &\sim \text{Normal}\left(0, \sigma_{\alpha} \right) &
+  \alpha_{d} &\sim \text{Normal}\left(0, \sigma_{\alpha} \right) &\
     \sigma_{\alpha} &\sim \text{Half-Cauchy}\left(0, 2 \right) \\
-  \nu_{d}  &\sim \text{Normal}\left(0, \sigma_{\nu} \right) &
+  \nu_{d}  &\sim \text{Normal}\left(0, \sigma_{\nu} \right) &\
     \sigma_{\nu} &\sim \text{Half-Cauchy}\left(0, 2 \right)
 \end{split}
 (\#eq:g-ranef-priors)
@@ -1275,9 +1224,9 @@ And finally, each stage of the model has a Normal error term for candidates with
 The variances for these errors are given half-Cauchy priors with wider scale values than the districts errors, since residual variation between any two candidates is likely larger than the variation between average candidates in any two districts.
 \begin{align}
 \begin{split}
-  \epsilon_{i} &\sim \text{Normal}\left(0, \sigma_{\epsilon} \right) &
+  \epsilon_{i} &\sim \text{Normal}\left(0, \sigma_{\epsilon} \right) &\
     \sigma_{\epsilon} &\sim \text{Half-Cauchy}\left(0, 5 \right) \\
-  u_{i} &\sim \text{Normal}\left(0, \sigma_{u} \right) &
+  u_{i} &\sim \text{Normal}\left(0, \sigma_{u} \right) &\
     \sigma_{u} &\sim \text{Half-Cauchy}\left(0, 5 \right)
 \end{split}
 (\#eq:g-resid-priors)
@@ -1333,6 +1282,9 @@ Whether voters are responding to primary competition in the district _per se_ or
 
 <!-- If treatment is correlated with X _by design_(?) or otherwise(?), such as blocking along a key covariate like income, can include block-specific means of the treatment variable [@Hill:2013:multilevel-causal-inf]; Bafumi and Gelman, Raudenbush -->
 
+
+
+<!-- 
 ### Model implementation in Stan {#sec:stan-g}
 
 As is common with Bayesian modeling, the flexibility to tackle idiosyncrasies in data require careful computational implementations.
@@ -1402,7 +1354,7 @@ The Woodbury identity states that we can invert this decomposition of $\mathbf{V
   (\#eq:woodbury)
 \end{align}
 where $I_{D}$ is a $D \times D$ identity matrix.
-
+ -->
 
 ### Data
 
@@ -1498,7 +1450,7 @@ total_samples <- g_samples %>%
   print()
 ```
 
-I implement the sequential-$g$ routine using candidate data drawn primarily from @bonica:2019:dime, @foster-molina:2016:data, and my own estimates. 
+I implement the sequential $g$ routine using candidate data drawn primarily from @bonica:2019:dime, @foster-molina:2016:data, and my own estimates. 
 
 For the dependent variable, I use Bonica's dynamic Dime scores for House primary candidates in election years 2012, 2014, and 2016. These estimates are generated from a data reduction on campaign contributions data, assuming that campaign contributors give money to ideologically proximate candidates.
 
@@ -1515,6 +1467,9 @@ Control variables are measured primarily at the congressional district level and
 
 ## Findings
 
+- show overall findings (color = party, panels for param sets)
+- show cool ideal point results
+- show key parameters in incumbency subgroups (don't say too much abt theory)
 
 
 ```{r read-G-data}
@@ -1526,7 +1481,7 @@ vb_grid <- read_rds(here("data", "mcmc", "4-positioning", "g-grid-vb.rds"))
 
 
 
-### District-Party Ideology and Primary Candidate Positioning
+<!-- ### District-Party Ideology and Primary Candidate Positioning -->
 
 I'm running short on time to write these results up gracefully, but here's what we're seeing so far!
 
@@ -1572,7 +1527,7 @@ indirect_summary <- total_samples %>%
   print()
 ```
 
-### Stage 1
+<!-- ### Stage 1 -->
 
 
 ```{r, eval = FALSE}
@@ -1645,7 +1600,7 @@ This maybe isn't so crazy, since most of the votes vs. ideal point relationship 
 ```{r plot-mediator, include = TRUE, fig.width = 7, fig.height = 3, eval = FALSE,  out.width = "100%", fig.cap = "Mediator findings"}
 ```
 
-### Stage 2
+<!-- ### Stage 2 -->
 
 
 
@@ -1782,7 +1737,7 @@ ggplot(total_samples) +
 ------------------------->
 
 
-### Effect modification by primary rules {#sec:pos-rules}
+### Primary rules and "effect modification" {#sec:pos-rules}
 
 
 
@@ -1793,20 +1748,31 @@ ggplot(total_samples) +
 
 ### Primary Representation
 
-The DAG reveals how confounding affects this conclusion.
+Theories of primaries and representation:
 
-- if intermediary groups are the key voice, but intermediaries are sampled from the population, then the population has an effect.
-- if the population responds to intermediaries (which might instead be functions of industry, demographics, etc), then the causal effect remains confounded insofar as controlling for demographics does _not_ do a sufficient job.
+- The DAG reveals how these things could be confounders.
+- if intermediary groups are the key causal story, but intermediaries are sampled from the party voters, then the party voters has an effect.
+- if the party voters take cues from intermediaries (which might instead be functions of industry, demographics, etc), then the causal effect is confounded if they are POST controls but have OTHER routes to CF scores.
 - draw a dag:
     - positioning ~ ideology, EPN
     - ideology ~ EPN, demographics
     - EPN ~ demographics + u
     - if U also connects to positioning, we're in trouble?
 
+Better data, better research design.
+
+- more years, DiD modeling.
+- variable treatment timing has created HUGE problems in DiD literature
+- Methods for high-quality causal inferences using panel data and fixed effects are extremely new.
+
+Better data, more confounding mechanisms.
+
+- Thermostatic opinion. national politics -> local ideology
+
 
 ### Bayesian Causal Inference
 
-Flexible sequential-$g$. 
+Flexible sequential $g$. 
 
 
 
