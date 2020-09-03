@@ -150,19 +150,15 @@ Unlike most studies, I find that more candidates are less responsive to district
 
 ### Ideology within the two major parties
 
-What to do we think we know about ideology and the parties, and how should it condition our expectations and interpretations of the evidence that we see here?
+The SPD claims that candidates should be differentially responsive to primary and general electorates, but other theories on the ideological nature of U.S. parties may be relevant as well.
+An increasingly prominent theoretical perspective in U.S. political research holds that the parties are not asymmetrical but instead exhibit many "asymmetries" that help explain recent political conflict.
+In particular, the Republican Party is understood as an "ideological" party committed to a smaller welfare state, less regulation of business, and conservative cultural values, while the Democratic Party is a "group-based" party whose priorities reflect the mixture of social groups that compose the party's core constituency [@grossman-hopkins:2016:asymmetric-politics]. 
+The mixture of group interests within the Democratic Party leads to internal conflicts about which policies to prioritize, while the Republican Party is more concerned with who is a "real Republican" or a "real conservative" [@freeman:1986:party-cultures]. 
+The ideological consensus in Republican political thought provides constituents with many different values-based rationales for supporting conservative policies, while Democrats remain more conflicted about how to rationalize their desires for activist government policies against an individualistic American value system that downplays the significance of group identities [@free-cantril:1967:american-beliefs; @feldman-zaller:1992:political-ambivalence; @lelkes-sniderman:2016:ideological-asymmetry]. 
 
-- Hopkins vs. Sniderman theory
-- does party's issue emphasis mean parties should collapse, or that variation should track
-- Grossman-Hopkins; parties care about issues so they try to position themselves on it
-  + read their stuff to see how they quality this
-  + do they think districts collapse?
-- weighting issues: left groups see fine variation in left members, but republicans are all bunched at zero (Brunell? Linda Fowler?)
-- or Sniderman conflicted theory: Democrats are conflicted about appeasing groups, so variation matters. Republicans are NOT conflicted because many rationales point to the same policy prescription
-    - lelkes sniderman 2016: ideological asymmetry
-- THINK about abortion as a toy case
-  + if weighting... if not weighting...
-
+The ideological foundations of U.S. political parties could be relevant for the way candidates conceive of their "responsiveness" to constituents.
+Because the Republican Party has an ideological underpinning, and elite political actors will be more aware of partisan ideology than individual constituents will be, Republican candidates may not place great importance on positioning themselves to cater to non-conservative policy views held by their constituents.
+Democrats, meanwhile, may appear more responsive to district-party ideology because local opinion variation reflects the social group profile of the district that Democratic candidates in each district must represent. These "asymmetric party" predictions diverge from [@clinton:2006:constituent-representation], who finds that Republicans are more responsive to within-party opinion variation than Democrats but doesn't provide much theoretical exploration of why that would be so.
 
 
 
@@ -426,7 +422,7 @@ ggplot(full_data) +
    ) 
 ```
 
-Finally, Figure \@ref(fig:plot-by-cycle) shows how the relationship between district-party ideology and CF scores varies by election year, splitting the 2012, 2014, and 2016 campaign cycles into three panels.
+Figure \@ref(fig:plot-by-cycle) shows how the relationship between district-party ideology and CF scores varies by election year, splitting the 2012, 2014, and 2016 campaign cycles into three panels.
 There is no definitive trend toward increasing polarization or increasing responsiveness to partisan ideology in more recent years, which which is inconsistent with theoretical speculation that candidates have become more sensitive to primary electorates over the past few elections.
 Instead, the same weak but positive relationship appears in nearly all subsets of data with no overwhelming explanation for differences over time or between parties.
 The flattest relationship actually appears most recently for Republicans in 2016, among whom the relationship is nearly flat.
@@ -510,133 +506,89 @@ full_data %>%
 ```
 
 
-<!------- TO DO ---------
-- primary rules
-------------------------->
+```{r rules-means}
+rule_means <- full_data %>%
+  group_by(party) %>%
+  nest() %>%
+  mutate(
+    lm = map(
+      data, 
+      ~ lm_robust(
+        recipient_cfscore_dyn ~ 0 + primary_rules_cso, 
+        clusters = group,
+        data = .x
+      )
+    ),
+    tidy = map(lm, tidy, conf.int = TRUE)
+  ) %>%
+  unnest(tidy) %>%
+  mutate(
+    term_label = case_when(
+      str_detect(term, "open") ~ "Open Primary",
+      str_detect(term, "semi") ~ "Semi-Closed Primary",
+      str_detect(term, "closed") ~ "Closed Primary"
+    ) %>%
+    fct_relevel("Open Primary", "Semi-Closed Primary")
+  ) %>% 
+  print()
+```
+
+```{r plot-rules-means}
+ggplot(rule_means) +
+  aes(x = term_label, y = estimate) +
+  facet_wrap(
+    ~ party, 
+    scales = "free_x",
+    labeller = as_labeller(c("D" = "Democrats", "R" = "Republicans"))
+  ) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high, color = party),
+    position = position_dodge(width = -0.25),
+    show.legend = FALSE
+  ) +
+  scale_color_manual(values = party_code_colors) +
+  coord_flip() +
+  labs(
+    y = "Average CF Score", x = NULL,
+    title = "Average CF Scores by Primary Openness",
+    subtitle = "Relationship is opposite theoretical expectations"
+  )
+```
+
+Finally, Figures \@ref(fig:plot-rules-means) and \@ref(fig:plot-by-rules) plot the topline relationship between district-party ideology and CF scores for candidates running in states with different levels of primary openness.
+Data on primary systems come from @boatright-et-al:2017:primary-timing-data for 2012 and 2014, and I coded 2016 by consulting the National Conference of State Legislators, Ballotpedia, and OpenPrimaries.org.^[
+  Accessed May 27, 2020.
+]
+I code primary rules using a three-category scheme.
+"Closed" primaries allow only pre-registered partisans to participate in a primary election.
+"Semi-closed" primaries are closed to party registrants, but they allow independent or non-partisan voters to choose which primary in which they wish to participate.
+Lastly, "open" primaries allow any eligible voter to participate in any party's primary.
+I code nonpartisan blanket and top-two primaries as "open."
+I choose a coarser three-level scheme over the five-level scheme in @mcghee-et-al:2014:nomination-systems because it is unlikely that voters process the fine legal differences that lead the authors to classify (for instance) "semi-closed" states and "semi-open" states differently.
+The three-part scheme is also more specific than the two-part open/closed scheme used by @hill:2015:nominating-institution, since it is difficult to group independent and non-partisan participation in semi-closed states as either closed or open.
+
+```{r plot-rules-means, include = TRUE, out.width = "100%", fig.width = 8, fig.height = 3, fig.cap = "Average CF scores candidate positioning in states with closed, semi-closed, and open primary rules.", fig.scap = "Average CF scores in states with closed-semi-closed, and open primary rules."}
+```
+
+Conventional wisdom about primary openness implies that closed primaries should produce more extreme candidates, and open primaries should produce more moderate candidates.
+Figure \@ref(fig:plot-by-rules), which plots the average CF score for Republicans and Democrats under each primary system, contradicts this hypothesis.^[
+  Estimates are calculated from a linear regression on indicator variables for each primary system type with group-clustered standard errors.
+]
+Democrats are in fact more progressive and Republicans more conservative in states with increasingly open primary participation rules, which is the opposite direction of the commonly hypothesized pattern.
+Figure \@ref(fig:plot-by-rules) goes on to plot the linear relationship between CF scores and district-party ideology in each state to see if candidates in closed primaries are more responsive to district-party ideology. 
+The relationships do not support the primary rules hypoethesis either.
+While Republican candidates are indeed least sensitive to local partisan ideology in states with the model open rules—indeed the point estimate of the relationship is negative—they are _most_ sensitive in semi-closed rather than closed states.
+The evidence from Democrats is even less consistent with the primary rules hypothesis.
+Democrats in semi-closed systems are also most responsive to district-party ideology, and they are less sensitive to district-party ideology in closed primary systems than they are in open systems.
 
 ```{r plot-by-rules, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 4.5, fig.cap = "District-party ideology and candidate positioning in states with closed, semi-closed, and open primary rules.", fig.scap = "District-party ideology and candidate positioning in states with different primary rules."}
 ```
 
-
-This descriptive picture informs a few modeling choices during the sequential $g$ routine. 
-Because incumbency status appears to modify the relationship between citizen and candidate ideology, some of the analysis below estimates the effect of district-party ideology separately for incumbents, challengers, and open seat candidates. 
-By comparison, estimates exhibit overwhelming time trend that needs to be considered, so I choose to pool election cycles into one model, using fixed effects where appropriate to the design, rather than estimating entirely separate models for different cycles. 
-And although the descriptive relationships were similar for both parties, the variables that could confound the relationship between district-party ideology and candidate ideology could differ dramatically across parties.
+The descriptive results from Figures \@ref(fig:plot-by-party) through \@ref(fig:plot-by-rules) inform a few modeling choices for the causal analysis to follow. 
+Because incumbency status appears to modify the relationship between citizen and candidate ideology, some of the analysis below estimates the effect of district-party ideology using subsets of data on incumbents, challengers, and open seat candidates. 
+By comparison, estimates exhibit no clear time variation, so I choose to pool election cycles into one model, using fixed effects where appropriate to the design, rather than estimating entirely separate models for different cycles.
+And although the descriptive relationships were broadly similar for both parties—contradicting an "asymmetric parties" prediction that Republicans would be less responsive to district party ideology as well as the @clinton:2006:constituent-representation finding that Republicans are _more_ responsive— the variables that could confound the relationship between district-party ideology and candidate ideology are likely to differ dramatically across parties.
 In order to increase the credibility of the selection-on-observables regression design, I therefore estimate models for Democrats and Republicans separately.
-
-
-<!------- TO DO ---------
-- whom to attribute to?
-------------------------->
-
-
-
-
-
-<!------- TO DO ---------
-- plot vote as f(theta)
-------------------------->
-
-```{r, eval = FALSE}
-ggplot(full_data) +
-  aes(
-    y = rep_pres_vs, x = theta_mean, 
-    color = as.factor(party)
-  ) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  theme(legend.position = "none") +
-  scale_color_manual(values = party_code_colors) +
-  labs(
-    y = "Past Republican Presidential Vote",
-    x = "District-Party Ideology"
-  ) +
-  facet_wrap(~ incumbency, ncol = 1) +
-  # scale_x_continuous(labels = percent_format(digits = 1), limits = c(0, 1))
-  NULL
-```
-
-```{r plot-scattering, eval = FALSE}
-(
-  ggplot(full_data) +
-  aes(
-    x = rep_pres_vs, y = recipient_cfscore_dyn, 
-    color = as.factor(party)
-  ) +
-  geom_point(alpha = 1, shape = 1) +
-  theme(legend.position = "none") +
-  scale_color_manual(values = party_code_colors) +
-  labs(
-    x = "Past Republican Presidential Vote",
-    y = "Dynamic Dime Score"
-  ) +
-  scale_x_continuous(labels = percent_format(digits = 1), limits = c(0, 1))
-) /
-((
-  ggplot(full_data) +
-  aes(
-    x = rep_pres_vs, y = dwnom1, 
-    color = as.factor(party)
-  ) +
-  geom_point(alpha = 1, shape = 1) +
-  theme(legend.position = "none") +
-  scale_color_manual(values = party_code_colors) +
-  labs(
-    x = "Past Republican Presidential Vote",
-    y = "DW-Nominate (D1)"
-   ) +
-   scale_x_continuous(labels = percent_format(digits = 1), limits = c(0, 1)) +
-   scale_y_continuous(limits = c(-1, 1))
-) +
-(
-  ggplot(full_data) +
-  aes(
-    x = dwnom1, y = recipient_cfscore_dyn, 
-    color = as.factor(party)
-  ) +
-  geom_point(alpha = 1, shape = 1) +
-  theme(legend.position = "none") +
-  scale_color_manual(values = party_code_colors) +
-  labs(
-    y = "Dynamic Dime Score", 
-    x = "DW-Nominate (D1)"
-   ) +
-   scale_x_continuous(limits = c(-1, 1))
-))
-```
-
-
-<!-- Figure&nbsp;\@ref(fig:plot-scattering) shows... -->
-
-```{r plot-scattering, include = FALSE, fig.width = 5, fig.height = 4, eval = FALSE, out.width= "70%", fig.cap = "Presidential Vote Shares and Ideal Point Measures, 2012--2016"}
-```
-
-
-
-```{r plot-scatter-by-incumbency, eval = FALSE}
-ggplot(full_data) +
-  aes(
-    x = rep_pres_vs, y = recipient_cfscore_dyn, 
-    color = as.factor(party)
-  ) +
-  geom_point(alpha = 1, shape = 1) +
-  theme(legend.position = "none") +
-  scale_color_manual(values = party_code_colors) +
-  labs(
-    x = "Past Republican Presidential Vote",
-    y = "Dynamic Dime Score"
-  ) +
-  scale_x_continuous(labels = percent_format(digits = 1), limits = c(0, 1)) +
-  facet_wrap(~ str_glue("{incumbency}s"))
-```
-
-<!-- put graph here -->
-<!-- cces figure -->
-<!-- dime vs. party prefs, dime vs. district voting -->
-<!-- swap dime for DW-Nominate -->
-
-
-
 
 
 
@@ -1201,22 +1153,28 @@ By specifying the prior directly and updating the parameters, there is no need f
 ------------------------->
 
 The Bayesian sequential $g$ approach, of course, requires priors for other model parameters as well.
-Coefficients for linear predictors in stages 1 and 2 are given Normal priors that are proper but overly diffuse, to avoid biasing treatment effects by over-regularizing covariates [@hahn-et-al:2018:regularization-confounding].
+As I describe below in Section \@ref(sec:g-data), most variables in the model are binary indicators or are standardized to be mean $0$ and variance $1$.
+Furthermore, most of the outcome data in each model fall mostly in the $[-2, 2]$, so we can place standard Normal priors on the covariates without being overly informative about the covariate effects and introducing regularization bias [@hahn-et-al:2018:regularization-confounding].
+Constants are given wider priors to account for the fact that not all predictors are exactly centered at means.
+<!------- TO DO ---------
+- do I change the prior scale for ideal points or anything?
+------------------------->
 \begin{align}
 \begin{split}
-  a_0, \eta, \mu, \beta, \gamma &\sim \text{Normal}\left(0, 10 \right) \\
-  a_{1}, \tau, \omega &\sim \text{Normal}\left(0, 10 \right)
+  a_0, a_1 &\sim \text{Normal}\left(0, 5\right) \\
+  \eta, \mu, \beta, \gamma &\sim \text{Normal}\left(0, 1 \right) \\
+  \tau, \omega &\sim \text{Normal}\left(0, 1 \right)
 \end{split}
 (\#eq:g-coef-priors)
 \end{align}
-Both modeling stages contain Normal district-level error terms, with estimated variances that facilitate partial pooling. 
+Both modeling stages contain Normal district-level error terms with estimated variances that facilitate partial pooling. 
 These variances are themselves given half-Cauchy priors with weakly informative scale parameter values that are about half the range of the raw outcome data within each party.
 \begin{align}
 \begin{split}
   \alpha_{d} &\sim \text{Normal}\left(0, \sigma_{\alpha} \right) &\
-    \sigma_{\alpha} &\sim \text{Half-Cauchy}\left(0, 2 \right) \\
+    \sigma_{\alpha} &\sim \text{Half-Cauchy}\left(0, 1 \right) \\
   \nu_{d}  &\sim \text{Normal}\left(0, \sigma_{\nu} \right) &\
-    \sigma_{\nu} &\sim \text{Half-Cauchy}\left(0, 2 \right)
+    \sigma_{\nu} &\sim \text{Half-Cauchy}\left(0, 1 \right)
 \end{split}
 (\#eq:g-ranef-priors)
 \end{align}
@@ -1225,9 +1183,9 @@ The variances for these errors are given half-Cauchy priors with wider scale val
 \begin{align}
 \begin{split}
   \epsilon_{i} &\sim \text{Normal}\left(0, \sigma_{\epsilon} \right) &\
-    \sigma_{\epsilon} &\sim \text{Half-Cauchy}\left(0, 5 \right) \\
+    \sigma_{\epsilon} &\sim \text{Half-Cauchy}\left(0, 2 \right) \\
   u_{i} &\sim \text{Normal}\left(0, \sigma_{u} \right) &\
-    \sigma_{u} &\sim \text{Half-Cauchy}\left(0, 5 \right)
+    \sigma_{u} &\sim \text{Half-Cauchy}\left(0, 2 \right)
 \end{split}
 (\#eq:g-resid-priors)
 \end{align}
@@ -1280,187 +1238,31 @@ This may be true if the long-run dynamics of primary competition within a distri
 There is evidence that primaries contain more ideological campaign content in certain periods of heightened partisan mobilization [@boatright:2013:getting-primaried], which could increase voters' ideological awareness as well.
 Whether voters are responding to primary competition in the district _per se_ or to a national state of partisan agitation is an interesting but thoroughly challenging question for future researchers to explore, were they to extend the data and methods in this project to a greater number of election cycles and dynamic causal modeling approaches [e.g. @blackwell-glynn:2018:causal-TSCS; @imai-kim:2019:fixed-effects-causal-inference].
 
-<!-- If treatment is correlated with X _by design_(?) or otherwise(?), such as blocking along a key covariate like income, can include block-specific means of the treatment variable [@Hill:2013:multilevel-causal-inf]; Bafumi and Gelman, Raudenbush -->
 
+### Data {#sec:g-data}
 
+For the CF score outcome measure, I specifically use the dynamic CF score provided by @bonica:2019:dime, which is re-estimated for each two-year FEC cycle.
+The measure of district-level partisanship, the mediator in the sequential $g$-estimation routine, is the two-party Republican presidential vote share from the previous election cycle, which is provided and matched to candidacies by @bonica:2019:dime.
+District-party ideology $\bar{\theta}_{g}$, the treatment variable, is measured from the ideal point model in Chapter \@ref(ch:model).
 
-<!-- 
-### Model implementation in Stan {#sec:stan-g}
-
-As is common with Bayesian modeling, the flexibility to tackle idiosyncrasies in data require careful computational implementations.
-The Bayesian sequential $g$ model can be fitted to multilevel data with many small groups thanks to stabilizing priors, but implementation in Markov chain Monte Carlo algorithms can present additional complications.
-For individual districts containing few candidates, the district error terms are only weakly identified against the candidate error terms, inducing correlations in the posterior distribution that lead to slower MCMC exploration of the parameter space. 
-
-I expedite MCMC performance through a multilevel model parameterization that marginalizes over the distribution of district random effects, recovering the same likelihood without the need to sample each district effect separately.
-The original model laid out in Equations \@ref(eq:med-model) through \@ref(eq:trt-model) draws the outcome variable as a univariate Normal variable conditional on the regression function and district membership. 
-In other words, candidates ideal points are independent Normal variables, after conditioning on group membership.
-By marginalizing over the distribution of district random effects instead of conditioning on a specific group, candidate ideal points are correlated multivariate Normal draws, with covariances that reflect the correlation among candidates within the same district. 
-This parameterization retains the same variance decomposition as before, without the need to explicit sample random effects that burden the MCMC algorithm.
-
-I walk through the multivariate parameterization beginning with the first stage model.
-Instead of drawing the CF score for each candidate, I draw CF scores for all candidates as an $N$-vector $\overrightarrow{CF}$ from a multivariate Normal distribution with a mean vector given by the linear regression in Equation \@ref(eq:med-model) and an $N \times N$ variance–covariance matrix $\mathbf{V}_{1}$.
-\begin{align}
-\begin{split}
-  \overrightarrow{CF} &\sim \text{MultiNormal}\left( 
-    a_0 + 
-    \eta \bar{\theta}_{g[i]} + 
-    \mu \mathrm{pvote}_{d[i]} + 
-    \mathbf{x}_{d[i]}^{\intercal}\beta +
-    \mathbf{z}_{d[i]}^{\intercal}\gamma,
-    \mathbf{V}_{1} %_
-  \right)
-\end{split}
-(\#eq:multinorm-y)
-\end{align}
-The regression omits the district effect, since it is mean $0$ and does not directly affect the conditional mean.
-The random effect distribution instead appears in the covariance structure of $\mathbf{V}_{i}$ in accordance with the multilevel model's variance assumptions.
-The total variance for each candidate $i$, located along the diagonal, is the sum of the the district variance $\sigma^{2}_{\alpha}$ and the residual candidate error variance $\sigma^{2}_{\epsilon}$.
-The off-diagonal elements are determined by the group membership of any two candidates.
-If two primary candidates run in the same district, their ideal point covariance is $\sigma^{2}_{\alpha}$.
-Two candidates in different districts are assumed to be independent with a covariance of $0$, since they share no correlated district-level error.
-This gives the covariance matrix a block-diagonal structure: total variance along the diagonal, and blocks of off-diagonal covariance terms that model correlated error between candidates in the same district.
-\begin{align}
-\begin{split}
-  \mathbf{V} &= \begin{bmatrix}
-    \sigma^{2}_{\epsilon} + \sigma^{2}_{\alpha} & 
-      \sigma^{2}_{\alpha} & 
-      0 & \dots & 0 \\
-    \sigma^{2}_{\alpha} & \sigma^{2}_{\epsilon} + \sigma^{2}_{\alpha} & 
-      0 &  & \vdots \\
-    0 & 0 & \sigma^{2}_{\epsilon} + \sigma^{2}_{\alpha} &  & 0 \\
-    \vdots & & & \ddots & \sigma^{2}_{\alpha} \\
-    0 & \dots & 0 & \sigma^{2}_{\alpha} & \sigma^{2}_{\epsilon} + \sigma^{2}_{\alpha}
-  \end{bmatrix}
-\end{split}
-(\#eq:multinorm-sigmas)
-\end{align}
-This covariance matrix models the data with the same variance assumptions as the original model parameterization, reducing both the number of parameters explored by the MCMC algorithm and the complexity of the posterior geometry.
-
-Computationally, sampling a multivariate Normal distribution requires inverting the covariance matrix, an operation that grows unfeasibly slow in high dimensional problems.
-It is computationally easier to sample a multivariate Normal distribution parameterized by a precision matrix, $\mathbf{Q}_{1} = \mathbf{V}^{-1}$, if an analytical matrix inversion is known.
-Fortunately for multilevel models of this sort, the precision matrix can be obtained through the Woodbury matrix identity.
-First, let $\mathbf{V}_{1} = \sigma^{2}_{\epsilon}I_{N} + \sigma^{2}_{\alpha}A$, where $I_{N}$ is an $N \times N$ identity matrix, and $A$ is an $N \times N$ symmetric adjacency matrix with cells representing pairs of candidates, equaling $1$ if the candidates run for the same district primary and $0$ if they run in different districts.
-This adjacency matrix has the same block-diagonal structure as the covariance matrix $\mathbf{V}_{1}$.
-The adjacency matrix can be further decomposed as $A = LL^{\intercal}$, where $L$ is an $N \times D$ matrix whose elements $L_{i, d}$ equal $1$ if candidate $i$ belongs to district $d$ and $0$ if not.
-The Woodbury identity states that we can invert this decomposition of $\mathbf{V}_{1}$ as
-\begin{align}
-  \mathbf{Q}_{1} = \left(\sigma^{2}_{\epsilon}I_{N} + L\sigma^{2}_{\alpha}L^{\intercal}\right)^{-1}
-  &= 
-  \frac{1}{\sigma^{2}_{\epsilon}}I_{N} - \frac{1}{\sigma^{2}_{\epsilon}}L
-  \left(
-    \frac{1}{\sigma^{2}_{\alpha}}I_{D} + \frac{1}{\sigma^{2}_{\epsilon}}L^{\intercal}L
-  \right)^{-1}
-  L^{\intercal}\frac{1}{\sigma^{2}_{\epsilon}}
-  (\#eq:woodbury)
-\end{align}
-where $I_{D}$ is a $D \times D$ identity matrix.
- -->
-
-### Data
-
-Pre-treatment confounders consist of district-level demographic indicators for the racial composition, college graduation rate, median income, inequality (Gini), unemployment rate, foreign-born population, and evangelical population, and $\mathbf{z}_{ig}$ currently contains an order-3 polynomial function of candidate $i$'s total campaign receipts.^[
-  Note: this isn't a good choice for intermediate confounding, and it should change. Ask me why!
+Pre-treatment confounders $\mathbf{x}_d$ are included to identify the effect of the presidential vote in stage 1 and the effect of district-party ideology in stage 2. 
+These covariates were organized and matched to primary candidacies by the Primary Timing Project by @boatright-et-al:2017:primary-timing-data
+District demographic variables (sourced originally from the American Community Survey) include district median income, population density, and land area, as well the percent of a district population that is White, Latino, college educated, below the federal poverty line, unemployed, employed in the service industry, employed in blue-collar jobs, aged 28–24, and aged 65+.
+The @boatright-et-al:2017:primary-timing-data data also provide @mayhew:2014:placing-parties's five-level "traditional party organization" and binary "persistent factionalism" classifications for state level [@mayhew:1986:placing-parties].
+The stage-1 model also contains intermediate controls $\mathbf{z}_{d}$ for identifying the effect of the past presidential vote on CF scores.
+These variables include the district-party ideal point for the _other_ party group in the same district, because both parties should partially affect aggregate district voting, and year fixed effects to capture average shifts in CF scores that are correlated with average shifts in presidential voting.^[
+  Fixed effects are not included in pre-treatment controls because district-party ideology is fixed across the redistricting cycle, so they do not improve causal identification in stage 2.
 ]
 
+All controls except for the fixed effects and binary indicators from @mayhew:2014:placing-parties are centered at their means and scaled by their standard deviations.
+This makes it easier to specify priors for coefficients, since standardized coefficients are unlikely to exceed a $1$ except when predictors are highly correlated.
+District-party ideology $\bar{\theta}_{g}$, the treatment variable, is measured on its original scale anchored by the item parameters in the Chapter \@ref(ch:model) model.
+The presidential vote variable is centered at its reference value for demediation, $0.5$, and then divided by 10 so that a one-unit change in the model represents a 10 point change in vote share.
+CF scores are measured on their original scale, which spans roughly as wide as $-5$ to $5$ across both parties, both the vast majority of Democrats occupy values in $[-2, 0]$ and Republicans in $[0, 2]$.
 <!------- TO DO ---------
-- should be a prior measure of relative party campaign spending
-------------------------->
-<!------- TO DO ---------
-- justify covariates with cites?
-------------------------->
-
-
-
-<!-- Primary Candidacies -->
-
-<!-- CF scores -->
-<!-- better than interest group ratings? -->
-
-CF scoreswork by assuming that a donor $i$ contributes to recipient $j$ by maximizing their donation utility over all potential recipients.
-The donor chooses a dollar amount $y_{ij}$ subject to contribution limits that maximizes
-\begin{align}
-  u_{i}(\mathbf{y}_{i}) &= \sum\limits_{j} \left[
-    b_{i}\left(y_{ij}\right) - y_{ij}\left(\theta_{i} - \delta_{j}\right)^2
-  \right]
-\end{align}
-where $b_{i}(y_{ij})$ is $i$'s net benefit for contribution $y_{ij}$ (instrumental and/or expressive benefits minus costs), $\theta_{i}$ is the donor's ideal point, and $\delta_{j}$ is the recipient's ideal point.
-The term $y_{ij}\left(\theta_{i} - \delta_{j}\right)^2$ is a dollar-weighted function of the ideological distance between donor and candidate ideologies.
-The term grows when the ideological distance is greater, meaning that the donor loses more utility by giving to candidates that don't reflect the donor's ideological preferences, and it also grows when the donation amount $y_{ij}$ is larger.
-The $b_{i}$ function acts like a donor-level fixed effect, capturing a donor's overall propensity to donate regardless of their ideological proximity to potential recipients.
-@bonica:2013:ideology-interests derives a fully parameterized item response theory (IRT) model from this utility framework, estimating latent ideological locations for all donors and all recipients from their contribution patterns.
-The IRT scores do not cover as wide of a universe as CF the scores created from correspondence analysis [@bonica:2014:mapping-ideology]. 
-
-<!------- TO DO ---------
-- validity conversation!!!
+- do we normalize in the data analysis?
 ------------------------->
 
-
-
-<!-- ### Primary Rules -->
-
-General comment: very difficult to code these.
-
-- law vs. party rules
-- for some organizations "open" means there's ANY openness, which can include the McGhee "semi-closed" definition
-- most states have the same system for both parties, but some state laws leave it open to parties to modify their rules in the months leading up to the election. 
-
-
-I take data from Boatright on primaries. 
-
-- 2016: combination of NCSL, Ballotpedia, and OpenPrimaries.org, as of 2020-05-27.
-
-
-`r knit_exit()`
-
-
-```{r read-g, eval = FALSE}
-g_samples <- 
-  here("data", "_model-output", "04-positioning", "pos-g-samples.rds") %>%
-  read_rds() %>%
-  print()
-```
-
-```{r unnest-samples, eval = FALSE}
-mediator_samples <- g_samples %>%
-  select(party, incumbency, .draw, mediator_samples) %>%
-  unnest(cols = mediator_samples) %>%
-  ungroup() %>%
-  mutate(
-    incumbency = str_glue("{incumbency}s")
-  ) %>%
-  print()
-
-direct_samples <- g_samples %>%
-  select(party, incumbency, .draw, direct_samples) %>%
-  unnest(cols = direct_samples) %>%
-  ungroup() %>%
-  mutate(
-    incumbency = str_glue("{incumbency}s")
-  ) %>%
-  print()
-
-total_samples <- g_samples %>%
-  select(party, incumbency, .draw, direct_samples, total_samples) %>%
-  unnest(cols = c(total_samples, direct_samples)) %>%
-  ungroup() %>%
-  mutate(
-    indirect_effect = total_effect - direct_effect,
-    incumbency = str_glue("{incumbency}s")
-  ) %>%
-  print()
-```
-
-I implement the sequential $g$ routine using candidate data drawn primarily from @bonica:2019:dime, @foster-molina:2016:data, and my own estimates. 
-
-For the dependent variable, I use Bonica's dynamic Dime scores for House primary candidates in election years 2012, 2014, and 2016. These estimates are generated from a data reduction on campaign contributions data, assuming that campaign contributors give money to ideologically proximate candidates.
-
-For the mediator, I use the Republican share of the presidential vote in the prior election, available in the Bonica data for each candidate running for House. This serves as a broad measure of district voting that closely reflects the partisan composition of the district.
-
-For my independent variable, I use my own district-party ideology estimates generated for the post-2012 districting cycle, estimated from ANES and CCES data for years 2012 through 2018.^[
-  One feature in this design that needs improvement is that it would be nice to have ideology estimates that evolve more over time, so as not to treat district-party ideology as fixed for an entire redistricting cycle, which is the current setup of the model.
-]
-
-Control variables are measured primarily at the congressional district level and are drawn primarily from @foster-molina:2016:data. These covariates include racial, educational, religious, and economic features of districts, which I revisit below. Currently I do not have data on primary institutions included in the routine, which limits what I can say about effect modification in primaries vs. caucuses or as a function of primary openness. This is an important part of the story to include in the future. 
 
 
 
@@ -1472,272 +1274,10 @@ Control variables are measured primarily at the congressional district level and
 - show key parameters in incumbency subgroups (don't say too much abt theory)
 
 
-```{r read-G-data}
-mcmc_dem <- read_rds(here("data", "mcmc", "4-positioning", "g-mcmc_dem.rds"))
-mcmc_rep <- read_rds(here("data", "mcmc", "4-positioning", "g-mcmc_rep.rds"))
-vb_grid <- read_rds(here("data", "mcmc", "4-positioning", "g-grid-vb.rds"))
-```
-
-
-
-
-<!-- ### District-Party Ideology and Primary Candidate Positioning -->
-
-I'm running short on time to write these results up gracefully, but here's what we're seeing so far!
-
-```{r g-summaries, eval = FALSE}
-mediator_summary <- mediator_samples %>%
-  group_by(party, incumbency) %>% 
-  summarize(
-    sample_mean = mean(mediator_effect), 
-    conf.low = quantile(mediator_effect, .05), 
-    conf.high = quantile(mediator_effect, .95),
-    n_samples = n()
-  ) %>%
-  print()
-
-direct_summary <- direct_samples %>%
-  group_by(party, incumbency) %>% 
-  summarize(
-    sample_mean = mean(direct_effect), 
-    conf.low = quantile(direct_effect, .05), 
-    conf.high = quantile(direct_effect, .95),
-    n_samples = n()
-  ) %>%
-  print()
-
-total_summary <- total_samples %>%
-  group_by(party, incumbency) %>% 
-  summarize(
-    sample_mean = mean(total_effect), 
-    conf.low = quantile(total_effect, .05), 
-    conf.high = quantile(total_effect, .95),
-    n_samples = n()
-  ) %>%
-  print()
-
-indirect_summary <- total_samples %>%
-  group_by(party, incumbency) %>% 
-  summarize(
-    sample_mean = mean(total_effect - direct_effect), 
-    conf.low = quantile(total_effect - direct_effect, .05), 
-    conf.high = quantile(total_effect - direct_effect, .95),
-    n_samples = n()
-  ) %>%
-  print()
-```
-
-<!-- ### Stage 1 -->
-
-
-```{r, eval = FALSE}
-ggplot(mediator_samples) +
-  aes(x = mediator_effect) +
-  geom_histogram(
-    aes(fill = as.factor(party), color = as.factor(party)), 
-    position = "identity", alpha = 0.5, bins = 50,
-    show.legend = FALSE
-  ) +
-  facet_wrap( ~ incumbency) +
-  scale_fill_manual(values = party_factor_colors) +
-  scale_color_manual(values = party_factor_colors)
-```
-
-```{r plot-mediator, eval = FALSE}
-ggplot(mediator_samples) +
-  aes(
-    x = mediator_effect, y = as.factor(party), 
-    fill = as.factor(party), color = as.factor(party)
-  ) +
-  # geom_vline(xintercept = 0, color = "gray", size = 0.5) +
-  # annotate(
-  #   geom = "segment", x = 0, xend = 0, y = 0, yend = 3.25,
-  #   color = "gray"
-  # ) +
-  geom_segment(
-    data = mediator_summary,
-    aes(x = conf.low, xend = conf.high, 
-        y = as.factor(party), yend = as.factor(party))
-  ) +
-  geom_point(
-    data = mediator_summary, aes(x = sample_mean, y = as.factor(party))
-  ) +
-  ggridges::geom_ridgeline(
-    stat = "binline", draw_baseline = FALSE,
-    boundary = 0, bins = 40, scale = 0.4,
-    alpha = 0.25
-  ) +
-  facet_wrap(~ incumbency, nrow = 1, strip.position = "bottom") +
-  scale_color_manual(values = party_factor_colors) +
-  scale_fill_manual(values = party_factor_colors) +
-  scale_y_discrete(
-    breaks = c(1, 2), labels = c("Democrats", "Republicans")
-  ) +
-  theme(
-    legend.position = "none",
-    panel.border = element_blank(),
-    panel.background = element_blank(),
-    axis.line.x = element_line(),
-    axis.ticks.y = element_blank(),
-    strip.placement = "outside"
-    # axis.text.y = element_blank()
-  ) +
-  coord_cartesian(ylim = c(1.35, 2.75)) +
-  labs(
-    title = "Effect of Past Presidential Vote", 
-    subtitle = "On Candidate Dime Score",
-    y = NULL, x = NULL
-  ) +
-  NULL
-```
-
-
-Stage 1 estimates the previous presidential vote's effect on candidate ideal points (the mediator-outcome model). Mediator effects in Figure&nbsp;\@ref(fig:plot-mediator) show noisy estimates. A one-unit represents a 100 percent change in Republican vote, whereas most Dime scores for candidates live in the [-2, 2] range. So this regression is getting hardly any signal from the presidential vote. 
-
-This maybe isn't so crazy, since most of the votes vs. ideal point relationship is between rather than within parties. This echoes back to a key finding in [@mccarty-poole-rosenthal:2009:gerrymandering], that the within-party relationship between district vote shares and NOMINATE scores was actually quite weak! It appears that these data find an even weaker relationship between district votes and Dime scores.
-
-
-```{r plot-mediator, include = TRUE, fig.width = 7, fig.height = 3, eval = FALSE,  out.width = "100%", fig.cap = "Mediator findings"}
-```
-
-<!-- ### Stage 2 -->
-
-
-
-
-
-
-
-<!------- TO DO ---------
-- old stuff below:...
-------------------------->
-```{r plot-direct, eval = FALSE}
-ggplot(direct_samples) +
-  aes(
-    x = direct_effect, y = as.factor(party), 
-    fill = as.factor(party), color = as.factor(party)
-  ) +
-  geom_vline(
-    xintercept = 0, color = "gray", size = 0.5, linetype = "dashed"
-  ) +
-  # annotate(
-  #   geom = "segment", x = 0, xend = 0, y = 0, yend = 3.25,
-  #   color = "gray"
-  # ) +
-  geom_segment(
-    data = direct_summary,
-    aes(x = conf.low, xend = conf.high, 
-        y = as.factor(party), yend = as.factor(party))
-  ) +
-  geom_point(
-    data = direct_summary, aes(x = sample_mean, y = as.factor(party))
-  ) +
-  ggridges::geom_ridgeline(
-    stat = "binline", draw_baseline = FALSE,
-    boundary = 0, bins = 40, scale = 0.4,
-    alpha = 0.25
-  ) +
-  facet_wrap(~ incumbency, nrow = 1, strip.position = "bottom") +
-  scale_color_manual(values = party_factor_colors) +
-  scale_fill_manual(values = party_factor_colors) +
-  scale_y_discrete(
-    breaks = c(1, 2), labels = c("Democrats", "Republicans")
-  ) +
-  theme(
-    legend.position = "none",
-    panel.border = element_blank(),
-    panel.background = element_blank(),
-    axis.line.x = element_line(),
-    axis.ticks.y = element_blank(),
-    strip.placement = "outside",
-    # axis.text.y = element_blank()
-  ) +
-  coord_cartesian(ylim = c(1.35, 2.25)) +
-  labs(
-    title = "Effects of District-Party Ideology",
-    subtitle = "Controlled Direct Effect on Candidate Dime Score",
-    y = NULL,
-    x = NULL
-  ) +
-  NULL
-```
-
-We're seeing average controlled direct effects that are statistically noteworthy in Figure&nbsp;\@ref(fig:plot-direct). Error bars represent 90 percent intervals,^[
-  90 percent intervals are chosen because simulation-based statistics they are more stable estimators of the interval bounds than 95 percent intervals, especially when we don't have a huge number of iterations to work with. 
-]
-which means that most of our simulations are showing ACDEs that have 95 percent posterior probability above zero. I know that I need to do some rescaling of variables to make these effects more interpretable, and once I do that I will be able to put regularizing priors on these effects so as to guard against overfitting in the inference of the treatment effect. 
-
-
-```{r plot-direct, include = TRUE, fig.width = 7, fig.height = 3, eval = FALSE, out.width = "100%", fig.cap = "ACDE findings"}
-```
-
-
-
-
-
-```{r plot-indirect, eval = FALSE}
-ggplot(total_samples) +
-  aes(
-    x = indirect_effect, y = as.factor(party), 
-    fill = as.factor(party), color = as.factor(party)
-  ) +
-  geom_vline(
-    xintercept = 0, color = "gray", size = 0.5, linetype = "dashed"
-  ) +
-  # annotate(
-  #   geom = "segment", x = 0, xend = 0, y = 0, yend = 3.25,
-  #   color = "gray"
-  # ) +
-  geom_segment(
-    data = indirect_summary,
-    aes(x = conf.low, xend = conf.high, 
-        y = as.factor(party), yend = as.factor(party))
-  ) +
-  geom_point(
-    data = indirect_summary, aes(x = sample_mean, y = as.factor(party))
-  ) +
-  ggridges::geom_ridgeline(
-    stat = "binline", draw_baseline = FALSE,
-    boundary = 0, bins = 40, scale = 0.4,
-    alpha = 0.25
-  ) +
-  facet_wrap(~ incumbency, nrow = 1, strip.position = "bottom") +
-  scale_color_manual(values = party_factor_colors) +
-  scale_fill_manual(values = party_factor_colors) +
-  scale_y_discrete(
-    breaks = c(1, 2), labels = c("Democrats", "Republicans")
-  ) +
-  theme(
-    legend.position = "none",
-    panel.border = element_blank(),
-    panel.background = element_blank(),
-    axis.line.x = element_line(),
-    axis.ticks.y = element_blank(),
-    strip.placement = "outside",
-    # axis.text.y = element_blank()
-  ) +
-  coord_cartesian(ylim = c(1.35, 2.25)) +
-  labs(
-    title = "Strength of the District Vote Mechanism",
-    subtitle = "Total Effect minus Controlled Direct Effect of District-Party Ideology",
-    y = NULL,
-    x = NULL
-  ) +
-  NULL
-```
-
-```{r plot-indirect, include = TRUE, fig.width = 7, fig.height = 3, eval = FALSE, out.width = "100%", fig.cap = "ATE-ACDE findings"}
-```
-
-<!------- TO DO ---------
-- parameter constraints!
-    - total = direct + indirect
-    - p(total) and p(direct), which are estimated, implying a prior for p(indirect).
-    - Suppose we constrain the variance of one of these, which of the "free" priors gets a better signal?
-------------------------->
-
 
 ### Primary rules and "effect modification" {#sec:pos-rules}
+
+
 
 
 
@@ -1777,3 +1317,10 @@ Flexible sequential $g$.
 
 
 
+
+<!------- TO DO ---------
+- parameter constraints!
+    - total = direct + indirect
+    - p(total) and p(direct), which are estimated, implying a prior for p(indirect).
+    - Suppose we constrain the variance of one of these, which of the "free" priors gets a better signal?
+------------------------->
