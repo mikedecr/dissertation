@@ -13,6 +13,7 @@ library("tidybayes")
 library("broom")
 library("scales")
 library("latex2exp")
+library("patchwork")
 
 (home <- system("whoami", intern = TRUE) == "michaeldecrescenzo")
 
@@ -42,33 +43,44 @@ if (home) {
 }
 
 
-
-
-
-
-
 # stan fits and data
-mc_fits <- here(mcmc_dir, "local_mcmc_grid.rds") %>%
+# mc_fits <- here(mcmc_dir, "local_mcmc_grid.rds") %>%
+#   read_rds() %>%
+#   ungroup() %>%
+#   arrange(party_num, incumbency, primary_rules_co) %>%
+#   mutate(
+#     tidymc = map(mcmcfit, tidy, conf.int = TRUE, ess = TRUE, rhat = TRUE)
+#   ) %>%
+#   print(n = nrow(.))
+
+vb_raw <- 
+  here("data", "mcmc", "4-positioning", "local_g-grid-vb.rds") %>%
   read_rds() %>%
   ungroup() %>%
-  arrange(party_num, incumbency, primary_rules_co) %>%
-  mutate(
-    tidymc = map(mcmcfit, tidy, conf.int = TRUE, ess = TRUE, rhat = TRUE)
-  ) %>%
+  arrange(party_num, incumbency, prim_rules) %>%
   print(n = nrow(.))
 
-vb_fits <- here("data", "mcmc", "4-positioning", "local_g-grid-vb.rds") %>%
-  read_rds() %>%
-  ungroup() %>%
-  arrange(party_num, incumbency, primary_rules_co) %>%
-  mutate(
-    tidyvb = map(vbfit, tidy, conf.int = TRUE)
+vb_fits <- vb_raw %>%  
+  pivot_longer(
+    cols = starts_with("vb_"), 
+    names_to = "prior",
+    values_to = "stanfit"
   ) %>%
-  print(n = nrow(.))
+  mutate(
+    prior = str_remove(prior, "vb_"),
+    stantidy = map(stanfit, tidy, conf.int = TRUE)
+  ) %>%
+  print()
 
 
-# ---- ad hoc data joining -----------------------
+# ----------------------------------------------------
+#   compare all estimates
+# ----------------------------------------------------
 
+vb_fits
+
+
+# ---- MCMC x VB joining -----------------------
 
 # temp <- here(mcmc_dir, "local_mcmc_party.rds") %>%
 #   read_rds() %>%
@@ -82,17 +94,13 @@ vb_fits <- here("data", "mcmc", "4-positioning", "local_g-grid-vb.rds") %>%
 #   filter((incumbency == "All" & primary_rules_co == "All") == FALSE) %>%
 #   bind_rows(temp)
 
-
 # join stan stuff
-g_wide <- full_join(mc_fits, vb_fits) %>%
-  print()
+# g_wide <- full_join(mc_fits, vb_fits) %>%
+#   print()
 
 
 
-
-# ----------------------------------------------------
-#   rhat, etc
-# ----------------------------------------------------
+# ---- rhat, ess, model diagnostic -----------------------
 
 g_wide %>% 
   select(party_num:primary_rules_co, tidymc) %>% 
@@ -116,30 +124,26 @@ g_wide %>%
   arrange(desc(rhat)) %>%
   print(n = 500)
 
+
+
 # ----------------------------------------------------
 #   look at coefficients
 # ----------------------------------------------------
 
 # categorize params
-tidy_coefs <- g_wide %>%
-  select(-contains('fit')) %>%
-  pivot_longer(
-    cols = contains("tidy"), 
-    names_to = "algo",
-    values_to = "tidy",
-    names_transform = list(algo = ~ str_remove(., "tidy"))
-  ) %>%
-  unnest(tidy) %>%
+tidy_coefs <- vb_fits %>%
+  unnest(stantidy) %>%
   mutate(
     prefix = case_when(
-      str_detect(term, "coef") ~ "Coefs of Interest",
+      term == "coef_theta_med" ~ "Med Nuisance",
+      str_detect(term, "coef") ~ "Causal Parameters",
       str_detect(term, "med") & 
         (str_detect(term, "wt") | str_detect(term, "const")) ~ 
         "Med Nuisance",
       str_detect(term, "trt") & 
         (str_detect(term, "wt") | str_detect(term, "const")) ~ 
         "Trt Nuisance",
-      str_detect(term, "sigma") ~ "Variance Components"
+      str_detect(term, "sigma") ~ "Scale Terms"
     )
   ) %>%
   filter(is.na(prefix) == FALSE) %>%
@@ -147,14 +151,15 @@ tidy_coefs <- g_wide %>%
 
 # compare key params
 tidy_coefs %>%
-  filter(prefix == "Coefs of Interest") %>%
+  filter(prefix == "Causal Parameters") %>%
   ggplot() +
-  aes(x = str_glue("{incumbency}-{primary_rules_co}"),
+  aes(x = str_glue("{incumbency}-{prim_rules}"),
       y = estimate,
       color = as.factor(party_num),
-      shape = algo
+      shape = prior
   ) +
   facet_wrap(~ term, scales = "free") +
+  geom_hline(yintercept = 0) +
   geom_pointrange(
     aes(ymin = conf.low, ymax = conf.high),
     position = position_dodge(width = -0.25)
@@ -164,12 +169,13 @@ tidy_coefs %>%
 
 
 # big caterpillar plot
-tidy_coefs %>%
-  filter(primary_rules_co == "All" & incumbency == "All") %>%
   # filter(algo == "vb") %>%
+tidy_coefs %>%
+  filter(prim_rules == "All" & incumbency == "All") %>%
   ggplot() +
-  aes(x = term, y = estimate, color = as.factor(party_num), shape = algo) +
-  facet_wrap(~ prefix, scales = "free", nrow = 1) +
+  aes(x = term, y = estimate, color = as.factor(party_num), shape = prior) +
+  facet_wrap(~ prefix, scales = "free", nrow = 2) +
+  geom_hline(yintercept = 0) +
   geom_pointrange(
     aes(ymin = conf.low, ymax = conf.high),
     position = position_dodge(width = -0.25)
@@ -180,10 +186,10 @@ tidy_coefs %>%
 
 # grid of trt effects
 tidy_coefs %>%
-  filter(prefix == "Coefs of Interest" | str_detect(term, "const")) %>%
+  filter(prefix == "Causal Parameters" | str_detect(term, "const")) %>%
   ggplot() +
-  aes(x = term, y = estimate, color = as.factor(party_num), shape = algo) +
-  facet_grid(incumbency ~ primary_rules_co) +
+  aes(x = term, y = estimate, color = as.factor(party_num), shape = prior) +
+  facet_wrap(~ str_glue("incumbency = {incumbency}\nprim = {prim_rules}")) +
   geom_hline(yintercept = 0) +
   geom_pointrange(
     aes(ymin = conf.low, ymax = conf.high),
@@ -191,10 +197,6 @@ tidy_coefs %>%
   ) +
   scale_color_manual(values = party_factor_colors) +
   coord_flip()
-
-
-
-
 
 
 
@@ -234,11 +236,8 @@ g_wide %>%
 
 # match each theta to its group
 # scale each prior theta within model subset to match model rescaling
-theta_prepost <- 
-  g_wide %>%
-# CHECK IF VB
-  unnest(tidymc) %>%
-# CHECK IF VB
+theta_prepost <- vb_fits %>% # g_wide %>%
+  unnest(stantidy) %>%
   filter(str_detect(term, "theta\\[") & (str_detect(term, "coef") == FALSE)) %>%
   mutate(
     stangroup = parse_number(term),
@@ -264,9 +263,9 @@ theta_prepost <-
     )
   ) %>%
   unnest(cols = prior_mean) %>%
-  group_by(party_num, incumbency, primary_rules_co) %>% 
+  group_by(party_num, incumbency, prim_rules) %>% 
   mutate(
-    prior_id = (prior_mean - mean(prior_mean)) / sd(prior_mean),
+    prior_mean_id = (prior_mean - mean(prior_mean)) / sd(prior_mean),
     lower_id = (lower - mean(prior_mean)) / sd(prior_mean),
     upper_id = (upper - mean(prior_mean)) / sd(prior_mean),
   ) %>%
@@ -276,19 +275,21 @@ theta_prepost <-
 
 
 theta_prepost %>% 
+  filter(prior == "random") %>%
   # filter(incumbency == "All" & primary_rules_co == "All") %>%
-  ggplot(aes(x = prior_id, y = estimate, color = as.factor(party_num))) +
+  ggplot(aes(x = prior_mean, y = estimate, color = as.factor(party_num))) +
   geom_pointrange(
     aes(ymin = conf.low, ymax = conf.high)
   ) +
   geom_pointrange(
-    aes(xmin = lower_id, xmax = upper_id),
+    aes(xmin = lower, xmax = upper),
     shape = 21
   ) +
   geom_point(size = 0.5, color = "black") +
   geom_abline() +
+  coord_fixed() +
   scale_color_manual(values = party_factor_colors) +
-  facet_wrap(~ party_num + incumbency + primary_rules_co) +
+  facet_wrap(~ str_glue("incumbency = {incumbency}\nprim = {prim_rules}")) +
   labs(
     x = TeX("Ideal Point Prior (mean $\\pm$ 2 sd)"),
     y = TeX("Ideal Point Posterior (mean and 90% interval)"),
@@ -315,3 +316,238 @@ theta_prepost %>%
     nudge_x = 10
   ) +
   facet_wrap(~ party_num, scales = "free", ncol = 1)
+
+
+
+# ----------------------------------------------------
+#   REAL DEAL
+# ----------------------------------------------------
+
+# - random thetas
+# - one cross-section of ideal points
+# - big multi-panel of coefficients
+# - "interest" coefs x incumbency
+# - "interest" coefs x 
+
+
+
+# ---- random thetas prepost -----------------------
+
+theta_prepost %>% 
+  filter(prior == "random") %>%
+  filter(incumbency == "All" & prim_rules == "All") %>%
+  ggplot() +
+  aes(x = prior_mean, y = estimate, color = as.factor(party_num)) +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high)) +
+  geom_pointrange(aes(xmin = lower, xmax = upper)) +
+  geom_point(size = 0.5, color = "black") +
+  geom_abline() +
+  coord_fixed() +
+  scale_color_manual(values = party_factor_colors) +
+  labs(
+    x = TeX("Ideal Point Prior (mean $\\pm$ 2 sd)"),
+    y = "Ideal Point Posterior\n(mean and 90% interval)",
+    title = "Ideal Point Uncertainty in Sequential-G",
+    subtitle = 'How model "updates" ideal point priors'
+  ) +
+  theme(legend.position = "none")
+
+# ---- big coef grid -----------------------
+
+X_names <- c(
+  "% White",
+  "% Latino",
+  "% College",
+  "Median Income",
+  "% Poverty",
+  "% Unemployed",
+  "% Service Sector",
+  "% Blue Collar",
+  "% Age 18–24",
+  "% Age 65+",
+  "Pop. Density",
+  "Area (sq.mi.)",
+  "TPO 2",
+  "TPO 3",
+  "TPO 4",
+  "TPO 5",
+  "Factionalism"
+) 
+
+Z_names <- c(
+  "Opp. Ideal Pt.",
+  "2014 Cycle",
+  "2016 Cycle" 
+)
+
+XZ_names <- c(X_names, Z_names) %>% print()
+
+pretty_coefs <- tidy_coefs %>%
+  # filter(prim_rules == "All" & incumbency == "All") %>%
+  filter(prior == "random") %>%
+  mutate(
+    term_label = case_when(
+      str_detect(term, "wt") ~ XZ_names[parse_number(term)],
+      str_detect(term, "const_") ~ "Constant",
+      term == "coef_theta_trt" ~ "CDE: District-Party Ideology",
+      term == "coef_mediator" ~ "Previous Rep. Vote",
+      term == "coef_theta_med" ~ "District-Party Ideology (Stage 1)",
+      str_detect(term, "hypersigma") ~ "District SD",
+      str_detect(term, "sigma") ~ "Residual SD",
+      TRUE ~ term
+    ),
+    term_label = fct_relevel(
+      term_label, 
+      "Constant",
+      "CDE: District-Party Ideology",
+      "District-Party Ideology (Stage 1)",
+      "Previous Rep. Vote",
+      "Opp. Ideal Pt.",
+      "Median Income",
+      "% College",
+      "% Poverty",
+      "% Unemployed",
+      "% Blue Collar",
+      "% Service Sector",
+      "% White",
+      "% Latino",
+      "% Age 18–24",
+      "% Age 65+",
+      "TPO 2",
+      "TPO 3",
+      "TPO 4",
+      "TPO 5",
+      "Factionalism",
+      "Pop. Density",
+      "Area (sq.mi.)",
+      "2014 Cycle",
+      "2016 Cycle" 
+    ),
+    prefix = case_when(
+      str_detect(prefix, "Nuisance") ~ "Controls",
+      TRUE ~ prefix
+    ),
+    stage = case_when(
+      str_detect(term, "trt") ~ 1,
+      str_detect(term, "med") ~ 2
+    )
+  ) %>%
+  print() 
+
+
+blankie <- tribble(
+  ~ term_label, ~ estimate, ~ prefix,
+  "Previous Rep. Vote", -.15, "Causal Parameters",
+  "Previous Rep. Vote", 0.15, "Causal Parameters",
+  "Constant", -1, "Controls",
+  "Constant", 1.2, "Controls",
+  "Residual SD", 0.5, "Scale Terms"
+)
+
+
+# dem_coefs <- 
+  pretty_coefs %>%
+  filter(party_num == 1) %>%
+  filter(incumbency == "All", prim_rules == "All") %>%
+  ggplot() +
+  aes(
+    x = fct_rev(term_label), 
+    y = estimate, 
+    shape = as.factor(stage)
+  ) +
+  facet_wrap(
+    ~ prefix,
+    nrow = 3,
+    scales = "free"
+  ) +
+  geom_hline(yintercept = 0) +
+  # geom_blank(data = blankie) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.75),
+    color = dblue
+  ) +
+  scale_color_manual(values = party_factor_colors) +
+  scale_shape_manual(values = c(16, 15)) +
+  coord_flip() +
+  theme(legend.position = "none") +
+  labs(
+    x = NULL, y = "Posterior Parameter Value"
+  )
+
+
+# rep_coefs <- 
+  pretty_coefs %>%
+  filter(party_num == 2) %>%
+  filter(incumbency == "All", prim_rules == "All") %>%
+  ggplot() +
+  aes(
+    x = fct_rev(term_label), 
+    y = estimate, 
+    shape = as.factor(stage)
+  ) +
+  facet_wrap(
+    ~ prefix,
+    nrow = 3,
+    scales = "free"
+  ) +
+  geom_hline(yintercept = 0) +
+  # geom_blank(data = blankie) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.75),
+    color = rred
+  ) +
+  scale_color_manual(values = party_factor_colors) +
+  scale_shape_manual(values = c(16, 15)) +
+  coord_flip() +
+  theme(legend.position = "none") +
+  labs(
+    x = NULL, y = "Posterior Parameter Value"
+  )
+
+
+
+
+# ---- incumbency coefs of interest -----------------------
+
+pretty_coefs %>%
+  filter(prim_rules == "All") %>%
+  filter(prefix == "Causal Parameters") %>%
+  ggplot() +
+  aes(x = fct_relevel(incumbency, "All", "Incumbent") %>% fct_rev(), 
+      y = estimate, color = as.factor(party_num)) +
+  facet_grid(. ~ term_label) +
+  geom_hline(yintercept = 0) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.25)
+  ) +
+  scale_color_manual(values = party_factor_colors) +
+  theme(legend.position = "none") +
+  coord_flip() +
+  labs(y = "Posterior Parameter Value", x = NULL)
+
+# clinton picture!
+
+# ---- primary rules -----------------------
+
+pretty_coefs %>%
+  filter(incumbency == "All") %>%
+  filter(prim_rules != "All") %>%
+  filter(term == "coef_theta_trt") %>%
+  ggplot() +
+  aes(x = fct_relevel(prim_rules, "closed", "semi", "open"), 
+      y = estimate, color = as.factor(party_num)) +
+  facet_grid(. ~ names(party_colors)[party_num]) +
+  geom_hline(yintercept = 0) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.25)
+  ) +
+  scale_color_manual(values = party_factor_colors) +
+  theme(legend.position = "none") +
+  coord_flip() +
+  labs(y = "Posterior Parameter Value", x = NULL)
+
+

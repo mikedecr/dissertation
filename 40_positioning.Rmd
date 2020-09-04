@@ -157,8 +157,10 @@ The mixture of group interests within the Democratic Party leads to internal con
 The ideological consensus in Republican political thought provides constituents with many different values-based rationales for supporting conservative policies, while Democrats remain more conflicted about how to rationalize their desires for activist government policies against an individualistic American value system that downplays the significance of group identities [@free-cantril:1967:american-beliefs; @feldman-zaller:1992:political-ambivalence; @lelkes-sniderman:2016:ideological-asymmetry]. 
 
 The ideological foundations of U.S. political parties could be relevant for the way candidates conceive of their "responsiveness" to constituents.
-Because the Republican Party has an ideological underpinning, and elite political actors will be more aware of partisan ideology than individual constituents will be, Republican candidates may not place great importance on positioning themselves to cater to non-conservative policy views held by their constituents.
-Democrats, meanwhile, may appear more responsive to district-party ideology because local opinion variation reflects the social group profile of the district that Democratic candidates in each district must represent. These "asymmetric party" predictions diverge from [@clinton:2006:constituent-representation], who finds that Republicans are more responsive to within-party opinion variation than Democrats but doesn't provide much theoretical exploration of why that would be so.
+Because the Republican Party has an ideological underpinning, and elite political actors will be more aware of partisan ideology than individual constituents will be, Republican candidates may not exhibit much ideological responsiveness even if their constituents' _policy attitudes_ contain real variation.
+In other words, the ideological identity of the Republican Party could be a stronger organizing principle for Republican candidate positioning than the heterogeneous views of local constituencies.
+Democrats, meanwhile, may appear more responsive to district-party ideology because local opinion variation reflects the social group profile of the constituency, which is the organizing feature of Democratic Party representation.
+The intuition of these "asymmetric party" predictions diverge from [@clinton:2006:constituent-representation], who finds that Republicans are _more_ responsive to within-party opinion variation than Democrats but doesn't provide much theoretical exploration of why this should be the case.
 
 
 
