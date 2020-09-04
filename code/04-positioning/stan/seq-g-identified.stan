@@ -29,7 +29,7 @@ transformed data {
 
   // do we eventually want a mundlak device?
   matrix[N, K_med + K_trt] X_med = append_col(X_trt, Z_med);
-  vector[N] y_scale = (y - mean(y)) / sd(y);
+  // vector[N] y_scale = (y - mean(y)) / sd(y);
 
 }
 
@@ -96,9 +96,9 @@ model {
   }
   
   blipdown_function = coef_mediator * (mediator - blip_value);
-  blip_y = y_scale - blipdown_function;
+  blip_y = y - blipdown_function;
 
-  y_scale ~ normal(yhat_med, sigma_med);
+  y ~ normal(yhat_med, sigma_med);
   blip_y ~ normal(yhat_trt, sigma_trt);
   
   // multivariate prior on RAW theta

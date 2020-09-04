@@ -100,7 +100,8 @@ full_data_raw %>% count(pf)
 g_data <- full_data_raw %>%
   transmute(
     group, party_num,
-    primary_rules_cso, primary_rules_co, incumbency,
+    primary_rules_cso, primary_rules_co, prim_rules = primary_rules_cso,
+    incumbency,
     theta_mean,
     y = recipient_cfscore_dyn,
     mediator = ((rep_pres_vs*100) - blip_value) / 10,
@@ -162,7 +163,7 @@ lapply(testy, length)
 g_data_dem <- g_data %>%
   filter(party_num == 1) %>%
   mutate(d = as.factor(group)) %>%
-  select(-c(starts_with("primary_rules"), party_num, incumbency)) %>%
+  select(-c(contains("_rules"), party_num, incumbency)) %>%
   compose_data(
     .n_name = toupper,
     N = length(y),
@@ -179,7 +180,7 @@ g_data_dem <- g_data %>%
 g_data_rep <- g_data %>%
   filter(party_num == 2) %>%
   mutate(d = as.factor(group)) %>%
-  select(-c(starts_with("primary_rules"), party_num, incumbency)) %>%
+  select(-c(contains("_rules"), party_num, incumbency)) %>%
   compose_data(
     .n_name = toupper,
     N = length(y),
@@ -227,7 +228,7 @@ g_grid_data <- g_data %$%
   crossing(
     party_num, 
     incumbency = c(incumbency, "All"), 
-    primary_rules_co = c(primary_rules_co, "All")
+    prim_rules = c(prim_rules, "All")
   ) %>%
   group_by_all() %>%
   mutate(data = list(g_data)) %>%
@@ -245,14 +246,14 @@ g_grid_data <- g_data %$%
         .f = ~ filter(.x, incumbency == .y))
     ),
     data = case_when(
-      primary_rules_co == "All" ~ data,
+      prim_rules == "All" ~ data,
       TRUE ~ map2(
         .x = data, 
-        .y = primary_rules_co,
-        .f = ~ filter(.x, primary_rules_co == .y))
+        .y = prim_rules,
+        .f = ~ filter(.x, prim_rules == .y))
     )
   ) %>%
-  filter(incumbency == "All" | primary_rules_co == "All") %>%
+  filter(incumbency == "All" | prim_rules == "All") %>%
   mutate(
     stan_data = map(
       .x = data,
@@ -399,14 +400,14 @@ g_FIX <-
   stan_model(
     here("code", "04-positioning", "stan", "seq-g-fixtheta.stan")
   )
+alarm()
 
 # ranefs marginalized (slow slow slow)
-g_marginal <- 
-  stan_model(
-    here("code", "04-positioning", "stan", "seq-g-marginal.stan")
-  )
-g_marginal
-alarm()
+# g_marginal <- 
+#   stan_model(
+#     here("code", "04-positioning", "stan", "seq-g-marginal.stan")
+#   )
+# g_marginal
 
 # ---- sampler wrapper function  -----------------------
 
@@ -567,7 +568,7 @@ vb_tidy %>%
 
 # ---- run VB grid -----------------------
 
-g_grid_vb <- g_grid_data %>%
+vb_fix <- g_grid_data %>%
   mutate(
     vb_fix = map(
       .x = stan_data,
@@ -578,7 +579,13 @@ g_grid_vb <- g_grid_data %>%
         include = FALSE,
         output_samples = 3000
       )
-    ),
+    )
+  ) %>%
+  print()
+alarm()
+
+vb_random <- g_grid_data %>%
+  mutate(
     vb_random = map(
       .x = stan_data,
       .f = ~ vb(
@@ -588,7 +595,13 @@ g_grid_vb <- g_grid_data %>%
         include = FALSE,
         output_samples = 3000
       )
-    ), 
+    )
+  ) %>%
+  print()
+alarm()
+
+vb_id <- g_grid_data %>%
+  mutate(
     vb_id = map(
       .x = stan_data,
       .f = ~ vb(
@@ -602,6 +615,11 @@ g_grid_vb <- g_grid_data %>%
   ) %>%
   print()
 alarm()
+
+g_grid_vb <- 
+  full_join(vb_fix, vb_random) %>%
+  full_join(vb_id) %>%
+  print()
 
 
 write_rds(g_grid_vb, here(mcmc_dir, "local_g-grid-vb.rds"))
@@ -620,7 +638,7 @@ write_rds(g_grid_vb, here(mcmc_dir, "local_g-grid-vb.rds"))
 #   filter(str_detect(term, "coef")) %>%
 #   ggplot() +
 #   aes(x = term, y = estimate, color = as.factor(party_num)) +
-#   facet_grid(incumbency ~ primary_rules_co) +
+#   facet_grid(incumbency ~ prim_rules) +
 #   geom_hline(yintercept = 0) +
 #   geom_pointrange(
 #     aes(ymin = conf.low, ymax = conf.high),
@@ -678,7 +696,7 @@ alarm()
 # ---- MCMC -----------------------
 
 mcmc_party <- g_grid_data %>%
-  filter(primary_rules_co == "All" & incumbency == "All") %>%
+  filter(prim_rules == "All" & incumbency == "All") %>%
   mutate(
     mcmcfit = map(
       .x = stan_data,
@@ -696,7 +714,7 @@ write_rds(mcmc_party, here(mcmc_dir, "local_mcmc_party.rds"))
 
 
 mcmc_dem_primary <- g_grid_data %>%
-  filter(primary_rules_co %in% c("closed", "open")) %>%
+  filter(prim_rules %in% c("closed", "semi", "open")) %>%
   filter(party_num == 1) %>%
   mutate(
     mcmcfit = map(
@@ -714,7 +732,7 @@ write_rds(mcmc_dem_primary, here(mcmc_dir, "local_mcmc_dem_primary.rds"))
 
 
 mcmc_rep_primary <- g_grid_data %>%
-  filter(primary_rules_co %in% c("closed", "open")) %>%
+  filter(prim_rules %in% c("closed", "semi", "open")) %>%
   filter(party_num == 2) %>%
   mutate(
     mcmcfit = map(
