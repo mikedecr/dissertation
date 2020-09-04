@@ -1,4 +1,4 @@
-# Bayesian Causal Models for Political Science {#ch:causality}
+# Bayesian Causal Inference {#ch:causality}
 
 <!------- TO DO ---------
 - why no build with tufte?
@@ -232,24 +232,19 @@ The mission in the remainder of this chapter is to establish a framework for cau
 
 
 
-## Bayesian Causal Modeling {#sec:intro-bcm}
+## Probabilistic Potential Outcomes Model {#sec:intro-bcm}
 
 Having reviewed the basics of causal models and Bayesian inference, we now turn to a framework for Bayesian causal modeling.
 The distinguishing feature of a Bayesian causal model is that the elemental units of the model, the potential outcomes, are given probability distributions.
 This probability distribution reflects available causal information that exists outside the current dataset.
-Bayesian inference proceeds updating our information about causal effects and counterfactual potential outcomes in light of the observed data.
-The headings under \@ref(sec:intro-bcm) introduce this modeling framework at a high level.
-I provide a probabilistic interpretation and notation for potential outcomes models, describe how a Bayesian modeling framework affects the "hierarchy of causal inference," and provide some broad justification for Bayesian causal modeling.
-
-
-
-### Probabilistic model for potential outcomes {#sec:po-distributions}
+Bayesian inference proceeds by updating our information about causal effects and counterfactual potential outcomes in light of the observed data.
+This section introduces this modeling framework at a high level, provides a probabilistic interpretation and notation for potential outcomes modeling and describes how the Bayesian framework affects the "hierarchy of causal inference."
 
 As with other causal models, we begin at the unit level.
 Unit $i$ receives a treatment $A_{i} = a$, with potential outcomes $Y_{i}\left(A_{i} = a\right)$.
 Suppose a binary treatment case where $A_{i}$ can take values $0$ or $1$, so the unit-level causal effect is $\tau_{i} - Y_{i}\left(1\right) - Y_{i}\left(0\right)$.
 Although $\tau_{i}$ is unidentified, it is possible to estimate population-level causal quantities by invoking identification assumptions.
-For instance, the conditional average treatment effect at $X_{i} = x$, $\bar{\tau}(X = x) = \E{Y_{i}(1) - Y_{i}(0) \mid X_{i} = x}$, can be estimated from observed data assuming consistency, non-interference, conditional ignorability, and positivity. 
+For instance, the conditional average treatment effect at $X_{i} = x$, $\bar{\tau}(X = x) = \E{Y_{i}(1) - Y_{i}(0) \mid X_{i} = x}$, can be estimated from observed data assuming no hidden treatments, no interference, conditional ignorability, and positivity. 
 Suppressing the unit index $i$,
 \begin{align}
 \begin{split}
@@ -264,36 +259,34 @@ where the third line is obtained by the identification assumptions.
 The identification assumptions connect _causal estimands_ and what I will call _observable estimands_.
 Causal estimands are the true causal quantities, but they are unobservable because they are stated as contrasts of potential outcomes.
 Observable estimands are the observable analogs of causal estimands and are equivalent to causal estimands if identification assumptions hold.
-Other literature refers to observable estimands as "nonparametric estimators" [@keele:2015:causal-inf], but I steer clear of this language because the gap between observable estimands and estimators is important for understanding the contributions of the Bayesian causal approach.
+Other literature refers to observable estimands as "nonparametric estimators" [@keele:2015:causal-inf], but I steer clear of this language because the distinction between observable estimands and estimators is important for understanding the contributions of the Bayesian causal approach.
 
 The transition to a Bayesian probabilistic model begins with an acknowledgment that no estimate of the observable estimand, $\E{Y \mid A = a, X = x}$, will be exact. 
-The assumptions identify causal effects only in an infinite data regime, where the observable estimand is known exactly.
+The assumptions identify causal effects only in an infinite data regime where the observable estimand is known exactly.
 Inference about causal effects from finite samples, however, requires further statistical assumptions that link the observable estimand to an estimator or model.
 <!------- TO DO ---------
 - redo with an expectation-level model
 ------------------------->
-Let $f(A_{i}, X_{i}, \boldsymbol{\pi}) + \epsilon_{i}$ be a model for $Y_{i}$ consisting of a function $f(\cdot)$ treatment $A_{i}$, covariates $X_{i}$, and parameters $\boldsymbol{\pi}$, and an error term $\epsilon_{i}$.
+Let $f(A_{i}, X_{i}, \boldsymbol{\pi}) + \epsilon_{i}$ be a model for $Y_{i}$ consisting of a function $f(\cdot)$ of treatment $A_{i}$, covariates $X_{i}$, and parameters $\boldsymbol{\pi}$, and an error term $\epsilon_{i}$.
 We let the systematic component $f(\cdot)$ be a plug-in estimator for $\E{Y \mid A = a, X = x}$.
-This setup is similar to any modeling assumption that appears in observational causal inference to link an estimator to the observable estimand, including parametric models for covariate adjustment, propensity models, matching, and more [@acharya-blackwell-sen:2016:direct-effects; @sekhon:2009:opiates].^[
-  Although researchers are focusing more attention on estimation methods that focus on these statistical assumptions themselves, either by model ensembles/averages or "robust" models for propensity and response.
-]
+This setup is similar to any modeling assumption that appears in observational causal inference to link an estimator to the observable estimand, including parametric models for covariate adjustment, propensity models, matching, and more [@acharya-blackwell-sen:2016:direct-effects; @sekhon:2009:opiates].
 <!------- TO DO ---------
 - cites for parametric adjustment, propensity, matching
 - robust
 - ensembles in causal inf
 ------------------------->
-We use the statistical model to generate a CATE estimate, $\hat{\bar{\tau}}(X = x)$, by differencing these model predictions over the treatment.
+We use the statistical model to estimate the CATE, $\hat{\bar{\tau}}(X = x)$, by differencing these model predictions over the treatment.
 \begin{align}
 \begin{split}
   \bar{\tau}(X = x) 
     &= \E{Y \mid A = 1, X = x} - \E{Y \mid A = 0, X = x} \\
   \hat{\bar{\tau}}(X = x)
-    &= \E{f(A_{i} = 1, X_{i}1 = x, \boldsymbol{\pi})
+    &= \E{f(A_{i} = 1, X_{i} = x, \boldsymbol{\pi})
        - f(A_{i} = 0, X_{i} = x, \boldsymbol{\pi})}
 \end{split}
 (\#eq:cate-f)
 \end{align}
-Where the second line includes $\hat{\bar{\tau}}$ to indicate that $f(\cdot)$ is an estimator of $\bar{\tau}$.
+Where the second line includes $\hat{\bar{\tau}}$ to reflect the fact that $f(\cdot)$ is an estimator of $\bar{\tau}$.
 
 The Bayesian approach, inspired largely by @rubin:1978:bayesian, confronts the problem with a joint model for data and parameters: $\p{Y, \boldsymbol{\pi}} = \p{Y \mid f(A, U, \boldsymbol{\pi})}\p{\boldsymbol{\pi}}$.
 The data are distributed conditional on the statistical model prediction $f(\cdot)$, which conditions on the model parameters $\boldsymbol{\pi}$.
@@ -319,6 +312,9 @@ The joint generative model is sufficient to characterize the probability distrib
 ------------------------->
 which is the probability distribution of model contrasts for $A = 1$ versus $A = 0$.
 This distribution of model contrasts contains two sources of uncertainty: uncertainty about the data given parameters, and uncertainty over the parameters themselves.
+<!------- TO DO ---------
+- is there uncertainty about data given parameters if the function is deterministic given params?
+------------------------->
 Integrating over $\boldsymbol{\pi}$ in Equation \@ref(eq:prior-cate) marginalizes the distribution with respect to the uncertain parameters. 
 Because the marginalized parameters are distributed according to the prior $\p{\boldsymbol{\pi}}$, the expression in \@ref(eq:prior-cate) represents a prior distribution for the CATE.
 This is an inherent feature of the Bayesian approach: probability distributions of causal quantities even before data are observed.
