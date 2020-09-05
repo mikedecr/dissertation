@@ -140,7 +140,7 @@ data_simple_D <- cands %>%
   list(
     n = nrow(.),
     y = win_primary,
-    X = data.frame(theta_x_cf, incumbent, challenger),
+    X = data.frame(recipient_cfscore_dyn, theta_mean, theta_x_cf, incumbent, challenger),
     n_g = distinct(., g_code, n_group) %>% pull(n_group)
   ) %>%
   c(p = ncol(.$X),
@@ -154,7 +154,7 @@ data_simple_R <- cands %>%
   list(
     n = nrow(.),
     y = win_primary,
-    X = data.frame(theta_x_cf, incumbent, challenger),
+    X = data.frame(recipient_cfscore_dyn, theta_x_cf, incumbent, challenger),
     n_g = distinct(., g_code, n_group) %>% pull(n_group)
   ) %>%
   c(p = ncol(.$X),
@@ -170,6 +170,7 @@ lapply(data_simple_R, head)
 
 # just seeing if the models don't fail
 loo_test <- sampling(object = model_simple, data = data_simple_R)
+
 sampling(object = model_simple, data = data_simple_D)
 sampling(object = model_net, 
          data = c(data_simple_R, n_nodes = 1, hidden_const = 1))
@@ -186,24 +187,19 @@ extract_log_lik(loo_test, "grp_loglik") %>%
 ll_test <- extract_log_lik(loo_test, "grp_loglik", merge_chains = FALSE)
 eff_test <- relative_eff(ll_test)
 
-names(looey)
-(looey)$estimates
-
-relative_eff(loo_test)
-
-
+# where was this going...
 
 
 # ---- VB on the neural net? -----------------------
 
 choice_vb_dem <- vb(
   object = model_net, 
-  data = c(data_simple_D, n_nodes = 2, hidden_const = 1),
+  data = c(data_simple_D, n_nodes = 5, hidden_const = 1),
 )
 
 choice_vb_rep <- vb(
   object = model_net, 
-  data = c(data_simple_R, n_nodes = 2, hidden_const = 1)
+  data = c(data_simple_R, n_nodes = 5, hidden_const = 1)
 )
 
 
@@ -250,37 +246,32 @@ net_test_data <-
       model == "simple" ~ list(model_simple)
     ),
     vbfit = pmap(
-      .l = list(data = data, param = stan_params, mod = stan_model),
-      .f = ~ try(
-        vb(
-          object = ..3,
-          data = ..1
-        )
-      )
+      .l = list(data = data, mod = stan_model),
+      .f = ~ vb(object = ..2, data = ..1)
     ),
-    stanfit = pmap(
-      .l = list(data = data, param = stan_params, mod = stan_model),
-      .f = ~ try(
-        sampling(
-          object = ..3, 
-          data = ..1, 
-          iter = ..2$iter, 
-          chains = mc_cores, 
-          thin = ..2$thin, 
-          warmup = ..2$warmup
-          # , include = FALSE, pars = c()
-        )
-      )
-    )
-    ,
-    loo = map(
-      .x = stanfit,
-      .f = ~ try(extract(.x, "grp_loglik")[[1]] %>% loo())
-    )
+    # stanfit = pmap(
+    #   .l = list(data = data, param = stan_params, mod = stan_model),
+    #   .f = ~ try(
+    #     sampling(
+    #       object = ..3, 
+    #       data = ..1, 
+    #       iter = ..2$iter, 
+    #       chains = mc_cores, 
+    #       thin = ..2$thin, 
+    #       warmup = ..2$warmup
+    #       # , include = FALSE, pars = c()
+    #     )
+    #   )
+    # )
+    # ,
+    # loo = map(
+    #   .x = stanfit,
+    #   .f = ~ try(extract(.x, "grp_loglik")[[1]] %>% loo())
+    # )
   ) %>%
   print()
 
-
+alarm()
 boxr::box_write(
   net_test_data, 
   as.character(str_glue("{Sys.Date()}_choice-net-tests_exp-ll.RDS")), 
@@ -312,7 +303,7 @@ if (system("whoami", intern = TRUE) == "michaeldecrescenzo") {
 net_test_data <- net_test_data %>%
   mutate(
     loglik = map(
-      .x = stanfit, 
+      .x = vbfit, 
       .f = extract_log_lik, 
       parameter = "grp_loglik", 
       merge_chains = FALSE
@@ -338,17 +329,18 @@ net_test_data %>%
 
 
 # compare node counts, group by party and constant
-net_test_data %>% 
+net_test_data %>%
   arrange(party, add_constant, nodes) %>%
   group_by(party, add_constant) %>%
   mutate(
     loo_compare = map2(
-      .x = lag(loo), 
-      .y = loo, 
-      .f = ~ try(loo_compare(.x, .y))
+      .x = lag(loo),
+      .y = loo,
+      .f = ~ try(loo_compare(.x, .y) %>% as_tibble())
     ),
   ) %>%
-  pull(loo_compare)
+  filter(class(loo_compare) != "tbl_df") %>%
+  select(party, add_constant, loo_compare)
 
 
 net_test_data %>%
@@ -356,13 +348,13 @@ net_test_data %>%
   filter(loo_stat != "elpd_loo") %>%
   mutate(
     loo_stat = case_when(
-      loo_stat == "elpd_loo" ~ "Expected Log Predictive Density", 
-      loo_stat == "looic" ~ "Leave-One-Out Information Criterion", 
+      loo_stat == "elpd_loo" ~ "Expected Log Predictive Density",
+      loo_stat == "looic" ~ "Leave-One-Out Information Criterion",
       loo_stat == "p_loo" ~ "Effective Number of Parameters"
     )
   ) %>%
   ggplot() +
-  aes(x = nodes, y = Estimate, 
+  aes(x = nodes, y = Estimate,
       color = party, shape = as.factor(add_constant)) +
   geom_pointrange(
     aes(ymin = Estimate - SE, ymax = Estimate + SE),
@@ -388,9 +380,8 @@ net_test_data %>%
 
 # ---- Estimate MLE version -----------------------
 
-
 rmod <- clogit(
-  win_primary ~ theta_x_cf + incumbent + challenger +
+  win_primary ~ recipient_cfscore_dyn + theta_x_cf + incumbent + challenger +
   + strata(g_code), 
   data = filter(cands, party == "R"),
   model = TRUE
@@ -399,7 +390,7 @@ rmod <- clogit(
 
 
 dmod <- clogit(
-  win_primary ~ theta_x_cf + incumbent + challenger +
+  win_primary ~ recipient_cfscore_dyn + theta_x_cf + incumbent + challenger +
   + strata(g_code),
   data = filter(cands, party == "D"),
   model = TRUE
@@ -576,23 +567,29 @@ tidy_linear %>%
     names_to = "transform"
   ) %>%
   filter(transform == "estimate") %>%
+  filter(add_constant == 1) %>%
   ggplot() +
   # aes(x = theta_mean_rescale, y = value, color = party, shape = incumbency) +
-  aes(x = theta_x_cf, y = value, color = party, shape = incumbency) +
-  facet_wrap(
-    ~ 
+  aes(x = theta_x_cf / recipient_cfscore_dyn, y = value, color = party, fill = party, shape = incumbency) +
+  # facet_wrap(
+  facet_grid(
+    incumbency ~ 
     # transform + 
-    str_glue("constant = {add_constant}") +
+    # str_glue("constant = {add_constant}") +
       str_glue("{nodes} nodes"),
     # ~ nodes,
-    scales = "free_y",
-    ncol = nn_nodes
+    scales = "free_y"
+    # , ncol = nn_nodes
   ) +
-  geom_pointrange(
+  geom_ribbon(
     aes(ymin = conf.low, ymax = conf.high),
     size = 0.25,
-    position = position_dodge(width = -0.25)
+    position = position_dodge(width = -0.25),
+    alpha = 0.2,
+    color = NA
   ) +
+  geom_point() +
+  # geom_line() +
   # geom_smooth() +
   labs(
     y = "Utility of Primary Candidate", 
@@ -600,7 +597,8 @@ tidy_linear %>%
     title = "How Local Ideology Affects Primary Voting",
     subtitle = "Policy preferences matter for open-seat races only"
   ) +
-  scale_color_manual(values = party_code_colors)
+  scale_color_manual(values = party_code_colors) +
+  scale_fill_manual(values = party_code_colors)
 
 
 
