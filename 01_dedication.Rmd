@@ -7,7 +7,7 @@
 
 
 <!-- \begin{vplace}[0.5] -->
-<!-- \begin{center} -->
+\begin{center}
 \hfill
 
 \hfill
@@ -28,6 +28,6 @@ for Tina:
 I became a worse political scientist
 
 so I could be a better person.
-<!-- \end{center} -->
+\end{center}
 <!-- \end{vplace} -->
 

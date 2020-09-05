@@ -50,7 +50,7 @@ servr::daemon_stop()
 
 
 # pdf
-bookdown::render_book("Index.Rmd", "bookdown::pdf_book")
+bookdown::render_book("Index.Rmd", "bookdown::pdf_book"); alarm()
 
 # tufte pdf
 bookdown::render_book("Index.Rmd", "bookdown::tufte_book2")
@@ -64,6 +64,7 @@ xaringan::inf_mr("40_positioning.Rmd")
 
 # preview chapter (static)
 bookdown::preview_chapter('40_positioning.Rmd')
+
 
 
 
