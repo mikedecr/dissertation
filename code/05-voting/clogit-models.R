@@ -13,7 +13,7 @@ library("broom")
 library("tidybayes")
 library("rstan")
 library("loo")
-mc_cores <- min(5, parallel::detectCores())
+mc_cores <- min(5, parallel::detectCores() - 1)
 options(mc.cores = mc_cores)
 rstan_options(auto_write = TRUE)
 # clogit
@@ -390,7 +390,7 @@ model_spline <- stan_model(
 model_combo <- stan_model(
   file = here("code", "05-voting", "stan", "choice-combo.stan")
 )
-
+alarm()
 
 
 # gaussian process interaction
@@ -817,6 +817,7 @@ mc_simple <- bayes_grid %>%
       .f = ~ sampling(
         data = .x, 
         object = model_simple,
+        chains = mc_cores,
         pars = "pos", include = FALSE
       )
     )
@@ -835,6 +836,7 @@ mc_int <- bayes_grid %>%
       .f = ~ sampling(
         data = .x, 
         object = model_interaction,
+        chains = mc_cores,
         pars = "pos", include = FALSE
       )
     )
@@ -853,6 +855,7 @@ mc_spline <- bayes_grid %>%
       .f = ~ sampling(
         data = .x, 
         object = model_spline,
+        chains = mc_cores,
         pars = c("pos", "wt_spline_raw"), include = FALSE
       )
     )
@@ -871,6 +874,7 @@ mc_combo <- bayes_grid %>%
       .f = ~ sampling(
         data = .x, 
         object = model_combo,
+        chains = mc_cores,
         pars = c("pos", "wt_spline_raw", "ideal_distance", "B"), 
         include = FALSE
       )
