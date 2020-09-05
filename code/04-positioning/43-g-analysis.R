@@ -135,7 +135,6 @@ tidy_coefs <- vb_fits %>%
   unnest(stantidy) %>%
   mutate(
     prefix = case_when(
-      term == "coef_theta_med" ~ "Med Nuisance",
       str_detect(term, "coef") ~ "Causal Parameters",
       str_detect(term, "med") & 
         (str_detect(term, "wt") | str_detect(term, "const")) ~ 

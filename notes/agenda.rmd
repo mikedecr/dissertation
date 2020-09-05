@@ -10,7 +10,8 @@ title: Overall thesis notes
 - ch 2: 
     - data sources, questions
     - post-MCMC graphics
-    - state data?
+    - state data? 
+    - compare ideal to CCES self-placement
 - write ch 3
     - permit Bayes: flat doesn't imply non-info, non-info doesn't imply flat, priors are relevant for modeling
     - justify Bayes: multi-stage models, p -> n or p > n, one-off data, prior information
@@ -32,27 +33,25 @@ title: Overall thesis notes
 
 ## Qs for Barry
 
-Parties theories:
+How to characterize your disagreement w/ A.S.S. on incumbents, challengers, open seats.
 
-- Grossman/Hopkins
-    - I think this means GOP should collapse, and Dems should be "responsive" 
-    - especially since we use proxies for social group issue focus as predictors in the IRT model, and groups have particularistic spending for Democrats (cite?)
-- Sniderman theory
-    - what is the theory?
+- Burden: incumbency is insurance
+- Ans: incumbency reflects selection, challengers/open must innovate
 
+Variance weighting of ideal points
 
-lit to include:
+Things I don't really plan to get to:
 
-- adams
-- boatright
+- Lit:
+    - adams
+    - more detailed boatright
+- potential new data sources: 
+    - is district in NAES 
+    - When did CCAP run 
 
-is district in NAES
-
-When did CCAP run
-
-compare ideal to CCES self-placement
 
 - what else explains the gaps? race/maj-min?
+
 
 
 ## Qs for Alex

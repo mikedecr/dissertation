@@ -15,7 +15,7 @@
 knitr::opts_chunk$set(
   # fig.path = here::here('_figs/')
   # cache.path = here::here("_bookdown_files", '_cache/'),
-  cache = TRUE,
+  cache = TRUE, cache.lazy = FALSE,
   echo = FALSE, include = FALSE, 
   warning = FALSE, message = FALSE, 
   fig.height = 4, fig.width = 6, 
