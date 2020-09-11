@@ -462,7 +462,7 @@ sample_g <- function(object = NULL, data = list(), ...) {
 
 # runs democratic test twice to check the convergence stability
 vb_dem <- vb(
-  object = g_FIX,
+  object = g_ID,
   data = g_data_dem,
   algorithm = "meanfield",
   pars = c("theta_raw", "prec_med", "prec_trt"),
@@ -470,7 +470,7 @@ vb_dem <- vb(
 )
 
 vb_dem_1 <- vb(
-  object = g_FIX,
+  object = g_ID,
   data = g_data_dem,
   algorithm = "meanfield"
 )
@@ -653,18 +653,18 @@ write_rds(g_grid_vb, here(mcmc_dir, "local_g-grid-vb.rds"))
 # ---- sampling testing -----------------------
 
 mcmc_dem <- sampling(
-  object = g_FIX,
+  object = g_ID,
   data = g_data_dem,
-  iter = 10,
+  iter = 100,
   refresh = 10L
 )
 alarm()
 
 # test republican fit
 mcmc_rep <- sampling(
-  object = g_FIX,
+  object = g_ID,
   data = g_data_rep,
-  iter = 10,
+  iter = 100,
   refresh = 10L
 )
 alarm()
@@ -701,7 +701,7 @@ mcmc_party <- g_grid_data %>%
     mcmcfit = map(
       .x = stan_data,
       .f = ~ sample_g(
-        object = g_FIX,
+        object = g_ID,
         data = .x
       )
     )
@@ -713,6 +713,7 @@ write_rds(mcmc_party, here(mcmc_dir, "local_mcmc_party.rds"))
 
 
 
+
 mcmc_dem_primary <- g_grid_data %>%
   filter(prim_rules %in% c("closed", "semi", "open")) %>%
   filter(party_num == 1) %>%
@@ -720,7 +721,7 @@ mcmc_dem_primary <- g_grid_data %>%
     mcmcfit = map(
       .x = stan_data,
       .f = ~ sample_g(
-        object = g_FIX,
+        object = g_ID,
         data = .x
       )
     )
@@ -738,7 +739,7 @@ mcmc_rep_primary <- g_grid_data %>%
     mcmcfit = map(
       .x = stan_data,
       .f = ~ sample_g(
-        object = g_FIX,
+        object = g_ID,
         data = .x
       )
     )
@@ -756,7 +757,7 @@ mcmc_dem_incumbency <- g_grid_data %>%
     mcmcfit = map(
       .x = stan_data,
       .f = ~ sample_g(
-        object = g_FIX,
+        object = g_ID,
         data = .x
       )
     )
@@ -774,7 +775,7 @@ mcmc_rep_incumbency <- g_grid_data %>%
     mcmcfit = map(
       .x = stan_data,
       .f = ~ sample_g(
-        object = g_FIX,
+        object = g_ID,
         data = .x
       )
     )
@@ -801,7 +802,7 @@ bind_rows(
 #     mcmcfit = map(
 #       .x = stan_data,
 #       .f = ~ sample_g(
-#         object = g_FIX,
+#         object = g_ID,
 #         data = .x
 #       ))
 #     )
@@ -813,3 +814,22 @@ bind_rows(
 
 
 
+# ----------------------------------------------------
+#   lookat mcmc
+# ----------------------------------------------------
+
+tidies <- mcmc_party %>%
+  mutate(
+    tidy = map(mcmcfit, tidy, conf.int = TRUE, conf.level = 0.9, rhat = TRUE, ess = TRUE)
+  ) %>%
+  unnest(tidy) %>%
+  ungroup() %>%
+  print()
+
+
+tidies %>%
+  filter(party_num == 2) %>%
+  filter(str_detect(term, "theta\\[")) %>%
+  arrange(term)
+  
+  

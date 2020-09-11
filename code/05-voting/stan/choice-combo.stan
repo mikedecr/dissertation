@@ -14,7 +14,7 @@ functions {
     vector[num_elements(x)] w2 = rep_vector(0, num_elements(x));
     
     if (order==1)
-      for (i in 1:num_elements(x)) // B-splines of order 1 are piece-wise constant
+      for (i in 1:num_elements(x)) // O1 B-splines are piecewise constant
         b_spline[i] = (ext_knots[ind] <= x[i]) && (x[i] < ext_knots[ind + 1]);
     else {
       if (ext_knots[ind] != ext_knots[ind + order - 1])
@@ -23,7 +23,7 @@ functions {
       if (ext_knots[ind + 1] != ext_knots[ind + order])
         w2 = 1 - (to_vector(x) - rep_vector(ext_knots[ind + 1], num_elements(x))) /
                  (ext_knots[ind + order] - ext_knots[ind + 1]);
-      // Calculating the B-spline recursively as linear interpolation of two lower-order splines
+      // Calculating B-spline recursively as linear interpolation of two lower-order splines
       b_spline = w1 .* build_b_spline(x, ext_knots, ind, order - 1) +
                  w2 .* build_b_spline(x, ext_knots, ind + 1, order - 1);
     }
@@ -63,9 +63,22 @@ data {
 transformed data {
   
   // center ideal point variables and combine
-  vector[n] CF_center = CF - mean([ min(CF), max(CF)]);
-  vector[n] theta_center = theta - mean([min(theta), max(theta)]);
+  real CF_offset = mean([ min(CF), max(CF)]);
+  real theta_offset = mean([ min(theta), max(theta)]);
+
+  vector[n] CF_center = CF - CF_offset;
+  vector[n] theta_center = theta - theta_offset;
+
   matrix[n, 2] ideals = append_col(CF_center, theta_center);
+
+  // post-estimation data things
+  vector[100] CF_post;
+  real CF_skipper = (max(CF) - min(CF)) / 100;
+  vector[3] theta_post = 
+    [mean(theta) - sd(theta), mean(theta), mean(theta) + sd(theta)]' - 
+    theta_offset;
+  // resume CF_post after all declarations
+  matrix[100 * 3, 2] ideals_post;
 
   // knots and basis functions
   int num_basis = num_knots + spline_deg - 1;
@@ -86,7 +99,18 @@ transformed data {
 
 
   // anything we can do for post-estimation prediction?
-  // range of f(CF, theta, linkers)
+  CF_post[1] = min(CF);
+  for (i in 2:100) {
+    CF_post[i] = CF_post[i - 1] + CF_skipper;
+  }
+  CF_post = CF_post - CF_offset;
+  ideals_post = append_row(
+    append_row(
+      append_col(CF_post, rep_vector(theta_post[1], 100)), 
+      append_col(CF_post, rep_vector(theta_post[2], 100)) 
+    ), 
+    append_col(CF_post, rep_vector(theta_post[3], 100))
+  );
 
 
 }
@@ -120,8 +144,8 @@ transformed parameters {
     build_b_spline(ideal_distance, to_array_1d(ext_knots), b, spline_deg + 1);
   }
 
-  // what is this?
-  B[n, num_knots + spline_deg - 1] = 1;
+  // only need if last data exactly == last knot?
+  // B[n, num_knots + spline_deg - 1] = 1;
 
   // linear model
   spline_function = B*wt_spline;
@@ -149,21 +173,26 @@ model {
 
   // priors
   wt ~ normal(0, prior_sd);
-  spline_scale ~ normal(0, 1);
+  spline_scale ~ cauchy(0, 2);
   wt_spline_raw ~ normal(0, 1);
 
 }
 
 generated quantities {
+  
+  vector[100 * 3] distances_post = ideals_post * linkers;
+  matrix[100 * 3, num_basis] B_post;
+  vector[100 * 3] spline_post;
 
-  // vector[S] set_loglik; // prob for winning candidate in g
-  // int pos = 1;         // for segmenting
+  // recursively build basis functions  
+  for (b in 1:num_basis) {
+    B_post[:, b] = 
+    build_b_spline(distances_post, to_array_1d(ext_knots), b, spline_deg + 1);
+  }
 
-  // // loglik from every GROUP (keep winning candidate only)
-  // for (s in 1:S) {
-  //   set_loglik[s] = 
-  //     segment(y, pos, n_set[s])' * log(softmax(segment(util, pos, n_set[s])));
-  //   pos = pos + n_set[s];
-  // }
+  // only need if last data exactly == last knot?
+  // B[n, num_knots + spline_deg - 1] = 1;
+
+  spline_post = B_post * wt_spline;
 
 }

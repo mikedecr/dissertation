@@ -57,6 +57,8 @@ boat <- boat_raw %>%
     Name = toupper(name),
     boat_win_primary = Pwinner,
     cand_status = primary_type,
+    cand_ethnicity = Dethnicity,
+    cand_quality = quality,
     Pvote_share,
     Preceipts,
     Pdisbursements,
@@ -169,4 +171,4 @@ write_rds(
 
 box_write(cands_linked, "primary-matchups.rds", dir_id = box_dir_clean)
 
-
+alarm()

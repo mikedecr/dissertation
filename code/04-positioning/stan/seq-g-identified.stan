@@ -49,8 +49,8 @@ parameters {
   vector[K_trt] wt_trt;         // confounder weights
 
   // district offsets and hypervariances
-  vector[D] ranef_med;
-  vector[D] ranef_trt;
+  vector[D] ranef_med_raw;
+  vector[D] ranef_trt_raw;
   real<lower = 0> hypersigma_med;
   real<lower = 0> hypersigma_trt;
   
@@ -62,10 +62,13 @@ parameters {
 
 transformed parameters {
   
-  vector[D] theta; 
+  // rescale theta so space is restricted
+  vector[D] theta = (theta_raw - mean(theta_raw)) / sd(theta_raw);
 
-  // rescale theta so space is restricted!
-  theta = (theta_raw - mean(theta_raw)) / sd(theta_raw);
+  // noncentering
+  vector[D] ranef_med = ranef_med_raw * hypersigma_med;
+  vector[D] ranef_trt = ranef_trt_raw * hypersigma_trt; 
+
 
 }
 
@@ -114,8 +117,8 @@ model {
   wt_trt ~ normal(0, 1);
   
   // ranefs 
-  ranef_med ~ normal(0, hypersigma_med);
-  ranef_trt ~ normal(0, hypersigma_trt);
+  ranef_med_raw ~ normal(0, 1);
+  ranef_trt_raw ~ normal(0, 1);
 
   // ranef dispersion 
   hypersigma_med ~ cauchy(0, 1);

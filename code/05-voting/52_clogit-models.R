@@ -46,12 +46,6 @@ cands_raw <-
 # we trust Boatright most
 # NAs become 0 if we know there is another winner in primary
 
-# create theta splines
-num_knots <- 12
-spline_degree <- 4
-
-# creating the B-splines
-
 cands <- cands_raw %>%
   mutate(
     dime_win_primary = case_when(
@@ -94,6 +88,9 @@ cands %>%
     win_prefer_dime, win_prefer_boat
   )
 
+count(cands, primary_rules)
+count(cands, cand_ethnicity)
+count(cands, boat, cand_quality)
 
 
 
@@ -117,11 +114,13 @@ cands %>%
   count(cycle, group, party) %>%
   count(n)
 
+
 # filter data
 matchups <- cands %>%
   group_by(cycle, group, party) %>% 
   filter(sum(win_prefer_boat, na.rm = TRUE) == 1) %>%
   filter(n() > 1) %>%
+  filter(primary_rules != "blanket") %>%
   ungroup() %>%
   print()
 
@@ -160,53 +159,90 @@ matchups %>%
 
 # ---- experiment w/ splines -----------------------
 
-matchups %>%
-  mutate(
-    theta_splines = bs(
-      theta_mean, 
-      knots = seq(
-        min(theta_mean, na.rm = TRUE), 
-        max(theta_mean, na.rm = TRUE), 
-        length.out = num_knots
-      ), 
-      degree = spline_degree, 
-      intercept = FALSE
-    ) 
+spline_degree <- 3
+num_knots <- 30
+
+# just see what the spline looks like overtop theta only
+matchups %$%
+  bs(
+    theta_mean, 
+    knots = seq(
+      min(theta_mean, na.rm = TRUE), 
+      max(theta_mean, na.rm = TRUE), 
+      length.out = num_knots 
+    ), 
+    degree = spline_degree, 
+    intercept = FALSE 
   ) %>%
-  select(theta_splines)
-  # class()
+  as_tibble() %>%
+  rename_all(~ str_glue("b_{.}")) %>%
+  bind_cols(matchups, .) %>%
+  pivot_longer(
+    cols = starts_with("b_"), 
+    names_to = "k",
+    values_to = "bf"
+  ) %>%
+  ggplot(aes(x = theta_mean, y = bf)) +
+  geom_line() +
+  facet_wrap(~ k)
 
-dim(B)
-head(B)
 
-
-
+# create draws of linear transform parameters
 linear_params <- 
-  tibble(alpha = seq(-1, 1, .001)) %>%
+  tibble(alpha = seq(-1, 1, .01)) %>%
   crossing(sign = c(-1, 1)) %>%
   mutate(
     beta = sign * sqrt(1 - alpha^2),
     norm = beta^2 + alpha^2
   ) %>%
+  print()
+
+
+# create centered data from OUTER CF and theta values here...
+data_bounds <- tibble(
+  cf = matchups %$% c(
+    min(recipient_cfscore_dyn, na.rm = TRUE), 
+    max(recipient_cfscore_dyn, na.rm = TRUE)
+  ) %>% 
+    (function(x) x - mean(x))
+  ,
+  theta = matchups %$% c(
+    min(theta_mean, na.rm = TRUE), 
+    max(theta_mean, na.rm = TRUE)
+  ) %>% 
+    (function(x) x - mean(x))
+) %>% 
+  print()
+
+data_inner <- data_bounds %$%
   crossing(
-    cf = matchups %$% c(
-      min(recipient_cfscore_dyn, na.rm = TRUE), 
-      max(recipient_cfscore_dyn, na.rm = TRUE)
-    ) %>% 
-      (function(x) x - mean(x))
-    ,
-    theta = matchups %$% c(
-      min(theta_mean, na.rm = TRUE), 
-      max(theta_mean, na.rm = TRUE)
-    ) %>% 
-      (function(x) x - mean(x))
+    cf = seq(min(cf), max(cf), length.out = 30),
+    theta = seq(min(theta), max(theta), length.out = 30)
   ) %>%
+  print()
+
+# bounds/hull of possible linear combinations
+linear_combos <- linear_params %>%
+  filter(alpha %in% seq(-1, 1, .1)) %>%
+  crossing(data_inner) %>%
   mutate(
-    cf_component = alpha*cf,
-    theta_component = beta*theta,
-    combo = cf_component + theta_component
+    cf_weighted = alpha*cf,
+    theta_weighted = beta*theta,
+    combo = cf_weighted + theta_weighted
   ) %>%
-  print(n = 100)
+  print()
+
+linear_combos_hull <- 
+  crossing(linear_params, data_bounds) %>%
+  mutate(
+    cf_weighted = alpha*cf,
+    theta_weighted = beta*theta,
+    combo = cf_weighted + theta_weighted
+  ) %>%
+  print()
+
+
+
 
 
 # cool graphics you could make
@@ -216,28 +252,104 @@ ggplot(linear_params) +
   geom_line(aes(group = as.factor(sign))) +
   coord_fixed()
 
-# 2. partial component of each variable (y) over variable (x)
-# 3. total combination over each input variable 
-linear_params %>%
+# 2. convex hull w/r/t each input
+linear_combos_hull %>%
   pivot_longer(
-    cols = c(cf_component, theta_component), 
+    cols = c(cf_weighted, theta_weighted), 
     names_to = "xname",
     values_to = "xvalue"
   ) %>%
+  arrange(xvalue) %>%
   print() %>%
   ggplot() +
   aes(x = xvalue, y = combo) +
   scale_color_viridis_d(option = "plasma", end = 0.8) +
-  facet_wrap(~ xname)
+  facet_wrap(~ xname) +
+  geom_point()
+
+
+# 2. partial component of each variable (y) over variable (x)
+linear_combos %>%
+  ggplot() +
+  aes(x = cf, y = cf_weighted) +
+  geom_line(aes(group = alpha > 0))
+
+
+
+# possible spline functions
+n_coef_draws <- 20
+coef_draws <- 
+  tibble(
+    k = 1:(num_knots + spline_degree)
+  ) %>%
+  crossing(
+    rep = 1:n_coef_draws
+  ) %>%
+  mutate(
+    sigma = rcauchy(n(), scale = 1) %>% abs(),
+    phi_raw = rnorm(n()),
+    phi = phi_raw * sigma
+  ) %>%
+  select(rep, k, phi) %>%
+  pivot_wider(
+    names_from = "rep",
+    values_from = "phi",
+  ) %>%
+  select(-k) %>%
+  print()
+
+
+combo_subset <- linear_combos %$%
+  tibble(combo = seq(0, 1, length.out = 1000)) %>%
+  print()
+
+combo_subset %$%
+  bs(
+    combo, 
+    df = num_knots + spline_degree,
+    degree = spline_degree, 
+    intercept = TRUE 
+  ) %>%
+  (function(x) x %*% as.matrix(coef_draws)) %>%
+  as_tibble() %>%
+  set_names(~ str_glue("f_{.}")) %>%
+  bind_cols(combo_subset, .) %>%
+  pivot_longer(
+    cols = starts_with("f_"), 
+    names_to = "draw",
+    values_to = "spline"
+  ) %>% 
+  ggplot(aes(x = combo, y = spline)) +
+  geom_line(
+    aes(group = draw), 
+    color = primary
+  ) +
+  geom_hline(yintercept = 0) +
+  coord_cartesian(ylim = c(-8, 8)) +
+  labs(
+    x = TeX("$\\Delta_{ir}$: Linear combination of CF score and $\\bar{\\theta}_{g}$"),
+    y = "Spline function",
+    title = "Prior draws of spline function",
+    subtitle = "Normal-Cauchy prior on spline coefficients"
+  ) +
+  scale_x_continuous(breaks = c(0, 1), labels = c("Min", "Max")) +
+  scale_y_continuous(breaks = seq(-6, 6, 3))
 
 
 linear_params %>%
   # filter(alpha == sample(alpha, size = 1)) %>%
   # filter(beta == sample(beta, size = 1)) %>%
+pivot_longer(
+  cols = c(cf_component, theta_component), 
+  names_to = "xname",
+  values_to = "xvalue"
+) %>%
   print() %>%
   ggplot() +
-  aes(x = cf_component, y = combo) +
-  geom_line(aes(color = as.factor(alpha)), show.legend = FALSE)
+  aes(x = xvalue, y = combo) +
+  geom_line(aes(color = as.factor(alpha)), show.legend = FALSE) +
+  facet_wrap(~ xname) +
+  NULL
 
 # linkers <- 
 linker_samples <- 
@@ -399,6 +511,7 @@ alarm()
 # )
 
 # create identifiers, covariates...
+# race & quality are super sparse, total no-gos
 bayes_df <- matchups %>% 
   transmute(
     cycle, party, group,
@@ -406,36 +519,72 @@ bayes_df <- matchups %>%
     y = win_prefer_boat,
     CF = recipient_cfscore_dyn,
     theta = theta_mean,
-    X = c(
+    X_full = c(
         as.numeric(cand_gender == "F"),
         as.numeric(incumbency == "Incumbent"),
-        scale(log(total_receipts + 1)),
-        scale(log(contribs_from_candidate + 1)), 
+        scale(log(contribs_from_candidate + 1))
+        , scale(log(total_receipts + 1)),
         scale(log(total_pac_contribs + 1))
+      ) %>% 
+      matrix(nrow = n()),
+    X_main = X_full[, 1:3],
+    X_no_inc = X_main[, -2]
+  ) %>%
+  na.omit() %>%
+  group_by(cycle, party, group) %>%
+  mutate(n_set = n()) %>%
+  filter(n_set > 1) %>%
+  filter(sum(y, na.rm = TRUE) == 1) %>%
+  ungroup() %>%
+  print()
+
+# incumbents only needs different set IDs
+bayes_no_incumbents <- matchups %>% 
+  group_by(cycle, party, group) %>%
+  filter(sum(incumbency == "Incumbent", na.rm = TRUE) < 1) %>%
+  ungroup() %>%  
+  transmute(
+    cycle, party, group,
+    set = paste(cycle, group, sep = "-"),
+    y = win_prefer_boat,
+    CF = recipient_cfscore_dyn,
+    theta = theta_mean,
+    X_no_inc = c(
+        as.numeric(cand_gender == "F"),
+        scale(log(contribs_from_candidate + 1))
+        # , scale(log(total_receipts + 1)),
+        # scale(log(total_pac_contribs + 1))
       ) %>% 
       matrix(nrow = n())
   ) %>%
   na.omit() %>%
   group_by(cycle, party, group) %>%
   mutate(n_set = n()) %>%
+  filter(n_set > 1) %>%
+  filter(sum(y, na.rm = TRUE) == 1) %>%
   ungroup() %>%
   print()
 
 
 # arrange into datalists for Stan
-bayes_grid <- bayes_df %>%
+# start with the two equal-size samples, then bind incumbent-only
+bayes_grid_init <- bayes_df %>%
   group_by(party) %>%
   nest() %>%
   mutate(
-    stan_data = map(
+    main = map(
       .x = data, 
       .f = ~ {
         compose_data(
-          .x,
+          .x, 
           i = 1:nrow(.x),
           set = as.factor(set),
           S = length(unique(set)),
           n_set = distinct(., set, n_set) %>% pull(n_set),
+          X = X_main,
+          X_main = NULL,
+          X_full = NULL,
+          X_no_inc = NULL,
           p = ncol(X),
           b_theta = bs(
             theta - mean(theta), 
@@ -448,97 +597,239 @@ bayes_grid <- bayes_df %>%
             intercept = FALSE 
           ) %>% matrix(nrow = n),
           B = ncol(b_theta),
-          num_knots = 30,
-          spline_deg = 4,
-          prior_sd = 10
+          num_knots = num_knots,
+          spline_deg = spline_degree,
+          prior_sd = 5
+        )
+      }
+    ),
+    fin_controls = map(
+      .x = data, 
+      .f = ~ {
+        compose_data(
+          .x, 
+          i = 1:nrow(.x),
+          set = as.factor(set),
+          S = length(unique(set)),
+          n_set = distinct(., set, n_set) %>% pull(n_set),
+          X = X_full,
+          X_main = NULL,
+          X_full = NULL,
+          p = ncol(X),
+          b_theta = bs(
+            theta - mean(theta), 
+            knots = seq(
+              min(theta, na.rm = TRUE), 
+              max(theta, na.rm = TRUE), 
+              length.out = 12 
+            ), 
+            degree = 3, 
+            intercept = FALSE 
+          ) %>% matrix(nrow = n),
+          B = ncol(b_theta),
+          num_knots = num_knots,
+          spline_deg = spline_degree,
+          prior_sd = 5
         )
       }
     )
   ) %>%
+  pivot_longer(
+    cols = c(main, fin_controls), 
+    names_to = "control_spec",
+    values_to = "stan_data"
+  ) %>%
+  print()
+
+bayes_grid <- bayes_no_incumbents %>%
+  group_by(party) %>%
+  nest() %>%
+  mutate(
+    no_incumbents = map(
+      .x = data, 
+      .f = ~ {
+        compose_data(
+          .x, 
+          i = 1:nrow(.x),
+          set = as.factor(set),
+          S = length(unique(set)),
+          n_set = distinct(., set, n_set) %>% pull(n_set),
+          X = X_no_inc,
+          X_no_inc = NULL,
+          p = ncol(X),
+          b_theta = bs(
+            theta - mean(theta), 
+            knots = seq(
+              min(theta, na.rm = TRUE), 
+              max(theta, na.rm = TRUE), 
+              length.out = 12 
+            ), 
+            degree = 3, 
+            intercept = FALSE 
+          ) %>% matrix(nrow = n),
+          B = ncol(b_theta),
+          num_knots = num_knots,
+          spline_deg = spline_degree,
+          prior_sd = 5
+        )
+      }
+    )
+  ) %>%
+  pivot_longer(
+    cols = c(no_incumbents), 
+    names_to = "control_spec",
+    values_to = "stan_data"
+  ) %>% 
+  bind_rows(bayes_grid_init) %>%
+  ungroup() %>%
+  filter(control_spec != "fin_controls") %>%
+  arrange(control_spec, party) %>%
   print()
 
 # investigate data lists
 bayes_grid$stan_data[[1]] %>% lapply(head)
+bayes_grid$stan_data[[2]] %>% lapply(head)
+bayes_grid$stan_data[[3]] %>% lapply(head)
+bayes_grid$stan_data[[4]] %>% lapply(head)
+
 bayes_grid$stan_data[[1]] %>% lapply(dim)
 bayes_grid$stan_data[[1]] %>% lapply(length)
 
 
 # ---- VB tests -----------------------
 
-vb_simple <- bayes_grid %>% 
-  mutate(
-    vb_simple = map(
-      .x = stan_data,
-      .f = ~ vb(
-        data = .x, 
-        object = model_simple,
-        pars = "pos", include = FALSE
-      )
-    )
-  ) %>%
-  print()
+# vb_simple <- bayes_grid %>% 
+#   mutate(
+#     vb_simple = map(
+#       .x = stan_data,
+#       .f = ~ vb(
+#         data = .x, 
+#         object = model_simple,
+#         pars = "pos", include = FALSE
+#       )
+#     )
+#   ) %>%
+#   print()
 
-vb_int <- bayes_grid %>%
-  mutate(
-    vb_int = map(
-      .x = stan_data,
-      .f = ~ vb(
-        data = .x, 
-        object = model_interaction,
-        pars = "pos", include = FALSE
-      )
-    )
-  ) %>%
-  print()
+# vb_int <- bayes_grid %>%
+#   mutate(
+#     vb_int = map(
+#       .x = stan_data,
+#       .f = ~ vb(
+#         data = .x, 
+#         object = model_interaction,
+#         pars = "pos", include = FALSE
+#       )
+#     )
+#   ) %>%
+#   print()
 
-vb_spline <- bayes_grid %>%
-  mutate(
-    vb_spline = map(
-      .x = stan_data,
-      .f = ~ vb(
-        data = .x, 
-        object = model_spline,
-        pars = c("pos", "wt_spline_raw"), include = FALSE
-      )
-    )
-  ) %>%
-  print()
+# vb_spline <- bayes_grid %>%
+#   mutate(
+#     vb_spline = map(
+#       .x = stan_data,
+#       .f = ~ vb(
+#         data = .x, 
+#         object = model_spline,
+#         pars = c("pos", "wt_spline_raw"), include = FALSE
+#       )
+#     )
+#   ) %>%
+#   print()
 
 
-vb_combo <- bayes_grid %>%
+vb_main <- bayes_grid %>%
+  filter(control_spec == "main") %>%
   mutate(
-    vb_combo = map(
+    vb_fit = map(
       .x = stan_data,
       .f = ~ vb(
         data = .x, 
         object = model_combo,
-        pars = c("pos", "wt_spline_raw", "ideal_distance", "B"),
+        pars = c("pos", "wt_spline_raw", "B"),
         include = FALSE
       )
     )
   ) %>%
   print()
+
+write_rds(vb_main, here(mcmc_path, "local_vb-main.rds"))
 alarm()
 
+# vb_fin_controls <- bayes_grid %>%
+#   filter(control_spec == "fin_controls") %>%
+#   mutate(
+#     vb_fit = map(
+#       .x = stan_data,
+#       .f = ~ vb(
+#         data = .x, 
+#         object = model_combo,
+#         pars = c("pos", "wt_spline_raw", "B"),
+#         include = FALSE
+#       )
+#     )
+#   ) %>%
+#   print()
+
+# write_rds(vb_fin_controls, here(mcmc_path, "local_vb-fin_controls.rds"))
+# alarm()
 
 
-
-vb_fits <- 
-  left_join(vb_simple, vb_int) %>% 
-  left_join(vb_spline) %>%
-  left_join(vb_combo) %>%
+vb_no_incumbents <- bayes_grid %>%
+  filter(control_spec == "no_incumbents") %>%
+  mutate(
+    vb_fit = map(
+      .x = stan_data,
+      .f = ~ vb(
+        data = .x, 
+        object = model_combo,
+        pars = c("pos", "wt_spline_raw", "B"),
+        include = FALSE
+      )
+    )
+  ) %>%
   print()
 
-vb_fits %>%
-  write_rds("~/Box Sync/research/thesis/data/mcmc/5-voting/vb_clogits.rds")
+write_rds(vb_no_incumbents, here(mcmc_path, "local_vb-no_incumbents.rds"))
 alarm()
 
+
+
+
+# ---- if you actually care about all the fits (and you don't) -------------
+
+# vb_fits <- 
+#   left_join(vb_simple, vb_int) %>% 
+#   left_join(vb_spline) %>%
+#   left_join(vb_combo) %>%
+#   print()
+
+# vb_fits %>%
+#   write_rds("~/Box Sync/research/thesis/data/mcmc/5-voting/vb_clogits.rds")
+# alarm()
+
+# # vb_fits <- read_rds(here(mcmc_path, "vb_clogits.rds"))
+
+# vb_combo <- select(vb_fits, -vb_int, -vb_simple, -vb_spline) %>%
+#   mutate(
+#     tidy = map(vb_combo, tidy, conf.int = TRUE, conf.level = .9)
+#   ) %>%
+#   print()
+
+
+# ---- end all fits -----------------------
+
+
+extract(vb_combo$vb_combo[[1]])$linkers %>%
+  as_tibble() %>%
+  ggplot(aes(x = V1, y = V2)) +
+  geom_point()
 
 
 # get linear pred effect
 spline_data <- vb_combo %>%
   mutate(
-    tidy = map(vb_combo, tidy, conf.int = TRUE),
+    tidy = map(vb_combo, tidy, conf.int = TRUE, conf.level = .9),
     lincom = map2(
       .x = tidy,
       .y = data,
@@ -553,6 +844,8 @@ spline_data <- vb_combo %>%
     )
   ) %>%
   print()
+
+spline_data
 
 spline_data %>%
   unnest(lincom) %>%
@@ -585,24 +878,26 @@ spline_data %>%
     x = "Candidate CF Score",
     y = "Primary Candidate Utility"
   ) +
-  annotate(
-    geom = "text",
-    label = "Democratic candidates benefit\nfrom ideological positioning",
-    x = -4, y = 1.5
-  ) +
-  annotate(geom = "segment", x = -4, xend= -1.5, y = 1, yend = 0.9) +
-  annotate(
-    geom = "text",
-    label = "Negligible impact of voter ideology",
-    x = 0, y = 2.5
-  ) +
-  annotate(geom = "segment", x = -0.5, xend= -1, y = 2.1, yend = 0.5) +
-  annotate(
-    geom = "text",
-    label = "No clear patterns in\nRepublican primary contests",
-    x = 4, y = -0.8
-  ) +
-  coord_cartesian(xlim = c(-5.5, 5.5))
+  theme(legend.position = "none") +
+  # annotate(
+  #   geom = "text",
+  #   label = "Democratic candidates benefit\nfrom ideological positioning",
+  #   x = -4, y = 1.5
+  # ) +
+  # annotate(geom = "segment", x = -4, xend= -1.5, y = 1, yend = 0.9) +
+  # annotate(
+  #   geom = "text",
+  #   label = "Negligible impact of voter ideology",
+  #   x = 0, y = 2.5
+  # ) +
+  # annotate(geom = "segment", x = -0.5, xend= -1, y = 2.1, yend = 0.5) +
+  # annotate(
+  #   geom = "text",
+  #   label = "No clear patterns in\nRepublican primary contests",
+  #   x = 4, y = -0.8
+  # ) +
+  # coord_cartesian(xlim = c(-5.5, 5.5)) + 
+  NULL
 
 
 
@@ -810,78 +1105,144 @@ ints$stan_data[[1]]$theta %>% quantile(probs = seq(0, 1, 0.25))
 
 # ---- MCMC fits -----------------------
 
-mc_simple <- bayes_grid %>%
+# mc_simple <- bayes_grid %>%
+#   mutate(
+#     mc_simple = map2(
+#       .x = stan_data,
+#       .y = party,
+#       .f = ~ {
+#         the_fit <- sampling(
+#           data = .x, 
+#           object = model_simple, 
+#           pars = c("pos", "wt_spline_raw", "B"), 
+#           include = FALSE 
+#         )
+#         path_name <- str_glue("fullfit-{.y}.rds") %>% as.character()
+#         write_rds(here(mcmc_path, path_name))
+#       }
+#     )
+#   ) %>%
+#   print()
+
+
+
+# write_rds(
+#   mc_simple,
+#   here(mcmc_path, "local_mc-simple.rds")
+# )
+
+# mc_int <- bayes_grid %>%
+#   mutate(
+#     mc_int = map(
+#       .x = stan_data,
+#       .f = ~ sampling(
+#         data = .x, 
+#         object = model_interaction,
+#         chains = mc_cores,
+#         pars = "pos", include = FALSE
+#       )
+#     )
+#   ) %>%
+#   print()
+
+# write_rds(
+#   mc_int,
+#   here(mcmc_path, "local_mc-int.rds")
+# )
+
+# mc_spline <- bayes_grid %>%
+#   mutate(
+#     mc_spline = map(
+#       .x = stan_data,
+#       .f = ~ sampling(
+#         data = .x, 
+#         object = model_spline,
+#         chains = mc_cores,
+#         pars = c("pos", "wt_spline_raw"), include = FALSE
+#       )
+#     )
+#   ) %>%
+#   print()
+
+# write_rds(
+#   mc_spline,
+#   here(mcmc_path, "local_mc-spline.rds")
+# )
+
+
+
+mc_main <- bayes_grid %>%
+  filter(control_spec == "main") %>%
   mutate(
-    mc_simple = map(
+    mc_fit = map2(
       .x = stan_data,
-      .f = ~ sampling(
-        data = .x, 
-        object = model_simple,
-        chains = mc_cores,
-        pars = "pos", include = FALSE
-      )
-    )
-  ) %>%
-  print()
-
-write_rds(
-  mc_simple,
-  here(mcmc_path, "local_mc-simple.rds")
-)
-
-mc_int <- bayes_grid %>%
-  mutate(
-    mc_int = map(
-      .x = stan_data,
-      .f = ~ sampling(
-        data = .x, 
-        object = model_interaction,
-        chains = mc_cores,
-        pars = "pos", include = FALSE
-      )
-    )
-  ) %>%
-  print()
-
-write_rds(
-  mc_int,
-  here(mcmc_path, "local_mc-int.rds")
-)
-
-mc_spline <- bayes_grid %>%
-  mutate(
-    mc_spline = map(
-      .x = stan_data,
-      .f = ~ sampling(
-        data = .x, 
-        object = model_spline,
-        chains = mc_cores,
-        pars = c("pos", "wt_spline_raw"), include = FALSE
-      )
-    )
-  ) %>%
-  print()
-
-write_rds(
-  mc_spline,
-  here(mcmc_path, "local_mc-spline.rds")
-)
-
-mc_combo <- bayes_grid %>%
-  mutate(
-    mc_combo = map(
-      .x = stan_data,
-      .f = ~ sampling(
-        data = .x, 
-        object = model_combo,
-        chains = mc_cores,
-        pars = c("pos", "wt_spline_raw", "ideal_distance", "B"), 
-        include = FALSE
-      )
+      .y = party,
+      .f = ~ {
+        the_fit <- sampling(
+          data = .x, 
+          object = model_combo, 
+          chains = mc_cores,
+          pars = c("pos", "wt_spline_raw", "B"), 
+          include = FALSE 
+        )
+        path_name <- str_glue("mc_main-{.y}.rds") %>% as.character()
+        write_rds(the_fit, here(mcmc_path, path_name))
+        return(the_fit)
+      }
     )
   ) %>%
   print()
 alarm()
+
+
+mc_fin_controls <- bayes_grid %>%
+  filter(control_spec == "fin_controls") %>%
+  mutate(
+    mc_fit = map2(
+      .x = stan_data,
+      .y = party,
+      .f = ~ {
+        the_fit <- sampling(
+          data = .x, 
+          object = model_combo, 
+          chains = mc_cores,
+          pars = c("pos", "wt_spline_raw", "B"), 
+          include = FALSE 
+        )
+        path_name <- str_glue("mc_fin_controls-{.y}.rds") %>% as.character()
+        write_rds(the_fit, here(mcmc_path, path_name))
+        return(the_fit)
+      }
+    )
+  ) %>%
+  print()
+alarm()
+
+
+
+mc_no_incumbents <- bayes_grid %>%
+  filter(control_spec == "no_incumbents") %>%
+  mutate(
+    mc_fit = map2(
+      .x = stan_data,
+      .y = party,
+      .f = ~ {
+        the_fit <- sampling(
+          data = .x, 
+          object = model_combo, 
+          chains = mc_cores,
+          pars = c("pos", "wt_spline_raw", "B"), 
+          include = FALSE 
+        )
+        path_name <- str_glue("mc_no_incumbents-{.y}.rds") %>% as.character()
+        write_rds(the_fit, here(mcmc_path, path_name))
+        return(the_fit)
+      }
+    )
+  ) %>%
+  print()
+alarm()
+
 
 write_rds(
   mc_combo,
@@ -907,6 +1268,10 @@ mc_fits <- full_join(mc_simple, mc_int) %>% print()
 mc_fits %>%
   write_rds("~/Box Sync/research/thesis/data/mcmc/5-voting/simple_mc.rds")
 alarm()
+
+
+
+
 
 
 

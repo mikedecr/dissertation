@@ -550,3 +550,14 @@ pretty_coefs %>%
   labs(y = "Posterior Parameter Value", x = NULL)
 
 
+# ----------------------------------------------------
+#   MCMC stuff
+# ----------------------------------------------------
+
+mc <- read_rds(here(mcmc_dir, "local_mcmc_party.rds")) %>%
+  print()
+
+mc$mcmcfit[[1]] %>% tidy(conf.int = TRUE, rhat = TRUE, ess = TRUE)
+mc$mcmcfit[[2]] %>% tidy(conf.int = TRUE, rhat = TRUE, ess = TRUE)
+
+rstan::stan_hist(mc$mcmcfit[[2]], "hypersigma_med")
