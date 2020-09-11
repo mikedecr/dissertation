@@ -19,13 +19,27 @@ title: Overall thesis notes
     - run MCMC on fixed theta
     - variance weighting of ideal points (Is this barry?)
 - ch 5:
-    - clogit treul
-    - two part contribution: specification and also setup aids interpretation of other things falsely attributed to ideology
-    - is markey more liberal, or the incumbent with lots of other advantages
-    - mcmc all models
+    - writing
+        - two part contribution: specification and also setup aids interpretation of other things falsely attributed to ideology
+        - is markey more liberal, or the incumbent with lots of other advantages
+    - model specs:
+        - [x] drop top-two
+        - [x] no finance data
+        - [ ] recreate data w/ finance, race/quality, no incumbents-s
+            - [ ] _make superset data frame and then widdle/group IDs_
+        - stratify on primary type
+   - mcmc all models
     - fix post-estimation code
-    - rms MLE splines?
 
+
+scheduling
+
+- Barry: no MW 3:30-5 
+- Ken: TR 9:30–11, 2:30-3:45  (could be recorded)
+- Alex: W 1:30–3:30, MW 4–5:30
+- Mike: M 12-1, M 3-4, TR 11–12:15, R 2-3
+- No APWs (19th OK!)
+- W 11-1 faculty meetings
 
 
 
@@ -33,12 +47,18 @@ title: Overall thesis notes
 
 ## Qs for Barry
 
-How to characterize your disagreement w/ A.S.S. on incumbents, challengers, open seats.
+Lit questions
 
-- Burden: incumbency is insurance
-- Ans: incumbency reflects selection, challengers/open must innovate
+- How to characterize your disagreement w/ A.S.S. on incumbents, challengers, open seats.
+    - Burden: incumbency is insurance
+    - Ans: incumbency reflects selection, challengers/open must innovate
+    - Groseclose: challengers are differentiating (formal arg) because they lose on non-policy
+- Variance weighting of ideal points
+    - King/Herron EI/WLS problem
+- utility optimum
+    - James Adams quadratic
+    - Adams/Dow directional vs. proximity voting
 
-Variance weighting of ideal points
 
 Things I don't really plan to get to:
 
@@ -48,6 +68,7 @@ Things I don't really plan to get to:
 - potential new data sources: 
     - is district in NAES 
     - When did CCAP run 
+
 
 
 - what else explains the gaps? race/maj-min?
@@ -63,6 +84,11 @@ G model:
     - ideal points
     - residuals?
 - what's the deal w/ variational
+
+
+CLOGIT:
+
+- final obs spline (I just skipped it??)
 
 
 Neural net:

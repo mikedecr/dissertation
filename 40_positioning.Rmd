@@ -11,6 +11,7 @@ $\renewcommand{\p}[1]{p\left(#1\right)}$
 - what's the latent relationship between local ideology and primary rules?
 - does this explain the weird findings by McGhee et al?
 - take credit for CDE interpretation (maybe done?)
+- rip Nielson and Visalvanich
 ------------------------->
 
 ```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
@@ -1123,14 +1124,8 @@ Because the IRT model partially pools ideal points using a hierarchical Normal r
 
 Including ideal point uncertainty as a prior distribution effectively adds a measurement error model overtop to the sequential $g$ analysis. 
 Although @acharya-blackwell-sen:2016:direct-effects describe a variance estimator and a bootstrap method for dealing with multi-stage modeling uncertainty, neither of these methods is naturally suited to a measurement error context where an additional layer of ideal point uncertainty is represented in MCMC samples.
-Past research has explored the use of inverse-variance weighting to downweight observations with greater ideal point uncertainty,
-<!------- TO DO ---------
-- who?
-------------------------->
-which accomplishes a similar goal as the prior distribution but throws away all prior information about the covariance between ideal points.
-<!------- TO DO ---------
-- cite?
-------------------------->
+Past research has explored the use of inverse-variance weighting to downweight observations with greater measurement uncertainty [e.g. @adolph-at-al:2003:wls-ei],
+which accomplishes a similar goal as the prior distribution but throws out all prior information about the covariance between ideal points.
 More recently, researchers have employed numerical methods for "uncertainty propagation," where the researcher estimates an uncertain quantity, simulates values from the quantity's posterior distribution, and pushes those simulated values through a downstream analysis. 
 Quantities of interest are then averaged across the posterior simulations [see @kastellec-et-al:2015:scotus-electoral-connection p. 791; @caughey-warshaw:2018:dynamic-responsiveness p. 6; @caughey-warshaw:2019:subnational-opinion-review p. 360].
 This is similar in spirit to "multiple overimputation" [@blackwell-et-al:2017:measurement-error], which extends multiple imputation to a measurement error setting by iteratively replacing mismeasured observations with draws from their posterior distribution.
@@ -1862,7 +1857,7 @@ Among Democrats, the controlled direct effect of district party ideology is stro
 This monotonic relationship is exactly consistent with the conventional wisdom on primary openness and candidate positioning.
 The results among Republicans are not monotonic—the strongest relationship is among semi-closed rather than closed systems—but generally support a conclusion that candidates in open systems are less responsive to district-party ideology, where the relationship between district-parties and candidates is actually negative.
 
-```{r plot-coef-rules, include = TRUE, fig.width = 8, fig.height = 4, out.width = "100%", ig.scap = "Sequential $g$ results for candidates in states with closed, semi-closed, and open primary systems.", fig.cap = "Sequential $g$ results for candidates in states with closed, semi-closed, and open primary systems. Points and intervals are variational point estimates and 90 percent intervals from the approximate posterior distribution."}
+```{r plot-coef-rules, include = TRUE, fig.width = 8, fig.height = 4, out.width = "100%", fig.scap = "Sequential $g$ results for candidates in states with closed, semi-closed, and open primary systems.", fig.cap = "Sequential $g$ results for candidates in states with closed, semi-closed, and open primary systems. Points and intervals are variational point estimates and 90 percent intervals from the approximate posterior distribution."}
 ```
 <!------- TO DO ---------
 - you might say "this could be bullshit" 
