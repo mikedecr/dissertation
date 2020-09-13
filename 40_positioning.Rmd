@@ -1343,7 +1343,8 @@ vb_kable <- bind_cols(
 ```{r n-kable, include = TRUE}
 kable(
   vb_kable,
-  caption = "Sample sizes in all estimated models."
+  caption = "Sample sizes in all estimated models.",
+  booktabs = TRUE
 )
 ```
 

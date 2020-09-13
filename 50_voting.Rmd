@@ -24,8 +24,10 @@ library("broom")
 
 library("ggdag")
 library("ggtext")
+library("scales")
 library("latex2exp")
 library("patchwork")
+library("ggforce")
 ```
 
 Intro:
@@ -399,6 +401,28 @@ Stated differently, this model sacrifices some interpretability in order to fit 
 
 ### Data
 
+
+```{r data-5}
+mcmc_path <- file.path("data", "mcmc", "5-voting")
+
+fits_raw <- here(mcmc_path, "local_vb-main.rds") %>%
+  read_rds() %>% 
+  group_by(party, control_spec) %>% 
+  print()
+
+fits_data <- fits_raw %>%
+  select(data, stan_data) %>%
+  print()
+```
+
+```{r data-no-incumbents}
+noinc_raw <- here(mcmc_path, "local_vb-no_incumbents.rds") %>%
+  read_rds() %>% 
+  group_by(party, control_spec) %>%
+  print()
+```
+
+
 The data for this analysis are drawn primarily from two secondary sources, the Database on Interests, Money in Politics, and Elections [DIME, @bonica:2019:dime] and the Primary Timing Project [PTP, @boatright-et-al:2017:primary-timing-data]. 
 Cases are organized at the candidate-contest level, with identifiers for each primary contest indexing political party $\times$ congressional district $\times$ election cycle.
 Because primary candidates can run unopposed, I restrict the data to primary races containing at least two candidates.
@@ -435,13 +459,39 @@ This is because previous research theorizes that candidate ideology is more like
 The utility model underlying CF scores assumes that this is true _ex ante_, by modeling campaign contributions as a function of ideological affinity.
 Using the same data for measurement and inference is presents problems that political scientists have been aware of, but political scientists are only just beginning to employ modern causal inference approaches to confront these problems [for an application to text analysis, see @egami-et-al:2018:causal-inf-texts].
 
+```{r clogit-n}
+bind_rows(noinc_raw, fits_data) %>%
+  unnest(data) %>%
+  ungroup() %>%
+  mutate(
+    party = ifelse(party == "D", "Democrats", "Republicans"),
+    Subset = case_when(
+      control_spec == "main" ~ "Full data",
+      TRUE ~ "No incumbents"
+    ),
+    control_spec = NULL
+  ) %>%
+  group_by(party, Subset) %>%
+  summarize(
+    `Primary Races` = comma(n_distinct(set)),
+    `Total Candidates` = comma(n())
+  ) %>%
+  arrange(Subset) %>%
+  knitr::kable(
+    caption = "Number of Primary Races and Primary Candidates",
+    booktabs = TRUE
+  )
+```
+
+
 I estimate separate models for Republicans and Democrats because control variables may confound the treatment effect differently for each party.
 For instance, gender is thought to have a greater impact in Democratic primaries than in Republican primaries [@thomsen-swers:2017:women-run; @thomsen:2019:women-win; @thomsen:2020:ideology-gender].
 It also may be the case that causal effects vary across party, either because Republicans or Democrats are not equally aware of political ideology or because district-party ideology has different modifying effects for Republicans and Democrats.
 I also estimate the same model with the sample limited to primary contests with no incumbent present, a practice employed by earlier researchers to sidestep the overwhelming likelihood that incumbents win reelection [e.g. @porter-treul:2020:primary-experience].
-<!------- TO DO ---------
-- how many?
-------------------------->
+Table \@ref(tab:clogit-n) displays the number of candidates and primary contests in each of these subsets of data.
+
+```{r clogit-n, include = TRUE}
+```
 
 
 ### Bayesian modeling, priors, and prior simulation
@@ -455,7 +505,7 @@ This concern has led researchers to use regularized estimators to detect heterog
 ```{r spline-coef-prior}
 plot_spline_coef_draws <- tibble(
   raw = rnorm(10000),
-  sigma = abs(rcauchy(10000, scale = 1)),
+  sigma = abs(1.5 * rt(10000, df = 3)),
   phi = raw*sigma,
 ) %>%
 ggplot() +
@@ -472,8 +522,6 @@ ggplot() +
   )
 ```
 
-
-
 ```{r spline-prior}
 # possible spline functions
 n_coef_draws <- 10
@@ -488,7 +536,7 @@ coef_draws <-
     rep = 1:n_coef_draws
   ) %>%
   mutate(
-    sigma = rcauchy(n(), scale = 1) %>% abs(),
+    sigma = 1.5 * rt(n(), df = 3) %>% abs(),
     phi_raw = rnorm(n()),
     phi = phi_raw * sigma
   ) %>%
@@ -538,7 +586,6 @@ plot_prior_spline_functions <-
   scale_y_continuous(breaks = seq(-6, 6, 3))
 ```
 
-
 ```{r plot-spline-priors}
 plot_spline_coef_draws + plot_prior_spline_functions
 ```
@@ -561,10 +608,10 @@ This prior is implemented in Stan as using a non-centered parameterization, whic
 (\#eq:spline-shrinkage)
 \end{align}
 The non-centered parameterization stretches a standard Normal distribution in order to create a Normal distribution with a scale of $\sigma$.
-This parameterization is valuable for Bayesian estimation because it de-correlates random variables in the posterior distribution, creating an easier posterior geometry for MCMC transitions.
+This parameterization is valuable for Bayesian estimation because it de-correlates random variables in the posterior distribution, creating an easier posterior geometry for estimation algorithms.
 I give the scale factor $\sigma$ a half-Cauchy prior,
 \begin{align}
-  \sigma &\sim \text{Half-Cauchy}\left(0, 1\right)
+  \sigma &\sim \text{Student's T}\left(\nu = 3, 0, s = 1.5\right)
   (\#eq:scale-cauchy)
 \end{align}
 which regularizes the scale value toward zero but has a flatter tail to allow strong signals from the data to depart from the prior.
@@ -610,8 +657,264 @@ For causal inference, it is important not to regularize confounding effects too 
 ## Findings
 
 
-```{r plot-spline-posterior}
+
+```{r tidy-5}
+fits <- fits_raw %>%
+  transmute(
+    tidy_fit = map(
+      .x = vb_fit,
+      .f = tidy,
+      conf.int = TRUE,
+      conf.level = 0.9
+    )
+  ) %>%
+  print()
 ```
+
+```{r draws-5}
+vb_draws <- fits_raw %>%
+  transmute(
+    draws = map(
+      .x = vb_fit,
+      .f = rstan::extract
+    )
+  ) %>%
+  print()
+```
+
+
+```{r spline-coefs-data}
+main_coefs <- fits %>%
+  unnest(tidy_fit) %>%
+  ungroup() %>%
+  filter(
+    str_detect(term, "_post") == FALSE,
+    str_detect(term, "wt") | str_detect(term, "spline_scale")
+  ) %>%
+  mutate(
+    index = parse_number(term),
+    term_label = case_when(
+      term == "wt[1]" ~ "Female",
+      term == "wt[2]" ~ "Incumbent",
+      term == "wt[3]" ~ "Log self-contribs (std.)",
+      str_detect(term, "wt_spline") ~ 
+        str_glue("Basis {index}") %>% as.character(),
+      term == "spline_scale" ~ "Spline scale"
+    ),
+    prefix = case_when(
+      str_detect(term, "spline") ~ "Spline Parameters",
+      str_detect(term, "wt") ~ "Regression Coefs",
+      TRUE ~ "Aux"
+    )
+  ) %>%
+  filter(str_detect(term, "linkers") == FALSE) %>%
+  print()
+```
+
+```{r plot-spline-coefs}
+ggplot(main_coefs) +
+  aes(
+    x = fct_reorder(term_label, index) %>% fct_rev(), 
+    y = estimate, 
+    color = party
+  ) +
+  geom_hline(yintercept = 0) +
+  geom_pointrange(
+    aes(ymin = conf.low, ymax = conf.high),
+    position = position_dodge(width = -0.25)
+  ) +
+  facet_wrap(~ prefix, scales = "free") +
+  coord_flip() +
+  scale_color_manual(values = party_code_colors) +
+  labs(
+    x = NULL,
+    y = "Posterior parameter value",
+    title = "Conditional Logit Parameters",
+    subtitle = "Fullrank variational estimations"
+  ) +
+  theme(
+    legend.position = "none",
+    plot.title.position = "plot"
+  )
+```
+
+```{r linker-plot}
+vb_draws %>%
+  transmute(
+    link_draws = map(
+      .x = draws,
+      .f = ~ {
+        .x$linkers %>% 
+        as_tibble(.name_repair = "unique") %>%
+        set_names(c("alpha", "beta"))
+      }
+    )
+  ) %>%
+  unnest(link_draws) %>%
+  ggplot() +
+  aes(x = alpha, y = beta, color = party) +
+  geom_hline(yintercept = 0, color = "black") +
+  geom_vline(xintercept = 0, color = "black") +
+  geom_jitter(width = .1, height = .1, shape = 16, alpha = 0.5) +
+  facet_wrap(
+    ~ party, 
+    labeller = as_labeller(c("D" = "Democrats", "R" = "Republicans"))
+  ) +
+  coord_fixed() +
+  scale_color_manual(values = party_code_colors) +
+  labs(
+    title = "Coefficients for Ideal Point Distance (Δ)",
+    subtitle = "Samples (jittered) from variational posterior",
+    x = "CF score weight (α)",
+    y = "District-party ideology\nweight (β)"
+  ) +
+  theme(
+    legend.position = "none",
+    plot.title.position = "plot"
+  )
+```
+
+All models were estimated using Stan's full-rank variational inference algorithm, which approximates the posterior distribution as a collection of Normal distributions with a full-rank covariance matrix. [@kucukelbir:2015:ADVI].
+I spend the majority of this section reviewing results from the models estimated using the full datasets. 
+I briefly review the key trends among non-incumbent races at the end of this section.
+
+Figure \@ref(fig:linker-plot) shows posterior samples for $\alpha$ and $\beta$, the coefficients that map CF scores and district-party ideology into the common ideal point distance measure $\Delta$. 
+Because the coefficients are constrained to have a norm of $1$ to identify the transformed space, all pairs of coefficients fall on the unit circle. 
+Points are jittered in the plot to convey which values have greater posterior probability.
+As mentioned above, many possible ideal point mappings can be rationalized against the flexible spline function, so the posterior distribution to does not concentrate tightly around particular combinations of $\alpha$ and $\beta$ values.
+This results in posterior samples that cover all four quadrants of the unit circle.
+This is not concerning because the common ideal point space is created to facilitate heterogeneous effects, not to be interpreted directly.
+
+
+```{r linker-plot, include = TRUE, out.width = "100%", fig.height = 5, fig.width = 9, fig.scap = "Posterior draws of linear mapping parameters.", fig.cap = "Posterior draws of parameters that map CF scores and district-party ideology into $\\Delta$ space. Points all fall on the unit circle but are slightly jittered to convey posterior density."}
+```
+
+Coefficients from the candidate utility model are presented in Figure \@ref(fig:plot-spline-coefs).
+The left panel shows regression coefficients for control variables in $\mathbf{c}_{ir}$: gender, incumbency, and candidate self-fundraising. 
+These coefficients find that gender is positively related to candidate utility among Democrats more than Republicans, incumbency is strongly related to candidate utility in both parties, and candidate self-fundraising does not strongly relate to candidate utility in either party.
+The right panel shows all spline basis function coefficients and the scale parameter in the smoothing prior for the spline coefficients.
+Most spline coefficients have posterior point estimates near zero, which is a product of the regularizing prior on the coefficients.
+Only a few coefficients strongly depart from the prior, an initial indication that the spline regression detects a smooth function with a small number of "wiggles," rather than a highly variable function with many local peaks and troughs. 
+
+
+```{r plot-spline-coefs, include = TRUE, out.width = "100%", fig.height = 8, fig.width = 9, fig.scap = "Posterior parameters from conditional logit.", fig.cap = "Posterior parameters from conditional logit. Points and intervals are variational point estimates and 90% quantile intervals from approximate posterior. Left panel shows regression weights for covariates. Right panel shows basis function coefficients and hierarchical scale parameter."}
+```
+
+
+
+```{r spline-plot}
+spline_means <- fits %>%
+  left_join(fits_data) %>%
+  mutate(
+    spline_means = map2(
+      .x = tidy_fit,
+      .y = stan_data,
+      .f = ~ {
+        rhs <- tibble(
+          CF = .y$CF,
+          i = .y$i
+        )
+        means <- .x %>%
+          filter(
+            str_detect(term, "spline_mean_post") |
+            str_detect(term, "spline_lower_post") |
+            str_detect(term, "spline_upper_post") 
+          ) %>%
+          mutate(i = parse_number(term)) 
+        left_join(means, rhs, by = "i")
+      }
+    )
+  ) %>%
+  select(spline_means) %>%
+  unnest(spline_means) %>%
+  print()
+```
+
+
+```{r plot-spline-posterior}
+spline_means %>%
+  filter(str_detect(term, "mean")) %>%
+  ggplot() +
+  aes(x = CF, y = estimate, color = party) +
+  geom_vline(xintercept = 0, color = "gray") +
+  geom_hline(yintercept = 0, color = "black") +
+  geom_ribbon(
+    aes(ymin = conf.low, ymax = conf.high, fill = party),
+    color = NA, 
+    alpha = 0.3,
+    show.legend = FALSE
+  ) +
+  geom_line(size = 1, show.legend = FALSE) +
+  geom_line(
+    data = filter(spline_means, str_detect(term, "mean") == FALSE),
+    aes(linetype = str_detect(term, "lower")),
+    color = "black"
+  ) +
+  geom_rug(aes(y = NULL), alpha = 0.2, show.legend = FALSE) +
+  scale_color_manual(values = party_code_colors) +
+  scale_fill_manual(values = party_code_colors) +
+  scale_linetype_manual(
+    values = c(2, 3),
+    labels = c("TRUE" = "1 sd below mean", "FALSE" = "1 sd above mean")
+  ) +
+  facet_wrap(
+    ~ party, 
+    scales = 'free_x',
+    labeller = as_labeller(c("D" = "Democrats", "R" = "Republicans"))
+  ) +
+  labs(
+    title = "How CF Score Affects Candidate Utility",
+    subtitle = "Negligible interaction with district-party ideology",
+    x = "Candidate CF Score",
+    y = "Spline function of ideal point distance",
+    linetype = TeX("$\\bar{\\theta}_{g}$ value")
+  ) +
+  theme(legend.position = c(.9, .8)) +
+  # coord_cartesian(xlim = c(-5.5, 5.5))
+  NULL
+```
+
+The key finding from the conditional logit model is the spline function plotted in Figure \@ref(fig:plot-spline-posterior).
+The spline is a function of the common ideal point metric $\Delta$, which means the spline is a function of both CF scores and district-party ideology.
+This means that the shape of the spline function comes two signals in the data.
+First, which $\Delta$ values are related to candidate utility, and second, what combination of CF scores and district-party ideology (in terms of $\alpha$ and $\beta$ values) more strongly affect CF scores. 
+I show candidate CF scores along the horizontal axis, and spline functions holding district-party ideology fixed at different values are plotted on the vertical axis.
+Solid lines show the spline function conditioned on _average_ district-party ideology in each party, while dashed and dotted lines condition the spline function on district-party ideology values one standard deviation above and below the mean.
+A spline function that drifts up and down across the range of CF scores reflects the causal effect of CF scores under the identification assumptions.
+A spline function that varies for different values of district-party ideology reflects heterogeneous causal effects in districts with different district-party ideologies.
+
+
+```{r plot-spline-posterior, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 4.5, fig.scap = "CF score effect on candidate utility.", fig.cap = "CF score effect on candidate utility. Spline function of CF score with district-party ideology held at mean, mean minus one standard deviation, and mean plus one standard deviation."}
+```
+
+The estimates for both Democrats and Republicans show that CF scores most strongly affect candidate utility at CF score values near the median partisan candidate, evidenced by the peak in the spline function near the center of each party's CF score distribution.
+This means that candidates at the ideological center of their party are most valuable to primary electorates, while both centrist and extreme candidates are less valuable.
+This signal is not overwhelmingly strong—the 90% credible interval covers zero—but the posterior distribution of spline functions generally supports this interpretation that primary voters prefer "representative" candidates.
+This peak in utility is what we should expect to find under an assumption of spatial utility voting: candidates are most likely to win when they take an optimal ideological stance, and less likely to win when they are more liberal or more conservative than the optimal stance.
+This pattern suggests that a null hypothesis of non-ideological voting in primaries is unlikely to be true, because the utility function isn't simply flat over candidate CF scores.
+The location of the utility peak suggests that primary electorates are not focused by-and-large on electability, which would manifest as a utility peak at centrist CF score values.
+It also suggests that primary electorates do not place a single-minded emphasis on partisan extremism, which would result in a utility peak at more extreme CF scores.
+It is also important to note that these estimates control for incumbency, so the utility peak at party-median CF score values _does not_ merely reflect the fact that incumbent candidates represent the ideological "core" of the party.
+Furthermore, results below suggest that a similar utility peak appears even when we remove all non-incumbents from the data.
+
+Although the analysis suggests that candidate ideology does have a causal effect on CF scores, there is no evidence to suggest that this effect is heterogeneous across districts.
+The utility function for districts with average district-party conservatism is almost identical to the utility functions for districts with above-average and below-average district-party conservatism.
+More conservative candidates are not noticeable more valuable to conservative primary electorates, nor are progressive candidates more valuable to progressive electorates.
+
+These results are partially consistent with the strategic positioning dilemma.
+
+- 
+
+
+
+
+
+Describe spline function
+
+- distance contains both CF and theta
+- results show the function responds mostly to CF, barely any effect of theta
+- appearance of an optimum; candidates are more valuable in a particular region of ideology space, less valuable in the fringes
+- NO effect of 
 
 The average effect of a change in CF score on candidate utility can't be summarized by a single coefficient because of the nonlinear, interactive form of the spline function $f\left(\text{CF}_{ir}, \bar{\theta}_{g}\right)$.
 The causal effect must instead be calculated as the difference in function values at different CF score inputs. 
@@ -658,8 +961,58 @@ In turn, the probability distribution is
   (\#eq:prob-cate-pwin)
 \end{align}
 
-```{r win-grid}
+
+```{r win-data}
+win_diffs_long <- 
+  here("data", "_model-output", "05-voting", "winprob-effects.rds") %>%
+  read_rds() %>% 
+  print()
 ```
+
+```{r win-grid-subset}
+win_subset <- win_diffs_long %>%
+  mutate(
+    incumbent = case_when(
+      str_detect(race_type, "noninc") ~ "No Incumbent in Primary",
+      TRUE ~ "Incumbent in Primary"
+    ),
+    candidates = parse_number(race_type),
+    candidates = case_when(
+      candidates == 2 ~ "One competitor",
+      candidates == 3 ~ "Two competitors"
+    ),
+    party_name = case_when(
+      party == "D" ~ "Democrats",
+      party == "R" ~ "Republicans"
+    )
+  ) %>%
+  filter(candidates == "Two competitors") %>%
+  print()
+```
+
+```{r win-grid}
+ggplot(win_subset) +
+  aes(x = CF, y = mean, color = party, fill = party) +
+  geom_hline(yintercept = 0) +
+  geom_ribbon(
+    aes(ymin = lower, ymax = upper),
+    alpha = 0.2,
+    color = NA
+  ) +
+  geom_line() +
+  facet_grid(party_name ~ fct_rev(incumbent)) +
+  scale_color_manual(values = party_code_colors) +
+  scale_fill_manual(values = party_code_colors) +
+  labs(
+    x = "Candidate CF score",
+    y = "Effect on win probability\n(vs. average CF score)",
+    title = "How Candidate Ideology Affects Win Probability",
+    subtitle = "In a three-candidate primary"
+  ) +
+  theme(legend.position = "none")
+```
+
+
 
 
 Figure \@ref(plot:win-grid) visualizes causal effects on win probability.
@@ -667,7 +1020,87 @@ The figure contains four comparisons in four different types of races: races wit
 The function plotted in each panel is the conditional win effect (vertical axis) of a candidate occupying a certain CF score (horizontal axis) compared to the average CF score in their party.
 
 
+```{r win-grid, include = TRUE, out.width = "100%", fig.width = 8, fig.height = 6, fig.scap = "CF score effect on primary win probability.", fig.cap = "CF score effect on primary win probability in a three candidate race. Left panels feature a three-candidate race with no incumbents. Right panels feature a three-candidate race with one incumbent."}
+```
+
+
+```{r splines-no-incumbent}
+spline_means_noinc <- noinc_raw %>%
+  mutate(
+    tidy_fit = map(vb_fit, tidy, conf.int = TRUE, conf.level = 0.9),
+    spline_means = map2(
+      .x = tidy_fit,
+      .y = stan_data,
+      .f = ~ {
+        rhs <- tibble(
+          CF = .y$CF,
+          i = .y$i
+        )
+        means <- .x %>%
+          filter(
+            str_detect(term, "spline_mean_post") |
+            str_detect(term, "spline_lower_post") |
+            str_detect(term, "spline_upper_post") 
+          ) %>%
+          mutate(i = parse_number(term)) 
+        left_join(means, rhs, by = "i")
+      }
+    )
+  ) %>%
+  select(spline_means) %>%
+  unnest(spline_means) %>%
+  print()
+```
+
+
+```{r noinc-spline-posterior}
+spline_means_noinc %>%
+  filter(str_detect(term, "mean")) %>%
+  ggplot() +
+  aes(x = CF, y = estimate, color = party) +
+  geom_vline(xintercept = 0, color = "gray") +
+  geom_hline(yintercept = 0, color = "black") +
+  geom_ribbon(
+    aes(ymin = conf.low, ymax = conf.high, fill = party),
+    color = NA, 
+    alpha = 0.3,
+    show.legend = FALSE
+  ) +
+  geom_line(size = 1, show.legend = FALSE) +
+  geom_rug(aes(y = NULL), alpha = 0.2, show.legend = FALSE) +
+  scale_color_manual(values = party_code_colors) +
+  scale_fill_manual(values = party_code_colors) +
+  scale_linetype_manual(
+    values = c(2, 3),
+    labels = c("TRUE" = "1 sd below mean", "FALSE" = "1 sd above mean")
+  ) +
+  facet_wrap(
+    ~ party, 
+    scales = 'free_x',
+    labeller = as_labeller(c("D" = "Democrats", "R" = "Republicans"))
+  ) +
+  labs(
+    title = "CF Scores and Utility among Non-Incumbents",
+    subtitle = "Model re-estimated on primary races with no incumbents",
+    x = "Candidate CF Score",
+    y = "Spline function of ideal point distance",
+    linetype = TeX("$\\bar{\\theta}_{g}$ value")
+  ) +
+  theme(legend.position = c(.9, .8)) +
+  # coord_cartesian(xlim = c(-5.5, 5.5))
+  NULL
+```
+
+```{r noinc-spline-posterior}
+```
+
 ## Discussion
+
+### CF scores and causal identification
+
+Centrist CF score reflects a consensus view that candidate is viable, so there remains some confounding.
+
+Feedback over time. If candidates observed that moderates were winning primaries, or extremists were winning primaries, they would shift their ideologies so that these ideal points became the center of the party.
 
 ### Other nonparametric Bayes approaches for flexible causal inference
 

@@ -168,7 +168,7 @@ model {
 
   // priors
   wt ~ normal(0, prior_sd);
-  spline_scale ~ cauchy(0, 1);
+  spline_scale ~ student_t(3, 0, 1.5);
   wt_spline_raw ~ normal(0, 1);
 
 }
