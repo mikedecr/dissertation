@@ -72,13 +72,24 @@ transformed data {
   matrix[n, 2] ideals = append_col(CF_center, theta_center);
 
   // post-estimation data things
-  vector[100] CF_post;
-  real CF_skipper = (max(CF) - min(CF)) / 100;
-  vector[3] theta_post = 
-    [mean(theta) - sd(theta), mean(theta), mean(theta) + sd(theta)]' - 
-    theta_offset;
+  // use the same CF from before, but fix theta
+  real theta_mean = mean(theta_center);
+  real theta_lower = mean(theta_center) - sd(theta_center);
+  real theta_upper = mean(theta_center) + sd(theta_center);  
+  
+  // post-est ideal data
+  matrix[n, 2] ideals_mean_post = 
+    append_col(CF_center, 
+               rep_vector(theta_mean, n));
+  
+  matrix[n, 2] ideals_lower_post = 
+    append_col(CF_center, 
+               rep_vector(theta_lower, n));
+  
+  matrix[n, 2] ideals_upper_post = 
+    append_col(CF_center, 
+               rep_vector(theta_upper, n));
   // resume CF_post after all declarations
-  matrix[100 * 3, 2] ideals_post;
 
   // knots and basis functions
   int num_basis = num_knots + spline_deg - 1;
@@ -96,22 +107,6 @@ transformed data {
     append_row(rep_vector(knots[1], spline_deg), knots);
   ext_knots = 
     append_row(ext_knots_temp, rep_vector(knots[num_knots], spline_deg));
-
-
-  // anything we can do for post-estimation prediction?
-  CF_post[1] = min(CF);
-  for (i in 2:100) {
-    CF_post[i] = CF_post[i - 1] + CF_skipper;
-  }
-  CF_post = CF_post - CF_offset;
-  ideals_post = append_row(
-    append_row(
-      append_col(CF_post, rep_vector(theta_post[1], 100)), 
-      append_col(CF_post, rep_vector(theta_post[2], 100)) 
-    ), 
-    append_col(CF_post, rep_vector(theta_post[3], 100))
-  );
-
 
 }
 
@@ -173,26 +168,47 @@ model {
 
   // priors
   wt ~ normal(0, prior_sd);
-  spline_scale ~ cauchy(0, 2);
+  spline_scale ~ cauchy(0, 1);
   wt_spline_raw ~ normal(0, 1);
 
 }
 
 generated quantities {
   
-  vector[100 * 3] distances_post = ideals_post * linkers;
-  matrix[100 * 3, num_basis] B_post;
-  vector[100 * 3] spline_post;
+  vector[n] distances_mean_post = ideals_mean_post * linkers;
+  vector[n] distances_lower_post = ideals_lower_post * linkers;
+  vector[n] distances_upper_post = ideals_upper_post * linkers;
+  matrix[n, num_basis] B_mean_post;
+  matrix[n, num_basis] B_lower_post;
+  matrix[n, num_basis] B_upper_post;
+  vector[n] spline_mean_post;
+  vector[n] spline_lower_post;
+  vector[n] spline_upper_post;
 
   // recursively build basis functions  
   for (b in 1:num_basis) {
-    B_post[:, b] = 
-    build_b_spline(distances_post, to_array_1d(ext_knots), b, spline_deg + 1);
+    B_mean_post[:, b] = 
+      build_b_spline(distances_mean_post, 
+                     to_array_1d(ext_knots), 
+                     b, 
+                     spline_deg + 1);
+    B_lower_post[:, b] = 
+      build_b_spline(distances_lower_post, 
+                     to_array_1d(ext_knots), 
+                     b, 
+                     spline_deg + 1);
+    B_upper_post[:, b] = 
+      build_b_spline(distances_upper_post, 
+                     to_array_1d(ext_knots), 
+                     b, 
+                     spline_deg + 1);
   }
 
   // only need if last data exactly == last knot?
   // B[n, num_knots + spline_deg - 1] = 1;
 
-  spline_post = B_post * wt_spline;
+  spline_mean_post = B_mean_post * wt_spline;
+  spline_lower_post = B_lower_post * wt_spline;
+  spline_upper_post = B_upper_post * wt_spline;
 
 }
