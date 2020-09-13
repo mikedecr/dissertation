@@ -455,7 +455,7 @@ This concern has led researchers to use regularized estimators to detect heterog
 ```{r spline-coef-prior}
 plot_spline_coef_draws <- tibble(
   raw = rnorm(10000),
-  sigma = abs(rcauchy(10000)),
+  sigma = abs(rcauchy(10000, scale = 1)),
   phi = raw*sigma,
 ) %>%
 ggplot() +
@@ -572,7 +572,7 @@ This Normal-Cauchy mixture is similar to the "horseshoe prior" and its variants 
   Note that "sparsity" in this context does not imply coefficients of exactly-zero as it does with non-Bayesian L1 regularization [@tibshirani:1996:lasso; @ratkovic-tingley:2017:sparse-lasso-plus].
   Sparse priors may result in posterior _modes_ at zero, but posterior intervals will contain non-zero values [@park-casella:2008:bayesian-lasso].
 ]
-The left-side panel in Figure \@ref(fig:spline-coef-prior) plots a histogram of simulated draws from this prior, which features a spike near zero and characteristically long Cauchy tails.^[
+The left-side panel in Figure \@ref(fig:plot-spline-priors) plots a histogram of simulated draws from this prior, which features a spike near zero and characteristically long Cauchy tails.^[
   The tails are long enough that many draws actually fall far outside the region plotted in the figure.
   These values are much rarer than the values contained in the plotted region, but they are much more probable than they would be under, for example, a Normal-Normal prior.
 ]
@@ -587,7 +587,7 @@ The left-side panel in Figure \@ref(fig:spline-coef-prior) plots a histogram of 
 ```{r plot-spline-priors, include = TRUE, fig.width = 9, fig.height = 5, out.width = "100%", fig.scap = "Prior draws of spline coefficient and spline function.", fig.cap = "Prior draws of spline coefficient and spline function. Left: histogram of prior draws for an individual spline coefficient. Right: draws from the implied prior over spline functions."}
 ```
 
-The right panel shows `r n_coef_draws` prior predictive draws of the spline functions, resulting from `r n_coef_draws` coefficient vectors drawn from the hierarchical prior.
+The right panel of Figure \@ref(fig:spline-coef-prior) shows `r n_coef_draws` prior predictive draws of the spline functions, resulting from `r n_coef_draws` coefficient vectors drawn from the hierarchical prior.
 There are a few important details to note about the construction of this prior.
 First, most of the "peaks" of the spline function are in a neighborhood near zero, especially within the $(-3, 3)$ interval.
 Although at first this sounds like a very narrow prior, it is important to remember that the spline function is defined on the utility (logit) scale, where small changes in utility can have large and nonlinear effects.
@@ -610,6 +610,62 @@ For causal inference, it is important not to regularize confounding effects too 
 ## Findings
 
 
+```{r plot-spline-posterior}
+```
+
+The average effect of a change in CF score on candidate utility can't be summarized by a single coefficient because of the nonlinear, interactive form of the spline function $f\left(\text{CF}_{ir}, \bar{\theta}_{g}\right)$.
+The causal effect must instead be calculated as the difference in function values at different CF score inputs. 
+Let $\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right)$ be the conditional utility effect (CUE) of moving to $\text{CF}$ from a reference value $\text{CF}'$, which is defined as
+\begin{align}
+  \text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right) &=
+    \E{f\left(\text{CF}, \bar{\theta}_{g}\right) \mid 
+       \bar{\theta}_{g} = \theta, C_{ir} = c} \\
+       &\quad -
+    \E{f\left(\text{CF}', \bar{\theta}_{g}\right) \mid 
+       \bar{\theta}_{g} = \theta, C_{ir} = c}
+  (\#eq:cate-utility)
+\end{align}
+given a fixed value of $\bar{\theta}_{g} = \theta$ and conditioning on covariates $C_{ir}$. 
+The Bayesian approach provides a definition for the probability distribution for $\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right)$ as well, which marginalizes over model parameters:
+\begin{align}
+  \p{\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right)} &=
+  \int \p{f\left(\text{CF}, \theta \right) - f\left(\text{CF}', \theta \right) \mid \theta, \alpha, \beta} \\
+  &\qquad \times \p{\alpha, \beta, \boldsymbol{\phi}} \diff \alpha \diff \beta \diff \boldsymbol{\phi}
+  (\#eq:prob-cate-utility)
+\end{align}
+The conditional average effect on candidate utility can be gleaned by simply contrasting the function values in Figure \@ref(fig:plot-spline-posterior) for two different CF score values.
+
+The conditional logit is a linear model for latent candidate utility, but causal effects on candidate win probabilities can be derived from the model as well.
+Two intervening factors affect how candidate utility becomes win probability.
+First, win probability is a nonlinear function of candidate utility, so a utility shock can have different effects on win probability depending on the baseline utility value.
+Second, a primary race can feature a variable number of candidates, so a utility shock can have a smaller effect on win probability if there are more candidates in the race.
+Let $\text{CWE}\left(\text{CF}, \text{CF}', \theta, c, r\right)$ be the conditional _win_ effect (CWE) of moving to $\text{CF}$ from a reference value $\text{CF}'$ in race $r$.
+The CWE is a function of the race $r$ because each race could have different numbers of candidates with different utilities.
+The CWE is the expected difference in softmax functions of candidate utility between CF score values $CF$ and $CF'$.
+\begin{align}
+  \text{CWE}\left(\text{CF}, \text{CF}', \theta, c, r\right) &=
+    \E{\text{softmax}\left(u_{ir}(CF\right) \mid \theta, c, r} \\
+    &\quad - 
+    \E{\text{softmax}\left(u_{ir}(CF'\right) \mid \theta, c, r}
+  (\#eq:cate-pwin)
+\end{align}
+where $u_{ir}\left(CF_{ir}\right)$ represents a candidate utility.
+In turn, the probability distribution is
+\begin{align}
+  \p{\text{CWE}\left(\text{CF}, \text{CF}', \theta, c, r\right)} &= 
+    \int \p{\text{softmax}\left(u_{ir}(CF\right) - \text{softmax}\left(u_{ir}(CF'\right) \mid \theta, c, r} \\
+    &\qquad \times \p{\alpha, \beta, \boldsymbol{\phi} \gamma} \diff \alpha \diff \beta \diff \boldsymbol{\phi} \gamma
+  (\#eq:prob-cate-pwin)
+\end{align}
+
+```{r win-grid}
+```
+
+
+Figure \@ref(plot:win-grid) visualizes causal effects on win probability.
+The figure contains four comparisons in four different types of races: races with two and three candidates with no incumbents, and races with two and three candidates where one of the competing candidates is an incumbent. 
+The function plotted in each panel is the conditional win effect (vertical axis) of a candidate occupying a certain CF score (horizontal axis) compared to the average CF score in their party.
+
 
 ## Discussion
 
@@ -618,7 +674,3 @@ For causal inference, it is important not to regularize confounding effects too 
 Matching under measurement error in the covariates: <https://amstat.tandfonline.com/doi/full/10.1080/01621459.2015.1122601?casa_token=an-4oMYQN1AAAAAA%3AcmZp5oIxAb5Hs2kkR53JgHrrSXOd1HrLYDwQiuXOw_BaJVWcgG7ADtFcSQrIUQ2qRJTT999k4D-n>
 
 ### Causal inference with latent variables and measurement models
-
-latent confounders with proxy measures:
-<http://papers.nips.cc/paper/7223-causal-effect-inference-with-deep-latent-variable-models.pdf>
-
