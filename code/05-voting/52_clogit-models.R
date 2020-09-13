@@ -7,19 +7,22 @@
 library("here")   
 library("magrittr")
 library("tidyverse")
-# bayesian modeling
+
+# (bayesian) modeling
 library("splines")
 library("broom")
 library("tidybayes")
 library("rstan")
-library("loo")
 mc_cores <- min(5, parallel::detectCores() - 1)
 options(mc.cores = mc_cores)
 rstan_options(auto_write = TRUE)
+
 # clogit
 library("survival")   
+
 # pushing to cloud data
 library("boxr"); box_auth()
+
 
 # source(here::here("code", "helpers", "call-R-helpers.R"))
 
@@ -504,6 +507,14 @@ model_combo <- stan_model(
 )
 alarm()
 
+drop_pars <- c(
+  "wt_spline_raw", 
+  "ideal_distance", "B", "util", "pos", 
+  #"spline_function"
+  "distances_mean_post", "distances_lower_post", "distances_upper_post", 
+  "B_mean_post", "B_lower_post", "B_upper_post"
+)
+
 
 # gaussian process interaction
 # model_GP <- stan_model(
@@ -740,13 +751,15 @@ bayes_grid$stan_data[[1]] %>% lapply(length)
 
 vb_main <- bayes_grid %>%
   filter(control_spec == "main") %>%
+  arrange(desc(party)) %>%
   mutate(
     vb_fit = map(
       .x = stan_data,
       .f = ~ vb(
         data = .x, 
         object = model_combo,
-        pars = c("pos", "wt_spline_raw", "B"),
+        pars = drop_pars,
+        algorithm = "fullrank",
         include = FALSE
       )
     )
@@ -764,7 +777,7 @@ alarm()
 #       .f = ~ vb(
 #         data = .x, 
 #         object = model_combo,
-#         pars = c("pos", "wt_spline_raw", "B"),
+#         pars = drop_pars,
 #         include = FALSE
 #       )
 #     )
@@ -783,7 +796,8 @@ vb_no_incumbents <- bayes_grid %>%
       .f = ~ vb(
         data = .x, 
         object = model_combo,
-        pars = c("pos", "wt_spline_raw", "B"),
+        pars = drop_pars,
+        algorithm = "fullrank",
         include = FALSE
       )
     )
@@ -1114,7 +1128,7 @@ ints$stan_data[[1]]$theta %>% quantile(probs = seq(0, 1, 0.25))
 #         the_fit <- sampling(
 #           data = .x, 
 #           object = model_simple, 
-#           pars = c("pos", "wt_spline_raw", "B"), 
+#           pars = drop_pars, 
 #           include = FALSE 
 #         )
 #         path_name <- str_glue("fullfit-{.y}.rds") %>% as.character()
@@ -1173,6 +1187,7 @@ ints$stan_data[[1]]$theta %>% quantile(probs = seq(0, 1, 0.25))
 
 mc_main <- bayes_grid %>%
   filter(control_spec == "main") %>%
+  arrange(desc(party)) %>%
   mutate(
     mc_fit = map2(
       .x = stan_data,
@@ -1182,7 +1197,7 @@ mc_main <- bayes_grid %>%
           data = .x, 
           object = model_combo, 
           chains = mc_cores,
-          pars = c("pos", "wt_spline_raw", "B"), 
+          pars = drop_pars, 
           include = FALSE 
         )
         path_name <- str_glue("mc_main-{.y}.rds") %>% as.character()
@@ -1206,7 +1221,7 @@ mc_fin_controls <- bayes_grid %>%
           data = .x, 
           object = model_combo, 
           chains = mc_cores,
-          pars = c("pos", "wt_spline_raw", "B"), 
+          pars = drop_pars, 
           include = FALSE 
         )
         path_name <- str_glue("mc_fin_controls-{.y}.rds") %>% as.character()
@@ -1231,7 +1246,7 @@ mc_no_incumbents <- bayes_grid %>%
           data = .x, 
           object = model_combo, 
           chains = mc_cores,
-          pars = c("pos", "wt_spline_raw", "B"), 
+          pars = drop_pars, 
           include = FALSE 
         )
         path_name <- str_glue("mc_no_incumbents-{.y}.rds") %>% as.character()
