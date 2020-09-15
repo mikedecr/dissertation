@@ -98,6 +98,7 @@ count(cands, boat, cand_quality)
 
 
 
+
 # ---- keep only valid matchups -----------------------
 
 # examine unique wins. 
@@ -127,6 +128,17 @@ matchups <- cands %>%
   ungroup() %>%
   print()
 
+
+
+count(matchups, boat, cycle) %>% 
+  pivot_wider(
+    names_from = "boat",
+    values_from = "n",
+  ) %>%
+  mutate(
+    p = `1` / (`1` + `NA`)
+  ) %>%
+  write_rds(here("data", "_model-output", "05-voting", "link-sum.rds"))
 
 # view sets and cands
 matchups %>%

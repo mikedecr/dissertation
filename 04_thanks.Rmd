@@ -2,7 +2,7 @@
 
 This project is better thanks to the advice and suggestions of my committee, Scott Straus and the students in the 2017 prospectus workshop, other Burden advisees (Levi Bankston, Jordan Hsu, Matt Shor, and Rochelle Snyder), David Canon, Devin Judge-Lord, Evan Morier, Blake Reynolds, and Marcy Shieh. 
 Researchers at other institutions provided suggestions and moral support about the ideas in this project as well: Devin Caughey, David Doherty, Andrew Heiss, Seth Hill, Shiro Kuriwaku, TJ Mahr, Steve Miller, Jacob Montgomery, Arman Oganisian, John Poe, Rachel Porter, Jonathan Robinson, Sarah Treul, and Chris Warshaw.
-Extra special thanks to researchers whose freely-provided data made the project possible: Robert Boatright, Adam Bonica, and Ella Foster-Molina, Seth Masket, Nolan McCarty, Eric McGhee, Vincent Moscardelli, Steven Rogers, Boris Shor, Clifford Vickrey, and the teams who make the ANES and CCES surveys possible.
+Extra special thanks to researchers whose freely-provided data made the project possible: Robert Boatright, Adam Bonica, Ella Foster-Molina, Seth Masket, Nolan McCarty, Eric McGhee, Vincent Moscardelli, Steven Rogers, Boris Shor, Clifford Vickrey, and the teams who make the ANES and CCES surveys possible.
 I received financial support from the Elections Research Center at the University of Wisconsin–Madison, and technical support from UW's Social Science Computing Cooperative, Garrick Aden-Buie, and Matthew Kay.
 Thanks also to Deb McFarlane for her help stewarding other students and myself through the bureaucracy of dissertating.
 

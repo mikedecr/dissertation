@@ -30,30 +30,32 @@ library("patchwork")
 library("ggforce")
 ```
 
-Intro:
+How does district-party ideology affect primary outcomes?
+The strategic positioning dilemma theory predicts that candidates position themselves as a compromise between the district electorate and the partisan primary electorate. 
+They care about the primary electorate to fend off competition in primaries, either by deterring primary competitors from running at all or by being the "best fitting" candidate to represent partisan constituents in the primary election.
+I find in Chapter \@ref(ch:positioning) that district-party policy preferences do affect candidate positioning, even after controlling for aggregate partisan voting in the district. 
+This chapter asks if this effort by candidates to position themselves toward their partisan constituency ultimately matters for primary election outcomes.
+Do more conservative districts nominate more conservative nominees?
 
-- Now that we have district-party ideology, does it appear to matter for candidate choice? 
-- are more progressive/conservative districts more likely to prefer more progressive/conservative candidates?
-- challenging modeling problem: the IV doesn't vary across candidates in the same primary, it only varies across primaries.
-- This means that we require an approach to modeling candidate choice that incorporates the interaction between district-party ideology and candidate positioning
+This chapter argues that this research question presents problems for statistical modeling and causal inference that come from the same basic limitation of the data: district-party ideology does not vary across candidates in the same district.
+While it is possible to measure the correlation between district-party ideology and the CF score of the primary winner, this method selects on the dependent variable. 
+We already know from Chapter \@ref(ch:positioning) that candidates are generally more conservative when the electorate is more conservative, so the simple correlation between district-party ideology and nominee ideology does not capture whether more conservative electorates prefer more conservative candidates, _conditional on the set of available candidates_ in the primary.
+By conditioning on a primary race, however, we also condition on district-party ideology, removing all statistical (and therefore causal) variation in district-party ideology across candidates in the same district.
+If we want to understand the role of district-party ideology in shaping primary outcomes, we must frame the research question and causal quantity to be identifiable using data on candidates in the same primary.
 
-Overview:
+I confront these statistical and causal challenges using an augmented conditional logit modeling approach.
+Traditionally, conditional logit is a model that predicts discrete choice based on covariates that vary across _alternatives_ within a choice set (candidates), with chooser data (the electorate) held constant within the choice set.
+This modeling limitation means that chooser features, such as district-party ideology, cannot directly affect candidate choice, but they can indirectly affect candidate choice.
+I discuss the nature of these indirect effects below, and I devise a statistical model that flexibly estimates a related causal quantity: the causal effect of candidate ideology on primary outcomes, with heterogeneous effects that vary across primary electorates with different district-party ideologies.
 
-- confront modeling challenges using a conditional logit approach: can only identify differences in candidate utility across candidates
-- this affects which causal claims we can support, since the model can't directly identify how district-party ideology affects candidate utility in isolation
-- discuss the relationship between feasible causal estimands and flexible conditional logit modeling approach for recovering how the effect of candidate positioning is heterogeneous across districts
-
-We find:
-
-- frame research question _as asked in the statistics_
-- Democratic primaries exhibit ideological voting: there is an ideological "sweet spot" where candidates should position themselves to maximize their win probability
-- However, the location of this sweet spot does not vary greatly across districts, meaning that variation in district-party ideology
-- Among Republicans, there is much weaker ideological voting.
-  Candidate value is not strongly related to their ideological positioning at all, leaving little room for effects to vary by districts.
+Using this modeling approach, I find a noisy effect of candidate ideology on primary outcomes.
+It appears that primary candidates are less likely to win primary elections when their CF scores are especially centrist or especially extreme, but the estimates are not especially precise.
+Furthermore, I find no evidence that this effect varies across primary electorates.
+Although candidates appear to position themselves strategically to fit the particular partisan constituency in their district (Chapter \@ref(ch:positioning)), I find no clear evidence that different partisan constituencies reward these strategic maneuvers by candidates.
 
 
 
-## Modeling Candidate Choice
+## Spatial Voting and Candidate Choice
 
 <!-- begin w/ lit review -->
 
@@ -95,7 +97,7 @@ ggplot(util_data) +
   ) +
   annotate(
     geom = "richtext", 
-    label = glue::glue("<b style='color:{primary}'>Candidate value</b> decreases<br>when candidate is farther<br>from group ideal point"),
+    label = glue::glue("<b style='color:{primary}'>Candidate utility</b> decreases<br>when candidate is farther<br>from group ideal point"),
     x = 4, y = -60,
     hjust = 1,
     label.color = NA, fill = NA,
@@ -111,32 +113,33 @@ ggplot(util_data) +
 
 
 
-What role does ideology play when constituencies nominate a primary candidate?
+How do the ideal points of candidates and electorates affect primary elections? 
 Spatial voting models argue that primary candidates are more likely to win the nomination when they position their candidacies closer in ideological space to the median primary voter [@downs:1957:economic-theory; @aldrich:1983:downsian-parties].
 This is an essential mechanism underlying the strategic positioning dilemma theory, which states that a candidate must strike a balance between the median partisan voter and the district median voter in order to win both the primary and the general election [@burden:2001:polarizing-primaries; @brady-han-pope:2007:out-of-step].
 This intuition appears to hold in general elections for U.S. House: candidates who are too progressive or too conservative perform worse than candidates who are "just right" [@canes-wrone-et-al:2002:out-of-step; @simas:2013:house-proximity].
-Figure \@ref(fig:utility-model) plots the key insight of these spatial voting models.
-A candidate is most appealing to a constituency when the candidate position (represented on the left–right ideological continuum) matches the constituency's preferred ideological outcome. 
-The candidate is less appealing, or provies less _value_ or _utility_, as their ideological distance from the constituency ideal point grows.
-This utility loss accumulates regardless of whether the candidate is too progressive or too conservative.
+Figure \@ref(fig:utility-model) plots the key claim of spatial voting models: a candidate is most appealing to a constituency when the candidate's ideological location (represented on a left–right ideological continuum) matches the constituency's preferred ideological outcome.
+The candidate is less appealing, or provides less _utility_ (or "value") to the constituency, when the ideological distance between the candidate and the constituency grows larger.
+This utility loss occurs whether the candidate is too progressive or too conservative.
 
-```{r utility-model, include = TRUE, fig.scap = "Spatial proximity and candidate utility.", fig.cap = "A spatial voting model's description of candidate value (utility) as a function of candidate position and district-party ideology. Candidate value is maximized at the group ideal point $\\bar{\\theta}_{g}$ and decreases in either direction. The example in this plot assumes quadratic utility loss."}
+```{r utility-model, include = TRUE, fig.scap = "Spatial proximity and candidate utility.", fig.cap = "A spatial voting model's description of candidate utility (value) as a function of candidate position and district-party ideology. Candidate value is maximized at the group ideal point $\\bar{\\theta}_{g}$ and decreases in either direction. The example in this plot assumes quadratic utility loss."}
 ```
 
 One important shortcoming of existing primary elections research is the inability of empirical models to capture this "optimal positioning" in primaries.
 Studies often measure the relationship between candidate "extremity" and their performance in primary elections—finding that more extreme candidates are more likely to win primary elections [@king-et-al:2016:twitter-primary] or that this effect is limited to extreme Republicans [@nielson-visalvanick:2017:primary-elections]—but extremity is allowed only a constant or monotonic effect on the candidate's primary performance [@hall-snyder:2015:ideology; @king-et-al:2016:twitter-primary; @nielson-visalvanick:2017:primary-elections].
 Without the possibility of non-monotonicity in the extremity–victory relationship, these empirical models do not reflect their underlying theoretical models.
-The other key drawback in existing research is that many studies try to understand the effects of primaries using data from incumbent candidates or general election candidates, which can introduce selection bias by observing only primaries winners instead of all primary candidates including primary losers [e.g. @ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning; @clinton:2006:constituent-representation; @brady-han-pope:2007:out-of-step; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems; @kujala:2020:primary-donors].
-Without somehow accounting for the menu of candidates that a primary electorate can choose from, these studies cannot observe whether extreme candidates are actually preferred over less extreme candidates .
-Studies that avoid this problem exist but are less common [@porter-treul:2020:primary-experience].
-The study design below remedies both of these problems by modeling candidate choice in primary elections using a conditional logit likelihood and using basis-splines to model nonlinear effects of candidate ideology.
+Furthermore, without a measure of the partisan constituency's ideal point (district-party ideology), these studies have no way to know whether the optimal candidate ideology is different in more conservative or more progressive electorates.
+Because my project measures district-party ideology, I can estimate the optimal candidate ideology in different districts with different partisan constituency ideologies.
 
-As reviewed in Chapter \@ref(ch:arg), there are several reasons to doubt that House primary voting predominantly follows a spatial voting model.
-Fewer voters are likely to be aware of candidate positioning in contexts where the party label does not provide differentiating information between candidates [@norrander:1989:primary-voters].
-Voters do respond to policy differences between candidates if they are aware of policy differences [@lelkes:2019:policy-over-party], but it is costly for primary voters to learn about the contrasting policy views of primary candidates.
-Voters may also be strategic, preferring the candidate that they believe is most likely to win the general election even if that candidate isn't closest to their ideal point [@simas:2017:primary-electability].
-Candidate traits like incumbency, an "outsider" reputation [@porter-treul:2020:primary-experience], early fundraising [@bonica:2020:lawyers-in-congress], gender [in Democratic races, see @thomsen:2020:ideology-gender], or other "valence" features [@nyhuis:2018:separate-valences] may bolster candidates' primary success.
-Candidate ideology may serve a selection function even before the primary election itself if moderate candidates are deterred from entering the primary in the first place [@thomsen:2014:moderate-candidates].
+Another important limitation of many existing studies is that the factors affecting primary choice cannot be inferred using only "post-choice" data on incumbent members of congress or primary nominees [e.g. @brady-han-pope:2007:out-of-step; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems; @kujala:2020:primary-donors].
+Without somehow accounting for the menu of candidates that a primary electorate can choose from, we cannot infer that whether candidates with certain ideological placements are actually preferred over candidates with other ideological placements.
+The analysis in this chapter confronts this problem by modeling primary candidate choice using a conditional logit approach, similar to other recent studies of primary choice [@porter-treul:2020:primary-experience].
+
+As I discuss in Chapter \@ref(ch:arg), there are several reasons to doubt that House primary voting predominantly follows a spatial model.
+Few voters are likely to be aware of candidate positioning in contexts where the party label does not provide differentiating information between candidates [@norrander:1989:primary-voters].
+Voters do respond to policy differences between candidates if they are made aware of those differences [@lelkes:2019:policy-over-party], but learning about the issue positions of House primary candidates is costly.
+Voters may also be strategic, preferring moderate or incumbent candidates that they believe are most likely to win the general election, even if those candidates are not closest to their ideal points [@simas:2017:primary-electability].
+Non-ideological traits like incumbency, an "outsider" reputation [@porter-treul:2020:primary-experience], early fundraising [@bonica:2020:lawyers-in-congress], gender [in Democratic races, see @thomsen:2020:ideology-gender], or other "valence" features [@nyhuis:2018:separate-valences] may be easier for primary voters to detect and act upon than candidates' ideological stances.
+It is also possible that candidate ideology's effect on primary elections is mainly a selection function, deterring moderate candidates from entering a primary at all, leaving only the ideologically faithful candidates who present less ideological contrast to voters [@thomsen:2014:moderate-candidates].
 
 
 
@@ -153,12 +156,12 @@ Let $y_{r} = i$ signify that candidate $i$ wins race $r$, with the probability t
 Choice settings such as this, where one chooser must select among several alternatives in the choice set, is traditionally modeled using a conditional logit likelihood [@mcfadden:1973:conditional-logit].
 Conditional logit has been employed to study candidate choice in U.S. primaries by @ansolabehere-et-al:2004:direct-primary-party-loyalty, @culbert:2015:strategic-voting-presidential-primaries, @simas:2017:primary-electability, and @porter-treul:2020:primary-experience.
 Conditional logit supposes that the chooser (in this case, a district-party group) selects a candidate $i$ by comparing the utility they would receive from each candidate in the race $r$.
-Suppose that this utility $\mu_{ir}$ contains a systematic component $u_{ir}$ and a random component $e_{ir}$.
+Suppose that this utility $\omega_{ir}$ contains a systematic component $u_{ir}$ and a random component $e_{ir}$.
 \begin{align}
-  \mu_{ir} &= u_{ir} + e_{ir}
+  \omega_{ir} &= u_{ir} + e_{ir}
 (\#eq:utility-error)
 \end{align}
-The probability that $i$ is chosen is defined as the probability that $\mu_{ir}$ is greatest among all alternatives.
+The probability that $i$ is chosen is defined as the probability that $\omega_{ir}$ is greatest among all alternatives.
 Because error term $e_{ir}$ is not known, this probability is calculated as a function of the systematic components that can be predicted, typically using the softmax function.
 \begin{align}
 \begin{split}
@@ -188,13 +191,13 @@ More generally, chooser-level features can be included in conditional logit mode
 Building a statistical model that enables this interactivity is an important contribution of this research design.
 
 This conditional logit model's identifiability constraint matters for causal inference as well, because it affects which causal quantities make sense in this context.
-Consider the potential outcome $\mu_{ir}\left(\bar{\theta}_{g[r]}, \text{CF}_{ir}\right)$, the systematic utility that is a function of district-party ideology and the candidate's ideological position.
+Consider the potential outcome $\omega_{ir}\left(\bar{\theta}_{g[r]}, \text{CF}_{ir}\right)$, the systematic utility that is a function of district-party ideology and the candidate's ideological position.
 Imagine that we intervene on district-party ideology and measure the average utility effect^[
   For the current discussion, we consider the effect on utility instead of the effect on win probability.
   This is because win probability is complicated by the presence of other candidates, whereas utility is a straightforward function of chooser and choice features.
   It is important to understand the relationship between the causal model structure and the outcome scale because treatments can have different effects on different scales [@vanderweele:2009:interaction-modification].
 ] 
-of setting $\bar{\theta}_{g} = \theta$ versus some other value $\theta'$, $\E{\mu_{ir}\left(\theta, \text{CF}_{ir}\right) - \mu_{ir}\left(\theta', \text{CF}_{ir}\right)}$.
+of setting $\bar{\theta}_{g} = \theta$ versus some other value $\theta'$, $\E{\omega_{ir}\left(\theta, \text{CF}_{ir}\right) - \omega_{ir}\left(\theta', \text{CF}_{ir}\right)}$.
 This effect does exist for individual candidates: making the district-party more liberal or conservative would affect the primary electorate's candidate utility by increasing or decreasing the ideological distance between the district-party and the candidate.
 But because multiple candidates can run in the same race, and the primary electorate has the same district-party ideology each time they consider a new candidate, the average causal effect of district-party ideology implicitly averaging all of the conditional effects for all candidates.
 This isn't unusual in the abstract: any average causal effect is an average over potential heterogeneities.
@@ -203,7 +206,7 @@ But this is complicated by the fact that the conditional logit model does not na
 It is much simpler, instead, to consider the average effect of candidate positioning on candidate utility.
 This average effect is also an implicit average over all interactions with district-party ideology, but conditioning on candidate features that confound the effect of CF scores is much simpler with conditional logit, so causal identification of choice-level effects is more analytically straightforward as well.
 The conditional average effect of CF scores on candidate utility would thus be 
-$\E{\mu_{ir}\left(\theta, \text{CF} \right) - \mu_{ir}\left(\theta, \text{CF}'\right) \mid C_{ir} = c, r}$,
+$\E{\omega_{ir}\left(\theta, \text{CF} \right) - \omega_{ir}\left(\theta, \text{CF}'\right) \mid C_{ir} = c, r}$,
 for a comparison of two values $\text{CF}$ and $\text{CF}'$, fixing the district-party ideology at $\theta$ and conditioning on other candidate-varying attributes $C_{ir} = c$ and the race $r$.^[
   Conditioning on the race, which defines the choice set, is inherent to conditional logit.
   Conditioning on the choice set is what makes undermines the identifiability chooser-level effects without cross-level interactions.
@@ -211,11 +214,11 @@ for a comparison of two values $\text{CF}$ and $\text{CF}'$, fixing the district
 
 Because this project is focused on the added value of observing district-party ideology, we go one step further to model effect heterogeneity over district-party ideology explicitly, rather than be content to average over it implicitly.
 I approach this from an effect modification perspective, meaning that heterogeneous effects do not reflect the causal effects of interventions on district-party ideology, but instead reflect causal effects of CF scores conditional on a given district-party ideology value.
-Formally, we say that district-party ideology is an "indirect modifier" if the CF score effect ($\text{CF}$ versus $\text{CF}'$) varies across levels of district-party ideology ($\theta$ versus $\theta'$) [@vanderweele-robins:2007:effect-modification].
+Formally, we say that district-party ideology is an "indirect modifier" if the CF score effect ($\text{CF}$ versus $\text{CF}'$) varies across levels of district-party ideology ($\theta$ versus $\theta'$) [@vanderweele-robins:2007:effect-modification], conditional on stratum $c$ and race $r$—in other words, if the following quantity is not zero.
 \begin{align}
-  \E{\mu_{ir}\left(\text{CF}\right) - \mu_{ir}\left(\text{CF}'\right) \mid \bar{\theta}_{g} = \theta, C_{ir} = c, r} 
+  \E{\omega_{ir}\left(\text{CF}\right) - \omega_{ir}\left(\text{CF}'\right) \mid \bar{\theta}_{g} = \theta, c, r}
   &- 
-  \E{\mu_{ir}\left(\text{CF}\right) - \mu_{ir}\left(\text{CF}'\right) \mid \bar{\theta}_{g} = \theta', C_{ir} = c, r}
+  \E{\omega_{ir}\left(\text{CF}\right) - \omega_{ir}\left(\text{CF}'\right) \mid \bar{\theta}_{g} = \theta', c, r}
   (\#eq:hte)
 \end{align}
 <!------- TO DO ---------
@@ -294,8 +297,8 @@ ggplot(clogit_dag) +
 ```
 
 Figure \@ref(fig:plot-choice-dag) plots a causal graph of the system under consideration.
-The causal effect of candidate position $\text{CF}_{ir}$ on candidate utility $\mu_{ir}$ is unidentified without conditioning on pre-treatment candidate features $C_{ir}$.
-District-party ideology is included as an indirect modifier of the CF score effect $\text{CF}_{ir} \rightarrow \mu_{ir}$, represented with the path $\bar{\theta}_{g} \rightarrow \text{CF}_{ir}$ and no direct path between $\bar{\theta}_{g}$ and $\mu_{ir}$ [@vanderweele-robins:2007:effect-modification].
+The causal effect of candidate position $\text{CF}_{ir}$ on candidate utility $\omega_{ir}$ is unidentified without conditioning on pre-treatment candidate features $C_{ir}$.
+District-party ideology is included as an indirect modifier of the CF score effect $\text{CF}_{ir} \rightarrow \omega_{ir}$, represented with the path $\bar{\theta}_{g} \rightarrow \text{CF}_{ir}$ and no direct path between $\bar{\theta}_{g}$ and $\omega_{ir}$ [@vanderweele-robins:2007:effect-modification].
 <!------- TO DO ---------
 - could add labels to describe the U path, modification, etc.
 ------------------------->
@@ -303,7 +306,7 @@ Because district-party ideology is included as an indirect modifier instead of a
 They do confound the causal effects of district-party ideology, however, which is why the effect heterogeneity across districts has no causal interpretation.
 
 
-```{r plot-choice-dag, include = TRUE, out.width = "60%",  fig.height = 6, fig.width = 6, fig.scap = "Causal Diagram of CF score effect on win probability.", fig.cap = "Causal Diagram of CF score effect on win probability. District-party ideology is an indirect modifier because has no direct effect on primary outcomes except through candidate proximity. Post-treatment candidate features $P_{i}$ and unobservables $U$ are uncontrolled but do not compromise identification."}
+```{r plot-choice-dag, include = TRUE, out.width = "60%",  fig.height = 6, fig.width = 6, fig.scap = "Causal Diagram of CF score effect on win probability.", fig.cap = "Causal Diagram of CF score effect on win probability. District-party ideology is an indirect modifier because has no direct effect on primary outcomes except through candidate proximity. Unobservables $U$ are uncontrolled, so the effect of district-party ideology is not identified. The CF score effect is identified conditioning on $C$ and district-party ideology."}
 ```
 
 
@@ -314,7 +317,7 @@ They do confound the causal effects of district-party ideology, however, which i
 
 
 
-### Causal heterogeneity through continuous interaction
+## Modeling Causal Heterogeneity with Continuous Interactions
 
 This section describes a statistical model for primary candidate choice that achieves two key objectives.
 First, the model is designed to capture the heterogeneous causal effect of candidate positioning, conditional on district-party ideology.
@@ -336,14 +339,13 @@ The conditional logit model begins modeling the probability that candidate $i$ i
 \end{split}
 (\#eq:clogit-likelihood)
 \end{align}
-The systematic utility $u_{ir}$ is given a vague definition for the time being.
-I use $f()$ to represent a flexible function of candidate $i$'s CF score and the district-party public ideology for group $g$ in which race $r$ is held.
+I use $f()$ to represent a flexible function of candidate $i$'s CF score and the district-party public ideology $\bar{\theta}_{g}$ for group $g$ in which race $r$ is held.
 I include a vector of candidate-level variables $\mathbf{c}_{ir}$ and regression coefficients $\gamma$.
-Causal inference requires the assumption that conditioning on candidate features renders CF scores ignorable among the candidates in $r$. 
+Causal inference requires the assumption that conditioning on candidate features renders CF scores ignorable among the candidates in $r$.
 
 I then construct $f()$ as a flexible spline function of CF scores and district-party ideal points.
-Although CF scores and district-party ideology both represent ideal point measures, the two measures are not constructed in the same ideal point space.
-The first step for constructing the spline is to create a function that effectively maps these two measures into a common space.
+Although CF scores and district-party ideology both represent ideal points, the two measures are not constructed in the same ideal point space, so calculating the absolute or squared distance between ideal points [e.g. @adams-et-al:2004:discounting-directional-voting] isn't immediately available.
+To rectify this, I create a function that maps these two measures into a common space.
 Let $\Delta_{ir}$ be a linear combination of $\text{CF}_{ir}$ and $\bar{\theta}_{g}$,
 \begin{align}
 \begin{split} 
@@ -352,25 +354,33 @@ Let $\Delta_{ir}$ be a linear combination of $\text{CF}_{ir}$ and $\bar{\theta}_
 \end{split}
 (\#eq:linear-combo)
 \end{align}
-The linear combination represents an assumption that CF score space and district-party ideology space are linear transformations of one another, similar to the way Aldrich–McKelvey scaling estimates linear mappings between ideology spaces [@aldrich-mckelvey:1977:scaling; @hare-et-al:2015:bayes-aldrich-mckelvey].
-The second line of \@ref(eq:linear-combo) restricts the coefficients to have a norm of $1$. 
-This places an identifiability restriction on the location and scale of the $\Delta$ space.
-Furthermore it implies a mapping between $\text{CF}$ space and $\bar{\theta}_{g}$ space, since $\beta$ is defined in terms of $\alpha$,
+which represents an assumption that CF scores and district-party ideology space are linear transformations of one another, similar to the way Aldrich–McKelvey scaling estimates linear mappings between ideology spaces [@aldrich-mckelvey:1977:scaling; @hare-et-al:2015:bayes-aldrich-mckelvey].
+Another interpretation of $\Delta_{ir}$ that a common ideal point space is a weighted average of CF scores and district-party ideology, which weights that are estimated from the data.
+The second line of \@ref(eq:linear-combo) restricts the coefficients to have a norm of $1$, which is an identifiability restriction on the location and scale of the $\Delta$ space, which would otherwise be arbitrary.
+The restriction implies a direct mapping between $\text{CF}$ space and $\bar{\theta}_{g}$ space, since $\beta$ is defined in terms of $\alpha$,
 \begin{align}
 \begin{split}
   1 &= \alpha^{2} + \beta^{2} \\
   \beta &= \pm\sqrt{(1 - \alpha^{2})}
 \end{split}
 \end{align}
-which clarifies how the linear transformation is estimating essentially a scale factor between the two ideal point spaces.^[
-  Restricting the value of $\beta > 0$ would identify the rotation of the $\Delta$ space as well.
-  Such a restriction would improve the interpretability of the $\Delta$ space, but it would hinder Bayesian estimation by introducing unnecessary discontinuities in the posterior distribution.
+which clarifies how the linear transformation is estimating essentially a scale factor between the two ideal point spaces
+Because $\Delta_{ir}$ is a linear transformation of CF scores and district-party ideology, it has the algebraic interpretation of a "distance measure" of the candidate's CF score and the district-party public ideology in the $\Delta$ space.
+For convenience, I sometimes refer to $\Delta_{ir}$ as "ideological distance."^[
+  It is important to note here that the use of "distance" refers more generally to vector spaces than it does to ideal point "differences."
+  We can think of a "difference" $x - z$ as a special case of a distance $\alpha x + \beta z$ where $\alpha = 1$ and $\beta = -1$. 
+  For a linear regression of $y$ on $(\alpha x + \beta z)$, any combination of nonzero $\alpha$ and $\beta$ values would result in identical predictions for $y$, so the ideal point "distance" $\Delta_{ir}$ contains the same information as an ideal point "difference" up to an arbitrary rotation of the $\Delta$ space.
+  I leave the rotation of the $\Delta$ space unrestricted, which makes the interpretation of the $\Delta$ space more ambiguous but improves Bayesian estimation by avoiding arbitrary boundaries or discontinuities in the posterior distribution.
+  <!------- TO DO ---------
+  - some cite on identifiability in Bayesian models?
+  ------------------------->
 ]
-The linear transformation gives $\Delta_{ir}$ the algebraic interpretation of a distance measure between the candidate's CF score and the district-party public ideology in the $\Delta$ space.
 
-I then use $\Delta_{ir}$ to construct a set of basis functions, using a degree-$3$ polynomial basis with $30$ knots across the range of $\Delta_{ir}$.^[
+I then create a function that lets candidate utility be a nonlinear function of the ideal point distance $\Delta_{ir}$.
+This captures the spatial voting intuition: shocks to either CF scores or district-party ideology change the ideal point distance $\Delta_{ir}$, which has a nonlinear effect on candidate utility depending on whether the shock moves the ideal point distance toward or away from the optimal distance.
+I create this nonlinear effect by constructing a set of spline basis functions of $\Delta_{ir}$, using degree-$3$ polynomial bases with $30$ knots across the range of $\Delta_{ir}$.^[
   The symmetry of the $\Delta$ space is ensured by centering CF scores and district-party ideology so that their respective minima and maxima are equidistant from zero.
-  This requires re-calculating $\Delta$ in each model, as CF scores and district-party ideology have different ranges for Republicans and Democrats.
+  This requires calculating separate $\Delta$ spaces for each model, as CF scores and district-party ideology take different values for Republicans and Democrats.
 ]
 Let $b_{k}(\Delta_{ir})$ be the $k$^th^ basis function out of $K$ total, each with a coefficient $\phi_{k}$.
 The function $f()$ from \@ref(eq:clogit-likelihood) results then in a spline regression on $\Delta_{ir}$.
@@ -382,18 +392,19 @@ The function $f()$ from \@ref(eq:clogit-likelihood) results then in a spline reg
 \end{split}
 (\#eq:spline-function)
 \end{align}
-
 The spline regression enables a continuous interaction effect between CF scores and district-party ideology.
-Because the basis functions are a nonlinear function district-party ideology, the derivative of $u_{ir}$ with respect to CF scores (the instantaneous effect of CF scores) is a function that contains district-party ideology $\bar{\theta}_{g}$.
-By specifying the interacting between chooser- and choice-level data in this way, I sidestep the identifiability limitation of a simpler conditional logit model, allowing the causal effect of CF score to vary in different districts with different district-party ideologies. 
-Interacting two continuous variables through the spline function is much more flexible than a multiplicative interaction between CF scores and district-party ideology, which would fail to capture both the utility optimum predicted by spatial voting models as well as any other non-constant interactions.
-The intuition of the linear combination is also superior to the multiplicative interaction, since the notion of a common ideal point metric is a more faithful operationalization of the underlying spatial model.
-The multiplicative interaction has no comparable interpretation.
+Because the basis functions are nonlinear transformations of district-party ideology, the chain rule ensures that the derivative of $u_{ir}$ with respect to CF scores (the instantaneous effect of CF scores) is a function that contains district-party ideology $\bar{\theta}_{g}$.
 
-Although the interpretation of $\Delta$ as a common ideal point metric is algebraically sensible, a limitation of the approach is that the model does not effectively identify which $\alpha$ and $\beta$ values create more plausible common spaces in terms of posterior probability.
-This is because the spline regression is flexible enough to create sensible regression functions out of the multitude of possible $\Delta$ spaces.
+By specifying the interacting between chooser- and choice-level data in this way, I sidestep the identifiability limitation of a simpler conditional logit model, allowing the causal effect of CF score to vary in different districts with different district-party ideologies.
+Interacting two continuous variables through the spline function is much more flexible than a multiplicative interaction between CF scores and district-party ideology, which would fail to capture both the utility optimum predicted by spatial voting models as well as any other non-constant interactions.
+Creating a distance metric using a linear combination also has a generative interpretation that is superior to the multiplicative interaction, because the intuition of a common ideal point metric is a more faithful representation of spatial voting models.
+The multiplicative interaction, meanwhile, has no comparable generative interpretation.
+
+
+Although the interpretation of $\Delta$ as a common ideal point metric is algebraically sensible, a limitation of the approach is that the model does not very accurately identify which $\alpha$ and $\beta$ values create more plausible common spaces in terms of posterior probability.
+This is because the spline regression is flexible enough to create sensible regression functions out of the many configurations of $\Delta$ space.
 In other words, if a particular draw of $\alpha$ and $\beta$ values "compress" the ideal point space in some way, the spline coefficients are able to "stretch" that space back out. 
-As a result, the distribution of spline regressions is well identified from the data even if its component parameters—$\alpha$, $\beta$, and spline weights $\phi_{k}$—are not strongly identifiable on their own.
+As a result, the posterior distribution of spline regressions is identified from the data even if its component parameters—$\alpha$, $\beta$, and spline weights $\phi_{k}$—are not strongly identifiable on their own.
 Stated differently, this model sacrifices some interpretability in order to fit a more flexible regression function, but this trade is worth it in order to capture nonlinear patterns in spatial voting while avoiding specific utility functions or ideal point mappings.
 
 
@@ -427,20 +438,41 @@ The data for this analysis are drawn primarily from two secondary sources, the D
 Cases are organized at the candidate-contest level, with identifiers for each primary contest indexing political party $\times$ congressional district $\times$ election cycle.
 Because primary candidates can run unopposed, I restrict the data to primary races containing at least two candidates.
 I keep only primary races where the number of winning candidates equals $1$, which removes any election where the winner lacked a CF score estimate or where primary outcomes are miscoded in the original data sources.
-I also drop any primary race where the outcome was decided by a convention instead of an election, and I drop all blanket and top-two primaries since those races are not limited to a single party.
+I also drop any primary race where the outcome was decided by a convention instead of an election (coded in the PTP), and I drop all blanket and top-two primaries since those races are not limited to candidates in a single party.
 <!------- TO DO ---------
 - how many?
 ------------------------->
 
+
+```{r}
+link_tab <- 
+  here("data", "_model-output", "05-voting", "link-sum.rds") %>%
+  read_rds() %>%
+  rename(
+    matched = `1`,
+    unmatched = `NA`
+  ) %>%
+  mutate(
+    total = matched + unmatched
+  ) %>%
+  print()
+```
+
+
+
 The DIME database contains most of the essential data used for this analysis: CF scores and primary outcome indicators.
-Primary outcomes for the 2016 election cycle were less thoroughly coded than the primaries for 2012 and 2014, which led to lots of missing data.
-Missing primary outcomes in the DIME were supplemented with data from the PTP.
-Because candidate identifiers were not easily reconcilable using candidate identifiers,^[
-  Candidate IDs in the DIME are regenerated with each vintage of the database, creating over-time inconsistencies candidate identifiers.
-  As a result, the DIME identifiers in PTP do not match the identifiers in more recent DIME vintages.
+Primary outcomes for the 2016 election cycle were less thoroughly coded than the primary outcomes for 2012 and 2014 cycles, which led to lots of missing data.
+Missing primary outcomes in the DIME were supplemented with primary outcome data from the PTP.
+Matching the same candidacy across databases was not easy using candidate identifiers,^[
+  Candidate IDs in the DIME are regenerated with each vintage of the database, creating inconsistencies in the same candidate's IDs over time.
+  As a result, the DIME identifiers that were initially copied into the PTP do not match the DIME identifiers in more recent DIME vintages.
 ]
-I merge the databases using the probabilistic record-linkage algorithm developed by @enamorado-et-al:2018:record-linkage, linking candidates by name, state, district number, election cycle, and political party.
-In cases where the DIME and the PTP disagree about primary outcomes, I defer to the PTP because its narrower substantive focus on primary elections lends it more credibility.
+so I merge the databases using the probabilistic record-linkage algorithm developed by @enamorado-et-al:2018:record-linkage.
+I link candidates by name, state, district number, election cycle, and political party.
+This process matches `r filter(link_tab, cycle == 2016) %>% pull(p) %>% percent(accuracy = 1)` of candidacies in 2016 and 
+`r (sum(link_tab$matched) / sum(link_tab$total)) %>% percent(accuracy = 1)` of candidates in the entire dataset.
+For candidacies where the DIME and the PTP disagree about the outcome of a primary race, I defer to the PTP because its narrower substantive focus on primary elections lends it more credibility.
+
 <!------- TO DO ---------
 - ???
 ------------------------->
@@ -478,7 +510,7 @@ bind_rows(noinc_raw, fits_data) %>%
   ) %>%
   arrange(Subset) %>%
   knitr::kable(
-    caption = "Number of Primary Races and Primary Candidates",
+    caption = "Number of primary races and primary candidates",
     booktabs = TRUE
   )
 ```
@@ -505,20 +537,20 @@ This concern has led researchers to use regularized estimators to detect heterog
 ```{r spline-coef-prior}
 plot_spline_coef_draws <- tibble(
   raw = rnorm(10000),
-  sigma = abs(1.5 * rt(10000, df = 3)),
-  phi = raw*sigma,
+  eta = abs(1.5 * rt(10000, df = 3)),
+  phi = raw*eta,
 ) %>%
 ggplot() +
   aes(x = phi) +
   geom_histogram(
-    boundary = 0, bins = 100, fill = primary
+    boundary = 0, bins = 100, fill = primary, alpha = 0.7
   ) +
   xlim(c(-10, 10)) +
   labs(
     x = TeX("Spline coefficient $\\phi_{k}$"),
     y = "Count",
     title = "Prior for Spline Coefficient",
-    subtitle = "Normal prior with Cauchy scale"
+    subtitle = "Normal prior with T(3) scale"
   )
 ```
 
@@ -536,9 +568,9 @@ coef_draws <-
     rep = 1:n_coef_draws
   ) %>%
   mutate(
-    sigma = 1.5 * rt(n(), df = 3) %>% abs(),
+    eta = 1.5 * rt(n(), df = 3) %>% abs(),
     phi_raw = rnorm(n()),
-    phi = phi_raw * sigma
+    phi = phi_raw * eta
   ) %>%
   select(rep, k, phi) %>%
   pivot_wider(
@@ -594,32 +626,33 @@ plot_spline_coef_draws + plot_prior_spline_functions
 I use a hierarchical prior for the spline coefficients to penalize the complexity of the resulting spline function.
 The prior for each basis function's coefficient $\phi_{k}$ has a Normal distribution,
 \begin{align}
-  \phi_{k} &\sim \text{Normal}\left(0, \sigma \right)
+  \phi_{k} &\sim \text{Normal}\left(0, \eta \right)
   (\#eq:spline-marginal)
 \end{align}
-where $\sigma$ is another estimated parameter.
+where $\eta$ is another estimated parameter.
 By estimating an adaptive prior distribution for the spline coefficients, coefficients are shrunk toward zero through partial pooling.
-This prior is implemented in Stan as using a non-centered parameterization, which decomposes $\phi_{k}$ into a standard Normal variable $\tilde{\phi}_{k}$ and a scale factor $\sigma$.
+This prior is implemented in Stan as using a non-centered parameterization, which decomposes $\phi_{k}$ into a standard Normal variable $\tilde{\phi}_{k}$ and a scale factor $\eta$.
 \begin{align}
 \begin{split}
-  \phi_{k} &= \tilde{\phi}_{k}\sigma \\ %_ 
+  \phi_{k} &= \tilde{\phi}_{k}\eta \\ %_ 
   \tilde{\phi}_{k} &\sim \text{Normal}\left(0, 1\right) %_
 \end{split}
 (\#eq:spline-shrinkage)
 \end{align}
-The non-centered parameterization stretches a standard Normal distribution in order to create a Normal distribution with a scale of $\sigma$.
+The non-centered parameterization stretches a standard Normal distribution in order to create a Normal distribution with a scale of $\eta$.
 This parameterization is valuable for Bayesian estimation because it de-correlates random variables in the posterior distribution, creating an easier posterior geometry for estimation algorithms.
-I give the scale factor $\sigma$ a half-Cauchy prior,
+I give the scale factor $\eta$ a Student's $T$ prior with $3$ degrees of freedom and a scale of $1.5$,
 \begin{align}
-  \sigma &\sim \text{Student's T}\left(\nu = 3, 0, s = 1.5\right)
+  \eta &\sim \text{Student's T}\left(\nu = 3, \mu = 0, \sigma = 1.5\right)
   (\#eq:scale-cauchy)
 \end{align}
-which regularizes the scale value toward zero but has a flatter tail to allow strong signals from the data to depart from the prior.
-This Normal-Cauchy mixture is similar to the "horseshoe prior" and its variants [@carvalho-et-al:2010:horseshoe-prior; @piironen-vehtari:2017:horseshoe-hyperprior; @piironen-vehtari:2017:horseshoe-sparse-vs-reg], which is a popular prior for estimating sparse coefficients with regularization.^[
+which regularizes the scale value toward zero, but has a modestly flat tail to allow strong signals from the data to depart from the prior.
+This Normal-T mixture is similar to a "horseshoe prior" [@carvalho-et-al:2010:horseshoe-prior; @piironen-vehtari:2017:horseshoe-hyperprior; @piironen-vehtari:2017:horseshoe-sparse-vs-reg], which is a popular prior for estimating sparse coefficients with regularization.^[
   Note that "sparsity" in this context does not imply coefficients of exactly-zero as it does with non-Bayesian L1 regularization [@tibshirani:1996:lasso; @ratkovic-tingley:2017:sparse-lasso-plus].
   Sparse priors may result in posterior _modes_ at zero, but posterior intervals will contain non-zero values [@park-casella:2008:bayesian-lasso].
 ]
-The left-side panel in Figure \@ref(fig:plot-spline-priors) plots a histogram of simulated draws from this prior, which features a spike near zero and characteristically long Cauchy tails.^[
+Unlike the horseshoe, which uses a half-Cauchy scale, I use a half-T scale that places lower probability on extremely large coefficients but doesn't regularize as strongly as, say, and half-Normal scale.
+The left-side panel in Figure \@ref(fig:plot-spline-priors) plots a histogram of simulated draws from this prior, which features a spike near zero and flatter tails than a Normal-Normal mixture.^[
   The tails are long enough that many draws actually fall far outside the region plotted in the figure.
   These values are much rarer than the values contained in the plotted region, but they are much more probable than they would be under, for example, a Normal-Normal prior.
 ]
@@ -641,7 +674,7 @@ Although at first this sounds like a very narrow prior, it is important to remem
 For context, a coefficient of $3$ on the logit scale would increase the success probability from $.5$ to `r plogis(3) %>% round(2)` in a two-candidate choice set, which is a larger effect than almost anything that occurs regularly in elections.
 Furthermore, a preference for a spline functions near zero is essential for regularization, so this amount of prior information is appropriate for controlling the spline fit.
 At the same time, there are several peaks that decisively escape the $(-3, 3)$ neighborhood.
-These larger peaks reflect the flat that the Cauchy prior on $\sigma$ has thicker tails that allow larger values to occur more frequently.
+These larger peaks reflect the flat that the Cauchy prior on $\eta$ has thicker tails that allow larger values to occur more frequently.
 The shape of the Cauchy tail retains enough flexibility to detect a spike in utility even if the center of the prior concentrates spline functions near zero.
 
 For the remaining coefficients $\gamma$, I specify a weakly informative prior,
@@ -652,6 +685,60 @@ For the remaining coefficients $\gamma$, I specify a weakly informative prior,
 which rules out explosive coefficient values while still allowing candidate attributes like incumbency to exhibit large correlations with candidate utility.
 For causal inference, it is important not to regularize confounding effects too much to avoid re-introducing bias into treatment effect estimates [@hahn-et-al:2018:regularization-confounding; @hahn-et-al:2020:bayesian-causal-forests].
 
+```{r a-b-data}
+unit_params <- tibble(
+  a_raw = rnorm(10000),
+  b_raw = rnorm(10000)
+) %>%
+  mutate(
+    across(
+      .cols = c(a_raw, b_raw), 
+      .fns = list(id = ~ . / sqrt(a_raw^2 + b_raw^2))
+    )
+  ) %>%
+  rename(
+    `Constrained α` = a_raw_id, 
+    `Constrained β` = b_raw_id
+  )
+```
+
+```{r a-b-priors}
+unit_params %>%
+  pivot_longer(
+    cols = contains("Constrained"), 
+    names_to = "param",
+    values_to = "value"
+  ) %>%
+  ggplot() +
+  aes(x = value) +
+  facet_wrap(
+    ~ param, 
+    scales = "free"
+  ) +
+  geom_histogram(alpha = 0.7, fill = primary) +
+  labs(
+    x = "Prior value", y = NULL,
+    title = "Prior Draws for Ideal Point Distance Coefficients"
+  ) +
+  ggeasy::easy_remove_y_axis()
+```
+
+Because $\alpha$ and $\beta$ are constrained to have a norm of $1$, their values fall on the unit circle.
+I give these parameters a joint prior that is flat along the unit circle.
+Stan implements this prior automatically by drawing unnormalized parameters $\tilde{\alpha}$ and $\tilde{\beta}$ from independent standard Normal distributions and then dividing by their norm,
+\begin{align}
+  \tilde{\alpha}, \tilde{\beta} &\sim \text{Normal}\left(0, 1\right) \\
+  \alpha = \sqrt{\tilde{\alpha}^2 + \tilde{\beta}^2} \\
+  \beta = \sqrt{\tilde{\alpha}^2 + \tilde{\beta}^2}
+\end{align}
+which creates a flat density over the unit circle.^[
+  Technically, this transformation is undefined if the norm is exactly zero, which realistically never happens.
+]
+The marginal densities for $\alpha$ and $\beta$, shown in Figure \@ref(fig:a-b-priors) are not exactly flat due to the nonlinear transformation from Cartesian coordinates to polar coordinates.
+
+
+```{r a-b-priors, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 4, fig.scap = "Prior draws for ideal point distance coefficients.", fig.cap = "Prior draws of coefficients that map CF cores and district-party ideology to the common ideal point distance metric $\\Delta$. These priors create a flat prior on unit circle coordinates, even though the marginal priors are not flat."}
+```
 
 
 ## Findings
@@ -708,32 +795,41 @@ main_coefs <- fits %>%
     )
   ) %>%
   filter(str_detect(term, "linkers") == FALSE) %>%
+  mutate(
+    term_label = fct_reorder(term_label, index) %>% fct_rev(),
+    party_name = ifelse(party == "D", "Democrats", "Republicans")
+  ) %>%
   print()
 ```
 
 ```{r plot-spline-coefs}
 ggplot(main_coefs) +
   aes(
-    x = fct_reorder(term_label, index) %>% fct_rev(), 
+    x = term_label,
     y = estimate, 
-    color = party
+    color = party_name
   ) +
   geom_hline(yintercept = 0) +
   geom_pointrange(
-    aes(ymin = conf.low, ymax = conf.high),
-    position = position_dodge(width = -0.25)
+    aes(ymin = conf.low, ymax = conf.high, shape = party_name),
+    position = position_dodge(width = -0.25),
+    fill = "white"
   ) +
   facet_wrap(~ prefix, scales = "free") +
   coord_flip() +
-  scale_color_manual(values = party_code_colors) +
+  scale_color_manual(values = party_colors) +
+  scale_shape_manual(values = c("Democrats" = 16, "Republicans" = 22)) +
   labs(
     x = NULL,
     y = "Posterior parameter value",
+    color = NULL, 
+    shape = NULL,
     title = "Conditional Logit Parameters",
     subtitle = "Fullrank variational estimations"
   ) +
   theme(
-    legend.position = "none",
+    legend.position = c(0.25, 0.2),
+    legend.background = element_rect(fill = alpha("white", 0.9)),
     plot.title.position = "plot"
   )
 ```
@@ -797,7 +893,7 @@ Most spline coefficients have posterior point estimates near zero, which is a pr
 Only a few coefficients strongly depart from the prior, an initial indication that the spline regression detects a smooth function with a small number of "wiggles," rather than a highly variable function with many local peaks and troughs. 
 
 
-```{r plot-spline-coefs, include = TRUE, out.width = "100%", fig.height = 8, fig.width = 9, fig.scap = "Posterior parameters from conditional logit.", fig.cap = "Posterior parameters from conditional logit. Points and intervals are variational point estimates and 90% quantile intervals from approximate posterior. Left panel shows regression weights for covariates. Right panel shows basis function coefficients and hierarchical scale parameter."}
+```{r plot-spline-coefs, include = TRUE, out.width = "100%", fig.height = 8, fig.width = 9, fig.scap = "Posterior parameters from conditional logit.", fig.cap = "Posterior parameters from conditional logit. Points and intervals are variational point estimates and 90 percent quantile intervals from approximate posterior. Left panel shows regression weights for covariates. Right panel shows basis function coefficients and hierarchical scale parameter."}
 ```
 
 
@@ -869,7 +965,10 @@ spline_means %>%
     y = "Spline function of ideal point distance",
     linetype = TeX("$\\bar{\\theta}_{g}$ value")
   ) +
-  theme(legend.position = c(.9, .8)) +
+  theme(
+    legend.position = c(.9, .8),
+    legend.background = element_rect(fill = alpha("white", 0.5))
+  ) +
   # coord_cartesian(xlim = c(-5.5, 5.5))
   NULL
 ```
@@ -880,6 +979,7 @@ This means that the shape of the spline function comes two signals in the data.
 First, which $\Delta$ values are related to candidate utility, and second, what combination of CF scores and district-party ideology (in terms of $\alpha$ and $\beta$ values) more strongly affect CF scores. 
 I show candidate CF scores along the horizontal axis, and spline functions holding district-party ideology fixed at different values are plotted on the vertical axis.
 Solid lines show the spline function conditioned on _average_ district-party ideology in each party, while dashed and dotted lines condition the spline function on district-party ideology values one standard deviation above and below the mean.
+The shaded region shows the 90% posterior interval for the spline function conditioning on the average district-party ideology, calculated from samples from the variational posterior.
 A spline function that drifts up and down across the range of CF scores reflects the causal effect of CF scores under the identification assumptions.
 A spline function that varies for different values of district-party ideology reflects heterogeneous causal effects in districts with different district-party ideologies.
 
@@ -894,28 +994,37 @@ This peak in utility is what we should expect to find under an assumption of spa
 This pattern suggests that a null hypothesis of non-ideological voting in primaries is unlikely to be true, because the utility function isn't simply flat over candidate CF scores.
 The location of the utility peak suggests that primary electorates are not focused by-and-large on electability, which would manifest as a utility peak at centrist CF score values.
 It also suggests that primary electorates do not place a single-minded emphasis on partisan extremism, which would result in a utility peak at more extreme CF scores.
-It is also important to note that these estimates control for incumbency, so the utility peak at party-median CF score values _does not_ merely reflect the fact that incumbent candidates represent the ideological "core" of the party.
+It is also important to note that these estimates control for incumbency, so the utility peak at party-median CF score values _does not_ merely reflect the fact that high-value incumbent candidates represent the ideological "core" of the party.
 Furthermore, results below suggest that a similar utility peak appears even when we remove all non-incumbents from the data.
 
 Although the analysis suggests that candidate ideology does have a causal effect on CF scores, there is no evidence to suggest that this effect is heterogeneous across districts.
-The utility function for districts with average district-party conservatism is almost identical to the utility functions for districts with above-average and below-average district-party conservatism.
-More conservative candidates are not noticeable more valuable to conservative primary electorates, nor are progressive candidates more valuable to progressive electorates.
+The utility function for districts with average district-party conservatism is almost identical to the utility functions for districts with above-average and below-average district-party conservatism, shown in the figure with dotted and dashed lines.
+More conservative candidates are not noticeably more valuable to conservative primary electorates, nor are progressive candidates more valuable to progressive electorates.
 
-These results are partially consistent with the strategic positioning dilemma.
+How do these results square with the strategic positioning dilemma?
+The SPD theorizes that candidates position themselves close to the primary constituency in order to defeat possible or actual primary challengers.
+While candidates may be able to position themselves to target the ideological preferences of their partisan constituents (shown in Chapter \@ref(ch:positioning)), these positioning maneuvers are ultimately ineffectual if primary voters do not perceive or act on candidates' ideological stances.
+While the findings in this do suggest that primary candidates are more highly valued  when they position their candidacies near the ideological "core" of their party, this benefit is very broad.
+Primary electorates' place less value on very extreme and very moderate candidates than they place on "typical" partisan candidates, but the current data do not support finer conclusions than that.
+I find no evidence that partisan constituencies with more consistent ideological preferences prefer more consistently ideological candidates, which suggests that primary candidates' ideological maneuvers may have little direct appeal to primary electorates.
+Either primary constituencies do not perceive fine differences between candidates' ideological positioning, or they do not place much weight on candidate ideology when choosing a candidate.
 
-- 
+On a theoretical level, these findings do not necessarily imply that candidate ideological maneuvering is useless to their primary successes.
+Candidate ideology's effect on primary success can be mediated by other mechanisms. 
+For instance, candidate ideology can affect campaign fundraising [@stone-simas:2010:candidate-valence; @barber-et-al:2016:ideological-donors; @thomsen-swers:2017:women-run], which could indirectly affect voters' awareness of candidates.
+Indirect mechanisms such as these are possible, but their reliance on intermediary actors rather is a point of divergence from the strategic positioning dilemma, which construes candidate ideology as a more direct appeal to voters' policy preferences.
+
+On a technical level, a significant benefit of the Bayesian approach is that uncertainty intervals are straightforward to calculate using posterior samples.
+Non-Bayesian uncertainty estimates would require the researcher to derive a variance estimator analytically or estimate a large number of models on bootstrapped data, both of which are more demanding than generating post-estimation quantities within a Stan program.
 
 
+### Causal effects on primary outcomes
 
+So far, I have discussed model results in terms of candidate utility, a latent scale that does not directly manifest as a primary win or loss.
+In order to understand how candidate ideology affects primary outcomes, utility must be translated to win probability.
+This discussion provides a brief mathematical roadmap to describe causal effects on utility and win probability.
 
-
-Describe spline function
-
-- distance contains both CF and theta
-- results show the function responds mostly to CF, barely any effect of theta
-- appearance of an optimum; candidates are more valuable in a particular region of ideology space, less valuable in the fringes
-- NO effect of 
-
+First, I discuss causal effects on candidate utility.
 The average effect of a change in CF score on candidate utility can't be summarized by a single coefficient because of the nonlinear, interactive form of the spline function $f\left(\text{CF}_{ir}, \bar{\theta}_{g}\right)$.
 The causal effect must instead be calculated as the difference in function values at different CF score inputs. 
 Let $\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right)$ be the conditional utility effect (CUE) of moving to $\text{CF}$ from a reference value $\text{CF}'$, which is defined as
@@ -929,22 +1038,23 @@ Let $\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right)$ be the conditional
   (\#eq:cate-utility)
 \end{align}
 given a fixed value of $\bar{\theta}_{g} = \theta$ and conditioning on covariates $C_{ir}$. 
-The Bayesian approach provides a definition for the probability distribution for $\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right)$ as well, which marginalizes over model parameters:
+The Bayesian approach defines a the probability distribution for $\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right)$, which marginalizes over model parameters:
 \begin{align}
   \p{\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right)} &=
   \int \p{f\left(\text{CF}, \theta \right) - f\left(\text{CF}', \theta \right) \mid \theta, \alpha, \beta} \\
   &\qquad \times \p{\alpha, \beta, \boldsymbol{\phi}} \diff \alpha \diff \beta \diff \boldsymbol{\phi}
   (\#eq:prob-cate-utility)
 \end{align}
-The conditional average effect on candidate utility can be gleaned by simply contrasting the function values in Figure \@ref(fig:plot-spline-posterior) for two different CF score values.
+The conditional average effect of CF score on candidate utility can be gleaned by simply contrasting the function values in Figure \@ref(fig:plot-spline-posterior) for two different CF score values.
+I do not plot these causal contrasts directly because they would look identical to the spline function, except the function would be intercept-shifted up or down depending on the reference value $\text{CF}'$.
 
-The conditional logit is a linear model for latent candidate utility, but causal effects on candidate win probabilities can be derived from the model as well.
+Instead, I highlight how changes in CF score affect primary win probability.
 Two intervening factors affect how candidate utility becomes win probability.
-First, win probability is a nonlinear function of candidate utility, so a utility shock can have different effects on win probability depending on the baseline utility value.
-Second, a primary race can feature a variable number of candidates, so a utility shock can have a smaller effect on win probability if there are more candidates in the race.
+First, win probability is a nonlinear function of candidate utility, so a utility shock can have different effects on win probability depending on the baseline utility at the reference value $\text{CF}'$.
+Second, a primary race can feature a variable number of candidates, so a utility shock will have larger effects on win probability when the field of candidates is small, and smaller effects on win probability when the field of candidates is larger.
 Let $\text{CWE}\left(\text{CF}, \text{CF}', \theta, c, r\right)$ be the conditional _win_ effect (CWE) of moving to $\text{CF}$ from a reference value $\text{CF}'$ in race $r$.
 The CWE is a function of the race $r$ because each race could have different numbers of candidates with different utilities.
-The CWE is the expected difference in softmax functions of candidate utility between CF score values $CF$ and $CF'$.
+Because win probability is modeled as a softmax function of candidate utility, the CWE is the expected difference in softmax functions when CF score takes the value $CF$ versus the reference value $CF'$.
 \begin{align}
   \text{CWE}\left(\text{CF}, \text{CF}', \theta, c, r\right) &=
     \E{\text{softmax}\left(u_{ir}(CF\right) \mid \theta, c, r} \\
@@ -952,8 +1062,8 @@ The CWE is the expected difference in softmax functions of candidate utility bet
     \E{\text{softmax}\left(u_{ir}(CF'\right) \mid \theta, c, r}
   (\#eq:cate-pwin)
 \end{align}
-where $u_{ir}\left(CF_{ir}\right)$ represents a candidate utility.
-In turn, the probability distribution is
+where $u_{ir}\left(CF_{ir}\right)$ represents a candidate utility, holding all variables besides CF score fixed.
+In turn, the probability distribution for the CWE marginalizes over the parameters that compose the softmax function.
 \begin{align}
   \p{\text{CWE}\left(\text{CF}, \text{CF}', \theta, c, r\right)} &= 
     \int \p{\text{softmax}\left(u_{ir}(CF\right) - \text{softmax}\left(u_{ir}(CF'\right) \mid \theta, c, r} \\
@@ -986,7 +1096,7 @@ win_subset <- win_diffs_long %>%
       party == "R" ~ "Republicans"
     )
   ) %>%
-  filter(candidates == "Two competitors") %>%
+  filter(candidates == "One competitor") %>%
   print()
 ```
 
@@ -999,6 +1109,7 @@ ggplot(win_subset) +
     alpha = 0.2,
     color = NA
   ) +
+  geom_rug(aes(y = NULL), alpha = 0.2, show.legend = FALSE) +
   geom_line() +
   facet_grid(party_name ~ fct_rev(incumbent)) +
   scale_color_manual(values = party_code_colors) +
@@ -1007,22 +1118,36 @@ ggplot(win_subset) +
     x = "Candidate CF score",
     y = "Effect on win probability\n(vs. average CF score)",
     title = "How Candidate Ideology Affects Win Probability",
-    subtitle = "In a three-candidate primary"
+    subtitle = "In a two-candidate primary"
   ) +
   theme(legend.position = "none")
 ```
 
-
-
-
-Figure \@ref(plot:win-grid) visualizes causal effects on win probability.
-The figure contains four comparisons in four different types of races: races with two and three candidates with no incumbents, and races with two and three candidates where one of the competing candidates is an incumbent. 
-The function plotted in each panel is the conditional win effect (vertical axis) of a candidate occupying a certain CF score (horizontal axis) compared to the average CF score in their party.
-
+Figure \@ref(plot:win-grid) visualizes causal effects of CF score on win probability in a two-candidate race.
+I use the average CF score in each party as the reference value for CF score.
+Therefore the figure plots the how a candidate's ideological position affects their win probability _compared to holding the average ideological position_ for a candidate in their party.
+I show effects only in races with two candidates total, which conveys an upper bound on the magnitude of causal effects—effects in more crowded primary fields are expected to be smaller.
+The left-side panels contain causal effects in a two-candidate race with no incumbent.
+The right-side panel shows causal effects in a two-candidate race when the other candidate is the incumbent.
 
 ```{r win-grid, include = TRUE, out.width = "100%", fig.width = 8, fig.height = 6, fig.scap = "CF score effect on primary win probability.", fig.cap = "CF score effect on primary win probability in a three candidate race. Left panels feature a three-candidate race with no incumbents. Right panels feature a three-candidate race with one incumbent."}
 ```
 
+The first thing to notice is that causal effects are generally negative.
+This is because the average CF score in each party is very close (but not equal) to the optimal CF score as estimated by the model.
+As candidates take ideological stances that are more moderate or more extreme than the optimal stance, their win probability generally decreases in all subsets of data.
+These declines are not monotonically decreasing because the spline function detects noisy effects for CF score with fewer observations.
+Although the 90% credible intervals contain generally contain effects of zero, the posterior distribution suggests that negative causal effects are most probable.
+
+Another important observation from Figure \@ref(plot:win-grid) is the way the presence of an incumbent dampens causal effects.
+Because incumbents are already highly valued in primaries, shocks to challenger utility compose a smaller share of the total utility across all candidates.
+In terms of win probability, because challengers are already unlikely to win a primary, a challenger with an ill-fitting ideological position can only hurt their chances so much before they confront the zero-bound on their win probability.
+
+Bayesian computation is again valuable for plotting these causal effects with uncertainty. 
+Because each of these effects was calculated using draws from the variational posterior distribution, creating 90% uncertainty intervals from the inner 90% of samples is straightforward.
+
+
+### Races with no incumbents
 
 ```{r splines-no-incumbent}
 spline_means_noinc <- noinc_raw %>%
@@ -1067,6 +1192,11 @@ spline_means_noinc %>%
     show.legend = FALSE
   ) +
   geom_line(size = 1, show.legend = FALSE) +
+  geom_line(
+    data = filter(spline_means_noinc, str_detect(term, "mean") == FALSE),
+    aes(linetype = str_detect(term, "lower")),
+    color = "black"
+  ) +
   geom_rug(aes(y = NULL), alpha = 0.2, show.legend = FALSE) +
   scale_color_manual(values = party_code_colors) +
   scale_fill_manual(values = party_code_colors) +
@@ -1086,24 +1216,74 @@ spline_means_noinc %>%
     y = "Spline function of ideal point distance",
     linetype = TeX("$\\bar{\\theta}_{g}$ value")
   ) +
-  theme(legend.position = c(.9, .8)) +
+  theme(
+    legend.position = c(.9, .8),
+    legend.background = element_rect(fill = alpha("white", 0.5))
+  ) +
   # coord_cartesian(xlim = c(-5.5, 5.5))
   NULL
 ```
 
-```{r noinc-spline-posterior}
+Because incumbent candidates are likely to win a primary re-nomination, some scholars estimate models of primary candidate choice using only open-seat primaries with no incumbents [e.g. @porter-treul:2020:primary-experience].
+I conduct this same analysis by dropping all races that feature an incumbent candidate, and I plot the spline function results in Figure \@ref(fig:noinc-spline-posterior).
+I find essentially the same pattern as with the full data: candidates with moderate and extreme ideological stances are less highly values by primary electorates, and the average pattern has no noticeable heterogeneity across districts with different district-party ideologies.
+
+```{r noinc-spline-posterior, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 4.5, fig.scap = "CF score effect on candidate utility in races with no incumbent.", fig.cap = "CF score effect on candidate utility in races with no incumbent. Spline function of CF score with district-party ideology held at mean, mean minus one standard deviation, and mean plus one standard deviation."}
 ```
 
-## Discussion
+## Discussion: Causal Identification with CF Scores
 
-### CF scores and causal identification
+Causal inference in this analysis depends on a key identifying assumption that candidate CF score values are ignorable, conditional on the observed covariates.
+Using CF scores as a treatment variable under ignorability could be problematic because CF scores are functions of a measurement process rather than being direct measures of candidate ideology.
+Because CF scores are affected by patterns of campaign contributions in the parties' campaign finance networks, these factors may play an indirect role in confounding the effect of CF scores. 
 
-Centrist CF score reflects a consensus view that candidate is viable, so there remains some confounding.
+In this analysis, I find that candidates with "party-typical" CF scores have optimal spatial utility.
+It could be the case that candidates only receive a party-typical CF score because of their central location in a campaign finance network, which indirectly captures a consensus view that donors find the candidate to be viable.
+If this is the case, the "viability" of a candidate (as judged by financial contributors) affects their CF score, and this vague sense of viability could confound the relationship between CF scores and primary victory.
+The use of proxy measures for modern causal inference isn't well understood in political science, and attempts to confront the issue are only just emerging [@egami-et-al:2018:causal-inf-texts].
+But because political science relies heavily on proxy measures in all subfields of quantitative research, learning to conduct causal inference with simultaneous measurement and inferential modeling will be essential for credible causal research in the future.
 
-Feedback over time. If candidates observed that moderates were winning primaries, or extremists were winning primaries, they would shift their ideologies so that these ideal points became the center of the party.
+The fact that party-typical CF scores are most valuable to primary electorates also raises a question of feedback over time.
+If extreme candidates were the candidates that were most valued in primaries, candidates could perceive this pattern, and over time candidates would re-equilibrate their campaign positions to maximize their win probability.
+This implies that the optimality of a campaign position causes it to be party-typical, not the other way around.
+In other words, we may never observe a reality where the optimal campaign stance is not also party-typical, because candidates adjust their ideologies to maximize their benefit in equilibrium, the same way that a seller of goods adjusts the pricing of their product to meet demand.
+Political scientists have studied the evolving stances of the parties over time [@carmines-stimson:1986:issue-evolution; @karol:2009:position-change; @schlozman:2015:movements-anchor; @rubin:2017:building-bloc], but these studies usually arise in the context of interparty polarization and interest group coalitions rather than the context of primary electioneering.
 
-### Other nonparametric Bayes approaches for flexible causal inference
 
-Matching under measurement error in the covariates: <https://amstat.tandfonline.com/doi/full/10.1080/01621459.2015.1122601?casa_token=an-4oMYQN1AAAAAA%3AcmZp5oIxAb5Hs2kkR53JgHrrSXOd1HrLYDwQiuXOw_BaJVWcgG7ADtFcSQrIUQ2qRJTT999k4D-n>
+## Closing remarks on the project
 
-### Causal inference with latent variables and measurement models
+How does district-party ideology affect primary outcomes?
+This question is complicated by statistical and causal identifiability problems.
+Primary elections are choices between alternative candidates in the same district, so district-party ideology cannot directly affect candidate choice without some interaction with candidate-level variables.
+I develop a statistical model that addresses statistical and causal identifiability problems, estimating the causal effect of candidate CF scores on candidate primary success with heterogeneous effects across district-parties with different policy ideologies.
+Under the right causal identification assumptions, I find that candidate ideology does affect primary outcomes: deviating from an optimal ideological position reduces a candidate's chance of winning, penalizing both moderate and extremist candidates.
+I find no evidence that this effect varies across district-parties, even though district-parties vary in their policy ideologies.
+This could be because voters do not perceive or do not give much weight to the fine differences between candidates' ideological positioning.
+It could also be because candidates' ideological stances have diffuse rather than specific effects on their success, increasing their credibility with campaign financiers or other party gatekeepers who can advance their careers, even if voters don't respond to these specific signals as strongly.
+
+This project examined district-party ideology, candidate positioning and primary outcomes as a study of the "strategic positioning dilemma" theory of primary competition.
+Chapter \@ref(ch:arg) justifies the creation of ideal point measures for the partisan preferences of partisan voters in a congressional district, a key independent variable in the theory. 
+I build the scores in Chapter \@ref(ch:model) and outline the Bayesian approach to causal inference in Chapter \@ref(ch:causality), both of which I employ in empirical analyses.
+Chapter \@ref(ch:positioning) studies the effect of district-party ideology primary candidates' campaign positions.
+Consistent with the strategic positioning dilemma, I find that district-party ideology _does_ affect campaign positions: candidates run as more conservative candidates in conservative district-parties, and vice versa in more progressive district-parties.
+Importantly, this relationship holds after controlling for district-level voting, suggesting that candidates' responsiveness to their partisan bases doesn't simply reflect the competitiveness of the general election.
+This chapter studied whether candidates' attempts to target their partisan bases pay off in primary elections.
+While I do find that primary candidates are more successful in primary elections when they position themselves optimally, I do not find that the optimal campaign position is a narrow enough region of ideological space to have a large effect on primary outcomes.
+Furthermore, I find no evidence that optimal campaign position is different from one district to the next, suggesting that candidates' efforts to position themselves toward the partisan base is appreciated by voters only in the broadest terms.
+Primary electorates do not prefer candidates to be too moderate or too extreme, but I find no evidence that partisan ideological variation from one district to the next has a noticeable effect on which candidate ultimately wins the primary.
+
+These results lend partial support to the strategic positioning dilemma.
+Elite actors in the story—primary candidates—do behave in accordance with theoretical expectations.
+The mass public's role in the story—judging which candidates best appease their appetites for ideological policy promises—is not supported by the analysis.
+To be clear, I do not find contradictory evidence either.
+Contradictory evidence would consist of electorates that tend to prefer moderate candidates, or electorates that have no ideological awareness whatsoever.
+Instead, I find that primary electorates are "broadly" ideological in the sense that they nominate candidates who represent the general consensus in the party, with no obvious variation in that pattern across districts.
+This combination of strategic behavior among elites with satisficing behavior among the public fits a prevailing current in modern US politics research: the mass public knows enough about their _general_ ideological tastes to make competent political decisions, but they are not so attuned to politics that they behave as hyper-informed political junkies.
+
+This project has also exemplified other important contributions to contemporary Bayesian analysis and causal inference.
+The empirical studies in Chapters \@ref(ch:positioning) and \@ref(ch:voting) demonstrate the use causal graphs to clarify causal assumptions and motivate the choice of causal estimands.
+The Bayesian approach to causal inference in Chapter \@ref(ch:causality) justified the use of Bayesian modeling for causal inference, which enabled flexible model-building, pragmatic uses of prior information for model stability and regularization, and principled accounting of statistical uncertainty throughout the causal analyses.
+
+
+
+
