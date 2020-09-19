@@ -14,7 +14,7 @@ $\renewcommand{\p}[1]{p\left(#1\right)}$
 - rip Nielson and Visalvanich
 ------------------------->
 
-```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
+```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
 knitr::knit_exit()
 ```
 
@@ -919,11 +919,10 @@ In the first stage of the model, the researcher estimates the effect of the medi
 \begin{split}  
   \E{\text{CF}_{i}\left(\theta, v\right) - 
      \text{CF}_{i}\left(\theta, v'\right) \mid 
-   \bar{\theta}_{g} = \theta, X_{d} = x, Z_{d} = z
-   } \\
-    \qquad = \E{\text{CF}_{i} \mid V_{d} = v, \bar{\theta}_{g} = \theta, X_{d} = x, Z_{d} = z} \\
-    \qquad \qquad 
-      - \E{\text{CF}_{i} \mid V_{d} = v', \bar{\theta}_{g} = \theta, X_{d} = x, Z_{d} = z}
+       \bar{\theta}_{g} = \theta, X_{d} = x, Z_{d} = z 
+     } = \hfill \\ 
+     \hfill \qquad \qquad \E{\text{CF}_{i} \mid v, \theta, x, z} - 
+     \E{\text{CF}_{i} \mid v', \theta, x, z}
 \end{split}
 (\#eq:po-stage-1)
 \end{align}
@@ -948,7 +947,7 @@ We subtract the demediation function from the original outcome to obtain the dem
 \begin{split}
   b\left( \text{CF} \right)_{i} &= 
     \text{CF}_{i} - \delta_{d}\left(\bar{\theta}_{g}, V_{d}, \bar{v} = 0.5, x\right) \\
-  \E{b\left(\text{CF}\right)_{i}}  &= \E{b\left(\text{CF}\right)_{i}\left(\theta, V_{d} = \bar{v}\right)}
+  \E{b\left(\text{CF}\right)_{i}}  &= \E{\text{CF}_{i}\left(\theta, V_{d} = \bar{v}\right)}
 \end{split}
 (\#eq:po-demediation)
 \end{align}
@@ -961,17 +960,11 @@ Finally, the researcher estimates the effect of the treatment on the demediated 
 \begin{align}
 \begin{split}
   \E{\text{CF}_{i}\left(\theta, \bar{v}\right) - 
-     \text{CF}_{i}\left(\theta', \bar{v}\right) 
-     \mid X_{d} = x 
-   } \\
-    \qquad =
-    \E{b\left(\text{CF}\right)_{i}\left(\theta\right) - 
-       b\left(\text{CF}\right)_{i}\left(\theta'\right) 
-       \mid X_{d} = x 
-    } \\
-   \qquad =
-    \E{b\left(\text{CF}\right)_{i} \mid \bar{\theta}_{g} = \theta, x} - 
-    \E{b\left(\text{CF}\right)_{i} \mid \bar{\theta}_{g} = \theta', x}
+     \text{CF}_{i}\left(\theta', \bar{v}\right) \mid x} &=
+   \E{b\left(\text{CF}\right)_{i}\left(\theta\right) - 
+      b\left(\text{CF}\right)_{i}\left(\theta'\right) \mid x} \\
+   &= \E{b\left(\text{CF}\right)_{i} \mid \theta, x} - 
+       \E{b\left(\text{CF}\right)_{i} \mid \theta', x}
 \end{split}
 (\#eq:po-stage-2)
 \end{align}
@@ -1076,7 +1069,7 @@ More generally, the ACDE of setting district-party ideology from $\bar{\theta}'$
   The linear model with no treatment interactions produces a simple linear ACDE definition, but a more complex model would entail a more complex formula.
 ]
 \begin{align}
-  ACDE(\tau, \bar{\theta}, \bar{\theta}') &= \tau \left(\bar{\theta} - \bar{\theta}'\right)
+  ACDE(\tau, \theta, \theta') &= \tau \left(\theta - \theta'\right)
   (\#eq:general-ACDE)
 \end{align}
 
@@ -1093,15 +1086,15 @@ Whereas non-Bayesian analysis requires either ad-hoc variance corrections for th
 Inferences about the ACDE can then be expressed by marginalizing the posterior distribution with respect to these auxiliary model parameters, isolating the remaining dimension of the posterior corresponding to the ACDE.
 Letting $\boldsymbol{\pi}$ represent all auxiliary model parameters, and using the definition of the ACDE in Equation \@ref(eq:general-ACDE), the posterior distribution for the ACDE is given by
 \begin{align}
-  \p{\tau \left(\bar{\theta} - \bar{\theta}'\right) \mid \mathbf{CF}} 
+  \p{\tau \left(\theta - \theta'\right) \mid \mathbf{CF}} 
   &= 
-  \int \p{\tau \left(\bar{\theta} - \bar{\theta}'\right), \boldsymbol{\pi} \mid \mathbf{CF}} \diff \boldsymbol{\pi},
+  \int \p{\tau \left(\theta - \theta'\right), \boldsymbol{\pi} \mid \mathbf{CF}} \diff \boldsymbol{\pi},
   (\#eq:post-acde)
 \end{align}
 which is a the distribution of ACDE values that condition on the observed data and marginalize over the associated auxiliary parameter values.
-In practice, we use MCMC samples to approximate this posterior distribution by picking any two values of $\bar{\theta}$ and $\bar{\theta}'$, extracting posterior samples for $\tau$, and calculating the ACDE for each MCMC sample iteration. 
-Posterior expectations for the ACDE can be calculated, up to Monte Carlo error, by averaging the ACDE values from a draw of MCMC samples.
-Uncertainty intervals for the ACDE can be estimated by noting which MCMC samples bound the inner 90 or 95% of posterior samples.
+In practice, we use posterior samples to approximate this posterior distribution by picking any two values $\theta$ and $\theta'$, extracting posterior samples for $\tau$, and calculating the ACDE for each sample iteration. 
+Posterior expectations for the ACDE can be calculated, up to Monte Carlo error, by averaging the ACDE values from a draw of posterior samples.
+Uncertainty intervals for the ACDE can be estimated by noting which posterior samples bound the inner 90 or 95% of posterior samples.
 
 <!------- TO DO ---------
 - should this go in Ch 3?
@@ -1123,7 +1116,7 @@ The mean vector $\hat{\Theta}$ contains MCMC means for each ideal point, and the
 Because the IRT model partially pools ideal points using a hierarchical Normal regression, the multivariate Normal prior is a reasonable stand-in for representing prior ideal point uncertainty in causal analyses.
 
 Including ideal point uncertainty as a prior distribution effectively adds a measurement error model overtop to the sequential $g$ analysis. 
-Although @acharya-blackwell-sen:2016:direct-effects describe a variance estimator and a bootstrap method for dealing with multi-stage modeling uncertainty, neither of these methods is naturally suited to a measurement error context where an additional layer of ideal point uncertainty is represented in MCMC samples.
+Although @acharya-blackwell-sen:2016:direct-effects describe a variance estimator and a bootstrap method for dealing with multi-stage modeling uncertainty, neither of these methods is naturally suited to a measurement error context where an additional layer of ideal point uncertainty is represented in posterior samples.
 Past research has explored the use of inverse-variance weighting to downweight observations with greater measurement uncertainty [e.g. @adolph-at-al:2003:wls-ei],
 which accomplishes a similar goal as the prior distribution but throws out all prior information about the covariance between ideal points.
 More recently, researchers have employed numerical methods for "uncertainty propagation," where the researcher estimates an uncertain quantity, simulates values from the quantity's posterior distribution, and pushes those simulated values through a downstream analysis. 
@@ -1246,7 +1239,7 @@ CF scores are measured on their original scale, which spans roughly as wide as $
 
 
 
-## Findings
+## Findings {#sec:g-findings}
 
 <!-- 
   bring in data from model fits and ideal point priors

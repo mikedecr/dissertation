@@ -8,7 +8,7 @@ $\renewcommand{\E}[1]{\mathbb{E}\left[#1\right]}$
 $\renewcommand{\p}[1]{p\left(#1\right)}$
 
 
-```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
+```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
 knitr::knit_exit()
 ```
 
@@ -130,8 +130,8 @@ Without the possibility of non-monotonicity in the extremity–victory relations
 Furthermore, without a measure of the partisan constituency's ideal point (district-party ideology), these studies have no way to know whether the optimal candidate ideology is different in more conservative or more progressive electorates.
 Because my project measures district-party ideology, I can estimate the optimal candidate ideology in different districts with different partisan constituency ideologies.
 
-Another important limitation of many existing studies is that the factors affecting primary choice cannot be inferred using only "post-choice" data on incumbent members of congress or primary nominees [e.g. @brady-han-pope:2007:out-of-step; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems; @kujala:2020:primary-donors].
-Without somehow accounting for the menu of candidates that a primary electorate can choose from, we cannot infer that whether candidates with certain ideological placements are actually preferred over candidates with other ideological placements.
+Another important limitation of many existing studies is that the factors affecting primary choice cannot be inferred from studying only incumbent members of congress or primary nominees, which is selecting on the dependent variable [e.g. @brady-han-pope:2007:out-of-step; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems; @kujala:2020:primary-donors].
+Without somehow accounting for the menu of candidates that a primary electorate can choose from, we cannot infer that whether candidates with certain ideological positions are actually preferred over candidates with other ideological positions.
 The analysis in this chapter confronts this problem by modeling primary candidate choice using a conditional logit approach, similar to other recent studies of primary choice [@porter-treul:2020:primary-experience].
 
 As I discuss in Chapter \@ref(ch:arg), there are several reasons to doubt that House primary voting predominantly follows a spatial model.
@@ -155,14 +155,15 @@ Consider a primary race $r$ containing $n_{r} > 1$ primary candidates, each cand
 Let $y_{r} = i$ signify that candidate $i$ wins race $r$, with the probability that $i$ wins $r$ given by $\psi_{ir}$.
 Choice settings such as this, where one chooser must select among several alternatives in the choice set, is traditionally modeled using a conditional logit likelihood [@mcfadden:1973:conditional-logit].
 Conditional logit has been employed to study candidate choice in U.S. primaries by @ansolabehere-et-al:2004:direct-primary-party-loyalty, @culbert:2015:strategic-voting-presidential-primaries, @simas:2017:primary-electability, and @porter-treul:2020:primary-experience.
-Conditional logit supposes that the chooser (in this case, a district-party group) selects a candidate $i$ by comparing the utility they would receive from each candidate in the race $r$.
-Suppose that this utility $\omega_{ir}$ contains a systematic component $u_{ir}$ and a random component $e_{ir}$.
+Conditional logit supposes that the chooser—in this case, a district-party group in which $r$ takes place—selects a candidate $i$ by comparing the utility they receive from each candidate in the race.
+Suppose that this utility $\omega_{ir}$ contains a systematic component $u_{ir}$ and a stochastic component $e_{ir}$.
 \begin{align}
   \omega_{ir} &= u_{ir} + e_{ir}
 (\#eq:utility-error)
 \end{align}
-The probability that $i$ is chosen is defined as the probability that $\omega_{ir}$ is greatest among all alternatives.
-Because error term $e_{ir}$ is not known, this probability is calculated as a function of the systematic components that can be predicted, typically using the softmax function.
+The probability that $i$ is chosen is defined as the probability that $\omega_{ir}$ is greatest among the alternatives in $r$.
+Because the error term $e_{ir}$ is unknown and idiosyncratic to the chooser-choice pairing, conditional logit makes a distributional assumption for the error term and calculates the probability that $\omega_{ir}$ is greatest given the distribution of the error term.
+This probability is calculated as the softmax function of the systematic components,
 \begin{align}
 \begin{split}
   p\left(y_{r} = i\right) &= \psi_{ir} \\
@@ -170,7 +171,7 @@ Because error term $e_{ir}$ is not known, this probability is calculated as a fu
 \end{split}
 (\#eq:softmax-probability)
 \end{align}
-which follows from an assumption that $e_{ir}$ is distributed Gumbel, as in logistic regression.
+which follows from the assumption that $e_{ir}$ is distributed Gumbel, as in logistic regression.
 The distinguishing feature of conditional logit is that _chooser_ attributes, utility shocks that are specific to the chooser and thus common across all choices, do not have identifiable effects on the resulting choice.
 This is because the chooser attribute introduces the same utility shock to every $u_{ir}$ term in Equation \@ref(eq:softmax-probability).^[
   This only holds when chooser attributes affect the choice utility _additively_.
@@ -184,41 +185,47 @@ In the case of primary elections, choosers are primary electorates, and district
   While this conceptual gap could be explored in future research projects, this project tolerates the inconsistency because the most recent evidence on the representativeness of primary electorates finds that they resemble the demographic profile and policy attitudes of the district-party public [@sides-et-al:2018:primary-representativeness].
   This analysis contains more years of data and relies on fewer modeling assumptions than analyses that conclude that primary electorates are more polarized than district-parties. [@jacobson:2012:polarization-origins; @hill:2015:nominating-institution].
 ]
-This means that district-party ideology, under the standard conditional logit approach, cannot _directly_ affect which candidate is nominated by holding all else fixed.
-This tracks with the spatial model picture laid out in Figure \@ref(fig:utility-model): shifting the district-party ideal point $\bar{\theta}_{g}$ left or right does affect utility, but only because it changes the distance between $\bar{\theta}_{g}$ and the candidate location.
-In other words, the interaction between district-party ideology and candidate location is key.
-More generally, chooser-level features can be included in conditional logit models as long as there is a cross-level interaction with choice-level data for statistical identification [@fox-et-al:2012:random-coef-logit].
+This means that district-party ideology, $\bar{\theta}_{g[r]}$ for group $g$ in which $r$ takes place, cannot _directly_ affect which candidate is nominated by holding all else fixed.
+This, in fact, is consistent with the spatial model intuition from Figure \@ref(fig:utility-model): shifting the district-party ideal point $\bar{\theta}_{g[r]}$ left or right affects utility only because it changes the distance between $\bar{\theta}_{g[r]}$ and the candidate location, so the interaction between district-party ideology and candidate location is key.
+More generally, chooser-level features can be included in conditional logit models as long as there is a cross-level interaction with choice-level data for statistical identification [@fox-et-al:2012:random-coef-logit].^[
+  I use "interaction" in this context to mean a function of both district-party ideology and candidate location.
+  It does not necessarily imply a multiplicative "interaction term" that is more common generalized linear modeling, multiplicative interactions are a specific example of such a function.
+]
 Building a statistical model that enables this interactivity is an important contribution of this research design.
 
-This conditional logit model's identifiability constraint matters for causal inference as well, because it affects which causal quantities make sense in this context.
-Consider the potential outcome $\omega_{ir}\left(\bar{\theta}_{g[r]}, \text{CF}_{ir}\right)$, the systematic utility that is a function of district-party ideology and the candidate's ideological position.
+This conditional logit model's identifiability constraint matters for causal inference as well, because it affects which causal quantities are feasible to estimate.
+Consider the potential outcome $\omega_{ir}\left(\text{CF}_{ir}, \bar{\theta}_{g}\right)$, the candidate utility resulting from a given candidate ideology and district-party ideology.^[
+  For notational convenience, let $g$ imply $g[r]$. 
+]
 Imagine that we intervene on district-party ideology and measure the average utility effect^[
   For the current discussion, we consider the effect on utility instead of the effect on win probability.
   This is because win probability is complicated by the presence of other candidates, whereas utility is a straightforward function of chooser and choice features.
   It is important to understand the relationship between the causal model structure and the outcome scale because treatments can have different effects on different scales [@vanderweele:2009:interaction-modification].
 ] 
-of setting $\bar{\theta}_{g} = \theta$ versus some other value $\theta'$, $\E{\omega_{ir}\left(\theta, \text{CF}_{ir}\right) - \omega_{ir}\left(\theta', \text{CF}_{ir}\right)}$.
-This effect does exist for individual candidates: making the district-party more liberal or conservative would affect the primary electorate's candidate utility by increasing or decreasing the ideological distance between the district-party and the candidate.
-But because multiple candidates can run in the same race, and the primary electorate has the same district-party ideology each time they consider a new candidate, the average causal effect of district-party ideology implicitly averaging all of the conditional effects for all candidates.
-This isn't unusual in the abstract: any average causal effect is an average over potential heterogeneities.
-But this is complicated by the fact that the conditional logit model does not naturally measure chooser-level effects (like district-party ideology), making it impractical to condition on other district-level characteristics to identify the average effect of district-party ideology on candidate choice.
+of setting $\bar{\theta}_{g} = \theta$ versus some other value $\theta'$, $\E{\omega_{ir}\left(\text{CF}_{ir}, \theta\right) - \omega_{ir}\left(\text{CF}_{ir}, \theta'\right)}$.
+This effect does exist for individual candidates: changing district-party ideology affects the primary electorate's candidate utility by increasing or decreasing the ideological distance between the district-party and the candidate.
+But because conditional logit model does not provide an easy interface for modeling chooser-level effects, it is impractical to condition on other district-level characteristics to render district-party ideology ignorable.
 
 It is much simpler, instead, to consider the average effect of candidate positioning on candidate utility.
-This average effect is also an implicit average over all interactions with district-party ideology, but conditioning on candidate features that confound the effect of CF scores is much simpler with conditional logit, so causal identification of choice-level effects is more analytically straightforward as well.
+Conditioning on candidate features is more straightforward with conditional logit, so causal identification of alternative-level effects is more analytically straightforward as well.
 The conditional average effect of CF scores on candidate utility would thus be 
-$\E{\omega_{ir}\left(\theta, \text{CF} \right) - \omega_{ir}\left(\theta, \text{CF}'\right) \mid C_{ir} = c, r}$,
+$\E{\omega_{ir}\left(\text{CF}, \theta\right) - \omega_{ir}\left(\text{CF}', \theta\right) \mid C_{ir} = c, r}$,
 for a comparison of two values $\text{CF}$ and $\text{CF}'$, fixing the district-party ideology at $\theta$ and conditioning on other candidate-varying attributes $C_{ir} = c$ and the race $r$.^[
   Conditioning on the race, which defines the choice set, is inherent to conditional logit.
   Conditioning on the choice set is what makes undermines the identifiability chooser-level effects without cross-level interactions.
 ]
 
-Because this project is focused on the added value of observing district-party ideology, we go one step further to model effect heterogeneity over district-party ideology explicitly, rather than be content to average over it implicitly.
-I approach this from an effect modification perspective, meaning that heterogeneous effects do not reflect the causal effects of interventions on district-party ideology, but instead reflect causal effects of CF scores conditional on a given district-party ideology value.
-Formally, we say that district-party ideology is an "indirect modifier" if the CF score effect ($\text{CF}$ versus $\text{CF}'$) varies across levels of district-party ideology ($\theta$ versus $\theta'$) [@vanderweele-robins:2007:effect-modification], conditional on stratum $c$ and race $r$—in other words, if the following quantity is not zero.
+Because this project is focused on the added value of my district-party ideology measure, I go one step further to model effect heterogeneity over district-party ideology instead of holding it constant.
+Because identifying ignorable variation in $\bar{\theta}_{g}$ is a challenge in conditional logit, I approach this heterogeneity from an effect modification perspective.
+This means that effect heterogeneity over district-party ideology not reflect the causal effect of district-party ideology.
+Instead, it reflects only the causal effects of CF scores conditional on a given district-party ideology value.
+This means rewriting potential outcome as $\omega_{ir}(\text{CF}_{ir})$, removing the causal effect of $\bar{\theta}_{g}$ from the notation.
+Formally, we say that district-party ideology is an "indirect modifier" if the CF score effect ($\text{CF}$ versus $\text{CF}'$) varies across levels of district-party ideology ($\theta$ versus $\theta'$) [@vanderweele-robins:2007:effect-modification], conditional on stratum $c$ and race $r$.
+In other words, the conditional average effect of candidate ideology is heterogeneous over district-party ideology if the following quantity is not zero:
 \begin{align}
   \E{\omega_{ir}\left(\text{CF}\right) - \omega_{ir}\left(\text{CF}'\right) \mid \bar{\theta}_{g} = \theta, c, r}
   &- 
-  \E{\omega_{ir}\left(\text{CF}\right) - \omega_{ir}\left(\text{CF}'\right) \mid \bar{\theta}_{g} = \theta', c, r}
+  \E{\omega_{ir}\left(\text{CF}\right) - \omega_{ir}\left(\text{CF}'\right) \mid \bar{\theta}_{g} = \theta', c, r}.
   (\#eq:hte)
 \end{align}
 <!------- TO DO ---------
@@ -303,7 +310,7 @@ District-party ideology is included as an indirect modifier of the CF score effe
 - could add labels to describe the U path, modification, etc.
 ------------------------->
 Because district-party ideology is included as an indirect modifier instead of as a joint treatment, back-door paths that connect district-party ideology and candidate utility through unobserved variables $U$ are allowed to exist without confounding the CF score effect or the effect modification interpretation [@vanderweele:2009:interaction-modification].
-They do confound the causal effects of district-party ideology, however, which is why the effect heterogeneity across districts has no causal interpretation.
+They do confound the causal effects of district-party ideology, however, which effect heterogeneity is not causally attributed to district-party ideology.
 
 
 ```{r plot-choice-dag, include = TRUE, out.width = "60%",  fig.height = 6, fig.width = 6, fig.scap = "Causal Diagram of CF score effect on win probability.", fig.cap = "Causal Diagram of CF score effect on win probability. District-party ideology is an indirect modifier because has no direct effect on primary outcomes except through candidate proximity. Unobservables $U$ are uncontrolled, so the effect of district-party ideology is not identified. The CF score effect is identified conditioning on $C$ and district-party ideology."}
@@ -321,16 +328,16 @@ They do confound the causal effects of district-party ideology, however, which i
 
 This section describes a statistical model for primary candidate choice that achieves two key objectives.
 First, the model is designed to capture the heterogeneous causal effect of candidate positioning, conditional on district-party ideology.
-That is, the model contains appropriate interactions to include chooser-level attributes in the model of choice.
+That is, the model contains appropriate interactions to include chooser-level attributes in the conditional choice model.
 And second, the model contains the flexibility to capture non-monotonic effects of candidate positioning: utility losses for candidates that position themselves too far from the district-party ideal point.
 The model detailed below achieves these objectives using two tactics. 
 The first tactic: I model candidate utility using a linear combination of CF scores and district-party ideology.
-This linear combination projects CF scores and district-party ideology into a shared space that can be interpreted like a "distance" metric, allowing candidate utility to increase or decrease as a function of the distance metric.
+This linear combination projects CF scores and district-party ideology into a common space that can be interpreted like as "ideological distance" metric, allowing candidate utility to increase or decrease as a function of the distance metric.
 The second tactic: The distance metric's effect on candidate utility is modeled with a spline function.
 The spline function serves the dual purpose of capturing nonlinearities in candidate utility—an essential component of the spatial voting model—and preserving the interaction between chooser and choice data through those nonlinearities.
 This strategy enables the effect of candidate positioning on candidate choice to be heterogeneous across candidates with different CF scores and heterogeneous across districts with different district-party ideology values.
 
-The conditional logit model begins modeling the probability that candidate $i$ is chosen in race $r$ as a softmax function of $u_{ir}$, the systematic component of a candidate's utility conditional on the choice set.
+The conditional logit model begins by defining the probability that candidate $i$ is chosen in race $r$ as a softmax function of $u_{ir}$, the systematic component of a candidate's utility conditional on the choice set.
 \begin{align}
 \begin{split}
   p\left(y_{r} = i\right) &= \psi_{ir} \\
@@ -339,7 +346,7 @@ The conditional logit model begins modeling the probability that candidate $i$ i
 \end{split}
 (\#eq:clogit-likelihood)
 \end{align}
-I use $f()$ to represent a flexible function of candidate $i$'s CF score and the district-party public ideology $\bar{\theta}_{g}$ for group $g$ in which race $r$ is held.
+I use $f()$ to represent a flexible function of candidate $i$'s CF score and the district-party public ideology $\bar{\theta}_{g[r]}$ for group $g$ in which race $r$ is held.
 I include a vector of candidate-level variables $\mathbf{c}_{ir}$ and regression coefficients $\gamma$.
 Causal inference requires the assumption that conditioning on candidate features renders CF scores ignorable among the candidates in $r$.
 
@@ -354,8 +361,8 @@ Let $\Delta_{ir}$ be a linear combination of $\text{CF}_{ir}$ and $\bar{\theta}_
 \end{split}
 (\#eq:linear-combo)
 \end{align}
-which represents an assumption that CF scores and district-party ideology space are linear transformations of one another, similar to the way Aldrich–McKelvey scaling estimates linear mappings between ideology spaces [@aldrich-mckelvey:1977:scaling; @hare-et-al:2015:bayes-aldrich-mckelvey].
-Another interpretation of $\Delta_{ir}$ that a common ideal point space is a weighted average of CF scores and district-party ideology, which weights that are estimated from the data.
+which represents an assumption that CF scores and district-party ideology space are affine transformations of one another, similar to the way Aldrich–McKelvey scaling estimates an affine mapping between ideology spaces [@aldrich-mckelvey:1977:scaling; @hare-et-al:2015:bayes-aldrich-mckelvey].
+Another way to interpret $\Delta_{ir}$ is that the common ideal point space is a weighted average of CF scores and district-party ideology, which weights that are estimated from the data.
 The second line of \@ref(eq:linear-combo) restricts the coefficients to have a norm of $1$, which is an identifiability restriction on the location and scale of the $\Delta$ space, which would otherwise be arbitrary.
 The restriction implies a direct mapping between $\text{CF}$ space and $\bar{\theta}_{g}$ space, since $\beta$ is defined in terms of $\alpha$,
 \begin{align}
@@ -364,13 +371,15 @@ The restriction implies a direct mapping between $\text{CF}$ space and $\bar{\th
   \beta &= \pm\sqrt{(1 - \alpha^{2})}
 \end{split}
 \end{align}
-which clarifies how the linear transformation is estimating essentially a scale factor between the two ideal point spaces
+which clarifies how the linear transformation is estimating essentially a scale factor between the two ideal point spaces, parameterized by $\alpha$ only.
 Because $\Delta_{ir}$ is a linear transformation of CF scores and district-party ideology, it has the algebraic interpretation of a "distance measure" of the candidate's CF score and the district-party public ideology in the $\Delta$ space.
-For convenience, I sometimes refer to $\Delta_{ir}$ as "ideological distance."^[
-  It is important to note here that the use of "distance" refers more generally to vector spaces than it does to ideal point "differences."
-  We can think of a "difference" $x - z$ as a special case of a distance $\alpha x + \beta z$ where $\alpha = 1$ and $\beta = -1$. 
-  For a linear regression of $y$ on $(\alpha x + \beta z)$, any combination of nonzero $\alpha$ and $\beta$ values would result in identical predictions for $y$, so the ideal point "distance" $\Delta_{ir}$ contains the same information as an ideal point "difference" up to an arbitrary rotation of the $\Delta$ space.
-  I leave the rotation of the $\Delta$ space unrestricted, which makes the interpretation of the $\Delta$ space more ambiguous but improves Bayesian estimation by avoiding arbitrary boundaries or discontinuities in the posterior distribution.
+For convenience, I therefore refer to $\Delta_{ir}$ as "ideological distance."^[
+  It is important to note here that my use of "distance" refers more generally to vector spaces than it does to ideal point "differences."
+  The "difference" $(x - z)$ is a special case of the distance $\alpha x + \beta z$ where $\alpha = 1$ and $\beta = -1$. 
+  For a linear regression of $y$ on $(\alpha x + \beta z)$, regression predictions for $y$ would be invariant to any nonzero combination of $\alpha$ and $\beta$ values.
+  So although I refer to $\Delta_{ir}$ as an ideal point "distance," it contains the same information as an ideal point "difference" up to an arbitrary rotation of the $\Delta$ space [e.g. @armstrong-et-al:2014-spatial-models, xv].
+  Restricting the rotation of $\Delta$—for example, by fixing $\beta < 0$—would improve the interpretation of $\Delta$ as an ideal point "difference," but it would make Bayesian estimation more difficult by introducing unnecessary boundaries and discontinuities in the posterior distribution over $\alpha$ and $\beta$.
+  For ease of estimation, I therefore leave the rotation of the $\Delta$ space unrestricted.
   <!------- TO DO ---------
   - some cite on identifiability in Bayesian models?
   ------------------------->
@@ -378,12 +387,14 @@ For convenience, I sometimes refer to $\Delta_{ir}$ as "ideological distance."^[
 
 I then create a function that lets candidate utility be a nonlinear function of the ideal point distance $\Delta_{ir}$.
 This captures the spatial voting intuition: shocks to either CF scores or district-party ideology change the ideal point distance $\Delta_{ir}$, which has a nonlinear effect on candidate utility depending on whether the shock moves the ideal point distance toward or away from the optimal distance.
-I create this nonlinear effect by constructing a set of spline basis functions of $\Delta_{ir}$, using degree-$3$ polynomial bases with $30$ knots across the range of $\Delta_{ir}$.^[
+I create this nonlinear effect using b-splines. 
+I construct a set of basis functions of $\Delta_{ir}$ using a degree-$3$ polynomial basis with $30$ knots across the range of $\Delta_{ir}$.^[
   The symmetry of the $\Delta$ space is ensured by centering CF scores and district-party ideology so that their respective minima and maxima are equidistant from zero.
   This requires calculating separate $\Delta$ spaces for each model, as CF scores and district-party ideology take different values for Republicans and Democrats.
+  It also means that the knot locations vary depending on $\alpha$ and $\beta$ parameters that define the range of $\Delta$ space. 
 ]
 Let $b_{k}(\Delta_{ir})$ be the $k$^th^ basis function out of $K$ total, each with a coefficient $\phi_{k}$.
-The function $f()$ from \@ref(eq:clogit-likelihood) results then in a spline regression on $\Delta_{ir}$.
+The function $f()$ from \@ref(eq:clogit-likelihood) results then in a spline regression on $\Delta_{ir}$,
 \begin{align}
 \begin{split}
   u_{ir} &= f\left(\text{CF}_{ir}, \bar{\theta}_{g[r]}\right) + \mathbf{c}_{ir}^{\intercal}\gamma \\
@@ -393,24 +404,24 @@ The function $f()$ from \@ref(eq:clogit-likelihood) results then in a spline reg
 (\#eq:spline-function)
 \end{align}
 The spline regression enables a continuous interaction effect between CF scores and district-party ideology.
-Because the basis functions are nonlinear transformations of district-party ideology, the chain rule ensures that the derivative of $u_{ir}$ with respect to CF scores (the instantaneous effect of CF scores) is a function that contains district-party ideology $\bar{\theta}_{g}$.
+The basis functions are nonlinear transformations of district-party ideology, so the chain rule ensures that the derivative of $u_{ir}$ with respect to CF scores (the instantaneous effect of CF scores) is a function that contains district-party ideology $\bar{\theta}_{g}$.
 
-By specifying the interacting between chooser- and choice-level data in this way, I sidestep the identifiability limitation of a simpler conditional logit model, allowing the causal effect of CF score to vary in different districts with different district-party ideologies.
-Interacting two continuous variables through the spline function is much more flexible than a multiplicative interaction between CF scores and district-party ideology, which would fail to capture both the utility optimum predicted by spatial voting models as well as any other non-constant interactions.
-Creating a distance metric using a linear combination also has a generative interpretation that is superior to the multiplicative interaction, because the intuition of a common ideal point metric is a more faithful representation of spatial voting models.
-The multiplicative interaction, meanwhile, has no comparable generative interpretation.
-
+By specifying the interaction between chooser- and choice-level data in this way, I sidestep the identifiability limitation of a simpler conditional logit model, allowing the causal effect of CF score to vary in different electorates with different district-party ideologies.
+Interacting two continuous variables through the spline function is much more flexible than a multiplicative interaction term between CF scores and district-party ideology, which would fail to capture both the utility optimum predicted by spatial voting models and any other non-constant interactions.
+Creating the ideal point distance metric also has a generative interpretation that is superior to the multiplicative interaction, because the intuition of a common ideal point metric is a more faithful representation of spatial voting models.
+A multiplicative interaction has no comparable generative interpretation.
 
 Although the interpretation of $\Delta$ as a common ideal point metric is algebraically sensible, a limitation of the approach is that the model does not very accurately identify which $\alpha$ and $\beta$ values create more plausible common spaces in terms of posterior probability.
 This is because the spline regression is flexible enough to create sensible regression functions out of the many configurations of $\Delta$ space.
-In other words, if a particular draw of $\alpha$ and $\beta$ values "compress" the ideal point space in some way, the spline coefficients are able to "stretch" that space back out. 
-As a result, the posterior distribution of spline regressions is identified from the data even if its component parameters—$\alpha$, $\beta$, and spline weights $\phi_{k}$—are not strongly identifiable on their own.
-Stated differently, this model sacrifices some interpretability in order to fit a more flexible regression function, but this trade is worth it in order to capture nonlinear patterns in spatial voting while avoiding specific utility functions or ideal point mappings.
+In other words, if a particular draw of $\alpha$ and $\beta$ values "compress" the ideal point space in some way, the spline coefficients are able to "stretch" that space back out in order to fit the data.
+As a result, the posterior distribution of spline functions is identified from the data even if its component parameters—$\alpha$, $\beta$, and spline weights $\phi_{k}$—are not strongly identifiable on their own.
+This trade-off between global and local identifiability appears in other flexible modeling approaches such as neural networks [@mackay:1992:bayes-neural-net-backpropagation; @beck-et-al:2004:neural-net] and is naturally suited to a Bayesian framework, where unidentified or over-paramaterized models pose no special problem for probabilistic inference [@jackman:2009:bayesian, 272].
+In short, while the model sacrifices some interpretability to fit a flexible regression function, the trade-off is worth the ability to capture nonlinear patterns in spatial voting while avoiding specific assumptions about functional forms or ideal point mappings.
 
 
 
 
-### Data
+### Data {#sec:vote-data}
 
 
 ```{r data-5}
@@ -496,14 +507,15 @@ bind_rows(noinc_raw, fits_data) %>%
   unnest(data) %>%
   ungroup() %>%
   mutate(
-    party = ifelse(party == "D", "Democrats", "Republicans"),
+    Party = ifelse(party == "D", "Democrats", "Republicans"),
+    party = NULL,
     Subset = case_when(
       control_spec == "main" ~ "Full data",
       TRUE ~ "No incumbents"
     ),
     control_spec = NULL
   ) %>%
-  group_by(party, Subset) %>%
+  group_by(Party, Subset) %>%
   summarize(
     `Primary Races` = comma(n_distinct(set)),
     `Total Candidates` = comma(n())
@@ -641,17 +653,17 @@ This prior is implemented in Stan as using a non-centered parameterization, whic
 \end{align}
 The non-centered parameterization stretches a standard Normal distribution in order to create a Normal distribution with a scale of $\eta$.
 This parameterization is valuable for Bayesian estimation because it de-correlates random variables in the posterior distribution, creating an easier posterior geometry for estimation algorithms.
-I give the scale factor $\eta$ a Student's $T$ prior with $3$ degrees of freedom and a scale of $1.5$,
+I give the scale factor $\eta$ a Half-$T$ prior with $3$ degrees of freedom and a scale of $1.5$,
 \begin{align}
-  \eta &\sim \text{Student's T}\left(\nu = 3, \mu = 0, \sigma = 1.5\right)
-  (\#eq:scale-cauchy)
+  \eta &\sim \text{Half-T}\left(\nu = 3, \mu = 0, \sigma = 1.5\right)
+  (\#eq:scale-T)
 \end{align}
 which regularizes the scale value toward zero, but has a modestly flat tail to allow strong signals from the data to depart from the prior.
 This Normal-T mixture is similar to a "horseshoe prior" [@carvalho-et-al:2010:horseshoe-prior; @piironen-vehtari:2017:horseshoe-hyperprior; @piironen-vehtari:2017:horseshoe-sparse-vs-reg], which is a popular prior for estimating sparse coefficients with regularization.^[
   Note that "sparsity" in this context does not imply coefficients of exactly-zero as it does with non-Bayesian L1 regularization [@tibshirani:1996:lasso; @ratkovic-tingley:2017:sparse-lasso-plus].
   Sparse priors may result in posterior _modes_ at zero, but posterior intervals will contain non-zero values [@park-casella:2008:bayesian-lasso].
 ]
-Unlike the horseshoe, which uses a half-Cauchy scale, I use a half-T scale that places lower probability on extremely large coefficients but doesn't regularize as strongly as, say, and half-Normal scale.
+Unlike the horseshoe, which uses a half-Cauchy scale, the Half-T scale places slightly lower probability on extremely large coefficients but doesn't regularize as strongly as a Half-Normal scale.
 The left-side panel in Figure \@ref(fig:plot-spline-priors) plots a histogram of simulated draws from this prior, which features a spike near zero and flatter tails than a Normal-Normal mixture.^[
   The tails are long enough that many draws actually fall far outside the region plotted in the figure.
   These values are much rarer than the values contained in the plotted region, but they are much more probable than they would be under, for example, a Normal-Normal prior.
@@ -667,15 +679,16 @@ The left-side panel in Figure \@ref(fig:plot-spline-priors) plots a histogram of
 ```{r plot-spline-priors, include = TRUE, fig.width = 9, fig.height = 5, out.width = "100%", fig.scap = "Prior draws of spline coefficient and spline function.", fig.cap = "Prior draws of spline coefficient and spline function. Left: histogram of prior draws for an individual spline coefficient. Right: draws from the implied prior over spline functions."}
 ```
 
-The right panel of Figure \@ref(fig:spline-coef-prior) shows `r n_coef_draws` prior predictive draws of the spline functions, resulting from `r n_coef_draws` coefficient vectors drawn from the hierarchical prior.
+The right panel of Figure \@ref(fig:plot-spline-priors) shows `r n_coef_draws` prior predictive draws of the spline functions, resulting from `r n_coef_draws` coefficient vectors drawn from the hierarchical prior.
 There are a few important details to note about the construction of this prior.
 First, most of the "peaks" of the spline function are in a neighborhood near zero, especially within the $(-3, 3)$ interval.
 Although at first this sounds like a very narrow prior, it is important to remember that the spline function is defined on the utility (logit) scale, where small changes in utility can have large and nonlinear effects.
 For context, a coefficient of $3$ on the logit scale would increase the success probability from $.5$ to `r plogis(3) %>% round(2)` in a two-candidate choice set, which is a larger effect than almost anything that occurs regularly in elections.
 Furthermore, a preference for a spline functions near zero is essential for regularization, so this amount of prior information is appropriate for controlling the spline fit.
 At the same time, there are several peaks that decisively escape the $(-3, 3)$ neighborhood.
-These larger peaks reflect the flat that the Cauchy prior on $\eta$ has thicker tails that allow larger values to occur more frequently.
-The shape of the Cauchy tail retains enough flexibility to detect a spike in utility even if the center of the prior concentrates spline functions near zero.
+These larger peaks reflect the flat that the T prior on $\eta$ has thicker tails that allow larger values to occur more frequently.
+The shape of the T tail retains enough flexibility to detect a spike in utility even if the center of the prior concentrates spline functions near zero.
+This plot also shows that 30 knots are more than enough flexibility to capture a utility spike along $\Delta$ space.
 
 For the remaining coefficients $\gamma$, I specify a weakly informative prior,
 \begin{align}
@@ -683,7 +696,10 @@ For the remaining coefficients $\gamma$, I specify a weakly informative prior,
   (\#eq:clogit-wt-priors)
 \end{align}
 which rules out explosive coefficient values while still allowing candidate attributes like incumbency to exhibit large correlations with candidate utility.
-For causal inference, it is important not to regularize confounding effects too much to avoid re-introducing bias into treatment effect estimates [@hahn-et-al:2018:regularization-confounding; @hahn-et-al:2020:bayesian-causal-forests].
+For causal inference, it is important not to regularize confounding effects too much to avoid re-introducing bias into treatment effect estimates [@hahn-et-al:2018:regularization-confounding; @hahn-et-al:2020:bayesian-causal-forests].^[
+  For high dimensional problems where regularization cannot be avoided, recent work recommends separate treatment and response models [@hahn-et-al:2018:regularization-confounding; @hahn-et-al:2020:bayesian-causal-forest] with a split-sample approach [@ratkovic:2019:rehabilitating-regression].
+]
+
 
 ```{r a-b-data}
 unit_params <- tibble(
@@ -727,9 +743,11 @@ Because $\alpha$ and $\beta$ are constrained to have a norm of $1$, their values
 I give these parameters a joint prior that is flat along the unit circle.
 Stan implements this prior automatically by drawing unnormalized parameters $\tilde{\alpha}$ and $\tilde{\beta}$ from independent standard Normal distributions and then dividing by their norm,
 \begin{align}
+\begin{split}
   \tilde{\alpha}, \tilde{\beta} &\sim \text{Normal}\left(0, 1\right) \\
   \alpha = \sqrt{\tilde{\alpha}^2 + \tilde{\beta}^2} \\
   \beta = \sqrt{\tilde{\alpha}^2 + \tilde{\beta}^2}
+\end{split}
 \end{align}
 which creates a flat density over the unit circle.^[
   Technically, this transformation is undefined if the norm is exactly zero, which realistically never happens.
@@ -741,7 +759,7 @@ The marginal densities for $\alpha$ and $\beta$, shown in Figure \@ref(fig:a-b-p
 ```
 
 
-## Findings
+## Findings {#sec:vote-findings}
 
 
 
@@ -870,27 +888,29 @@ vb_draws %>%
   )
 ```
 
-All models were estimated using Stan's full-rank variational inference algorithm, which approximates the posterior distribution as a collection of Normal distributions with a full-rank covariance matrix. [@kucukelbir:2015:ADVI].
-I spend the majority of this section reviewing results from the models estimated using the full datasets. 
-I briefly review the key trends among non-incumbent races at the end of this section.
+All models were estimated using Stan's full-rank variational inference algorithm, which approximates the posterior distribution as a collection of Normal distributions with a full-rank covariance matrix [@kucukelbir:2015:ADVI].
+The main discussion of results focuses on the models estimated using the full datasets.
+I briefly review the key trends among non-incumbent races in Section \@ref(sec:no-incumbents).
 
-Figure \@ref(fig:linker-plot) shows posterior samples for $\alpha$ and $\beta$, the coefficients that map CF scores and district-party ideology into the common ideal point distance measure $\Delta$. 
-Because the coefficients are constrained to have a norm of $1$ to identify the transformed space, all pairs of coefficients fall on the unit circle. 
+In order to facilitate the interpretation of the spline model, I first show Figure \@ref(fig:linker-plot), which contains posterior samples the coefficients that map CF scores and district-party ideology into the common ideal point distance measure $\Delta$.
+Because I identify the latent $\Delta$ space by constraining these coefficients to have a norm of $1$, all pairs of parameters fall on the unit circle.
 Points are jittered in the plot to convey which values have greater posterior probability.
-As mentioned above, many possible ideal point mappings can be rationalized against the flexible spline function, so the posterior distribution to does not concentrate tightly around particular combinations of $\alpha$ and $\beta$ values.
+As mentioned above, many possible ideal point mappings can be rationalized as part of the spline function, so the posterior distribution to does not concentrate very tightly around particular combinations of $\alpha$ and $\beta$ values.
 This results in posterior samples that cover all four quadrants of the unit circle.
-This is not concerning because the common ideal point space is created to facilitate heterogeneous effects, not to be interpreted directly.
-
+This is not concerning, however, because the common ideal point space is created to facilitate heterogeneous effects, not to be interpreted directly.
 
 ```{r linker-plot, include = TRUE, out.width = "100%", fig.height = 5, fig.width = 9, fig.scap = "Posterior draws of linear mapping parameters.", fig.cap = "Posterior draws of parameters that map CF scores and district-party ideology into $\\Delta$ space. Points all fall on the unit circle but are slightly jittered to convey posterior density."}
 ```
 
 Coefficients from the candidate utility model are presented in Figure \@ref(fig:plot-spline-coefs).
 The left panel shows regression coefficients for control variables in $\mathbf{c}_{ir}$: gender, incumbency, and candidate self-fundraising. 
-These coefficients find that gender is positively related to candidate utility among Democrats more than Republicans, incumbency is strongly related to candidate utility in both parties, and candidate self-fundraising does not strongly relate to candidate utility in either party.
+These coefficients find that gender is positively related to candidate utility among Democrats more than Republicans, a finding that reflects recent evidence by [@thomsen:2019:women-win].
+Unsurprisingly, incumbency has a strong, positive relationship to candidate utility in both parties.
+Candidate self-fundraising does not strongly relate to candidate utility in either party.
+This could be because heavier self-funders reflect a mixture of wealthy candidates, who may be advantaged because of their connections to other wealthy funders, and down-on-their luck candidates who rely more heavily on self-fundraising to make up for meager fundraising receipts elsewhere.
 The right panel shows all spline basis function coefficients and the scale parameter in the smoothing prior for the spline coefficients.
-Most spline coefficients have posterior point estimates near zero, which is a product of the regularizing prior on the coefficients.
-Only a few coefficients strongly depart from the prior, an initial indication that the spline regression detects a smooth function with a small number of "wiggles," rather than a highly variable function with many local peaks and troughs. 
+Most spline coefficients have posterior point estimates near zero, which is the intended result of the regularizing prior on the coefficients.
+A few coefficients do depart from the prior, an initial indication that the spline regression detects a smooth function with a small number of "wiggles" rather than a highly variable function with many local peaks and troughs. 
 
 
 ```{r plot-spline-coefs, include = TRUE, out.width = "100%", fig.height = 8, fig.width = 9, fig.scap = "Posterior parameters from conditional logit.", fig.cap = "Posterior parameters from conditional logit. Points and intervals are variational point estimates and 90 percent quantile intervals from approximate posterior. Left panel shows regression weights for covariates. Right panel shows basis function coefficients and hierarchical scale parameter."}
@@ -1029,21 +1049,23 @@ The average effect of a change in CF score on candidate utility can't be summari
 The causal effect must instead be calculated as the difference in function values at different CF score inputs. 
 Let $\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right)$ be the conditional utility effect (CUE) of moving to $\text{CF}$ from a reference value $\text{CF}'$, which is defined as
 \begin{align}
-  \text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right) &=
-    \E{f\left(\text{CF}, \bar{\theta}_{g}\right) \mid 
-       \bar{\theta}_{g} = \theta, C_{ir} = c} \\
-       &\quad -
+\begin{split}
+  & \text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right) = \hfill \\
+  & \hfill \qquad \qquad \E{f\left(\text{CF}, \bar{\theta}_{g}\right) \mid
+       \bar{\theta}_{g} = \theta, C_{ir} = c} -
     \E{f\left(\text{CF}', \bar{\theta}_{g}\right) \mid 
        \bar{\theta}_{g} = \theta, C_{ir} = c}
-  (\#eq:cate-utility)
+\end{split}
+(\#eq:cate-utility)
 \end{align}
 given a fixed value of $\bar{\theta}_{g} = \theta$ and conditioning on covariates $C_{ir}$. 
 The Bayesian approach defines a the probability distribution for $\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right)$, which marginalizes over model parameters:
 \begin{align}
-  \p{\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right)} &=
-  \int \p{f\left(\text{CF}, \theta \right) - f\left(\text{CF}', \theta \right) \mid \theta, \alpha, \beta} \\
-  &\qquad \times \p{\alpha, \beta, \boldsymbol{\phi}} \diff \alpha \diff \beta \diff \boldsymbol{\phi}
-  (\#eq:prob-cate-utility)
+\begin{split}
+  & \p{\text{CUE}\left(\text{CF}, \text{CF}', \theta, c\right) \mid \mathbf{y}} = \hfill \\
+  & \hfill \qquad \qquad \int \p{f\left(\text{CF}, \theta \right) - f\left(\text{CF}', \theta\right), \alpha, \beta, \boldsymbol{\phi} \mid \theta, c, \mathbf{y}} \diff \alpha \, \beta \, \boldsymbol{\phi}    
+\end{split}
+(\#eq:prob-cate-utility)
 \end{align}
 The conditional average effect of CF score on candidate utility can be gleaned by simply contrasting the function values in Figure \@ref(fig:plot-spline-posterior) for two different CF score values.
 I do not plot these causal contrasts directly because they would look identical to the spline function, except the function would be intercept-shifted up or down depending on the reference value $\text{CF}'$.
@@ -1056,19 +1078,23 @@ Let $\text{CWE}\left(\text{CF}, \text{CF}', \theta, c, r\right)$ be the conditio
 The CWE is a function of the race $r$ because each race could have different numbers of candidates with different utilities.
 Because win probability is modeled as a softmax function of candidate utility, the CWE is the expected difference in softmax functions when CF score takes the value $CF$ versus the reference value $CF'$.
 \begin{align}
-  \text{CWE}\left(\text{CF}, \text{CF}', \theta, c, r\right) &=
-    \E{\text{softmax}\left(u_{ir}(CF\right) \mid \theta, c, r} \\
-    &\quad - 
-    \E{\text{softmax}\left(u_{ir}(CF'\right) \mid \theta, c, r}
-  (\#eq:cate-pwin)
+\begin{split}
+  & \text{CWE}\left(\text{CF}, \text{CF}', \theta, c, r\right) 
+    = \hfill \\
+  & \hfill \qquad \qquad
+    \E{\text{softmax}\left(u_{ir}(CF)\right) \mid \theta, c, r} - 
+    \E{\text{softmax}\left(u_{ir}(CF')\right) \mid \theta, c, r}
+\end{split}
+(\#eq:cate-pwin)
 \end{align}
 where $u_{ir}\left(CF_{ir}\right)$ represents a candidate utility, holding all variables besides CF score fixed.
 In turn, the probability distribution for the CWE marginalizes over the parameters that compose the softmax function.
 \begin{align}
-  \p{\text{CWE}\left(\text{CF}, \text{CF}', \theta, c, r\right)} &= 
-    \int \p{\text{softmax}\left(u_{ir}(CF\right) - \text{softmax}\left(u_{ir}(CF'\right) \mid \theta, c, r} \\
-    &\qquad \times \p{\alpha, \beta, \boldsymbol{\phi} \gamma} \diff \alpha \diff \beta \diff \boldsymbol{\phi} \gamma
-  (\#eq:prob-cate-pwin)
+\begin{split}
+  & \p{\text{CWE}\left(\text{CF}, \text{CF}', \theta, c, r\right) \mid \mathbf{y}} = \hfill \\
+  &  \hfill \qquad \qquad \int \p{\text{softmax}\left(u_{ir}(CF)\right) - \text{softmax}\left(u_{ir}(CF')\right) \mid \theta, c, r, \mathbf{y}} \diff \alpha \, \beta \, \boldsymbol{\phi} \, \gamma
+\end{split}
+(\#eq:prob-cate-pwin)
 \end{align}
 
 
@@ -1123,7 +1149,7 @@ ggplot(win_subset) +
   theme(legend.position = "none")
 ```
 
-Figure \@ref(plot:win-grid) visualizes causal effects of CF score on win probability in a two-candidate race.
+Figure \@ref(fig:win-grid) visualizes causal effects of CF score on win probability in a two-candidate race.
 I use the average CF score in each party as the reference value for CF score.
 Therefore the figure plots the how a candidate's ideological position affects their win probability _compared to holding the average ideological position_ for a candidate in their party.
 I show effects only in races with two candidates total, which conveys an upper bound on the magnitude of causal effects—effects in more crowded primary fields are expected to be smaller.
@@ -1139,7 +1165,7 @@ As candidates take ideological stances that are more moderate or more extreme th
 These declines are not monotonically decreasing because the spline function detects noisy effects for CF score with fewer observations.
 Although the 90% credible intervals contain generally contain effects of zero, the posterior distribution suggests that negative causal effects are most probable.
 
-Another important observation from Figure \@ref(plot:win-grid) is the way the presence of an incumbent dampens causal effects.
+Another important observation from Figure \@ref(fig:win-grid) is the way the presence of an incumbent dampens causal effects.
 Because incumbents are already highly valued in primaries, shocks to challenger utility compose a smaller share of the total utility across all candidates.
 In terms of win probability, because challengers are already unlikely to win a primary, a challenger with an ill-fitting ideological position can only hurt their chances so much before they confront the zero-bound on their win probability.
 
@@ -1147,7 +1173,7 @@ Bayesian computation is again valuable for plotting these causal effects with un
 Because each of these effects was calculated using draws from the variational posterior distribution, creating 90% uncertainty intervals from the inner 90% of samples is straightforward.
 
 
-### Races with no incumbents
+### Races with no incumbents {#sec:no-incumbents}
 
 ```{r splines-no-incumbent}
 spline_means_noinc <- noinc_raw %>%
