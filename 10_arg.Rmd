@@ -1,5 +1,10 @@
 # Introduction: Policy Ideology and Congressional Primaries {#ch:arg}
 
+
+```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
+knitr::knit_exit()
+```
+
 <!-- outline 
 
 What's the problem?
@@ -343,7 +348,7 @@ Candidates who run in electorally competitive districts are more moderate than c
 Extremist candidates, meanwhile, earn fewer votes and are less likely to win in Congressional elections, and this tendency is stronger in competitive districts than in safe districts [@hall:2015:extremists].
 Despite these incentives to take moderate campaign positions, candidates nonetheless take divergent rather than convergent stances by and large.
 Republican and Democratic members of Congress vote very differently from one another, and this partisan divergence increased in recent years [@poole-rosenthal:1997:roll-call-history; @McCarty-Poole-Rosenthal:2006:book].
-The difference in legislative voting behavior across parties isn't simply because Republicans and Democrats represent different districts, since Republicans and Democrats who represent similar districts (or the same state, in the case of U.S. Senators) nonetheless vote differently from one another [@mccarty-poole-rosenthal:2009:gerrymandering; @brunell:2006:rethinking-redistricting; @brunell-grofman-merrill:2016:polarization-components].
+The difference in legislative voting behavior across parties does not arise simply because Republicans and Democrats represent different districts, since Republicans and Democrats who represent similar districts (or the same state, in the case of U.S. Senators) nonetheless vote differently from one another [@mccarty-poole-rosenthal:2009:gerrymandering; @brunell:2006:rethinking-redistricting; @brunell-grofman-merrill:2016:polarization-components].
 Even among Congressional races in the exact same district, there is a sizable gap between Republican and Democratic candidate positions [@rogowski-langella:2015:primary-systems].
 And although qualitative evidence from decades past suggests that candidates take careful positions on issues of local concern [@fenno:1978:home-style], more recent systematic tests find mixed evidence of localized, particularistic position-taking. [@canes-wrone-et-al:2011:issue-accountability; @fowler-hall:2016:convergence].
 In total, even though there is some evidence that candidates benefit by positioning themselves as marginally more moderate or more in line with local public opinion, the dominant finding is that candidates take divergent positions that are more closely aligned with a national party platform than with a set of local issue priorities.

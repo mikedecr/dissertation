@@ -1,9 +1,33 @@
 ## Data Sources {#sec:model-data}
 
-<!-- in chapter: model -->
-
-Describe data
+```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
+knitr::knit_exit()
+```
 
 ```{r knitr-02-2_model-data, include = FALSE, cache = FALSE}
 source(here::here("assets-bookdown", "knitr-helpers.R"))
 ```
+
+
+<!-- in chapter: model -->
+### Response data {#sec:model-y}
+
+
+- survey data
+- describe outcomes
+
+
+### Covariates {#sec:model-covariates}
+
+I draw district-level demographic data from @foster-molina:2016:data, whose study of district demographics and congressional voting includes a publicly released time-series of congressional district demographics.
+I use observations from the 2012 election cycle, which represents is the first general election of the districting cycle for which I estimate ideal points.
+I measure the median income, median age, Gini coefficient, and the percent of the district population that was White, had a college degree, was born outside the U.S., and was unemployed.
+
+State covariate data were included from the Correlates of State Policy Project [@jordan-grossman:2017:CSPP].
+I include a state measure of the percent of the population that is Evangelical Christian, a measure that has been shown to predict aggregate opinion well [@lax-phillips:2009:mrp; @buttice-hightin:2013:MRP], but that had no district-level measure for. 
+I also measure the percent of the population that is non-White and per capita income at the state level, which are similar to variables I include at the district level but may capture different patterns at different levels of aggregation [e.g. @gelman-et-al:2007:red-state-qjps].
+
+The common worry that correlation among covariates inflates the variance of coefficient estimates is not of particular concern for this model, because covariates are included to improve the prediction of ideal points, not for inference on the regression coefficients themselves.
+Furthermore, prior distributions for the regression parameters serve a similar function as a ridge penalty, regularizing coefficients against noisy or weakly-identified solutions [@bishop:2006:pattern-rec].
+To facilitate the specification of weakly regularizing priors across all covariates, I scale all covariates to have mean zero and variance $1$ before estimation.
+

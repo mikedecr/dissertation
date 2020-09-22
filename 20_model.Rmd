@@ -935,16 +935,20 @@ Figure \@ref(fig:plot-valid-probit) provides a graphical depiction of this point
 ------------------------->
 
 A more general takeaway from the relationship between the probit model and the standard Normal distribution is that prior ignorance on the probability scale is reasonably approximated by priors scales of order $1$ on the quantile scale.
-For instance, if a model prediction has a $\text{Normal}\left(0, 1\right)$ prior on the quantile scale, it has a flat prior on the probability scale.
-Priors of this sort are a simple example of weak information: enough regularization to downweight extreme model configurations, but weak enough that the data distinguish between the more reasonable model configurations.
+For instance, if a model quantile value has a $\text{Normal}\left(0, 1\right)$ distribution, this implies a flat distribution over the probability scale.
+Priors of this sort are a simple example of weak information: enough regularization to downweight extreme model configurations that upweight very high or very low probabilities, but weak enough that the data adjudicate between model configurations in relevant regions of the probability scale.
 For this reason, the priors for regression parameters are concentrated around these scale values.
-Constants are given $\text{Normal}\left(0, 1\right)$ priors, the scale parameters in the group, state, and region random effects are given $\text{Half-Normal}\left(0, 1\right)$ priors, and regression coefficients are given regularized slightly more with $\text{Normal}\left(0, 0.5\right)$ priors.
-Because the covariate data for the regressions are all scaled to be standard deviation $1$, a prior scale of $0.5$ means that approximately 98% of prior mass is concentrated on effect sizes of less than $1$ on the quantile scale. 
+Constants are given $\text{Normal}\left(0, 1\right)$ priors.
+The hierarchical scale parameters in the group, state, and region random effects are given $\text{Half-Normal}\left(0, 1\right)$ priors, and regression coefficients are regularized slightly more with $\text{Normal}\left(0, 0.5\right)$ priors.
+Because the covariate data for the regressions are all scaled to be standard deviation $1$, a prior scale of $0.5$ means that approximately 98% of prior mass is concentrated on effect sizes of less than $1$ on the quantile scale.^[
+  Normal priors for coefficients are similar to a ridge penalty [@bishop:2006:pattern-rec], a commonplace regularization choice in predictive modeling.
+]
 
 Allowing the likelihood model to inform prior scales is common among Bayesian statisticians but rarer among political scientists.
-The widespread understanding that flatter priors always represent more principled prior ignorance does not generalize to modeling problems with nonlinear parameter spaces that concentrate most plausible model configurations on particular orders of magnitude.
-Early ideal point models for the mass public [e.g. @treier-hillygus:2009:ideology] tend to use highly diffuse priors, such as $\text{Normal}\left(0, 100\right)$, which place the majority of prior probability on model configurations that are virtually impossible to be true.
-More recent Bayesian ideal point models [e.g. @tausanovitch-warshaw:2013:constituent-prefs; @caughey-warshaw:2015:DGIRT] use more reasonable prior scales such as $5$ or $2.5$, which are still broad but at least on the order of magnitude that fits the probit model.
+The widespread understanding that flatter priors always represent more principled prior ignorance is not generally true, but instead depends on the parameter space—an important point that I explore further in Chapter \@ref(ch:causality).
+This is especially relevant for modeling problems like this, where nonlinear parameter spaces that concentrate most plausible model configurations on certain orders of magnitude.
+Early ideal point models for the mass public [e.g. @treier-hillygus:2009:ideology] tend to use highly diffuse priors, such as $\text{Normal}\left(0, \sqrt{1000}\right)$, which place the majority of prior probability on model configurations that are virtually impossible to be true.
+More recent Bayesian ideal point models [e.g. @tausanovitch-warshaw:2013:constituent-prefs; @caughey-warshaw:2015:DGIRT] use more reasonable prior scales such as $5$ or $2.5$, which are still broad but at least on an order of magnitude that fits the probit model.
 
 
 ### Priors for item parameters
@@ -1190,12 +1194,4 @@ As explained above, these parameters are restricted to sum to zero in each MCMC 
 
 <!-- other file -->
 
-## Ideal Point Estimates for District-Party Publics
 
-### Data
-
-<!-- other file -->
-
-### Posterior Analysis
-
-<!-- another file? -->
