@@ -63,7 +63,8 @@ n_regions <- 5
 n_states <- 20
 n_districts <- 5
 n_parties <- 2
-n_cases <- 50
+# n_cases <- 50
+n_cases <- 5
 n_items <- 40
 # will these do anything? (could sim from mvnorm?)
 n_statecov <- 1L
@@ -460,6 +461,7 @@ if (whoami == "michaeldecrescenzo") {
 long_homsk
 # long_het
 
+alarm()
 message("models compiled")
 
 # save compiled model to box? is this worth it?
@@ -481,7 +483,8 @@ message("models compiled")
 
 # same in data/sim-dgirt/mcmc
 mcmc_homsk <- dgirt(long_homsk, stan_data)
-boxr::box_write(mcmc_homsk, "probit-lkj-2k.RDS", dir_id = mcmc_dir)
+boxr::box_write(mcmc_homsk, "SMOL_probit-lkj-2k.RDS", dir_id = mcmc_dir)
+
 # boxr::box_write(mcmc_homsk, "short-probit-lkj-stanfit.RDS", dir_id = mcmc_dir)
 # boxr::box_write(mcmc_homsk, "test-probit-lkj-stanfit.RDS", dir_id = mcmc_dir)
 # boxr::box_write(mcmc_homsk, "test-homsk-stanfit.RDS", dir_id = mcmc_dir)
@@ -576,14 +579,15 @@ shinystan::launch_shinystan(fit)
 
 stan_rhat(fit)
 
-
+# avg autocor is very good
 stan_ac(fit, "theta")$data %>%
   as_tibble() %>%
   group_by(parameters, lag) %>%
   summarize(ac = mean(ac)) %>%
   group_by(parameters) %>%
   nest() %>%
-  sample_n(30) %>%
+  ungroup() %>%
+  sample_n(10, replace= TRUE) %>%
   unnest() %>%
   ggplot(aes(x = lag, y = ac)) +
     geom_col() +
@@ -593,6 +597,8 @@ stan_ac(fit, "theta")$data %>%
 
 mcmc_homsk %>%
   tidy(rhat = TRUE, ess = TRUE) %>%
+  arrange(ess) %>%
+  print() %>%
   gather(key = stat, value = value, rhat, ess) %>%
   ggplot(aes(x = value)) +
     geom_histogram() +
