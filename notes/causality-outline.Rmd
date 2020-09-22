@@ -1,0 +1,16 @@
+
+What I need for my project
+
+- conceptual intro to Bayes
+- Bayesian expression of causal estimands
+- why bayes?
+    - direct inference 
+    - priors for uncertainty 
+    - priors for regularization
+- bayes and CI hierarchy
+- understanding priors
+    - flatness is a shape, not informativeness.
+
+
+
+

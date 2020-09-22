@@ -3,11 +3,10 @@
 # - Mahr: <https://github.com/tjmahr/dissertation/blob/master/index.Rmd>
 
 title: "Do Primaries Work?"
-subtitle: "Bayesian Causal Models of Partisan Ideology and Congressional Nominations" 
+subtitle: "Constituent Ideology and Congressional Nominations" 
 # title: Bayesian Causal Models of Partisan Ideology and Primary Elections
 author: "Michael G. DeCrescenzo"
-date: |
-  | `r if (knitr::is_latex_output()) "TBD" else if (knitr::is_html_output()) stringr::str_glue("Compiled {format(Sys.time(), '%B %d, %Y: %H:%M')}")`
+date: "October 16, 2020"
 #  `r format(Sys.time(), "%B %d, %Y: %H:%M")` 
 site: "bookdown::bookdown_site"
 github-repo: "mikedecr/dissertation"
@@ -60,7 +59,8 @@ bookdown::render_book("Index.Rmd", "bookdown::html_book")
 
 
 # preview chapter (live)
-xaringan::inf_mr("40_positioning.Rmd")
+# xaringan::inf_mr("30_causality.Rmd")
+# xaringan::inf_mr("40_positioning.Rmd")
 
 # preview chapter (static)
 bookdown::preview_chapter('40_positioning.Rmd')
