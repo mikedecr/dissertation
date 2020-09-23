@@ -8,13 +8,137 @@ knitr::knit_exit()
 source(here::here("assets-bookdown", "knitr-helpers.R"))
 ```
 
+```{r 02-data-packages, cache = FALSE}
+library("here")
+library("magrittr")
+library("tidyverse")
+library("scales")
+```
+
 
 <!-- in chapter: model -->
 ### Response data {#sec:model-y}
 
 
-- survey data
-- describe outcomes
+```{r poll-data}
+polls_raw <- here("data", "polls-clean", "megapoll.RDS") %>%
+  read_rds() %>%
+  ungroup() %>%
+  print()
+```
+
+```{r clean-polls}
+polls_raw %>%
+  mutate(
+    names = map(cleaned_data, names)
+  ) %>%
+  unnest(names)
+
+polls_raw %>%
+  mutate(
+    party = map(cleaned_data, ~ count(.x, party))
+  ) %>%
+  unnest(party)
+
+
+polls <- polls_raw %>%
+  mutate(
+    slim = map(
+      .x = cleaned_data, 
+      .f = ~ {
+        .x %>%
+        select(domain, item_code)
+      }
+    )
+  ) %>%
+  select(-cleaned_data) %>%
+  unnest(slim) %>%
+  distinct() %>%
+  mutate(
+    domain = case_when(
+      domain == "immigratioin" ~ "immigration",
+      item_code == "econ_env.jobs" ~ "environment",
+      item_code == "abort_20wk.ban" ~ "abortion",
+      TRUE ~ domain
+    ),
+    big_domain = case_when(
+      domain %in% c("budget", "econ", "health") ~ "econ: economics/budget/healthcare",
+      domain %in% c("abortion", "gender", "lgbtq") ~ "gender: sex/gender/reproduction",
+      domain %in% c("race", "law", "guns") ~ "social: race/police/drugs/guns",
+      domain %in% c("immigration", "defense") ~ "imm: immigration/defense",
+      domain %in% c("environment") ~ "env: environment"
+    )
+  ) %>%
+  print()
+
+items <- polls %>%
+  select(contains("domain"), item_code) %>%
+  distinct() %>%
+  print()
+
+items %>% count(item_code) %>% print(n = nrow(.))
+items %>% count(domain)
+items %>% count(domain, big_domain)
+```
+
+
+
+```{r calculate-responses}
+Ns <- polls_raw %>%
+  mutate(
+    N_respondents = map_dbl(
+      .x = cleaned_data,
+      .f = ~ .x %>% 
+        filter(party %in% c(1, 2)) %>% 
+        filter(state_abb %in% c(state.abb)) %>%
+        count(caseid) %>% 
+        nrow()
+    ),
+    N_groups = map_dbl(
+      .x = cleaned_data,
+      .f = ~ .x %>% 
+        filter(party %in% c(1, 2)) %>% 
+        filter(state_abb %in% c(state.abb)) %>%
+        count(state_abb, district_num, party) %>% 
+        nrow()
+    ),
+    N_responses = map_dbl(cleaned_data, nrow)
+  ) %>%
+  print()
+```
+
+```{r calculate-cases}
+n_group_items <- polls_raw %>%
+  unnest(cleaned_data) %>%
+  filter(party %in% c(1, 2)) %>% 
+  filter(state_abb %in% c(state.abb)) %>%
+  select(state_abb, district_num, party, item_code) %>%
+  distinct() %>%
+  nrow() %>%
+  print()
+```
+
+```{r calculate-domains}
+domains <- items %>% 
+  count(big_domain) %>%
+  split(.$big_domain) %>%
+  set_names(~ str_split(., pattern = ":", simplify = TRUE)[,1]) %>%
+  print()
+```
+
+
+Survey response data are drawn from the Cooperative Congressional Election Study (CCES) waves 2012, 2014, 2016, and 2018, and the 2016 wave of the American National Election Study (ANES).
+I restrict the  data to include only respondents who identify with the Republican and Democratic Parties and who reside in one of the 435 congressional districts.
+
+I combine the responses to policy questions in these surveys into a single dataset, commonly called a "megapoll" [@kastellec-et-al:2019:mrp-primer].
+The megapoll contains `r nrow(polls)` policy items across all of the surveys it contains.
+Some items in different surveys are either worded identically or similarly enough to be considered as the same item, resulting in `r (n_items <- items %>% count(item_code) %>% nrow())` unique items used for scaling.
+There are `r domains$econ$n` items about economics, the federal budget, and health care; `r domains$env$n` items about the environment and climate change; `r domains$gender$n` items on sex/gender equality and reproductive rights; `r domains$imm$n` on immigration and national defense; and `r domains$social$n` items on other social issues such as race, policing, drug laws, and gun rights.
+If an item contained a response scale instead of a binary response option, I collapse responses into a binary coding to facilitate estimation with the probit model.
+A table describing the text and data sources of all items is included in Appendix \@ref(ch:appendix-model).
+
+Each survey contained responses from between `r min(Ns$N_respondents) %>% comma()` and `r max(Ns$N_respondents) %>% comma()` respondents, totaling `r sum(Ns$N_responses) %>% comma()` individual item responses across all surveys, respondents, and items.
+After aggregating respondents into district-party groups, the data contain `r comma(n_group_items)` observations at the group-item level, which averages to approximately `r number(n_group_items / (435 * 2), accuracy = 1)` item responses per group, or `r number(n_group_items / (n_items), accuracy = 1)` responses per item.
 
 
 ### Covariates {#sec:model-covariates}

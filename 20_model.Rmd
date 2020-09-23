@@ -720,12 +720,12 @@ It is important to discuss these implementation details because they are essenti
 Models that are not parameterized for stable computation are likely to return severely biased estimates, which is especially worrisome for Bayesian models with complex, high-dimensional posterior distributions. 
 Furthermore, recent work in political science that employs similar models [@caughey-warshaw:2015:DGIRT] does not utilize best-practice parameterizations, so this discussion provides an important corrective for other researchers estimating similar models.
 Broadly speaking, there are no reference texts for doing contemporary Bayesian analysis in political science that reflect recent innovations in Hamiltonian Monte Carlo methods.
-This is despite the fact that HMC has been the state of the art MCMC method for most applied Bayesian problems for several years [@patil-et-al:2010:PyMC;@carpenter-at-al:2016:stan; @betancourt:2017:conceptual-hamiltonian].^[
+This is despite the fact that HMC has been the state of the art MCMC method for most applied Bayesian problems for several years [@patil-et-al:2010:PyMC;@carpenter-at-al:2016:stan; @betancourt:2017:conceptual-hamiltonian; @burkner:2017:brms].^[
   Gibbs sampling methods are still common for problems with categorical parameters and other models with discontinuous posterior distributions.
 ]
 
-The group-level IRT model regularizes parameters estimates using several hierarchical regression models: group ideal points are regularized using a district-level regression, and state effects are regularized using a state-level regression.
-Hierarchical models have posterior distributions whose curvatures are known present difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations].
+The group-level IRT model regularizes parameters estimates using several hierarchical regression models: group ideal points are regularized using a district-level regression, state effects are regularized using a state-level regression, and region effects are pooled toward a hierarchical prior with a mean of zero.
+Hierarchical models like these have posterior distributions whose curvatures are known present difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations].
 To improve the estimation in Stan, the best practice for most situations is to parameterize hierarchical models using a "non-centered" model parameterization rather than a "centered" parameterization.
 Whereas the centered parameterization considers $\bar{\theta}_{g}$ as a random draw from a hierarchical distribution (Equation \@ref(eq:theta-g-hlm) above),
 the non-centered parameterization defines $\bar{\theta}_{g}$ as a deterministic function of its conditional hypermean and a random variable.
@@ -742,14 +742,14 @@ where $u_{dp}\tau_{p}$ behaves as a group-level error term.
 The group-level error term is decomposed into a standard Normal variate $u_{dp}$ and a scalar parameter $\tau_{p}$ that controls the scale of the error term.
 The scale parameter $\tau_{p}$ then is given a separate prior.
 
-The non-centered model is algebraically equivalent to centered model as it pertains to the likelihood of the data, but the non-centered parameterization "unnests" the mean and the scale value from the hierarchical random variable.
-This parameterization improves MCMC sampling by de-correlation random variables in the posterior distribution, leading to more efficient MCMC exploration. 
+The non-centered model is algebraically equivalent to centered model as it pertains to the likelihood of the data, but the non-centered parameterization "unnests" the mean and the scale from the hierarchical distribution.
+This parameterization improves MCMC sampling by de-correlating random variables in the posterior distribution, leading to more efficient MCMC exploration. 
 The centered parameterization, meanwhile, contains regions of highly correlated parameter space that trap Markov chains in "funnels" that are difficult to escape [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations].
 These problematic regions in the posterior lead to "divergent transitions" in the Markov chain: transitions where the posterior curvature is so high that the Hamiltonian algorithm cannot accurately estimate the trajectory of its own proposals.
 Markov chains with many divergent transitions have a high risk of being severely biased because they indicate that the chain is failing to navigate the parameter space effectively. 
 The non-centered parameterization smooths out these problematic regions of posterior density, safeguarding against biased MCMC estimates.
 
-Equation \@ref(eq:theta-g-noncenter) is an incomplete implementation of the non-centered form; to complete the parameterization, I apply it too all hierarchical components in the regression, including the state and region effects,
+Equation \@ref(eq:theta-g-noncenter) is an incomplete implementation of the non-centered form; to complete the parameterization, I apply it to all hierarchical components in the regression, including the state and region effects,
 \begin{align}
 \begin{split}
   \bar{\theta}_{g} &=
@@ -766,7 +766,7 @@ Equation \@ref(eq:theta-g-noncenter) is an incomplete implementation of the non-
 \end{split}
 (\#eq:full-noncenter)
 \end{align}
-where $u^{\mathtt{district}}$, $u^{\mathtt{state}}$, and $u^{\mathtt{region}}$ are all standard Normal variables, and the scale components $\tau$ for each level have their own prior distributions as well.
+where $u^{\mathtt{district}}$, $u^{\mathtt{state}}$, and $u^{\mathtt{region}}$ are all standard Normal variables, and the scale components $\tau$ for each level have their own prior distributions that I specify below.
 
 
 ### Prior Distribution {#sec:priors}
@@ -776,7 +776,7 @@ where $u^{\mathtt{district}}$, $u^{\mathtt{state}}$, and $u^{\mathtt{region}}$ a
 ------------------------->
 
 Bayesian models require a prior probability distribution over the model parameters, which can be a benefit and a drawback of the approach. 
-The primary benefit is the ability to encode external information into a model, allowing the researcher to stabilize parameters and downweight unreasonable estimates, which guard against overfitting and smooth estimates across many groups of data [@gelman-hill:2006:multilevel]. 
+The primary benefit is the ability to encode external information into a model, allowing the researcher to downweight unreasonable estimates, regularize against overfitting, stabilize weakly identified quantities, and pool estimates across many groups of data [@gelman-hill:2006:multilevel]. 
 Bayesian estimation is especially valuable for ideal point models because MCMC generates posterior samples of latent variables as if they were any other model parameter. 
 The drawback of Bayesian modeling is that prior specification is additional work for the researcher, which can be complicated.
 The following discussion describes and justifies priors used in the group ideal point model. 
@@ -939,7 +939,7 @@ For instance, if a model quantile value has a $\text{Normal}\left(0, 1\right)$ d
 Priors of this sort are a simple example of weak information: enough regularization to downweight extreme model configurations that upweight very high or very low probabilities, but weak enough that the data adjudicate between model configurations in relevant regions of the probability scale.
 For this reason, the priors for regression parameters are concentrated around these scale values.
 Constants are given $\text{Normal}\left(0, 1\right)$ priors.
-The hierarchical scale parameters in the group, state, and region random effects are given $\text{Half-Normal}\left(0, 1\right)$ priors, and regression coefficients are regularized slightly more with $\text{Normal}\left(0, 0.5\right)$ priors.
+The hierarchical scale parameters in the group, state, and region random effects ($\tau$) are given $\text{Half-Normal}\left(0, 1\right)$ priors, and regression coefficients are regularized slightly more with $\text{Normal}\left(0, 0.5\right)$ priors.
 Because the covariate data for the regressions are all scaled to be standard deviation $1$, a prior scale of $0.5$ means that approximately 98% of prior mass is concentrated on effect sizes of less than $1$ on the quantile scale.^[
   Normal priors for coefficients are similar to a ridge penalty [@bishop:2006:pattern-rec], a commonplace regularization choice in predictive modeling.
 ]
@@ -1186,12 +1186,8 @@ Each point represents a simulated item as a combination of unrestricted cutpoint
 Brighter points indicate greater density among the random draws.
 As explained above, these parameters are restricted to sum to zero in each MCMC iteration to identify the ideological space.
 
-```{r plot-lkj, include = TRUE, fig.height = 9, fig.width = 7, out.width = "100%", fig.cap = "Components of the joint hierarchical prior for the unscaled item parameters. Left panel shows prior values for unscaled item parameters from the joint prior. Remaining panels show priors for decomposed covariance matrix components: including the standard deviation that form the matrix diagonal (middle) and the off-diagonal correlation from the LKJ prior (right)."}
+```{r plot-lkj, include = TRUE, fig.height = 9, fig.width = 7, out.width = "80%", fig.cap = "Components of the joint hierarchical prior for the unscaled item parameters. Left panel shows prior values for unscaled item parameters from the joint prior. Remaining panels show priors for decomposed covariance matrix components: including the standard deviation that form the matrix diagonal (middle) and the off-diagonal correlation from the LKJ prior (right)."}
 ```
 
-
-## Testing the Model with Simulated Data
-
-<!-- other file -->
 
 

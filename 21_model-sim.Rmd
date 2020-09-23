@@ -3,16 +3,12 @@
 <!-- in chapter: model -->
 
 
-```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
+```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
 knitr::knit_exit()
 ```
 
 ```{r knitr-02-1_model-sim, include = FALSE, cache = FALSE}
 source(here::here("assets-bookdown", "knitr-helpers.R"))
-```
-
-```{r, cache = FALSE}
-knitr::knit_exit()
 ```
 
 ```{r r-02-1_model-sim, cache = FALSE}
@@ -30,14 +26,16 @@ library("broom")
 library("tidybayes")
 ```
 
+```{r sim-dirs}
+input_dir <- file.path("data", "mcmc", "2-dgirt", "test", "input")
+mcmc_dir <- file.path("data", "mcmc", "2-dgirt", "test", "samples")
+```
 
 ```{r 021-helper-vars}
 # helper variables
 sim_seed <- 01110011
 ```
 
-
-Because the model is custom-built with `Stan`, it comes with no off-the-shelf quality assurances. To test the model's ability to estimate unknown parameters, I subject the model to a number of tests during its development. These tests proceed by simulating data from a data generating process with known parameters, fitting the model to the simulated data, and comparing the posterior estimates against their known values. This section describes these simulations and presents their results.
 
 
 ```{r read-simulation-data}
@@ -46,17 +44,46 @@ Because the model is custom-built with `Stan`, it comes with no off-the-shelf qu
 # (3) remove list
 
 # box_read(524570617700)
-here("data", "mcmc", "dgirt", "test", "input", "sim-params.RDS") %>%
-  readRDS() %>% 
+list.files(input_dir)
+here(input_dir, "sim-params.RDS") %>%
+  read_rds() %>% 
   list2env(envir = .GlobalEnv)
 
 ls()
 ```
 
+Because the model is custom-built using Stan, it comes with no off-the-shelf quality assurances. 
+To test the model's ability to recover unknown parameters, I estimate the model on simulated data. 
+I intentionally stress-test the model by building a dataset that is smaller than the real dataset that I use for estimation.
+The fake data contain just `r n_states` with `r english(n_districts)` districts per state.
+With two parties per district, this totals `r n_states * n_districts * n_parties` groups instead of the $435 \times 2 = 870$ groups in the real data.
+Individuals in each group offer responses to `r n_items` items.
+For simplicity, the simulation assumes that each individual in each group answers only one question.
+When the model is estimated on real data, this assumption is relaxed by the weighting scheme laid out in Section \@ref(sec:model-weights).
+Because the weighting scheme downweights respondents who answer multiple survey items, I generate a small number of item responses for each item in each group: just `r n_cases` independent responses per item. 
+
+
+
+
+
+The model is designed to estimate group-level parameters from an individual-level data generating process. As such, I begin by simulating individual-level item response data before aggregating the data to the group level for estimation. I simulate a universe containing `r n_states` states nested within `r english(n_regions)` regions, allocated so each region contains `r english(n_states / n_regions)` states. Each state contains `r english(n_districts)` districts containing voters belonging to `r english(n_parties)` parties, totaling `r n_states * n_districts * n_parties` groups across `r n_states * n_districts` districts in the whole "country." Data for each district-party group contain responses to `r n_items` items that are answered by `r n_cases` unique individuals apiece.^[
+  While a single survey will not contain `r n_items` policy items, this study will pool items from several surveys into a final dataset.
+]
+
+```{r party-params}
+party_params <- params %>% split(.$party) %>% print()
+```
+
+I draw item parameters from independent Normal distributions: $\text{Normal}(0, `r difficulty_sd`)$ for the unadjusted midpoint parameters and $\text{Normal}\left(0, `r discrimination_sd`\right)$ for the unadjusted log discrimination parameters.
+The hierarchical model does not contain a lot of data: I generate just `r english(n_distcov)` district-level covariates and `r english(n_statecov)` state covariate.
+District and state covariates are random draws from a Normal distribution with standard deviation `r sd_beta_d`, with separate coefficients for "Democrats" and "Republicans."
+Intercept values for Democrats and Republicans are `r party_params[[1]]$const` and `r party_params[[2]]$const`, respectively.
+The random effects for districts, states, and `r english(n_regions)` regions are Normal draws with standard deviations of `r resid_theta_d`, `r resid_theta_s`, and `r resid_theta_r`.
+
 
 ```{r read-test-stanfit}
 # box_read(507153233559)
-stanfit <- readRDS(here("data", "mcmc", "dgirt", "test", "samples", "test-homsk-stanfit.RDS"))
+stanfit <- read_rds(here("data", "mcmc", "2-dgirt", "test", "samples", "SMOL_probit-lkj-2k.RDS"))
 ```
 
 ```{r tidybayes-tidy}
@@ -64,67 +91,19 @@ df_stanfit <- tidy_draws(stanfit)
 ```
 
 ```{r read-test-stanpars, cache = FALSE}
-here("data", "mcmc", "dgirt", "test", "input", "mcmc-params.RDS") %>%
-  readRDS() %>% 
+here("data", "mcmc", "2-dgirt", "test", "input", "mcmc-params.RDS") %>%
+  read_rds() %>% 
   list2env(envir = .GlobalEnv)
 
 total_iterations <- (n_chains * (n_iterations - n_warmup) / n_thin)
 ```
 
-The model is designed to estimate group-level parameters from an individual-level data generating process. As such, I begin by simulating individual-level item response data before aggregating the data to the group level for estimation. I simulate a universe containing `r n_states` states nested within `r english(n_regions)` regions, allocated so each region contains `r english(n_states / n_regions)` states. Each state contains `r english(n_districts)` districts containing voters belonging to `r english(n_parties)` parties, totaling `r n_states * n_districts * n_parties` groups across `r n_states * n_districts` districts in the whole "country." Data for each district-party group contain responses to `r n_items` items that are answered by `r n_cases` unique individuals apiece.^[
-  While a single survey will not contain `r n_items` policy items, this study will pool items from several surveys into a final dataset.
-]
- For simplicity, the simulation assumes that each individual answers only one question. When the model is implemented on real data, this assumption is relaxed by the weighting scheme laid out in Section&nbsp;\@ref(sec:model-weights).
-  <!------- TO DO ---------
-  - Fix
-  ------------------------->
-
-Individual partisans respond to each item probabilistically according to the individual-level item response model originally laid out in Equation&nbsp;\@ref(eq:y-i-probit). The probability $\pi$ that individual $i$ gives a conservative answer to item $j$ is
-\begin{align*}
-  y_{ij} &\sim \mathrm{Bernoulli}(\pi_{ij}) \\
-  \pi_{ij} 
-  &= 
-  \Phi\left(\frac{\theta_{i} - \kappa_{j}}{\sigma_{j}}\right)
-\end{align*} 
-Once individual responses are simulated, the number of conservative responses are summed within each item-group and supplied to the model for estimation.
-
-Simulating these individual level responses requires that we provide hyperparameter values to ideal points $\theta_{i}$, cutpoints $\kappa_{j}$, and dispersions $\sigma_{j}$. Beginning with the item parameters, every cutpoint value is drawn a Normal distribution with mean $0$ and standard deviation `r difficulty_sd`. Every dispersion parameter is defined as $\sigma_{j} = \iota_{j}^{-1}$, where $\iota_{j}$ is a LogNormal draw with mean $0$ and standard deviation `r discrimination_sd` on the log scale.
-
-Individual ideal point parameters are Normal draws within their respective district-party groups ($\theta_{i} \sim \mathrm{Normal}\left(\bar{\theta}_{g[i]}, \sigma_{g[i]}\right)$), where each group has a potentially unique mean and standard deviation. As described in Section&nbsp;\@ref(sec:geographic-model), group means are generated from hierarchical models with parameters that vary across parties. I also specify a group-level regression to generate heteroskedasticity in $\sigma_{g}$, which the model does not currently estimate.
-<!------- TO DO ---------
-- fix this bit oh boy
-------------------------->
-\begin{align}
-  \theta_{g} &=
-    \mu_{0p} + 
-    \mathbf{x}^{\intercal}_{d}\beta_{p} + 
-    \mathbf{z}^{\intercal}_{s}\gamma_{p} +
-    \epsilon_{dp}^{\mathtt{district}} + 
-    \epsilon_{sp}^{\mathtt{state}} + 
-    \epsilon_{rp}^{\mathtt{region}} \\
-  \log\left(\sigma_{g}\right) &=
-    \delta_{0p} + 
-    \mathbf{x}^{\intercal}_{d}\delta_{p} + 
-    \mathbf{z}^{\intercal}_{s}\zeta_{p} +
-    \nu_{dp}^{\mathtt{district}} + 
-    \nu_{sp}^{\mathtt{state}} + 
-    \nu_{rp}^{\mathtt{region}}
-\end{align}
-The hierarchical regression contains district data $\mathbf{x}$, consisting of two standard normal covariates, and state data $\mathbf{z}$, containing just one standard normal covariate. Subscripts index groups $g$, districts $d$, states $s$, and regions $r$.^[
-  For simplicity, notation for the hierarchical structure is left implicit in these equations.
-]
-To generate group means $\theta_{g}$, the constants $\mu_{0p}$ are explicitly set for each party $p$: $\mu_{0, p=1} = `r const_d`$ and $\mu_{0, p=2} = `r const_r`$. This implies that, on average, party $1$ is liberal, and party $2$ is conservative. District coefficients $\beta_{p}$ and state coefficients $\gamma_{p}$ are all simulated as Normal draws with mean $0$ and standard deviation `r sd_beta_d`. The hierarchical model contains party-specific error terms (denoted as $\epsilon$) for districts ($\mathrm{sd} = `r resid_theta_d`$), states ($\mathrm{sd} = `r resid_theta_s`$), and regions ($\mathrm{sd} = `r resid_theta_r`$). The setup is similar for the generation of group-level dispersion terms $\sigma_{g}$. The constants $\delta_{0p}$ are set to `r const_sig` for both parties, coefficients for districts ($\delta_p$) and states ($\zeta_{p}$) are both Normal draws with mean $0$ and std.\ dev.\ $`r sd_beta_d_sig`$, and there are separate mean-$0$ error terms $\nu$ for districts ($\mathrm{sd}= `r resid_sigma_d`$), states ($\mathrm{sd}= `r resid_sigma_s`$), and regions ($\mathrm{sd}= `r resid_sigma_r`$).
-
-It is important to note that many of the parameters in this simulation are not hand-selected but simulated from probability distributions. This is done to obscure the true values of these parameters, ensuring that prior distributions are specified without knowledge of true values. To stress-test the model, I intentionally simulate the true parameters from distributions with narrower dispersions than the priors.
-<!------- TO DO ---------
-- more specific
-------------------------->
-
-I estimate the model by generating `r comma(total_iterations)` samples for each parameter across `r comma(n_chains)` Markov chains, `r comma(n_iterations - n_warmup)` iterations per chain. I warm up each chain for an initial `r comma(n_warmup)` iterations before saving samples.
+I estimate the model with MCMC, running `r english(n_chains)` for `r n_iterations`, using the first `r n_warmup` iterations for an adaptive warmup period.
+This results in `r comma(total_iterations)` samples for each parameter in total.
 
 ```{r read-true-thetas}
-group_level <- readRDS(
-  here("data", "mcmc", "dgirt", "test", "input", "group-level-data.RDS")
+group_level <- read_rds(
+  here("data", "mcmc", "2-dgirt", "test", "input", "group-level-data.RDS")
 )
 ```
 
@@ -151,41 +130,48 @@ thetas <- tidy_stanfit %>%
 axis_limit <- thetas %$% max(max(theta_g), max(estimate)) %>% ceiling() %>% abs()
 ```
 
-```{r plot-theta-scatters, include = TRUE, fig.height = 4, fig.width = 5, out.width = "70%", fig.cap = "Testing the ideal point model with simulated data: estimated vs. true ideal points for district-party groups. Estimates are plotted with means and compatibility intervals. Ellipses are included to identify the parties and carry no statistical interpretation."}
+```{r plot-theta-scatters}
 ggplot(thetas) +
   aes(x = theta_g, y = estimate, color = as.factor(party)) +
-  geom_mark_ellipse(
-      expand = unit(3, "mm"),
-      aes(label = str_glue("Party {party}"), fill = as.factor(party)
-          , color = NA
-      ),
-      alpha = 0.2,
-      label.family = font_fam,
-      label.fontface = "plain"
-    ) +
-  geom_abline(color = "black") +
+  geom_hline(yintercept = 0, color = "gray") +
+  geom_vline(xintercept = 0, color = "gray") +
+  facet_wrap(
+    ~ as.factor(party),
+    labeller = 
+      c("1" = "Simulated Democrats",
+        "2" = "Simulated Republicans") %>%
+      as_labeller()
+  ) +
   geom_pointrange(
     aes(ymin = (conf.low), ymax = conf.high),
     fatten = 2
   ) +
+  geom_abline(color = "black") +
   labs(
-    y = as.character(str_glue(
-      "Model Estimate\n({percent(conf_level, accuracy = 1)} intervals)"
-    )),
-    x = "True Ideal Point",
-    color = "Party"
+    y = str_glue(
+      "Model Estimate ({percent(conf_level, accuracy = 1)} intervals)"
+    ),
+    x = '"True" Ideal Point',
+    color = NULL,
+    title = 'Estimated vs. "True" Ideal Points',
+    subtitle = "Results from fake data simulation"
   ) +
   scale_color_manual(values = party_factor_colors) +
-  scale_fill_manual(values = party_factor_colors) +
   theme(legend.position = "none") +
-  coord_cartesian(
-    xlim = c(-axis_limit, axis_limit),
-    ylim = c(-axis_limit, axis_limit)
-  ) +
+  coord_fixed() +
   NULL
 ```
 
-Figure&nbsp;\@ref(fig:plot-theta-scatters) compares each group's "true" ideal point to its estimated ideal point from the IRT model. We observe a strong relationship between the true and estimated values, indicating that the model does a good job recovering the ideal points. We do observe a little bit of shrinkage in the ideal point estimates; the most and least conservative ideal points fall closer to zero compared to the $45^{\circ}$ line. This is likely owed to partial pooling in the model---since the model knows that it receives an uncertain signal about the ideal point, the hierarchical prior hedges its bet toward th estimated distribution of ideal points. Another source of attenuation could be the fact that the data are generated from a heteroskedastic model, but the model does not generate that heteroskedasticity. Unmodeled sources of variation add dispersion to the data, pulling the response probability toward $0.5$, which will pull ideal point estimates toward $0$ and increase the item dispersion parameters. 
+Figure \@ref(fig:plot-theta-scatters) compares each group's "true" ideal point to its estimated ideal point from the IRT model.
+We observe a strong relationship between the true and estimated values, indicating that the model does a good job recovering the ideal points. 
+We do observe a little bit of shrinkage in the ideal point estimates; the most and least conservative ideal points fall closer to zero compared to the $45^{\circ}$ line. 
+This is likely a result of partial pooling in the model—without strong information about ideal point estimates themselves, the hierarchical prior hedges more extreme ideal points toward the center of the estimated distribution. 
+
+<!-- Another source of attenuation could be the fact that the data are generated from a heteroskedastic model, but the model does not generate that heteroskedasticity.  -->
+<!-- Unmodeled sources of variation add dispersion to the data, pulling the response probability toward $0.5$, which will pull ideal point estimates toward $0$ and increase the item dispersion parameters.  -->
+
+```{r plot-theta-scatters, include = TRUE, fig.height = 5, fig.width = 8, out.width = "100%", fig.scap = "Ideal point estimates from fake data simulation.", fig.cap = "Ideal point estimates from fake data simulation. Estimates are plotted with posterior means and 90 percent compatibility intervals."}
+```
 
 ```{r extract-icc-draws}
 n_draws <- 50
@@ -206,32 +192,32 @@ icc_draws <- draws %>%
 
 
 ```{r read-ij-data}
-ij_level <- readRDS(
-  here("data", "mcmc", "dgirt", "test", "input", "ij-level-data.RDS")
+ij_level <- read_rds(
+  here("data", "mcmc", "2-dgirt", "test", "input", "ij-level-data.RDS")
 )
 ```
 
 
-
-<!-- ICCs -->
-```{r, eval = FALSE}
-# # Just testing ICCs from known params
-# ij_level %>%
-#   ggplot() +
-#   aes(x = theta_i, y = pi_ij) +
-#   geom_line() +
-#   facet_wrap(~ as.factor(item))
+```{r sample_items}
+n_items_sampled <- 10
+sampled_items <- 
+  sample(ij_level$item, size = n_items_sampled, replace = FALSE) %>%
+  round(1) %>%
+  as.integer()
 ```
 
-```{r plot-sim-ICCs, include = TRUE, fig.height = 10, fig.width = 8, out.width = "100%", fig.cap = 'Testing the ideal point model on simulated data: item characteristic curves from estimated (yellow) and true (black) item parameters'}
+```{r plot-sim-ICCs}
 icc_draws %>%
+  filter(item %in% sampled_items) %>%
   ggplot() +
   aes(x = theta, y = pp) +
   geom_vline(xintercept = 0, color = "gray", size = 0.25) +
   geom_hline(yintercept = 0.5, color = "gray", size = 0.25) +
   geom_line(aes(group = .draw), color = primary, size = 0.2) +
   geom_line(
-    data = ij_level, color = "black", size = 0.35,
+    data = filter(ij_level, item %in% sampled_items), 
+    color = "black", 
+    size = 1.5,
     aes(x = theta_i, y = pi_ij)
   ) +
   facet_wrap(
@@ -241,17 +227,30 @@ icc_draws %>%
   ) +
   coord_cartesian(xlim = c(-1 * axis_limit, axis_limit), ylim = c(0, 1)) +
   scale_y_continuous(breaks = seq(0, 1, .5)) +
-  labs(x = "Ideal Point", y = "Probability of Conservative Response")
+  labs(
+    x = "Ideal Point", 
+    y = "Conservative Response Probability",
+    title = 'Item Response Functions from Fake Data Simulation',
+    subtitle = str_glue("{n_draws} posterior samples vs. true item response function")
+  )
 ```
 
-Figure&nbsp;\@ref(fig:plot-sim-ICCs) shows item response functions for all items. True IRFs are plotted in black, with IRFs from `r n_draws` randomly selected posterior samples in yellow. For the most part, the model is able to recover the shape of each item response function extremely well. Items with more extreme midpoint and discrimination values are slightly attenuated, likely owing to priors that exert some pull against extreme estimates. 
+The other important result from the fake data simulation is the item response functions (IRFs).
+Figure \@ref(fig:plot-sim-ICCs) plots estimated IRFs from `r n_draws` MCMC draws (light orange) against the true IRF (black). 
+These results also testify to the model's ability to recover key parameters even under weak data settings.
+In the few cases where the estimated IRF departs slightly from the true IRF, this again appears to be due to partial pooling.
+In particular, the model is pooling the largest-magnitude midpoint parameters toward the mean of the distribution, which is restricted to be zero. 
 
-
-```{r, eval = FALSE}
-# ggsave("~/desktop/test.pdf", height = 10, width = 8, device = cairo_pdf); beepr::beep(2)
+```{r plot-sim-ICCs, include = TRUE, fig.height = 6, fig.width = 9, out.width = "100%", fig.scap = "Item response functions from fake data simulation.", fig.cap = "Item response functions from fake data simulation. Comparison between estimated (yellow) and true (black) item parameters for a random sample of items."}
 ```
 
-```{r}
+It is important to remember that the bias introduced by partial pooling is intentional.
+Partial pooling, like all forms of regularization, is intended to stabilize parameters that are estimated with weak signals from data.
+Without partial pooling, the model must estimate each ideal point or item parameter with no "memory" of the other parameters in the model.
+Although less regularization leads to less bias (all else equal), estimates will have higher variance especially in highly parameterized measurement models.
+Pooling toward hierarchical distributions can be particularly valuable for item response models, where each additional observation introduces additional parameters for items or for respondents [@bailey:2001:ranef-ideal].
+
+```{r item-hyper-prepost, eval = FALSE}
 df_stanfit %>%
   spread_draws(item_scales[dim], item_rho) %>% 
   gather(key = param, value = value, contains('item_')) %>%
@@ -284,7 +283,7 @@ df_stanfit %>%
       (x <= 1 & param == "item_rho")
     ),
     aes(ymax = density, ymin = 0, x = x),
-    fill = primary_light, alpha = 0.5
+    fill = primary, alpha = 0.5
   ) +
   geom_histogram(
     aes(y = ..density..), 
@@ -294,25 +293,22 @@ df_stanfit %>%
 ```
 
 
-```{r item-scatter-posterior}
+```{r item-hyper-scatter, eval = FALSE}
 df_stanfit %>%
   spread_draws(dispersion[item], cutpoint[item], n = 500) %>%
   ggplot() +
-  aes(x = cutpoint, y = dispersion) +
+  aes(x = cutpoint, y = log(1 / dispersion), fill = as.factor(item)) +
   geom_mark_ellipse(
     expand = unit(3, "mm"),
-    aes(fill = as.factor(item)
-        # , fill = as.factor(party) , color = NA
-    ),
     color = NA,
     alpha = 0.1,
     label.family = font_fam,
     label.fontface = "plain"
   ) +
   ggpointdensity::geom_pointdensity() +
-  viridis::scale_fill_viridis(discrete = TRUE) +
+  scale_fill_viridis_d(option = "plasma") +
+  scale_color_viridis_c(option = "plasma") +
   NULL
-
 ```
 
 
@@ -325,9 +321,6 @@ residual values -->
 <!------- TO DO ---------
 - still need to compare the hierarchical distributions
 ------------------------->
-
-to do: still want to examine the values of the hierarchical parameter estimates, but that requires a big more surgery in the model results!
-
 
 
 <!-- Distill the simulation stuff here 

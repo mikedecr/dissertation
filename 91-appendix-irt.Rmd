@@ -1,1 +1,52 @@
-# Group IRT Model
+# Group IRT Model {#ch:appendix-model}
+
+
+
+```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
+knitr::knit_exit()
+```
+
+```{r knitr-appendix-02, include = FALSE, cache = FALSE}
+source(here::here("assets-bookdown", "knitr-helpers.R"))
+```
+
+```{r appendix-02-packages}
+library("here")
+library("magrittr")
+library("tidyverse")
+library("scales")
+library("kableExtra")
+```
+
+```{r}
+item_list <- here("notes", "item-list.csv") %>%
+  read_csv() %>%
+  print()
+```
+
+
+```{r item-table, include = TRUE}
+item_list %>%
+  select(-decades) %>% 
+  rename(
+    Tag = tag,
+    `Text (short)` = text,
+    `Source(s)` = datasets
+  ) %>%
+  knitr::kable(
+    booktabs = TRUE,
+    longtable = TRUE,
+    caption.short = "List of policy items used for ideal point estimation.",
+    caption = "List of policy items used for ideal point estimation and data sources containing these items."
+  ) %>%
+  kable_styling(
+    font_size = 10,
+    latex_options = c("repeat_header"),
+    repeat_header_method = c("replace"),
+    table.envir = "singlespace"
+  ) %>%
+  column_spec(2, width = "15em") %>%
+  column_spec(3, width = "10em")
+```
+
+
