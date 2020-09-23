@@ -209,8 +209,8 @@ group_level <- district_level %>%
         state_resid_sigma + region_resid_sigma,
       theta_g = 
         rnorm(n = n(), mean = theta_hypermean, sd = params$sd_theta_d),
-      sigma_g = 
-        exp(rnorm(n = n(), mean = sigma_hypermean, sd = params$sd_sigma_d))
+      sigma_g = 0.5
+        # exp(rnorm(n = n(), mean = sigma_hypermean, sd = params$sd_sigma_d))
   ) %>%
   print()
 
@@ -281,8 +281,9 @@ if (whoami == "michaeldecrescenzo") {
 item_level <- 
   tibble(
     item = as.numeric(1:n_items), 
-    cutpoint = rnorm(n_items, mean = 0, sd = difficulty_sd), 
+    cut_raw = rnorm(n_items, mean = 0, sd = difficulty_sd), 
     disc_raw =  rlnorm(n_items, meanlog = 0, sd = discrimination_sd),
+    cutpoint = cut_raw - mean(cut_raw),
     discrimination = 
       log(disc_raw) %>%
       sum() %>%
@@ -552,7 +553,7 @@ message("print after stopping")
 # locally
 mcmc_homsk <- 
   readRDS(
-    here("data", "mcmc", "dgirt", "test", "samples", "test-homsk-stanfit.RDS")
+    here("data", "mcmc", "2-dgirt", "test", "samples", "test-homsk-stanfit.RDS")
   ) %T>%
   print()
 
@@ -575,7 +576,7 @@ fit <- mcmc_homsk
 
 check_hmc_diagnostics(fit)
 
-shinystan::launch_shinystan(fit)
+# shinystan::launch_shinystan(fit)
 
 stan_rhat(fit)
 
