@@ -467,7 +467,7 @@ message("models compiled")
 
 # save compiled model to box? is this worth it?
 
-# boxr::box_write(whatever, "filename.RDS", dir_id = xxx)
+# boxr::box_write(whatever, "file_name.RDS", dir_id = xxx)
 
 
 
@@ -501,7 +501,7 @@ boxr::box_write(mcmc_homsk, "SMOL_probit-lkj-2k.RDS", dir_id = mcmc_dir)
 # ---- save data -----------------------
 lapply(params_to_save, get) %>%
   set_names(params_to_save) %>%
-  box_write(filename = "sim-params.RDS", dir_id = input_dir)
+  box_write(file_name = "sim-params.RDS", dir_id = input_dir)
 
 box_write(group_level, "group-level-data.RDS", dir_id = input_dir)
 
@@ -517,7 +517,7 @@ box_write(
     adapt_delta = adapt_delta,
     max_treedepth = max_treedepth
   ), 
-  filename = "mcmc-params.RDS", 
+  file_name = "mcmc-params.RDS", 
   dir_id = input_dir
 )
 

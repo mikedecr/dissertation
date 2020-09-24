@@ -83,7 +83,7 @@ The random effects for districts, states, and `r english(n_regions)` regions are
 
 ```{r read-test-stanfit}
 # box_read(507153233559)
-stanfit <- read_rds(here("data", "mcmc", "2-dgirt", "test", "samples", "SMOL_probit-lkj-2k.RDS"))
+stanfit <- read_rds(here(mcmc_dir, "SMOL_probit-lkj-2k.RDS"))
 ```
 
 ```{r tidybayes-tidy}
@@ -124,15 +124,19 @@ thetas <- tidy_stanfit %>%
   ) %>%
   mutate(group = parse_number(term)) %>%
   left_join(group_level %>% select(group, theta_g, sigma_g, party)) %>% 
+  mutate(
+    across(
+      .cols = c(estimate, conf.low, conf.high),
+      .fns = ~ (. - mean(estimate)) / sd(estimate)
+    ),
+    theta_g_id = (theta_g - mean(theta_g)) / sd(theta_g)
+  ) %>%
   print()
-
-# make a square plot, save abs_value of "biggest" theta
-axis_limit <- thetas %$% max(max(theta_g), max(estimate)) %>% ceiling() %>% abs()
 ```
 
 ```{r plot-theta-scatters}
 ggplot(thetas) +
-  aes(x = theta_g, y = estimate, color = as.factor(party)) +
+  aes(x = theta_g_id, y = estimate, color = as.factor(party)) +
   geom_hline(yintercept = 0, color = "gray") +
   geom_vline(xintercept = 0, color = "gray") +
   facet_wrap(
@@ -149,9 +153,9 @@ ggplot(thetas) +
   geom_abline(color = "black") +
   labs(
     y = str_glue(
-      "Model Estimate ({percent(conf_level, accuracy = 1)} intervals)"
+      "Estimated ideal point (standardized)"
     ),
-    x = '"True" Ideal Point',
+    x = '"True" ideal point (standardized)',
     color = NULL,
     title = 'Estimated vs. "True" Ideal Points',
     subtitle = "Results from fake data simulation"
@@ -163,12 +167,8 @@ ggplot(thetas) +
 ```
 
 Figure \@ref(fig:plot-theta-scatters) compares each group's "true" ideal point to its estimated ideal point from the IRT model.
-We observe a strong relationship between the true and estimated values, indicating that the model does a good job recovering the ideal points. 
-We do observe a little bit of shrinkage in the ideal point estimates; the most and least conservative ideal points fall closer to zero compared to the $45^{\circ}$ line. 
-This is likely a result of partial pooling in the model—without strong information about ideal point estimates themselves, the hierarchical prior hedges more extreme ideal points toward the center of the estimated distribution. 
-
-<!-- Another source of attenuation could be the fact that the data are generated from a heteroskedastic model, but the model does not generate that heteroskedasticity.  -->
-<!-- Unmodeled sources of variation add dispersion to the data, pulling the response probability toward $0.5$, which will pull ideal point estimates toward $0$ and increase the item dispersion parameters.  -->
+Because the latent ideological space is not identified, I facilitate the comparison of ideal points by standardizing both sets to be mean zero and variance of $1$. 
+The model recovers a strong correspondence between the true and estimated ideal point values, underscoring the computational fidelity of the model and the statistical precision to detect meaningful variation in the underlying data.
 
 ```{r plot-theta-scatters, include = TRUE, fig.height = 5, fig.width = 8, out.width = "100%", fig.scap = "Ideal point estimates from fake data simulation.", fig.cap = "Ideal point estimates from fake data simulation. Estimates are plotted with posterior means and 90 percent compatibility intervals."}
 ```
@@ -183,7 +183,7 @@ draws <- df_stanfit %>%
 # beepr::beep(2)
 icc_draws <- draws %>%
   group_by(item) %>%
-  crossing(theta = seq(-axis_limit, axis_limit, .05)) %>%
+  crossing(theta = seq(min(thetas$theta_g), max(thetas$theta_g), .05)) %>%
   mutate(
     pp = plogis((theta - cutpoint) / dispersion)
   ) %>%
@@ -217,7 +217,6 @@ icc_draws %>%
   geom_line(
     data = filter(ij_level, item %in% sampled_items), 
     color = "black", 
-    size = 1.5,
     aes(x = theta_i, y = pi_ij)
   ) +
   facet_wrap(
@@ -231,24 +230,24 @@ icc_draws %>%
     x = "Ideal Point", 
     y = "Conservative Response Probability",
     title = 'Item Response Functions from Fake Data Simulation',
-    subtitle = str_glue("{n_draws} posterior samples vs. true item response function")
+    subtitle = str_glue("{n_draws} posterior samples of {n_items_sampled} random items vs. true IRFs")
   )
 ```
 
 The other important result from the fake data simulation is the item response functions (IRFs).
-Figure \@ref(fig:plot-sim-ICCs) plots estimated IRFs from `r n_draws` MCMC draws (light orange) against the true IRF (black). 
+Figure \@ref(fig:plot-sim-ICCs) plots IRFs from `r n_items_sampled` randomly chosen items, showing `r n_draws` MCMC draws of the estimated IRFs (light orange) against the true IRF (black). 
 These results also testify to the model's ability to recover key parameters even under weak data settings.
-In the few cases where the estimated IRF departs slightly from the true IRF, this again appears to be due to partial pooling.
-In particular, the model is pooling the largest-magnitude midpoint parameters toward the mean of the distribution, which is restricted to be zero. 
+In the few cases where the estimated IRF departs slightly from the true IRF, this appears to be due to partial pooling: the hierarchical item prior pooling an item parameter toward the estimated distribution of item parameters.
+In particular, the model appears to pooling high-magnitude midpoint parameters toward the mean of the distribution, which is restricted to be zero. 
 
 ```{r plot-sim-ICCs, include = TRUE, fig.height = 6, fig.width = 9, out.width = "100%", fig.scap = "Item response functions from fake data simulation.", fig.cap = "Item response functions from fake data simulation. Comparison between estimated (yellow) and true (black) item parameters for a random sample of items."}
 ```
 
 It is important to remember that the bias introduced by partial pooling is intentional.
 Partial pooling, like all forms of regularization, is intended to stabilize parameters that are estimated with weak signals from data.
-Without partial pooling, the model must estimate each ideal point or item parameter with no "memory" of the other parameters in the model.
-Although less regularization leads to less bias (all else equal), estimates will have higher variance especially in highly parameterized measurement models.
-Pooling toward hierarchical distributions can be particularly valuable for item response models, where each additional observation introduces additional parameters for items or for respondents [@bailey:2001:ranef-ideal].
+Without partial pooling, the model must estimate each item parameter with no "memory" of the other item parameters in the model.
+Although less regularization leads to less bias (all else equal), estimates will have higher variance especially in measurement models that have many parameters.
+Pooling toward hierarchical distributions can be particularly valuable for item response models, for which each additional observation introduces either two additional item parameters or an additional ideal point parameter [@bailey:2001:ranef-ideal].
 
 ```{r item-hyper-prepost, eval = FALSE}
 df_stanfit %>%
