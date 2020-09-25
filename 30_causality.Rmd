@@ -438,7 +438,7 @@ What does it mean for Bayesian estimation to have theoretical implications for c
 This brings our focus to level one of the causal inference hierarchy: the model of potential outcomes.
 Any estimation method that invokes Bayesian tools requires a prior for model parameters, which imply prior densities on causal estimands. 
 If the joint model contains a unit-level data model as well, which is the case for most regression approaches, then unit potential outcomes also have prior probability densities: some potential outcomes are more plausible than others, even before seeing data. 
-This is a decisive philosophical departure from a non-Bayesian approach to causal modeling, where potential outcomes and causal effects are merely defined.
+This is a decisive theoretical departure from a non-Bayesian approach to causal modeling, where potential outcomes and causal effects are merely defined.
 The benefit of this departure is the ability to specify posterior distributions for unobserved potential outcomes directly, which a few recent methodology papers in political science have invoked for missing data due to noncompliance [@horiuchi-et-al:2007:experimental-design], synthetic control estimation [@carlson:2020:GP-synth] and regression settings [@ratkovic-tingley:2017-direct-estimation].
 But these papers do not highlight the fact that these methods also imply _priors_ for counterfactuals.
 As a result, skeptical applied researchers have little guidance for understanding what it means to have priors on counterfactual data, theoretically or practically.
@@ -1589,7 +1589,16 @@ rd_drops <- c("brm_constrained", "brm_flat", "brm_logit", "const_draws",
 rm(list = rd_drops)
 ```
 
+
+
 ### Application: modeling assumptions in meta-analysis {#sec:meta-analysis}
+
+@green-et-al:2016:lawn-signs present experimental results of the effects of yard signs on vote shares.
+The original study contains four separate field experiments with small samples and uncertain treatment effects.
+The research team conducted a "fixed-effects" meta-analysis to synthesize the results from all studies, which is equivalent to a prior distribution that the variance of treatment effects across studies is exactly zero.
+I relax the fixed-effects assumption using a Bayesian random effects model with different priors for the cross-study variance.
+My results show that the findings of original @green-et-al:2016:lawn-signs are not robust across different priors.
+This exercise highlights how common modeling assumptions can be encoded as priors, how priors can be used to _relax_ these assumptions rather than rigidify them, and how these priors are consequential enough to change our interpretations of experimental findings.
 
 
 ```{r meta-data}
@@ -1606,96 +1615,129 @@ ran_tidy <-
 
 ran_draws <- 
   here(output_path, "ranef-samples.rds") %>%
-  read_rds() %>%
-  filter(heterogeneity == max(heterogeneity)) 
+  read_rds()
 ```
 
 
-Lessons:
+The @green-et-al:2016:lawn-signs implemented their field experiment in coordination with campaigns and interest groups active during primary campaign cycles for county commissioner and mayor and general election cycles for congress and governor. 
+These four races had varying salience levels, varying sign placements (yard versus road), and varying sign designs that differently emphasized the candidates' party, ideological affiliation, and messages about candidates' viability in the race.
+Different precincts within each electoral district were assigned to be treated with yard sign placements.
+Campaigns sometimes designated certain precincts as "must-treat" and "untreatable," so the original statistical analysis was a weighted least squares regression with inverse propensity weights to adjust for treatment assignment probability.
+Vote share data were measured using aggregate precinct-level returns, which was the lowest level of analysis for randomization and for outcome measurement.
+The team estimated all treatment effects with and without covariates, with covariates used to improve the precision of estimates and correct any residual covariate imbalance across treatment assignments.
+I take all propensity weighting and covariate adjustments conducted by the original team as appropriate, reestimating the meta-analysis using covariate-adjusted treatment effect estimates (intent-to-treat) as presented in the published paper.
 
-- default choice implies a strict prior with a limiting-case parameter value
-- the parameter is not strongly identified by the data
-- choice of prior has a big effect on inferences
-- relaxing the prior easily changes the results
 
-Setting:
+```{r green-data-meta}
+direct_meta <- signs_direct %>%
+  mutate(
+    lab = str_glue("Study {j} (n = {n})")
+  ) %>%
+  bind_rows(
+    tibble(estimate = 0.017, sigma = 0.007, j = 5, lab = "Pooled estimate")
+  ) %>%
+  print()
+```
 
-
-```{r}
-ggplot(signs_direct) +
-  aes(x = fct_rev(str_glue("Study {j}")), y = estimate) +
+```{r plot-green-data}
+ggplot(direct_meta) +
+  aes(x = fct_rev(as.factor(j)), y = estimate) +
   geom_pointrange(
     aes(ymin = estimate - 2*sigma, ymax = estimate + 2*sigma)
   ) +
   coord_flip() +
   labs(
     x = NULL,
-    y = TeX("Estimated effect $\\pm$ 2 std. errors"),
-    title = "Yard Sign Effect on Vote Share",
-    subtitle = "Field experiments by Green et al. (2016)"
+    y = NULL,
+    title = "Yard Sign Effect on Vote Share, Green et al. (2016)",
+    subtitle = TeX("Estimated effect $\\pm$ 2 std. errors")
   ) +
-  geom_hline(yintercept = 0)
+  ggeasy::easy_remove_y_axis() +
+  theme(panel.grid.major.y = element_blank()) +
+  geom_hline(yintercept = 0) +
+  geom_text(
+    aes(y = 0, label = lab),
+    hjust = 0.5 - sign(direct_meta$estimate),
+    vjust = -1.1
+  )
 ```
 
+Figure \@ref(fig:plot-green-data) plots the original treatment effect estimates from each of the four studies, and the population treatment effect estimate from the original fixed-effects meta-analysis conducted by the authors.
+I use the standard errors reported in the paper to calculate confidence intervals as the point estimate $\pm$ two standard errors.
+The original estimates are noisy, owed to the low number of precinct observations in each study.
+The preponderance of evidence suggests, however, that the population treatment effect is more likely to be positive than negative, since the positive point estimates are more precisely measured than the negative point estimates. 
+The pooled estimate is consistent with, indicating that yard signs increase a candidate's vote share by an estimated `r direct_meta %>% filter(j == max(j)) %>% pull(estimate) %>% number(scale = 100, accuracy = 0.1)` points on average, with a standard error of `r direct_meta %>% filter(j == max(j)) %>% pull(sigma) %>% number(scale = 100, accuracy = 0.1)` percentage points.
 
+```{r plot-green-data, include = TRUE, fig.cap = "Original estimates from Green et al. (2016) field experiments. Pooled estimate from fixed-effects meta-analysis.", fig.scap = "Original estimates from Green et al. (2016) field experiments.", out.width = "60%"}
+```
 
-Model:
+The meta-analysis finding suggests that yard signs do have an overall beneficial effect for candidates, even if the estimates from one-off studies yield uncertain results.
+The fixed-effects meta-analysis model, however, represents a special case where the "true" treatment effect in each experiment is assumed to be exactly the same. 
+In other words, the model assumptions allow no heterogeneity whatsoever across study contexts to systematically modify the effectiveness of yard signs.
+This assumption is unlikely to be true, since the settings cover both primary and general election campaigns, offices as high-profile as governor and as low-profile as county commissioner, electorates in different states, and more.
+The assumption of no study-level heterogeneity is relaxed in "random-effects" meta-analysis.
+The random-effects model corresponds to a view that "true" treatment effects will be slightly different from one another, depending on the context of a study.
+These contextual effects are captured by an additional variance parameter that describes the heterogeneity in treatment effects across studies as a separate source of variance aside from sampling error.
 
-$\hat{\tau}_{j}$ is the treatment effect estimate in study $j$ with standard error $s_{j}$.
-
+I now present a Bayesian random effects model that generalizes both the fixed- and random-effects, showing how the different model assumptions are represented by different prior distributions. 
+This Bayesian approach is similar to the model proposed by @rubin:1981:eight-schools to analyze parallel experiments in different schools [for a recent extension, see @meager:2019:microcredit].
+Notationally, we have four experiments each indexed $j$ with treatment effect estimates $\hat{y}_{j}$ and standard errors $s_{j}$.
+By the central limit theorem, each study estimate is modeled as a draw from a Normal distribution with a mean of $\tau_{j}$, the true effect in study $j$, and standard error $s_{j}$.
 \begin{align}
-  \hat{\tau}_{j} &\sim \text{Normal}\left(\mu, s_{j} \right)
-  (\#eq:fixed-model)
+  \hat{y}_{j} &\sim \text{Normal}\left(\tau_{j}, s_{j}\right)
+  (\#eq:random-model)
 \end{align}
 
-They compare the meta-analysis estimates for $\mu$ using different priors based on "agnostic," "skeptical," and "optimistic" prior beliefs about $\mu$.
+The next step generalizes the random- and fixed-effects approaches to meta-analysis.
+The true effect for study $j$ is modeled as a draw from the population effect, the average effect across all possible studies. 
+The choice of the prior density depends on the assumptions that link a study to the population of possible studies.
+A common choice is a Normal distribution, which represents a generative assumption that individual study effects differ from the global effect by the addition of a large number of independent fluctuations—different studies have candidates, different campaign strategies, different voter populations, and so on, and the effects of each of these forces are additive shocks to a study treatment effect.
+This prior draws the true study effect from a Normal distribution with mean $\mu$ and scale $\sigma$,
+\begin{align}
+  \tau_{j} &\sim \text{Normal}\left(\mu, \sigma\right)
+  (\#eq:study-prior)
+\end{align}
+where $\mu$ represents the population mean and $\sigma$ represents the amount of cross-study variation in treatment effects.
+The random-effects model represents a prior that $\sigma$ takes some value greater than $0$, leaving open the possibility that there is heterogeneity in treatment effects across studies.
+The fixed-effects model, meanwhile, restricts the value of $\sigma$ to be exactly $0$—_perfect prior knowledge_ that all $\tau_{j}$ are unquestionably equal to $\mu$, with no admissible possibility that the true effects contain study-level heterogeneity.
+This is a highly restrictive assumption to which the results of this meta-analysis are highly sensitive.
+
+I complete the model by specifying priors for $\mu$ and $\sigma$.
+For $\mu$, I follow @green-et-al:2016:lawn-signs and estimate separate models that represent "agnostic," "skeptical," and "optimistic" prior beliefs about the population treatment effect, represented as Normal distributions with different mean and scale values.
 \begin{align}
   \text{Agnostic:} &\qquad \mu &\sim \text{Normal}(0, 0.05) \\
   \text{Skeptical:} &\qquad \mu &\sim \text{Normal}(0, 0.01) \\
   \text{Optimistic:} &\qquad \mu &\sim \text{Normal}(0.05, 0.05)
+  (\#eq:pop-priors)
 \end{align}
-
-This assumes that there is no heterogeneity across all studies.
-This is wrong if...
-
-- different populations
-- different candidates...
-- different campaign environments...
-
-Random model introduces $\tau_{j}$, the study-specific mean.
-\begin{align}
-  \hat{\tau}_{j} &\sim \text{Normal}\left(\tau_{j}, s_{j} \right)
-  (\#eq:random-model)
-\end{align}
-
-The study-specific effects are drawn from the population effect.
-\begin{align}
-  \tau_{j} &\sim \text{Normal}\left(\mu, \sigma)
-  (\#eq:random-mean)
-\end{align}
-
-The population effect $\mu$ gets the same priors as before, but we've introduced a new parameter, $\sigma$ representing the amount of heterogeneity across studies.
-This parameter also needs a prior.
-I give it an exponential prior,
+For $\sigma$, I estimate models with a range of priors that represent different prior expectations about cross-study heterogeneity.
+I use an Exponential prior with a rate parameter $\lambda$,
 \begin{align}
   \sigma &\sim \text{Exponential}(\lambda)
   (\#eq:heterogeneity-prior)
 \end{align}
-where $\lambda$ is a rate parameter. 
-The Exponential prior has an always-decreasing density, so the prior regularizes toward smaller values of $\sigma$.
-The expected value of the Exponential prior is $\sigma = \lambda^{-1}$, so we can interpret $\lambda^{-1}$ as an expression of prior heterogeneity across studies.
-I estimate the model using different values of $\lambda^{-1}$ to represent different prior assumptions about the level of heterogeneity.
+and set $\lambda$ to different values in each model.
+The Exponential prior has an always-decreasing density, meaning that larger $\sigma$ values (more heterogeneity) are always less likely in the prior.
+The expected value of the Exponential prior is $\sigma = \lambda^{-1}$, so we can directly interpret $\lambda^{-1}$ as an expression of the expected prior heterogeneity across studies.
+The least informative prior for $\sigma$ sets $\lambda$ equal to `r filter(ran_tidy, heterogeneity == max(heterogeneity)) %$% unique(lambda)`, or an expected cross-study variance of `r ran_tidy %$% max(heterogeneity) %>% number(scale = 100)` percentage points. 
+This is the same value as the prior scale for the agnostic and optimistic priors, representing a weakly informative assumption that the heterogeneity in the data is equal parts sampling error and study-level variation.
+I also estimate models with $\lambda$ values equal to
+`r ran_tidy %>% filter(heterogeneity != 0 & heterogeneity != max(heterogeneity)) %>% pull(lambda) %>% unique() %>% sort() %>% str_c(., collapse = " and ")`,
+which correspond to expected study heterogeneities of
+`r ran_tidy %>% filter(heterogeneity != 0 & heterogeneity != max(heterogeneity)) %>% pull(heterogeneity) %>% unique() %>% number(scale = 100, accuracy = .1) %>% str_c(., collapse = " and ")` percentage points, respectively.
+I also estimate a fixed-effects model where $\sigma$ is forced to be zero, which is equivalent to an $\text{Exponential}\left(\lambda = \infty\right)$ prior.
+
 <!-- use data from R -->
 
-
-```{r}
+```{r plot-ranef}
 ran_tidy %>%
   filter(term == "b_Intercept") %>%
   ggplot() +
   aes(
-    x = 
-      fct_relevel(prior, "optimistic", "agnostic", "skeptical") %>%
-      fct_rev(),
+    x = tools::toTitleCase(prior) %>%
+        paste("prior") %>%
+        fct_relevel(.f = ., "Optimistic prior") %>%
+        fct_rev(),
     y = estimate, 
     color = as.factor(heterogeneity),
     shape = as.factor(heterogeneity)
@@ -1715,9 +1757,12 @@ ran_tidy %>%
     y = "Population treatment effect",
     x = NULL,
     title = "Bayesian Meta-Analysis of Lawn Sign Experiments",
-    subtitle = 'Heterogeneity prior relaxes "fixed effects" assumption'
+    subtitle = 'Heterogeneity prior relaxes "fixed-effects" assumption'
   ) +
-  theme(legend.position = "none") +
+  theme(
+    legend.position = "none", 
+    plot.title.position = "plot"
+  ) +
   geom_text(
     data = ran_tidy %>% 
       filter(term == "b_Intercept") %>% 
@@ -1752,7 +1797,22 @@ ran_tidy %>%
   NULL
 ```
 
-```{r}
+I plot the population treatment effect from each model in Figure \@ref(fig:plot-ranef).
+The figure contains estimates using the optimistic, agnostic, and skeptical priors for the population treatment effect itself.
+The plot uses different point shapes and colors to display the estimates from different priors for the cross-study heterogeneity.
+Across all of the $\mu$ priors, the population treatment effect is largest and most precisely estimated with using the fixed-effects prior ($1 / \lambda = 0)$.
+Indeed, the only $\sigma$ prior that rejects the null hypothesis for the skeptical, agnostic, and optimistic prior is the fixed-effects prior of $\sigma = 0$.
+Any prior that allows the possibility of cross-study variance attenuates the treatment effect estimated toward zero and increases the posterior variance of the treatment effect.
+Many of these priors yield population estimates that fail to reject a null hypothesis.
+
+```{r plot-ranef, include = TRUE, fig.scap = "Population estimates from Bayesian meta-analysis models.", fig.cap = 'Population estimates from Bayesian meta-analysis models. Exponential priors with lower rate parameters represent the relaxation of the "fixed-effects" assumption.', fig.width = 8, fig.height = 8}
+```
+
+```{r, eval = FALSE}
+# ----------------------------------------------------
+#   NOT EVALUATED
+# ----------------------------------------------------
+
 ggplot(ran_draws) +
   aes(x = sd_j__Intercept, y = b_Intercept) +
   ggpointdensity::geom_pointdensity(
@@ -1784,104 +1844,36 @@ ggplot(ran_draws) +
   )
 ```
 
+It is important to note that the priors used in the random-effects models are not being "unfair to the data." 
+There are many possible priors that could have been used that would have created more posterior uncertainty in the population treatment effects than the priors currently used.
+For instance, research commonly use Cauchy or Student's T priors to model "robust" random effects that regularize less aggressively.
+Those priors would have pooled study effects less than the Normal prior, resulting in more uncertainty about the population treatment effect.
+It is also important to note that the Exponential priors on the cross-study heterogeneity are not injecting "too much variance" into the model.
+A naïve approach to random-effects meta-analysis would have been to use a _flat_ prior on the study variance, or $\text{Exponential}(\lambda = 0)$, which would have resulted in much greater posterior uncertainty in the population treatment effect.
 
-## Other Frontiers of Bayesian Causal Inference 
-
-Make this one section, not many
-
-<!-- Beyond Estimation: Inferences About Models and Hypotheses -->
-
-We can think bigger about Bayesian _inference_ for a parameter as distinct from Bayesian _estimation_ of the in-sample quantity. 
-This lets us use a nonparametric data-driven estimator for the data, but the "inference" or "generalization" still has a prior.
-For instance a sample mean estimates a population mean without a likelihood model for the data, but inference about the population mean often follows a parametric assumption from the Central Limit Theorem that the sampling distribution from the mean is asymptotically normal (but doesn't have to, c.f. bootstrapping).
-<!------- TO DO ---------
-- Read more about sharp null and an RI framework for inference, 
-  since this runs up against the idea of asymptotic normality of the means.
-------------------------->
-Even if the point estimator we use for a mean is unbiased, we can assimilate external information during the interpretation of the estimator (biasing the inference without biasing the point estimator).
-Restated: the posterior distribution is a weighted average of the raw point estimator and external information, rather than biasing the data-driven estimate directly.
-
-
-Even bigger: Bayesian inference about _models_ (Baldi and Shahbaba 2019). 
-This is probably where I have to start my justification for this? 
-The _entire point_ of causal inference is to make inferences about counterfactuals given data (Rubin 1978?).
-Invoking Bayesian inference is really the only way to say what we _want_ to say about causal effects: what are the plausible causal effects given the model/data. We do _not_ care about the plausibility of data given the null (as a primary QOI). 
-- Probably want to use Harrell-esque language? Draw on intuition from clinical research, or even industry. We want our best answer, not a philosophically indirect weird jumble.
-- This probably also plays into the Cox/Jeffreys/Jaynes stuff I have open on my computer.
-- but this is also so big as to be useless. Extrapolating Bayes into a philosophy is impractical and frankly dogmatic. It puts the "coherence" of a method above its usefulness.
-- And since all models are wrong anyway (Navarro) this is probably taking the whole thing too far.
-- We should use Bayes where it's helpful, and criticize Bayes where it isn't helpful (Bayes holes), and acknowledge where the practical implementation of Bayes is helpful even when it violates the supposed "philosophical coherence" of Bayes.
-
-<!------- TO DO ---------
-- Corey Yanofsky recommended reading
-- Gelman/Shalizi philosophy of Bayes
-- Induction/Deduction in Bayes
-- etc.
-- symposium about "objective" Bayes
-- And then also Gelman/Simpson/Betancourt "context of the likelihood"
-  => we have priors about the WORLD, not about model parameters.
-------------------------->
-
-
-This presumes an m-closed world(?right?), which maybe we do not like (Navarro, "Devil and Deep Blue Sea").
-<!------- TO DO ---------
-- Read Navarro CLOSELY!
-- Read ARONOW and MILLER: how to square "intra-model agonisticism" with 
-  some philosophical view of what Bayes is.
-- Maybe this is terminology I should work on! Draw some helpful lines that 
-  do not already exist for defining subtypes of agnosticism or other
-  epistemic bundles of things.
-  (there is also some paper on "types of Bayesians"?
-   mentioned in a McElreath talk)
-------------------------->
-Me debating with myself: how to think about Bayesian model selection vs "doubly robust" estimation ideas...
+This exercise is useful for demonstrating how priors are consequential for the inferences drawn from causal studies.
+Sensitivity to priors is often regarded as a downside of the Bayesian approach, but this example is instructive because it highlights how priors don't disappear just because we wish to avoid the work of specifying them.
+The fixed-effects approach, which was employed as the "default" choice, did not avoid the issue of priors whatsoever.
+Instead, the fixed-effects model secretly posits a highly specific prior by assuming no cross-study heterogeneity.
+The Bayesian model exposes this prior, allowing the researcher to scrutinize and improve their model.
 
 
 
-Inherit material from earlier section (baldi paper)
+## Other Frontiers of Bayesian Causal Inference
 
-Quasi-experiment paper (LR/BF of two models)
+There are many roads that this chapter does not take in its discussion of Bayesian causal modeling.
+In particular, this chapter is light on epistemology.
+While the Bayesian approach to learning and uncertainty is a valuable metaphor for scientific inference, especially as it relates to direct probabilistic inference about data that cannot be repeatedly sampled, it should not be taken too far.
+The hyper-Bayesian visions of entire scientific fields operating formally as gigantic Bayesian models is ridiculous, especially considering that all models are wrong and that priors almost never represent actual beliefs [@navarro:2019:devil; @gelman-shalizi:2013:bayes-philosophy].
+Instead, I have tried to present Bayesian causal modeling as a collection of _pragmatic_ tools to address _practical_ problems with causal inference, not as theoretical tools for philosophical problems.
+As much as advocates of Bayesian inference like to discuss the "coherence" of the framework, there are many legitimate criticisms of its philosophical posture and operating characteristics [@mayo:2013:error-bayes; @mayo:2018:severe-testing] including from practitioners of the approach [@gelman-yao:2020:bayes-holes].
 
-
-Conventional:
-\begin{align}
-  p(\theta \mid \mathbf{y}) &= \frac{p(\mathbf{y} \mid \theta)p(\theta)}{p(\mathbf{y})} \\
-  p(\theta \mid \mathbf{y}) &\propto p(\mathbf{y} \mid \theta)p(\theta)
-\end{align}
-
-Implied:
-\begin{align}
-  p(\theta \mid \mathbf{y}, \mathcal{H}) &= \frac{p(\mathbf{y} \mid \theta, \mathcal{H})p(\theta \mid \mathcal{H})}{p(\mathbf{y} \mid \mathcal{H})}
-\end{align}
-
-
-No-Free-Lunch theorems
-
-
-<!-- ### Modeling Cultures in Political Science: Complexity and Agnosticism -->
-
-Sidestepping priors
-
-complexity of bayes vs. parsimony of causal inference NOT A RULE
-
-Causal doesn't imply nonparametric, Bayesian doesn't imply complex
-
-At any rate: 
-
-- simple case: sensitivity testing for noisy circumstances
-- complex case: stabilizing highly parameterized problems
-    - dynamic TCSC models, lots of parameters
-    - that hierarchical conjoint thing
-    - priors in high dimensions are scary: consider parameterizations and do simulations
-
-
-
-
-- For nonparametric estimators, structural priors can be helpful for concentrating probability mass in sensible areas of space, since nonparametric estimators may be lower-powered than estimators that get a power boost from parametric assumptions.
-- Parametric models, in term, are obvious areas where Bayesian estimates can go, but they are stacking more assumptions on top of the parametric assumptions.
-- Semi-parametric models are an interesting middle ground, where we want to be flexible about the exact nature of the underlying relationships, but we want to impose some stabilization to prevent the model from behaving like crazy.
-
-
+There are other approaches to Bayesian causal modeling in other fields that were beyond the scope of this chapter. 
+@baldi-shahbaba:2019:bayesian-causality discuss "Bayesian Causality" with a broader vision where entire hypotheses are subjected to Bayesian updating from hypothesis tests. 
+More practically, @hinne-et-al:2019:bayes-quasi-experiment discuss a Bayesian approach to causal inference as a model-comparison problem.
+This framework considers two alternative models for data—a continuous model that assumes no causal effects, and a discontinuous model that separately models treated and control outcomes—and compares the evidence for each model using Bayes factors. 
+This framework is interesting because it can quantify evidence in favor of both competing models instead of only evidence _against_ a null model [@wagenmakers:2007:p-values], but it is a strong methodological departure from traditional statistical practices in political science.
+Finally, @lattimore-rohde:2019:do-calc-bayes-rule argue that the _do_-calculus machinery behind @pearl:2009:causality can be entirely subsumed into Bayesian inference using probabilistic graphical models, which is interesting but not of immediate concern to political science. 
 
 
 

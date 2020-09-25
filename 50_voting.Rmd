@@ -259,6 +259,7 @@ clogit_dag <-
     )
   ) %>%
   tidy_dagitty() %>%
+  as_tibble() %>%
   print()
 ```
 
