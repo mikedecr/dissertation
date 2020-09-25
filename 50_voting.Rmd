@@ -8,7 +8,7 @@ $\renewcommand{\E}[1]{\mathbb{E}\left[#1\right]}$
 $\renewcommand{\p}[1]{p\left(#1\right)}$
 
 
-```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
+```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
 knitr::knit_exit()
 ```
 

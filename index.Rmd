@@ -43,6 +43,7 @@ bookdown::serve_book(
   in_session = TRUE, 
   quiet = FALSE
 )
+alarm()
 
 servr::daemon_stop()
 

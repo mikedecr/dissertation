@@ -14,7 +14,7 @@ $\renewcommand{\p}[1]{p\left(#1\right)}$
 - rip Nielson and Visalvanich
 ------------------------->
 
-```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
+```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
 knitr::knit_exit()
 ```
 

@@ -291,7 +291,7 @@ ggplot(joined_ideal) +
   labs(
     title = "Ideal Points vs. Ideological Self-Placement",
     subtitle = "Self-placement from CCES 5-category item",
-    x = "CCES self-placement, district-party average (2012",
+    x = "CCES self-placement, district-party average (2012–2018)",
     y = "District-party ideology from IRT model\n(posterior mean)"
   )
 ```

@@ -1,7 +1,7 @@
 # Introduction: Policy Ideology and Congressional Primaries {#ch:arg}
 
 
-```{r stopper, eval = TRUE, cache = FALSE, include = FALSE}
+```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
 knitr::knit_exit()
 ```
 
