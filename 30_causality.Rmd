@@ -1637,11 +1637,159 @@ ggplot(signs_direct) +
   geom_hline(yintercept = 0)
 ```
 
-### Beyond Estimation: Inferences About Models and Hypotheses
 
 
+Model:
+
+$\hat{\tau}_{j}$ is the treatment effect estimate in study $j$ with standard error $s_{j}$.
+
+\begin{align}
+  \hat{\tau}_{j} &\sim \text{Normal}\left(\mu, s_{j} \right)
+  (\#eq:fixed-model)
+\end{align}
+
+They compare the meta-analysis estimates for $\mu$ using different priors based on "agnostic," "skeptical," and "optimistic" prior beliefs about $\mu$.
+\begin{align}
+  \text{Agnostic:} &\qquad \mu &\sim \text{Normal}(0, 0.05) \\
+  \text{Skeptical:} &\qquad \mu &\sim \text{Normal}(0, 0.01) \\
+  \text{Optimistic:} &\qquad \mu &\sim \text{Normal}(0.05, 0.05)
+\end{align}
+
+This assumes that there is no heterogeneity across all studies.
+This is wrong if...
+
+- different populations
+- different candidates...
+- different campaign environments...
+
+Random model introduces $\tau_{j}$, the study-specific mean.
+\begin{align}
+  \hat{\tau}_{j} &\sim \text{Normal}\left(\tau_{j}, s_{j} \right)
+  (\#eq:random-model)
+\end{align}
+
+The study-specific effects are drawn from the population effect.
+\begin{align}
+  \tau_{j} &\sim \text{Normal}\left(\mu, \sigma)
+  (\#eq:random-mean)
+\end{align}
+
+The population effect $\mu$ gets the same priors as before, but we've introduced a new parameter, $\sigma$ representing the amount of heterogeneity across studies.
+This parameter also needs a prior.
+I give it an exponential prior,
+\begin{align}
+  \sigma &\sim \text{Exponential}(\lambda)
+  (\#eq:heterogeneity-prior)
+\end{align}
+where $\lambda$ is a rate parameter. 
+The Exponential prior has an always-decreasing density, so the prior regularizes toward smaller values of $\sigma$.
+The expected value of the Exponential prior is $\sigma = \lambda^{-1}$, so we can interpret $\lambda^{-1}$ as an expression of prior heterogeneity across studies.
+I estimate the model using different values of $\lambda^{-1}$ to represent different prior assumptions about the level of heterogeneity.
+<!-- use data from R -->
 
 
+```{r}
+ran_tidy %>%
+  filter(term == "b_Intercept") %>%
+  ggplot() +
+  aes(
+    x = 
+      fct_relevel(prior, "optimistic", "agnostic", "skeptical") %>%
+      fct_rev(),
+    y = estimate, 
+    color = as.factor(heterogeneity),
+    shape = as.factor(heterogeneity)
+  ) +
+  geom_hline(yintercept = 0) +
+  geom_pointrange(
+    aes(ymin = lower, ymax = upper),
+    position = position_dodge(width = -0.5),
+    size = 0.75
+  ) +
+  coord_flip(xlim = c(0.5, 3)) +
+  scale_color_viridis_d(option = "plasma", end = 0.8) +
+  scale_shape_manual(values = c(15, 16, 17, 18)) +
+  labs(
+    color = TeX("Cross-study heterogeneity: $\\lambda^{-1}$"),
+    shape = TeX("Cross-study heterogeneity: $\\lambda^{-1}$"),
+    y = "Population treatment effect",
+    x = NULL,
+    title = "Bayesian Meta-Analysis of Lawn Sign Experiments",
+    subtitle = 'Heterogeneity prior relaxes "fixed effects" assumption'
+  ) +
+  theme(legend.position = "none") +
+  geom_text(
+    data = ran_tidy %>% 
+      filter(term == "b_Intercept") %>% 
+      filter(prior == "skeptical"),
+    aes(y = upper, label = str_glue("1 / λ = {heterogeneity}")),
+    color = "black",
+    position = position_dodge(width = -0.5),
+    hjust = -0.1
+  ) +
+  geom_mark_circle(
+    data = ran_tidy %>%
+      filter(term == "b_Intercept") %>%
+      filter(prior == "skeptical") %>%
+      filter(heterogeneity %in% c(max(heterogeneity), min(heterogeneity))),
+    aes(
+      label = case_when(
+        heterogeneity == max(heterogeneity) ~ "Greatest heterogeneity",
+        heterogeneity == min(heterogeneity) ~ '"Fixed effects" (no heterogeneity)'
+      )
+    ),
+    position = position_dodge(width = -0.75),
+    label.family = font_fam,
+    label.fontface = "plain",
+    label.fontsize = 10, 
+    label.fill = "gray95",
+    alpha = 0, 
+    label.buffer = unit(3, "mm"),
+    con.type = "straight", 
+    con.cap = 5,
+    show.legend = FALSE
+  ) +
+  NULL
+```
+
+```{r}
+ggplot(ran_draws) +
+  aes(x = sd_j__Intercept, y = b_Intercept) +
+  ggpointdensity::geom_pointdensity(
+    alpha = 0.7,
+    shape = 16,
+    size = 2
+  ) +
+  geom_hline(yintercept = 0, color = "black") +
+  facet_wrap(
+    ~ 1 / lambda, 
+    nrow = 1,
+    labeller = 
+      str_glue("Prior 1 / λ = {sort(unique(1 / ran_draws$lambda))}") %>% 
+      as.character() %>%
+      set_names(sort(unique(1 / ran_draws$lambda))) %>%
+      as_labeller()
+  ) +
+  # scale_x_log10(labels = number) +
+  scale_color_viridis_c(option = "plasma", end = 0.9) +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 0.8),
+    legend.position = "none"
+  ) +
+  labs(
+    x = "Study heterogeneity",
+    y = "Aggregate treatment effect",
+    title = "Population Effect vs. Cross-Study Heterogeneity",
+    subtitle = 'MCMC samples from "agnostic" population prior\nand greatest study heterogeneity prior'
+  )
+```
+
+
+## Other Frontiers of Bayesian Causal Inference 
+
+Make this one section, not many
+
+<!-- Beyond Estimation: Inferences About Models and Hypotheses -->
 
 We can think bigger about Bayesian _inference_ for a parameter as distinct from Bayesian _estimation_ of the in-sample quantity. 
 This lets us use a nonparametric data-driven estimator for the data, but the "inference" or "generalization" still has a prior.
@@ -1660,6 +1808,10 @@ The _entire point_ of causal inference is to make inferences about counterfactua
 Invoking Bayesian inference is really the only way to say what we _want_ to say about causal effects: what are the plausible causal effects given the model/data. We do _not_ care about the plausibility of data given the null (as a primary QOI). 
 - Probably want to use Harrell-esque language? Draw on intuition from clinical research, or even industry. We want our best answer, not a philosophically indirect weird jumble.
 - This probably also plays into the Cox/Jeffreys/Jaynes stuff I have open on my computer.
+- but this is also so big as to be useless. Extrapolating Bayes into a philosophy is impractical and frankly dogmatic. It puts the "coherence" of a method above its usefulness.
+- And since all models are wrong anyway (Navarro) this is probably taking the whole thing too far.
+- We should use Bayes where it's helpful, and criticize Bayes where it isn't helpful (Bayes holes), and acknowledge where the practical implementation of Bayes is helpful even when it violates the supposed "philosophical coherence" of Bayes.
+
 <!------- TO DO ---------
 - Corey Yanofsky recommended reading
 - Gelman/Shalizi philosophy of Bayes
@@ -1705,9 +1857,6 @@ Implied:
 
 No-Free-Lunch theorems
 
-
-
-### Agnostic Causal Inference
 
 <!-- ### Modeling Cultures in Political Science: Complexity and Agnosticism -->
 

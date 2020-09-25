@@ -21,6 +21,8 @@ title: Overall thesis notes
         - run MCMC on fixed theta
         - send alex data and code
     - variance weighting of ideal points (Is this barry?)
+    - explain TPO
+    - other Barry comments
 - ch 5:
     - writing
         - is Markey more liberal, or the incumbent with lots of other advantages

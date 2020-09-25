@@ -5,6 +5,7 @@
 library("here")
 library("magrittr")
 library("tidyverse")
+
 library("broom")
 library("rstan")
 library("tidybayes")
@@ -12,28 +13,38 @@ library("brms")
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
-model_path <- file.path("code", "03-causality", "meta")
-samples_path <- file.path("data", "mcmc", "causal-inf", "meta")
+library("latex2exp")
+library("scales")
+library("ggforce")
 
+source(here::here("assets-bookdown", "knitr-helpers.R"))
+
+
+model_path <- file.path("code", "03-causality", "meta")
+samples_path <- file.path("data", "mcmc", "3-causal-inf", "meta")
+output_path <- file.path("data", "_model-output", "03-causality")
 
 signs_direct <- 
   tribble(
-    ~ estimate, ~ sigma,
-    0.025, 0.017,
-    -0.014, 0.057,
-    0.018, 0.009,
-    -0.012, 0.026
+    ~ estimate, ~ sigma, ~ n,
+    0.025, 0.017, 88, 
+    -0.014, 0.057, 69,
+    0.018, 0.009, 131,
+    -0.012, 0.026, 88
   ) %>%
   mutate(j = row_number()) %>%
   print()
 
+write_rds(signs_direct, here(output_path, "signs-direct-estimates.rds"))
+
+
 signs_indirect <- 
   tribble(
-    ~ estimate, ~ sigma,
-    0.018, 0.016, 
-    0.004, 0.045,
-    0.018, 0.007,
-    -0.020, 0.021 
+    ~ estimate, ~ sigma, ~ n,
+    0.018, 0.016, 88, 
+    0.004, 0.045, 69,
+    0.018, 0.007, 131,
+    -0.020, 0.021, 88
   ) %>%
   mutate(j = row_number()) %>%
   print()
@@ -119,7 +130,7 @@ tidy_fix <-
     "optimistic" = brm_fix_optimistic,
     "skeptical" = brm_fix_skeptical
   ) %>% 
-  lapply(tidy, conf.int = TRUE) %>%
+  lapply(tidy, conf.int = TRUE, conf.level = 0.9) %>%
   bind_rows(.id = "prior") %>%
   print()
 
@@ -175,9 +186,10 @@ mega_ranefs <- tibble(
   prior = c("agnostic", "optimistic", "skeptical"),
   mu_prior = list(agnostic_prior, optimistic_prior, skeptical_prior)
 ) %>%
-  crossing(lambda = c(10, 20, 100, 1000)) %>%
+  crossing(heterogeneity = c(.05, .01, .005)) %>%
   group_by_all() %>%
   mutate(
+    lambda = 1 / heterogeneity,
     sd_prior = map(
       .x = lambda,
       .f = ~ set_prior(
@@ -203,23 +215,35 @@ mega_ranefs <- tibble(
 beepr::beep(2)
 
 
-mega_ranefs %>%
+# tidy random effects plus fixed effects
+ran_tidy <- mega_ranefs %>%
   mutate(
     tidy = map(brmfit, tidy, conf.int = TRUE)
   ) %>%
+  select(-brmfit) %>%
   unnest(tidy) %>%
-  filter(
-    term == "b_Intercept"
-   # | str_detect(term, "r_j")
-  ) %>%
+  ungroup() %>%
   mutate(
-    j = parse_number(term)
+    study = parse_number(term),
   ) %>%
+  bind_rows(
+    tidy_fix %>% mutate(heterogeneity = 0)
+  ) %>%
+  print()
+
+write_rds(ran_tidy, here(output_path, "ranef-tidy.rds"))
+
+
+
+ran_tidy %>%
+  filter(term == "b_Intercept") %>%
   ggplot() +
   aes(
-    x = fct_rev(str_glue("{tools::toTitleCase(prior)}\nEffect Prior")), 
+    x = 
+      fct_relevel(prior, "optimistic", "agnostic", "skeptical") %>%
+      fct_rev(),
     y = estimate, 
-    color = (as.factor(1 / lambda))
+    color = as.factor(heterogeneity)
   ) +
   geom_hline(yintercept = 0) +
   geom_pointrange(
@@ -227,26 +251,100 @@ mega_ranefs %>%
     position = position_dodge(width = -0.5),
     size = 0.75
   ) +
-  coord_flip() +
+  coord_flip(xlim = c(0.5, 3)) +
   # facet_wrap(~ ) +
   scale_color_viridis_d(option = "plasma", end = 0.8) +
   labs(
-    color = "Prior mean of cross-study std. dev",
+    color = TeX("Cross-study heterogeneity: $\\lambda^{-1}$"),
     y = "Population treatment effect",
     x = NULL,
-    title = "Bayesian Meta-Analysis of Green et al. (2016) Experiments",
-    subtitle = 'Cross-study variance priors relax "fixed effects" assumption'
+    title = "Bayesian Meta-Analysis of Lawn Sign Experiments",
+    subtitle = 'Heterogeneity prior relaxes "fixed effects" assumption'
+  ) +
+  geom_mark_circle(
+    data = ran_tidy %>%
+      filter(term == "b_Intercept") %>%
+      filter(prior == "skeptical") %>%
+      filter(heterogeneity %in% c(max(heterogeneity), min(heterogeneity))),
+    aes(
+      label = case_when(
+        heterogeneity == max(heterogeneity) ~ "Greatest heterogeneity",
+        heterogeneity == min(heterogeneity) ~ '"Fixed effects" (no heterogeneity)'
+      )
+    ),
+    position = position_dodge(width = -0.75),
+    label.family = font_fam,
+    label.fontface = "plain",
+    label.fontsize = 10, 
+    label.fill = "gray95",
+    alpha = 0, 
+    label.buffer = unit(3, "mm"),
+    # con.type = "straight", 
+    con.cap = 0,
+    show.legend = FALSE
+  ) +
+  NULL
+
+
+ran_tidy %>%
+  filter(term == "sd_j__Intercept") %>%
+  ggplot() +
+  aes(x = 1 / lambda, y = estimate, color = prior) +
+  geom_pointrange(
+    aes(ymin = lower, ymax = upper),
+    position = position_dodge(width = -0.05)
+  ) +
+  scale_x_log10()
+
+
+
+ran_draws <- mega_ranefs %>%
+  mutate(
+    draws = map(
+      .x = brmfit,
+      .f = spread_draws, b_Intercept, sd_j__Intercept
+    )
+  ) %>% 
+  ungroup() %>%
+  select(prior, heterogeneity, lambda, draws) %>%
+  unnest(draws) %>%
+  filter(prior == "agnostic") %>%
+  print()
+
+
+write_rds(ran_draws, here(output_path, "ranef-samples.rds"))
+
+
+ggplot(ran_draws) +
+  aes(x = sd_j__Intercept, y = b_Intercept) +
+  ggpointdensity::geom_pointdensity(
+    alpha = 0.7,
+    shape = 16,
+    size = 2
+  ) +
+  geom_hline(yintercept = 0, color = "black") +
+  facet_wrap(
+    ~ 1 / lambda, 
+    nrow = 1,
+    labeller = 
+      str_glue("Prior 1 / λ = {sort(unique(1 / ran_draws$lambda))}") %>% 
+      as.character() %>%
+      set_names(sort(unique(1 / ran_draws$lambda))) %>%
+      as_labeller()
+  ) +
+  scale_x_log10(labels = number) +
+  scale_color_viridis_c(option = "plasma", end = 0.9) +
+  theme(
+    axis.text.x = element_text(angle = 45, vjust = 0.8),
+    legend.position = "none"
+  ) +
+  labs(
+    x = "Study heterogeneity",
+    y = "Aggregate treatment effect",
+    title = "Treatment Effect and Study Variance"
   )
 
-
-
-
-
-
-
-
-
-
+alarm()
 
 
 
