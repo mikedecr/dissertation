@@ -53,22 +53,14 @@ ls()
 ```
 
 Because the model is custom-built using Stan, it comes with no off-the-shelf quality assurances. 
-To test the model's ability to recover unknown parameters, I estimate the model on simulated data. 
-I intentionally stress-test the model by building a dataset that is smaller than the real dataset that I use for estimation.
-The fake data contain just `r n_states` with `r english(n_districts)` districts per state.
+To test the model's ability to recover unknown parameters, I estimate the model on simulated data [@gelman-et-al:2013:BDA p. 270].
+I intentionally stress-test the model by building a simulated dataset that is smaller than the real dataset that I use for estimation.
+The fake data contain just `r n_states` states with `r english(n_districts)` districts per state.
 With two parties per district, this totals `r n_states * n_districts * n_parties` groups instead of the $435 \times 2 = 870$ groups in the real data.
-Individuals in each group offer responses to `r n_items` items.
+Individuals in each group offer responses to `r n_items` items, which is fewer than the number of items I collect from real data.
 For simplicity, the simulation assumes that each individual in each group answers only one question.
 When the model is estimated on real data, this assumption is relaxed by the weighting scheme laid out in Section \@ref(sec:model-weights).
-Because the weighting scheme downweights respondents who answer multiple survey items, I generate a small number of item responses for each item in each group: just `r n_cases` independent responses per item. 
-
-
-
-
-
-The model is designed to estimate group-level parameters from an individual-level data generating process. As such, I begin by simulating individual-level item response data before aggregating the data to the group level for estimation. I simulate a universe containing `r n_states` states nested within `r english(n_regions)` regions, allocated so each region contains `r english(n_states / n_regions)` states. Each state contains `r english(n_districts)` districts containing voters belonging to `r english(n_parties)` parties, totaling `r n_states * n_districts * n_parties` groups across `r n_states * n_districts` districts in the whole "country." Data for each district-party group contain responses to `r n_items` items that are answered by `r n_cases` unique individuals apiece.^[
-  While a single survey will not contain `r n_items` policy items, this study will pool items from several surveys into a final dataset.
-]
+Because the weighting scheme downweights respondents who answer multiple survey items, I generate a small number of independent responses for each item in each group: just `r n_cases` independent responses per item.
 
 ```{r party-params}
 party_params <- params %>% split(.$party) %>% print()
@@ -76,8 +68,8 @@ party_params <- params %>% split(.$party) %>% print()
 
 I draw item parameters from independent Normal distributions: $\text{Normal}(0, `r difficulty_sd`)$ for the unadjusted midpoint parameters and $\text{Normal}\left(0, `r discrimination_sd`\right)$ for the unadjusted log discrimination parameters.
 The hierarchical model does not contain a lot of data: I generate just `r english(n_distcov)` district-level covariates and `r english(n_statecov)` state covariate.
-District and state covariates are random draws from a Normal distribution with standard deviation `r sd_beta_d`, with separate coefficients for "Democrats" and "Republicans."
-Intercept values for Democrats and Republicans are `r party_params[[1]]$const` and `r party_params[[2]]$const`, respectively.
+District and state covariates are random draws from a Normal distribution with standard deviation `r sd_beta_d`, with separate coefficients for the fake "Democrats" and "Republicans."
+Intercept values for Democrats and Republicans are fixed at `r party_params[[1]]$const` and `r party_params[[2]]$const`, respectively.
 The random effects for districts, states, and `r english(n_regions)` regions are Normal draws with standard deviations of `r resid_theta_d`, `r resid_theta_s`, and `r resid_theta_r`.
 
 
@@ -98,8 +90,8 @@ here("data", "mcmc", "2-dgirt", "test", "input", "mcmc-params.RDS") %>%
 total_iterations <- (n_chains * (n_iterations - n_warmup) / n_thin)
 ```
 
-I estimate the model with MCMC, running `r english(n_chains)` for `r n_iterations`, using the first `r n_warmup` iterations for an adaptive warmup period.
-This results in `r comma(total_iterations)` samples for each parameter in total.
+I estimate the model with MCMC, running `r english(n_chains)` chains for `r n_iterations` iterations apiece, using the first `r n_warmup` iterations in each chain for an adaptive warmup period.
+This results in `r comma(total_iterations)` saved samples for each parameter.
 
 ```{r read-true-thetas}
 group_level <- read_rds(
@@ -170,7 +162,7 @@ Figure \@ref(fig:plot-theta-scatters) compares each group's "true" ideal point t
 Because the latent ideological space is not identified, I facilitate the comparison of ideal points by standardizing both sets to be mean zero and variance of $1$. 
 The model recovers a strong correspondence between the true and estimated ideal point values, underscoring the computational fidelity of the model and the statistical precision to detect meaningful variation in the underlying data.
 
-```{r plot-theta-scatters, include = TRUE, fig.height = 5, fig.width = 8, out.width = "100%", fig.scap = "Ideal point estimates from fake data simulation.", fig.cap = "Ideal point estimates from fake data simulation. Estimates are plotted with posterior means and 90 percent compatibility intervals."}
+```{r plot-theta-scatters, include = TRUE, fig.height = 5, fig.width = 10, out.width = "100%", fig.scap = "Ideal point estimates from fake data simulation.", fig.cap = "Ideal point estimates from fake data simulation. Estimates are plotted with posterior means and 90 percent compatibility intervals."}
 ```
 
 ```{r extract-icc-draws}
@@ -224,6 +216,7 @@ icc_draws %>%
     labeller = as_labeller(function(x) str_glue("Item {x}")),
     ncol = 5
   ) +
+  scale_x_continuous(limits = c(-4, 4)) +
   scale_y_continuous(breaks = seq(0, 1, .5)) +
   labs(
     x = "Ideal Point", 
@@ -236,8 +229,7 @@ icc_draws %>%
 The other important result from the fake data simulation is the item response functions (IRFs).
 Figure \@ref(fig:plot-sim-ICCs) plots IRFs from `r n_items_sampled` randomly chosen items, showing `r n_draws` MCMC draws of the estimated IRFs (light orange) against the true IRF (black). 
 These results also testify to the model's ability to recover key parameters even under weak data settings.
-In the few cases where the estimated IRF departs slightly from the true IRF, this appears to be due to partial pooling: the hierarchical item prior pooling an item parameter toward the estimated distribution of item parameters.
-In particular, the model appears to pooling high-magnitude midpoint parameters toward the mean of the distribution, which is restricted to be zero. 
+In the few cases where the estimated IRF departs slightly from the true IRF, this appears to be due to partial pooling: regularization of item parameters toward their estimated distribution.
 
 ```{r plot-sim-ICCs, include = TRUE, fig.height = 6, fig.width = 9, out.width = "100%", fig.scap = "Item response functions from fake data simulation.", fig.cap = "Item response functions from fake data simulation. Comparison between estimated (yellow) and true (black) item parameters for a random sample of items."}
 ```
@@ -310,10 +302,6 @@ df_stanfit %>%
 ```
 
 
-<!-- item parameters
-covariate values
-residual values -->
-
 
 
 <!------- TO DO ---------
@@ -321,13 +309,6 @@ residual values -->
 ------------------------->
 
 
-<!-- Distill the simulation stuff here 
-
-- Static, homoskedastic
-- Static and heteroskedastic
-- Heteroskedastic and dynamic
-
--->
 
 
 

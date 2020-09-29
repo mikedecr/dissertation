@@ -1,4 +1,4 @@
-# Hierarchical IRT Model for District-Party Ideology {#ch:model}
+# Measuring District-Party Ideology with a Group IRT Model  {#ch:model}
 
 ```{r stopper, eval = FALSE, cache = FALSE, include = FALSE}
 knitr::knit_exit()
@@ -26,33 +26,14 @@ To study how partisan constituencies are represented in primary elections, we re
 - What is "district-party"
 ------------------------->
 
-This chapter proceeds in three major steps. First, I review the theoretical basis for ideal point models, rooted in spatial models of policy choice. 
-I connect these formal models to statistical models of policy ideal points [in a style that follows @clinton-jackman-rivers:2004:ideal] as well as their connection to Item Response Theory (IRT) models from psychometrics and education testing [e.g. @fox:2010:bayesian-IRT].
-
-Second, I specify and test the group-level model that I build and employ in my analysis of district-party publics.
-This discussion includes details that are relevant to Bayesian estimation, including identification restrictions on the latent policy space, specification and simulation of prior distributions, and model parameterizations that expedite estimation with Markov chain Monte Carlo (MCMC).
-
-<!------- TO DO ---------
-- Prior checking
-------------------------->
-
-Lastly, I describe how I fit the model to real data.
-This section describes data collection, data processing, and model performance, and a descriptive analysis of the estimates.
-
-<!------- TO DO ---------
-- model performance
-------------------------->
-
-<!------- TO DO ---------
-- Should this include a comparison to CDW measures? Hill measures? 
-  those are state level.
-------------------------->
-
+This chapter proceeds in three major steps. First, I review the theoretical basis for ideal point models, connecting formal models of policy choice to statistical models for estimating latent attitudes from data.
+Second, I specify and test a group-level model for estimating district-party public ideology.
+This discussion includes details that are relevant to Bayesian estimation, including identification restrictions on the latent policy space, specification and simulation of prior distributions, and model parameterizations that facilitate estimation with Markov chain Monte Carlo (MCMC).
+Lastly, I describe how I fit the model to real data and review the results.
 
 
 ## Spatial Models and Ideal Points
 
-<!-- goal: spatial >> IRT >> Parameterizations -->
 ```{r spatial-data}
 dd <- tibble(
   Left = -1,
@@ -93,34 +74,30 @@ utility_plot
 ```
 
 
-Ideal points are constructs from spatial models of political choice. 
-These models exist under formal theory---they simplify scenarios in the political world into sets of actors whose behaviors obey utility functions that conform to mathematical assumptions.
-Spatial models invoke a concept of "policy space," where actor preferences and potential policy outcomes are represented as locations along a number line.
-A canonical example is a left-right continuum, where progressive or "liberal" policies occupy locations on the left side of the continuum, while conservative policies are on the right side.
-Actors are at least partially motivated by their policy preferences, so they strive to achieve policy outcomes that are closest to their own locations in policy space.
+Ideal points are constructs from spatial models of political choice.
+Spatial theories invoke a concept of "policy space," where political preferences and policy outcomes are represented as locations along a number line.
+The key policy space in this project is a left–right ideological continuum where progressive or "liberal" policies occupy locations on the left side of the continuum, while conservative policies are on the right side.
+Actors are at least partially motivated by their policy preferences, so they strive to achieve policy outcomes that are closest to their own locations in policy space, holding other factors constant.
 Figure \@ref(fig:plot-space-1) plots a simple example of an Actor's choice over two policies in one-dimensional policy space.
 The "Left" outcome is a more progressive policy outcome than the "Right" outcome.
 The Actor has a location, which corresponds to their most-desired policy outcome or "ideal point."
-Formal models like these encode assumptions that structure policy choice: whether the policy space is one-dimensional or multidimensional, the functional form of the Actor's policy utility (linear, quadratic, Gaussian...), and distributional assumptions about error terms in the utility function.
+Formal models like these encode assumptions that structure policy choice: whether the policy space is one-dimensional or multidimensional, the functional form of the Actor's policy utility, and distributional assumptions about error terms in the utility function.
 
 ```{r plot-space-1, out.width = "100%", fig.height = 2, fig.width = 8, include = TRUE, fig.scap = "Left–right policy continuum featuring an Actor and two policy outcomes.", fig.cap = "A left–right policy continuum featuring an Actor, a progressive policy outcome, and a conservative policy outcome."}
 ```
 
-<!-- canonical cite for the or the notion of policy dimensions? -->
-
-Formal models of ideal points are distinct from statistical models of ideal points.
-Formal models are primarily theoretical exercises; they explore the incentives and likely actions of Actors in specific choice contexts, building theoretical intuitions that can be applied in the study of real-world politics with real data.
-Statistical models, on the other hand, explicitly or implicitly assume an underlying formal model of policy choice and estimate its parameters using data.
-Data could come from legislators casting voting on bills, judges ruling on case outcomes, survey respondents stating their policy preferences (as in this project), and other situations.
-The statistical model in this chapter begins with a formal model where actors are partisan voters, choices are statements of policy preferences in surveys, and ideal points are summarized on a single dimension.^[
+The formal model of ideal points is distinct from a statistical model to estimate ideal points.
+The formal model is a theoretical exercise; it establishes the incentives and likely decisions that Actors make in specific choice contexts, building theoretical intuitions that can be tested in empirical studies of real-world politics.
+The statistical model explicitly or implicitly assumes an underlying formal model and estimates its parameters using data.
+The statistical model in this chapter begins with a formal model where actors represent partisan voters, choices are statements of policy preferences in public opinion surveys, and ideal points are summarized on a single policy dimension.^[
   Researchers disagree about the appropriateness of a one-dimensional model for the mass public [@ansolabehere-et-al:2008:voter-ideology; @treier-hillygus:2009:ideology]. 
-  Past work on the strategic positioning dilemma theory guides our choice of a single-dimensional model, since the theory operates under a model of policy positioning where candidates take more progressive or conservative positions to target the policy preferences of their voters.
+  Past work on the strategic positioning dilemma theory guides our choice of a single-dimensional model because the theory holds that candidates take more progressive or conservative positions to target the policy preferences of their voters.
 ]
 An Actor $i \in \{1, \ldots, n\}$ has an ideal point in policy space represented by $\theta_{i}$. 
-The Actor is confronted with survey item $j \in \{1, \ldots, J\}$ and chooses a Left alternative located at position $L_{j}$ or a Right alternative located at $R_{j}$. 
+The Actor is confronted with survey item $j \in \{1, \ldots, J\}$ and chooses either the Left alternative located at position $L_{j}$ or a Right alternative located at $R_{j}$. 
 
 The Actor's choice is a function of the distance between their ideal point and the respective choice locations.
-Utility is maximized if the Actor can choose a policy located at exactly their ideal point, and utility is "lost" for choices farther from their ideal point.
+The Actor maximizes their utility if they can choose a policy located at exactly their ideal point, and they lose utility for policy choices that are farther from their ideal point.
 Like @clinton-jackman-rivers:2004:ideal, I assume quadratic utility loss with increasing ideological distance, which implies a utility function over the *squared distance* between an Actor and a choice location.
 Let $U_{i}\left(L_{j}\right)$ and $U_{i}\left(R_{j}\right)$ be utility functions for $i$'s choice of Left or Right on item $j$,
 \begin{align}
@@ -130,7 +107,7 @@ Let $U_{i}\left(L_{j}\right)$ and $U_{i}\left(R_{j}\right)$ be utility functions
   \end{split}
   (\#eq:utility-fns)
 \end{align}
-where $u^{\mathtt{R}}_{ij}$ and $u^{\mathtt{L}}_{ij}$ are the idiosyncratic error terms for the Right and Left alternatives, respectively.
+where $u^{\mathtt{R}}_{ij}$ and $u^{\mathtt{L}}_{ij}$ are idiosyncratic error terms for the Right and Left alternatives, respectively.
 I sometimes refer to the quadratic utility loss as the "deterministic" component of the Actor's utility function, while the idiosyncratic error terms are "stochastic" components.
 
 ```{r plot-utility}
@@ -155,26 +132,26 @@ utility_plot +
 
 <!-- break -->
 
-Let $y_{ij} = 1$ indicate the Actor chooses Right and $y_{ij} = 0$ indicate that they choose Left.
+Let $y_{ij} = 1$ indicate that the Actor chooses Right and $y_{ij} = 0$ indicate that they choose Left.
 The Actor chooses Left or Right based on which choice gives greater utility:
 \begin{align}
   y_{ij} = 1 &\iff U_{i}\left(R_{j}\right) > U_{i}\left(L_{j}\right)
   (\#eq:choice-iff)
 \end{align}
-To visualize this choice, I plot the deterministic components of Equation \@ref(eq:choice-iff) in Figure \@ref(fig:plot-utility), omitting the stochastic utility terms. 
+To visualize this choice, I plot the deterministic components of \@ref(eq:utility-fns) in Figure \@ref(fig:plot-utility), omitting the stochastic utility terms. 
 The parabola represents $i$'s utility loss for any choice along the ideological continuum, owed to their distance from that policy choice.
 The vertex of the parabola is at the Actor's ideal point, where policy utility is maximized.
 Dashed lines below the Left and Right alternatives represent the utility loss owed to the Actor's distance from those specific choices.
-In the current example, the Actor is closer to Right than to Left, so they receives greater utility (or lose _less_ utility) by choosing Right instead of Left.
+In the current example, the Actor is closer to Right than to Left, so they receive greater utility (or lose _less_ utility) by choosing Right instead of Left.
 
-```{r plot-utility, include = TRUE, fig.height = 2, fig.width = 8, out.width = "100%", fig.cap = "A representation of quadratic utility loss over policy choices"}
+```{r plot-utility, include = TRUE, fig.height = 2, fig.width = 8, out.width = "100%", fig.cap = "A representation of quadratic utility loss over policy choices."}
 ```
 
 The Actor's choice is affected by stochastic utility components $u^{\mathtt{R}}_{ij}$ and $u^{\mathtt{L}}_{ij}$ in addition to the deterministic utility loss.
 This means that even if the Actor's distance to Right is smaller than their distance to Left, there remains a nonzero probability that $i$ chooses Left.
 This probability depends on the values of the stochastic error terms for each choice.
 These error terms represent the accumulation of several possible, non-ideological shocks to utility: systematic decision factors that are not summarized by ideology, issue-specific considerations that do not apply broadly across all issues, random misperceptions about the policy locations, and so on.
-Supposing that these idiosyncratic terms follow some probability distribution, Equation \@ref(eq:choice-iff) can be represented probabilistically:
+Supposing that these idiosyncratic terms follow some probability distribution, the choice can be represented probabilistically:
 \begin{align}
   \begin{split}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
@@ -195,7 +172,7 @@ Supposing that these idiosyncratic terms follow some probability distribution, E
 which states that the Actor will choose the closest policy alternative *unless* idiosyncratic factors overcome ideological considerations.
 
 Equation \@ref(eq:choice-prob) can be rearranged to reveal an appealing functional form for $i$'s choice probability. 
-By expanding the polynomial term and then factoring...
+By expanding the polynomial terms and then factoring...
 \begin{align}
 \begin{split}
   \mathrm{Pr}\left(y_{ij} = 1\right) &= 
@@ -225,12 +202,13 @@ By expanding the polynomial term and then factoring...
 \end{align}
 we reveal two interpretable expressions for important constructs in the model.
 First, note that $\frac{R_{j} + L_{j}}{2}$ is a formula for the midpoint between the Left and Right locations. 
-Midpoints are significant for spatial models because they represent the threshold where Actor prefers one alternative over the other on average.^[
+Midpoints are significant for spatial models because they represent the threshold where the Actor is indifferent between policy alternatives.^[
   @ansolabehere-et-al:2001:candidate-positioning and @burden:2004:candidate-positioning use candidate midpoints as predictors in regression analyses to estimate the impact of candidate ideology in House elections.
 ]
-The term $\theta_{i} - \frac{R_{j} + L_{j}}{2}$ conveys which policy alternative is closer to the Actor; the expression is positive if the Actor is closer to Right and negative if closer to Left.
-Second, $2\left(R_{j} - L_{j}\right)$ captures how far apart the policy alternatives are from one another.
-Together, these capture whether the Actor is closer to the Left or Right policy and by how much.
+The term $\theta_{i} - \frac{R_{j} + L_{j}}{2}$ conveys which policy alternative is closer to the Actor. 
+The expression is positive if the Actor is closer to Right and negative if closer to Left.
+Second, $2\left(R_{j} - L_{j}\right)$ measures how far apart the policy alternatives are from one another.
+Together, these two terms capture whether the Actor is closer to the Left or Right policy and by how much.
 
 The final manipulation is to simplify the terms above, resulting in a convenient parameterization for statistical estimation.
 \begin{align}
@@ -245,13 +223,15 @@ The final manipulation is to simplify the terms above, resulting in a convenient
 This setup contains a "discrimination parameter" $\iota_{j} = 2\left(R_{j} - L_{j}\right)$, the "midpoint" or "cutpoint" parameter $\kappa_{j} = \dfrac{R_{j} + L_{j}}{2}$, and a joint error term $\epsilon_{ij} = u^{\mathtt{L}}_{ij} - u^{\mathtt{R}}_{ij}$.^[
   The names for these parameters are adapted from item-response theory (IRT), an area of psychometrics that is similarly interested in inferring latent traits from observed response data. 
 ]
-Similar to Equation \@ref(eq:factor-item-params), $\theta_{i} - \kappa_{j}$ shows how far the Actor is from the midpoint between Left and Right and in which direction, and $\iota_{j}$ behaves as a "slope" on this distance: the distance from the midpoint has a _stronger influence_ when the policy alternatives are farther from one another, since more utility is lost over larger spatial distances.
-I explore the intuitions of this functional form more thoroughly in Section \@ref(sec:irt).
+Similar to Equation \@ref(eq:factor-item-params), $\theta_{i} - \kappa_{j}$ shows how far the Actor is from the midpoint between Left and Right and in which direction. 
+The discrimination parameter $\iota_{j}$ behaves as a slope or elasticity on this distance: the distance from the midpoint has a stronger influence on the Actor's choice when the policy alternatives are farther from each other because utility is a quadratic function of the ideological distance.
+I explore the intuitions and consequences of this functional form more thoroughly in Section \@ref(sec:irt).
 
 A complete statistical model is obtained by a distributional assumption for $\epsilon_{ij}$.
-A common assumption in ideal point modeling is to assume that $\epsilon_{ij}$ is Normal, which assumes that utility error represents a _sum_ of unrelated utility shocks.^[
-  Many IRT models assume that $\epsilon_{ij}$ follows a Logistic distribution, resulting in a logistic regression model [for example @londregan:1999:ideal-pts].
-  Logistic models are computationally convenient but harder to justify in the ideal point context, especially as we add sources of variance to the choice problem in the group-level model.
+A common assumption in ideal point modeling is to assume that $\epsilon_{ij}$ is Normal, which assumes that utility error represents a sum of unrelated utility shocks.^[
+  Many IRT models assume that $\epsilon_{ij}$ follows a Logistic distribution, resulting in a logit model [for example @londregan:1999:ideal-pts].
+  The logit model is computationally convenient, but the Logistic error term is harder to justify under spatial theory. 
+  Furthermore, the Normal error term better facilitates the group-level extension below.
 ]
 This assumption results in a probit regression model for the probability that Actor $i$ chooses Right on choice $j$:
 \begin{align}
@@ -275,14 +255,14 @@ where $\Phi(\cdot)$ is the cumulative Normal distribution function.^[
   A scale restriction for a single choice is not problematic because the ideological scale is latent and can be arbitrarily stretched with the discrimination parameter $\iota_{j}$.
   The important implication for estimation is that the error variance is equal _across individuals_.
 ]
-The probit model simply states that $i$ is closer to Right than Left is a function of ideal point distances plus Normal error.
+The probit model simply states that $i$ prefers Right over Left as a function of ideal point distance plus Normal error.
 
 
 ## Item Response Theory {#sec:irt}
 
-Ideal point models have a similar construction to models developed under item response theory (IRT) in psychometrics.
+Ideal point models have a similar construction to models developed under item response theory (IRT), a modeling framework from psychometrics.
 IRT models have a similar aim as ideal point models: measuring latent features in the data given individuals' observable responses to stimuli.
-The canonical psychometric example is in education testing, where several test questions are used to measure a student's latent academic "ability" level. 
+The canonical psychometric example is educational testing, where several test questions are used to measure a student's academic "ability" level. 
 This section connects ideal point models to IRT to help explain the theoretical and mathematical intuitions at work.
 
 ### Latent traits
@@ -295,10 +275,10 @@ We can represent a measurement model with general notation $\mathbf{y} = f(\bold
 In the education context, a student's observable pattern of answers to test questions reveals their underlying ability level.
 In a context of policy choice, it is impossible to observe an individual's political ideology directly, but the model provides a structure to infer ideology from a pattern of policy choice questions on a survey.
 
-An important point about measurement models is that they require assumptions to infer reconstruct a signal about latent traits from observed data, otherwise no inferences can be draws.
+An important point about measurement models is that they require assumptions to reconstruct a signal about latent traits from observed data, otherwise no inferences can be drawn.
 In this sense, the estimates are always sensitive to the model's assumptions.
-While this is always important to acknowledge, it is an ever-present consideration even for simpler measurement strategies such as additive indices that estimate ideology by summing or averaging responses to a battery of policy questions.
-In fact, additive indices are special cases of measurement models where key parameters are assumed to be known with certainty and fixed across all policy items, which is problematic if there is any reason to suspect that item responses are correlated across individuals.^[
+While this is always important to acknowledge, it is an ever-present consideration even for non-IRT measurement strategies, such as additive indices that estimate ideology by summing or averaging responses to a battery of policy questions.
+Additive indices are special cases of measurement models where key parameters are assumed to be known with certainty and fixed across all policy items, which is problematic if there is any reason to suspect that item responses are correlated across individuals.^[
   Additive indices are represent a model where all policy choices have the same Left and Right locations, which is a highly restrictive assumption that IRT models do not make.
 ]
 In this way, measurement models actually *relax* the assumptions of simpler measurement strategies, even if the underlying mathematics are more intensive. 
@@ -350,14 +330,14 @@ item_params_2p <-
 ex_item_params <- 
   bind_rows(
     .id = "model",
-    'No Item Variation\n("Additive Index")' = item_params_0p,
+    'No Item Variation' = item_params_0p,
     "Varying Item Difficulty" = item_params_1p,
     "Varying Difficulty\n& Discrimination" = item_params_2p 
   ) %>%
   mutate(
     item = 1:n(),
     model = fct_relevel(
-      model, 'No Item Variation\n("Additive Index")', "Varying Item Difficulty"
+      model, 'No Item Variation', "Varying Item Difficulty"
     )
   ) %>%
   print()
@@ -374,8 +354,8 @@ ex_iccs <- ex_item_params %>%
 
 Measurement models relax assumptions about the data's functional dependence on the latent trait by modeling features of the items to which subjects respond.
 Different items reveal different information about the latent construct [@fox:2010:bayesian-IRT].
-Consider a simple model where an student $i$ is more likely to answer test questions $j$ correctly if she has greater academic ability $\theta_{i}$. Analogously, a citizen who is more conservative is more likely to express conservative preferences for policy question $j$. 
-Keeping the probit functional form from above, we can represent this simple model with the equation:
+Consider a simple model where a student $i$ is more likely to answer test questions $j$ correctly if she has a greater academic ability level $\theta_{i}$. Analogously, a citizen who is more conservative is more likely to express conservative preferences for policy question $j$. 
+Using the probit setup from above, we can represent this simple model with the equation:
 \begin{align}
   \mathrm{Pr}\left( y_{ij} = 1 \right) &= 
   \Phi\left(\theta_{i}\right),
@@ -384,21 +364,21 @@ Keeping the probit functional form from above, we can represent this simple mode
 where the probability of a correct/conservative response is $0.5$ at $\theta_{i} = 0$.
 This model asserts that knowing $\theta_{i}$ is sufficient to produce exchangeable response data; there are no remaining systematic differences across questions that lead to systematically different answers.
 This implicit assumption is often unrealistic: some test questions are more difficult than others, and some policy questions present more extreme or lopsided choices than others.
-Even so, political science is replete with measurement approaches that omit all item-level variation, such as the racial resentment scale, the additive index of of political participation, and more [@henry-sears:2002:symbolic-racism; @verba-nie:1972:participation].
+Even so, political science is replete with measurement approaches that omit all item-level variation, such as the racial resentment scale, the additive index of political participation, and more [@henry-sears:2002:symbolic-racism; @verba-nie:1972:participation].
 
-IRT models assume that items reveal systematically different information from one another and model these item characteristics using _item parameters_.
+Item response theory assumes that items reveal systematically different information from one another and models these item characteristics using _item parameters_.
 IRT models have different behaviors based on the parameterization of the item effects in the model. 
-The simplest IRT model is a "one-parameter" model, which includes an item-specific intercept $\kappa_{j}$.
+The simplest IRT model is a "one-parameter" model, which includes an item-specific intercept $\kappa_{j}$. 
 \begin{align}
   \mathrm{Pr}\left( y_{ij} = 1 \right) 
   &= \Phi\left(\theta_{i} - \kappa_{j}\right)
   (\#eq:1p-ogive)
 \end{align}
-IRT parlance refers to $\kappa_{j}$ as the idem "difficulty" parameter.
+IRT parlance refers to $\kappa_{j}$ as the item "difficulty" parameter.
 In the testing context, if a student has greater ability than the difficulty level of the question, they will most likely answer the item correctly.
 This probability goes up for easier questions and down for more difficult questions.
 In policy choice, the difficulty parameter represents the "midpoint" parameter between two policy alternatives.
-The chooser prefers Left or Right depending on their ideal point location relative to the midpoint.
+The probability of a Left or Right choice depends on the Actor's ideal point location relative to the midpoint.
 The "two-parameter" IRT model is more common, especially in the ideal point context. The two-parameter model introduces the "discrimination" parameter $\iota_{j}$, which behaves as a slope on the difference between $\theta_{i}$ and $\kappa_{j}$. 
 \begin{align}
   \mathrm{Pr}\left( y_{ij} = 1 \right)
@@ -408,9 +388,9 @@ The "two-parameter" IRT model is more common, especially in the ideal point cont
   (\#eq:2p-ogive)
 \end{align}
 Intuitively, the discrimination parameter captures how well a test item differentiates between the responses of high- and low-ability students, with greater values meaning more divergence in responses.
-In the ideal point context, it captures how strongly a policy question divides liberal and conservative respondents.
+In the ideal point context, it captures how strongly a policy question divides the responses of progressive and conservative Actors.
 
-```{r plot-example-iccs, include = TRUE, echo = FALSE, fig.cap = "Examples of item characteristic curves under different item parameter assumptions", fig.width = 9, fig.height = 4, out.width = "100%"}
+```{r plot-example-iccs, include = TRUE, echo = FALSE, fig.scap = "Examples of item characteristic curves under different item parameter assumptions.", fig.cap = "Examples of item characteristic curves under different item parameter assumptions: ability-only (left), one parameter (middle), and two parameter (right).", fig.width = 9, fig.height = 4, out.width = "100%"}
 ggplot(ex_iccs) +
   aes(x = theta, y = prob) +
   facet_wrap(~ model) +
@@ -437,76 +417,67 @@ ggplot(ex_iccs) +
 ```
 
 Figure \@ref(fig:plot-example-iccs) shows how response probabilities are affected by the parameterization of item effects.
-Each panel plots how increases in subject ability or conservatism (the horizontal axis) result in increased response probability (the vertical axis), where the shape of the curve is set by values of the item parameters.
+Each panel shows how the subject's ability/conservatism (the horizontal axis) affects the probability of a correct/conservative response (the vertical axis), where the shape of the curve is set by the values of the item parameters.
 These curves are commonly referred to as *item characteristic curves* (ICCs) or *item response functions* (IRFs).
-The leftmost panel shows a model with no item effects whatsoever; any item is theorized to behave identically to any other item, and response probabilities are affected only by the subject's ability (ideology).
-The middle panel shows a one-parameter model where item difficulties (cutpoints) are allowed to vary systematically at the item level.
-Difficulty parameters behave as intercept shifts, so they change the value of $\theta$ predicts a correct response with probability $0.5$, but they do not affect the slope of the item response function.
+The leftmost panel shows a model with no item effects whatsoever, so response probabilities are affected only by the latent trait.
+The middle panel shows a one-parameter model where item difficulties/cutpoints are allowed to vary.
+Difficulty parameters behave as intercept shifts, so they change the value of $\theta$ where a subject is indifferent between responses.
 The final panel shows item response functions from the two-parameter IRT model, where item difficulties (intercepts) and discriminations (slopes) are allowed to vary across items.
 
 How do we interpret our statistical model of ideal points (Equation \@ref(eq:probit-irt)) in light of item response theory? 
 The cutpoint parameter $\kappa_{j} = \dfrac{R_{j} + L_{j}}{2}$ behaves like a difficulty parameter, capturing intercept shifts in the item response function.
-If $\theta_{i} - \kappa_{j} = 0$, the item cutpoint falls directly on an Actor's ideal point, this the Actor is indifferent (in expectation) between Left and Right and thus chooses Right with probability $0.5$. 
-The value of $\kappa_{j}$ increases by moving either the Right or Left alternatives to the right (increasing $R_{j}$ or $L_{j}$), subject to the constraint that $R_{j} \geq L_{j}$. 
-Larger values of the item cutpoint imply a lower probability that the Actor chooses Right, since $\kappa_{j}$ has a non-positive effect on the conservative response probability.^[
+If $\theta_{i} - \kappa_{j} = 0$, the item cutpoint falls directly on an Actor's ideal point, so the Actor is ideologically indifferent between Left and Right and chooses Right with probability $0.5$. 
+The value of $\kappa_{j}$ increases by moving either the Right or Left alternatives to the right (increasing $R_{j}$ or $L_{j}$), subject to the constraint that $R_{j} > L_{j}$. 
+Larger values of the item cutpoint imply a lower probability that the Actor chooses Right, since $\kappa_{j}$ has a negative effect on the conservative response probability.^[
   Formally we can show this by taking the derivative of the link function with respect to the cutpoint: $\dfrac{\partial \iota_{j}\left(\theta_{i} - \kappa_{j}\right)}{\partial \kappa_{j}} = -\iota_{j}$, where the polarity of the ideal point space (conservative means "right") constrains $\iota_{j}$ to be positive.
 ]
-The opposite intuition holds as the Left position becomes increasingly progressive, resulting in larger values of $\kappa_{j}$ that imply a higher probability of choosing Right, all else equal.
+The opposite intuition holds as the Left position becomes increasingly progressive, resulting in lower values of $\kappa_{j}$ that imply a higher probability of choosing Right, all else equal.
 
 The discrimination parameter $\iota_{j} = 2(R_{j} - L_{j})$ grows when the distance between the Right and Left alternatives grows larger, either because $R_{j}$ increases or $L_{j}$ decreases.
 This parameter captures the "slope" on the distance between the Actor ideal point and the cutpoint, meaning that the Actor's choice is more elastic to their policy preferences as $\iota_{j}$ increases.^[
   Again we can demonstrate this by noticing that the derivative of the link function with respect to the discrimination parameter is $\dfrac{\partial \iota_{j}\left(\theta_{i} - \kappa_{j}\right)}{\partial \iota_{j}} = \left(\theta_{i} - \kappa_{j}\right)$. 
   The derivative's magnitude depends on the absolute value of this distance, and its sign depends on the sign of the difference.
 ]
-Substantively, this means that progressives and conservatives vote more differently from one another when the policy alternatives present a starker ideological contrast.^[
-  In a special case that Right and Left alternatives are located in exactly the same location, the result is $\kappa_{j} = \iota_{j} = 0$, leading all Actors to choose Right with probability $0.5$. 
-  This result represents a situation where policy preferences are not systematically related to the choice whatsoever, and only idiosyncratic error affects the choice of Right or Left. 
-  Although the model implies that this result is *mathematically* possible, it is not realistic to expect any of the policy choices in this project to induce this behavior.
-]
+Substantively, this means that progressives and conservatives vote more differently from one another when the policy alternatives present a starker ideological contrast.
 
 
 
 ## Modeling Party-Group Ideology in Congressional Districts
 
 Having laid out the basics of the individual ideal point model and item response theory, this section outlines the group-level ideal point model for district-party publics.
-It connects the individual- and group-level response models and lays out a hierarchical model for smoothing district-party ideal points.
-I discuss several technical features of model implementation in the Stan software for Bayesian estimation [@carpenter-at-al:2016:stan], including the structure of the data, model parameterization, identifiability restrictions, and prior distributions for Bayesian estimation.
+It connects the individual- and group-level response models and lays out a hierarchical prior for smoothing district-party ideal points.
+The group-level model is similar to the approach laid out by @caughey-warshaw:2015:DGIRT, but differs in important ways that I describe as I go.
+I also discuss several technical features for estimating the model, including the structure of the data, model parameterization, identifiability restrictions, and prior distributions for Bayesian estimation.
 
 Unlike the ideal point model discussed so far, this project is concerned with the average ideal point for a _group_ of individuals. 
 These groups are district-party publics: groups of major-party identifiers nested within congressional districts (435 districts $\times$ 2 parties per district = `r 435 * 2` district-party groups).
 The group model assumes that individual ideal points are distributed around some group average.
 Let $g$ index groups, which are intersections of congressional districts $d$ and major political party affiliations $p$.
 As before, a probit model describes the probability that an individual $i$ gives a conservative response to survey item $j$.
-\begin{align}
-  y_{ij} &\sim \mathrm{Bernoulli}(\pi_{ij}) \\
-  \pi_{ij} &= \Phi\left(\iota_{j}\left( \theta_{i} - \kappa_{j} \right)\right)
-  (\#eq:y-i-probit)
-\end{align}
 Following @caughey-warshaw:2015:DGIRT, it is helpful to reparameterize the IRT model to accommodate a group-level extension.
-This parameterization replaces item "discrimination" with item "dispersion" using the parameter $\sigma_{j} = \iota^{-1}_{j}$,
+This parameterization replaces item "discrimination" with item "dispersion" using the parameter $\sigma_{j} = \iota^{-1}_{j}$, which controls the additional "measurement error" introduced by a survey question beyond the standard Normal utility error in the probit model.
 \begin{align}
-  \pi_{ij} 
-  &= 
-  \Phi\left(\frac{\theta_{i} - \kappa_{j}}{\sigma_{j}}\right).
-  (\#eq:y-i-irt)
+\begin{split}
+  y_{ij} &\sim \mathrm{Bernoulli}(\pi_{ij}) \\
+  \pi_{ij} &= \Phi\left(\frac{\theta_{i} - \kappa_{j}}{\sigma_{j}}\right).
+\end{split}
+(\#eq:y-i-probit)
 \end{align}
-which controls the additional "measurement error" introduced by a survey question beyond the standard Normal utility error in the probit model [@caughey-warshaw:2015:DGIRT].
-
 The group model assumes that individual ideal points are Normally distributed within a group.
-In other words, individual ideal point deviations from the mean ideal point in the group are the result of a sum of random forces.
+In other words, individual ideal points deviate from the mean ideal point in the group as a result of a sum of random forces.
 \begin{align}
   \theta_{i} &\sim 
     \mathrm{Normal}\left( \bar{\theta}_{g[i]}, \sigma_{g[i]} \right)
   (\#eq:theta-i-draw)
 \end{align}
 where $\bar{\theta}_{g[i]}$ and $\sigma_{g[i]}$ are the mean and standard deviation of ideal points within $i$'s group $g$.^[
-  Notation for Normal distributions will always describe the scale parameter in terms of standard deviation $\sigma$ instead of variance $\sigma^2$.
+  Notation for Normal distributions will always describe the scale in terms of standard deviation $\sigma$ instead of variance $\sigma^2$.
 ] 
 
 While it is possible to continue building the model hierarchically from \@ref(eq:theta-i-draw), it would be far too computationally expensive to estimate every individual's ideal point in additional to the group-level parameters---every individual ideal point is essentially a nuisance parameter. 
-Instead, we aggregate individual-level responses to the group level and marginalize over the distribution of individual ideal points.
+Instead, we aggregate individual-level responses to the group level and estimate the group ideal point by marginalizing over the individuals within the group.
 Let $s_{gj} = \sum\limits_{i \in g}^{n_{gj}} y_{ij}$ be the number of conservative responses from group $g$ to item $j$, where $n_{gj}$ is the total number of responses (trials) to item $j$ by members of group $g$. 
-If trials are conducted independently across groups and items (an assumption that is relaxed later), we could model the grouped outcome as a binomial random variable,
+If trials are conducted independently across groups and items (an assumption that is relaxed later), we can model the grouped outcome as a binomial random variable,
 \begin{align}
 \begin{split}
 s_{gj} &\sim \mathrm{Binomial}\left(n_{gj}, \bar{\pi}_{gj}\right) \\ 
@@ -517,11 +488,9 @@ s_{gj} &\sim \mathrm{Binomial}\left(n_{gj}, \bar{\pi}_{gj}\right) \\
 (\#eq:y-g-irt)
 \end{align}
 where $\bar{\pi}_{gj}$ is the average conservative response probability for item $j$ in group $g$, or the probability that a randomly selected individual from group $g$ gives a conservative response to item $j$.
-Our uncertainty about the item response now contains two sources of variance: the uncertainty introduced by the item itself and the variance of the individual ideal points around the group mean.
+Our uncertainty about the item response now contains two sources of variance: the uncertainty introduced by the item itself, $\sigma_{j}$, and the variance of the individual ideal points around the group mean, $\sigma_{g}$.
 Because individual ideal points are assumed to be Normal within their group, the within-group variance can simply be added to the probit model as another source of measurement error.
-Larger within-group variances attenuate $\bar{\pi}_{ij}$ toward $0.5$.^[
-  @caughey-warshaw:2015:DGIRT derive this result in the appendix to their article.
-]
+Larger within-group variances attenuate $\bar{\pi}_{ij}$ toward $0.5$.
 
 The current setup assumes that every item response is independent, conditional on the group and the item.
 This assumption is violated if the same individuals in a group answer multiple items---one individual who answers `r smart_number(20)` items is less informative about the group average than `r smart_number(20)` individuals who answer one item apiece. 
@@ -530,15 +499,15 @@ While this too could be addressed by explicitly modeling each individual's ideal
 
 ### Hierarchical model for group parameters {#sec:geographic-model}
 
-The group model described so far can be estimated straightforwardly if there are enough responses from enough individuals in enough district-party groups. In practice, however, it would take dozens more surveys than are practically available to achieve this level of precision with survey data alone.
-Instead, I build a hierarchical model for the group parameters that regularizes group ideal point estimates in a principled way.
+The group model described so far can be estimated straightforwardly if there are enough responses from enough individuals in each district-party groups. In practice, it would take dozens more surveys than are practically available to achieve this level of precision with survey data alone.
+Instead, I build a hierarchical model for the group parameters that regularizes the group ideal points in a principled way.
 The hierarchical model estimates how group ideal points are related to features of the districts and states in which they are located, borrowing strength from data-rich groups to stabilize the ideal point estimates for data-sparse groups.
-This section describes the multilevel structure using traditional notation for hierarchical models; later in Section \@ref(sec:noncentering) I describe how I reparameterize the model for computational implementation.
+This section describes the multilevel structure using traditional notation for hierarchical models; Section \@ref(sec:noncentering) describes how I reparameterize the model for computational implementation.
 
 I posit a hierarchical structure where groups $g$ are "cross-classified" within districts $d$ and parties $p$. 
 This means that groups are nested within districts and within parties, but districts and parties have no nesting relationship to one another.
 Districts are further nested within states $s$. 
-I represent this notationally by referring to group $g$'s district as $d[g]$. Similarly, $g$'s party is $p[g]$. 
+I represent this notationally by referring to group $g$'s district as $d[g]$ and $g$'s party is $p[g]$. 
 For higher levels such as $g$'s state, $s[g]$ is shorthand for the more-specific but more-tedious $s[d[g]]$.
 In some settings, I drop the $g$ from the subscript altogether to achieve simpler notation.
 
@@ -552,21 +521,18 @@ This regression takes the form
   \right) 
   (\#eq:theta-g-hlm)
 \end{align}
-where $\mu_{p}$ is a constant specific to party $p$,^[
-  Or "grand mean," since all covariates are eventually be centered at their means.
-]
-and $\mathbf{x}_{d}$ is a vector of congressional district-level covariates with party-specific coefficients $\beta_{p}$.
+where $\mu_{p}$ is a constant specific to party $p$, and $\mathbf{x}_{d}$ is a vector of congressional district-level covariates with party-specific coefficients $\beta_{p}$.
 State effects $\alpha^{\mathtt{state}}_{sp}$ are also specific to each party. 
 
 The benefit of specifying separate parameters for each party is that geographic features may be related to ideology in ways that are not identical across all parties.
-This is an important departure from the structure laid out by @caughey-warshaw:2015:DGIRT, who estimate the same set of geographic effects for all groups in the data.
+This is a profound departure from the structure laid out by @caughey-warshaw:2015:DGIRT, who estimate the same set of geographic effects for all groups in the data.
 This flexibility is especially important if certain contextual factors influence ideology in opposite ways: for instance, racial heterogeneity within a congressional district may make Democrats more progressive and Republicans more conservative.
+My results suggest that many of the contextual factors in the model have different effects in different parties (Section \@ref(sec:ideal-covariates)).
 <!------- TO DO ---------
-- Milk this.
-- come back and pick a substantiated example.
+- Milk this _MORE_???
 ------------------------->
 
-The state effects are regressions on state features as well,
+The state offsets are regressed on state features as well,
 \begin{align}
   \alpha^{\mathtt{state}}_{sp} 
   &\sim 
@@ -574,7 +540,7 @@ The state effects are regressions on state features as well,
 (\#eq:state-effects-draws)
 \end{align}
 where state-level covariates $\mathbf{z}_{s}$ have party-specific coefficients $\gamma_{p}$.
-Each state effect contains a party-specific region effect $\alpha^{\mathtt{region}}_{r[s]p}$ for Census regions indexed $r$, which is a modeled mean-zero effect to capture region-level correlations across the state effects.
+Each state effect contains a party-specific region effect $\alpha^{\mathtt{region}}_{rp}$ for Census regions indexed $r$, which is a modeled mean-zero effect to capture region-level correlations across the state effects.
 \begin{align}
   \alpha^{\mathtt{region}}_{rp} 
   &\sim
@@ -584,18 +550,17 @@ Each state effect contains a party-specific region effect $\alpha^{\mathtt{regio
 
 This model is estimated in a Bayesian framework using Markov chain Monte Carlo (MCMC) to sample the posterior distribution.
 This means that all above parameters have prior distributions or are functions of parameters with prior distributions. 
-I discuss the parameterization of the model and priors below.
+I return to the discussion of priors and model parameterization below.
 
 I use this model to scale the ideal points for groups of major party identifiers in all congressional districts for the 2010s districting cycle.
-Researchers wishing to extend the district-party ideal point model could construct a dynamic model that scales congressional districts across election cycles or across 10-year districting cycles.
-Because congressional districts change boundaries across districting cycles—sometimes falling out of or coming into existence, depending on decennial apportionment of districts to states—the district-party groups may not be considered as the "same group over time." 
-The ideal point space, however, could be identified over time either by specifying dynamic priors on hierarchical regression parameters or by fixing item parameters over time [@caughey-warshaw:2015:DGIRT].
-
+Researchers wishing to extend the district-party ideal point model could construct a dynamic model that scales district-party groups across election cycles or across 10-year districting cycles.
+Because congressional districts change boundaries between districting cycles—sometimes falling out of or coming into existence, depending on decennial apportionment of districts to states—the district-party groups may not be considered as the "same group over time."
+The ideal point space, however, can be identified over time either by specifying dynamic priors on hierarchical regression parameters or by fixing item parameters over time [@caughey-warshaw:2015:DGIRT].
 
 ### Identifying the latent policy space {#sec:identification-restrictions}
 
-Ideal point models, as with all latent space models, are unidentified without restrictions on the latent space.
-The likelihood model as written can rationalize many possible estimates for the unknown parameters, with no prior basis for deciding which estimates are best.
+Ideal point models, as with all latent variable models, are unidentified without restrictions on the latent space.
+Without these restrictions, the likelihood model as written can rationalize an infinite number of parameter estimates with no basis for deciding which estimates are best, even with infinite data.
 These identifiability problems affect the location, scale, and polarity of the latent space.
 
 - Location: the latent scale can be arbitrarily shifted right or left. 
@@ -604,15 +569,15 @@ These identifiability problems affect the location, scale, and polarity of the l
   We could multiply the latent space by some scale factor, and the response probability would be unaffected if we also multiply the discrimination parameter by the inverse scale factor.
 - Polarity: the progressive and conservative poles of the scale could be reversed by flipping the sign of every ideal point and item parameter.
 
-All statistical models have the potential to be non-identified in this way, but fixed covariate data typically provide the restrictions necessary to identify a model.^[
-  We could imagine shifting, stretching, or reversing the sign of a model covariate to reveal the same identifiability issues.
+All statistical models have the potential to be non-identified in this way, but covariate data typically provide the restrictions necessary to identify a model.^[
+  We could imagine shifting, stretching, or reversing the sign of a covariate to reveal the same identifiability issues.
 ]
 Because the response probability is a function of latent-space parameters, however, data alone do not identify a unique solution. 
 As a result, I must provide my own identifiability restrictions to the ideal point space.
 
-The polarity of the space is fixed by coding all survey items such that conservative responses are $1$ and liberal responses are $0$.
+The polarity of the space is fixed by coding all survey items such that conservative responses are $1$ and progressive responses are $0$.
 This implies a restriction that all discrimination parameters are positive, 
-which ensures that moving to the _right_ in the latent ideological space always leads to an increased probability of a _conservative_ item response, all other parameters held equal.
+which ensures that moving an ideal point to the _right_ in the latent ideological space always leads to an increased probability of a _conservative_ item response, all else equal.
 
 The location of the space is set by restricting the sum of the $J$ item cutpoints to be $0$. 
 If $\tilde{\kappa}_{j}$ is a latent cutpoint in an unrestricted space, the cutpoint value in the restricted space $\kappa_{j}$ would be defined as
@@ -621,10 +586,11 @@ If $\tilde{\kappa}_{j}$ is a latent cutpoint in an unrestricted space, the cutpo
   (\#eq:scale-midpoint)
 \end{align}
 which is performed in every iteration of the estimation routine.
-This restriction on the sum of the cutpoint parameters implies that the mean of the cutpoints is zero as well.
+Restricting the sum of the cutpoints to zero implies that the mean of the cutpoints is also zero.
 
-Lastly, I set the scale of the latent space by restricting the product of the $J$ discrimination parameters to be equal to $1$.
-In practice, I implement this restraint on the log scale by restricting the log discrimination parameters to sum to $0$, which achieves an equivalent transformation.
+Lastly, I restrict the scale of the latent space by restricting the product of the $J$ discrimination parameters to be equal to $1$.
+Unlike the @caughey-warshaw:2015:DGIRT approach, I implement this constraint on the log scale by restricting the log discrimination parameters to sum to $0$, which achieves an equivalent transformation.
+Performing this restriction on the log scale facilitates a unique prior specification for the item parameters that I describe in Section \@ref(sec:item-priors).
 If $\tilde{\iota}_{j}$ is a discrimination parameter in an unrestricted space, the restricted $\iota_{j}$ value is defined as follows.
 \begin{align}
   \log\left(\iota_{j}\right) &= \log\left(\tilde{\iota}_{j}\right) - \frac{1}{J} \sum\limits_{j= 1}^{J} \log\left(\tilde{\iota}_{j}\right) \\
@@ -641,7 +607,7 @@ Item discrimination is then reparameterized as dispersion, $\sigma_{j} = \iota_{
 - https://notstatschat.rbind.io/2020/08/04/weights-in-statistics/
 ------------------------->
 
-The group-level model learns about group ideal points by surveying individuals within groups, but the model currently assumes that all $y_{gj}$ are independent conditional on the item.
+The group-level model learns about group ideal points by surveying individuals within groups, but the model currently assumes that all $y_{ij}$ are independent conditional on the item.
 If the same individuals answer multiple items, this assumption is violated.
 Additionally, we cannot assume that responses are independent in the presence of nonrepresentative survey designs that oversample and undersample certain populations.
 This section describes an approach for weighting group-level data that adjusts for both issues, based on @ghitza-gelman:2013:subgroup-mrp and @caughey-warshaw:2015:DGIRT. 
@@ -652,13 +618,13 @@ The recipe contains three adjustments: a "design effect" to account for nonequal
 - Talk to Alex
 ------------------------->
 
-First, the sample size in each group-item "cell" $gj$ must is adjusted for survey design and multiple responses per individual. Let $n_{g[i]j}^{*}$ be the adjusted sample size for $i$'s group-item cell, defined as
+First, the sample size in each group-item "cell" $gj$ is adjusted for survey design and multiple responses per individual. Let $n_{g[i]j}^{*}$ be the adjusted sample size for $i$'s group-item cell, defined as
 \begin{align}
   n^{*}_{g[i]j} &=
   \sum\limits_{i = 1}^{n_{g[i]j}} \frac{1}{r_{i}d_{g[i]}},
   (\#eq:wted-n)
 \end{align}
-where $r_{i}$ is the number of responses given by individual $i$, and $d_{g[i]}$ is a survey design correction for $i$'s group. The effective sample size decreases when respondents answer multiple questions ($r_{i} > 1$) or in the presence of a sample design correction ($d_{g} > 1$). The design correction, originally specified by @ghitza-gelman:2013:subgroup-mrp, penalizes information collected from groups that contain greater variation in their survey design weights. It is defined as
+where $r_{i}$ is the number of responses given by individual $i$, and $d_{g[i]}$ is a survey design correction for $i$'s group. The adjusted sample size is smaller when respondents answer multiple questions ($r_{i} > 1$) or in the presence of a sample design correction ($d_{g} > 1$). The design correction, originally specified by @ghitza-gelman:2013:subgroup-mrp, penalizes information collected from groups that contain greater variation in their survey design weights. It is defined as
 \begin{align}
   d_{g[i]} &= 
     1 + \left(\frac{\mathrm{sd}_{g[i]}\left(w_{i}\right)}{
@@ -666,7 +632,7 @@ where $r_{i}$ is the number of responses given by individual $i$, and $d_{g[i]}$
         \right)^{2},
   (\#eq:design-effect)
 \end{align}
-where $\mathrm{sd}(\cdot)$ and $\mathrm{mean}(\cdot)$ are the within-group standard deviation and mean of respondent weights $w_{i}$. If all weights within a cell are identical, their standard deviation will be $0$, resulting in a design correction equal to $1$ (meaning, no correction). Larger within-cell variation in weights increases the value of $d_{g}$, thus decreasing the effective sample size within a cell. The intuition of this correction is to account for increased variance of weighted statistics compared to unweighted statistics, given a fixed number of observations [@ghitza-gelman:2013:subgroup-mrp, 765].
+where $\mathrm{sd}(\cdot)$ and $\mathrm{mean}(\cdot)$ are the within-group standard deviation and mean of respondent weights $w_{i}$. If all weights within a cell are identical, their standard deviation will be $0$, resulting in a design effect of $1$ (no design correction). Larger within-cell variation in weights increases the value of $d_{g}$, thus decreasing the effective sample size within a cell. The intuition of this correction is to account for increased variance of weighted statistics compared to unweighted statistics, given a fixed number of observations [@ghitza-gelman:2013:subgroup-mrp, 765].
 
 To obtain the weighted number of successes in cell $gj$, I multiply the cell's weighted sample size by its weighted mean. The weighted mean $\bar{y}^{*}_{gj}$ adjusts for the respondent's survey weight $w_{i}$ and number of responses $r_{i}$ and is defined as
 \begin{align}
@@ -688,11 +654,11 @@ The weighted number of successes in each cell, in turn, is
 where I take the minimum to ensure that the number of successes does not exceed the adjusted sample size. 
 
 It is likely that many values of $n^{*}_{gj}$ and $s^{*}_{gj}$ will be non-integers. 
-This is a problem for modeling a Binomial random variable, which is an interger-valued count of successes out of an interger-valued number of trials.
-To rectify this, I follow @caughey-warshaw:2015:DGIRT and round the weighted number of trials up (to ensure no trail counts of zero) and round the weighted number of successes to the nearest integer. 
+This presents a problem for modeling a Binomial random variable with statistical programs, which expect integer-valued numbers of successes and trials.
+To rectify this, I follow @caughey-warshaw:2015:DGIRT and round the weighted number of trials up (to ensure no trial counts of zero) and round the weighted number of successes to the nearest integer. 
 These integer results are then used in the IRT likelihood as follows.^[
-  Another possible tactic would be to use a quasi-likelihood approach [@ghitza-gelman:2013:subgroup-mrp], supplying the weighted number of successes and trials to the Binomial probability mass function directly instead of using a built-in computer function that will fail for non-integers.
-  This is more complex to implement in Bayesian estimation software because it requires the researcher to add log probability expressions directly to the _log density accumulator_ construct in a Stan program [@carpenter-at-al:2016:stan], though other research has demonstrated the routine for a Binomial quasi-likelihood problem [@decrescenzo-mayer:2019:voter-ID, 350].
+  Another possible tactic would be to use a quasi-likelihood approach [@ghitza-gelman:2013:subgroup-mrp], supplying the weighted number of successes and trials to the Binomial probability mass function directly instead of using a built-in computer function that fails for non-integers.
+  This is more complex to implement in Bayesian estimation software because it requires the researcher to add log probability expressions directly to a construct in a Stan program called the "log density accumulator" [@carpenter-at-al:2016:stan], though other research has demonstrated the routine for a Binomial quasi-likelihood problem [@decrescenzo-mayer:2019:voter-ID, 350].
 ]
 \begin{align}
   \lfloor s^{*}_{gj} \rceil &\sim 
@@ -711,24 +677,25 @@ BAYESIAN OVERTURE
 - additional considerations
 ------------------------->
 
-I estimate the model using Stan, a probabilistic programming language for constructing Bayesian analysis implements estimation using compiled `C++` programs [@carpenter-at-al:2016:stan].
+I estimate the model using Stan, a probabilistic programming language for defining Bayesian models that are estimated using `C++` [@carpenter-at-al:2016:stan].
 Stan implements an adaptive variant of Hamiltonian Monte Carlo (HMC) sampling, an algorithm that efficiently proposes Markov transitions by "surfing" a proposal trajectory along the gradient of the posterior distribution instead of walking randomly in parameter space [@neal:2012:mcmc; @betancourt:2017:conceptual-hamiltonian].
-Although these Hamiltonian mechanics are highly effective for fast and reliable Bayesian estimation, the model must be parameterized to ensure that the geometry of the posterior distribution is favorable to the HMC proposal trajectories.
+Although these Hamiltonian mechanics are highly effective for fast and reliable Bayesian estimation, the model must be parameterized to ensure that the geometry of the posterior distribution is favorable to the proposal trajectories.
 This section describes how the parameterization of the model _as programmed in Stan_ departs from the model _as written_ above.
 
 It is important to discuss these implementation details because they are essential to valid MCMC estimation.
 Models that are not parameterized for stable computation are likely to return severely biased estimates, which is especially worrisome for Bayesian models with complex, high-dimensional posterior distributions. 
 Furthermore, recent work in political science that employs similar models [@caughey-warshaw:2015:DGIRT] does not utilize best-practice parameterizations, so this discussion provides an important corrective for other researchers estimating similar models.
-Broadly speaking, there are no reference texts for doing contemporary Bayesian analysis in political science that reflect recent innovations in Hamiltonian Monte Carlo methods.
+At a broader level, there are simply no reference texts for contemporary Bayesian analysis in political science that reflect recent innovations in Hamiltonian Monte Carlo methods.
 This is despite the fact that HMC has been the state of the art MCMC method for most applied Bayesian problems for several years [@patil-et-al:2010:PyMC;@carpenter-at-al:2016:stan; @betancourt:2017:conceptual-hamiltonian; @burkner:2017:brms].^[
   Gibbs sampling methods are still common for problems with categorical parameters and other models with discontinuous posterior distributions.
 ]
 
-The group-level IRT model regularizes parameters estimates using several hierarchical regression models: group ideal points are regularized using a district-level regression, state effects are regularized using a state-level regression, and region effects are pooled toward a hierarchical prior with a mean of zero.
-Hierarchical models like these have posterior distributions whose curvatures are known present difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations].
-To improve the estimation in Stan, the best practice for most situations is to parameterize hierarchical models using a "non-centered" model parameterization rather than a "centered" parameterization.
+The most essential elements of the model to reparameterize are the hierarchical priors.
+The group-level IRT model regularizes parameters estimates using several hierarchical regressions: group ideal points are regularized with a regression on district-level data, state effects are regularized with a regression on state-level data, and region effects are regularized using a mean-zero hierarchical prior.
+Hierarchical models like these have posterior distributions whose curvatures are known to present difficulties for sampling algorithms [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations].
+To improve the estimation in Stan, the best practice for most situations is to parameterize hierarchical models using a "non-centered" parameterization rather than a "centered" parameterization.
 Whereas the centered parameterization considers $\bar{\theta}_{g}$ as a random draw from a hierarchical distribution (Equation \@ref(eq:theta-g-hlm) above),
-the non-centered parameterization defines $\bar{\theta}_{g}$ as a deterministic function of its conditional hypermean and a random variable.
+the non-centered parameterization defines $\bar{\theta}_{g}$ as a function of covariates and a random error term,
 \begin{align}
   \bar{\theta}_{g} &=
     \mu_{p} + \mathbf{x}^{\intercal}_{d}\beta_{p} + 
@@ -738,18 +705,19 @@ the non-centered parameterization defines $\bar{\theta}_{g}$ as a deterministic 
   \tau_{p} &\sim \ldots
   (\#eq:theta-g-noncenter)
 \end{align}
-where $u_{dp}\tau_{p}$ behaves as a group-level error term. 
-The group-level error term is decomposed into a standard Normal variate $u_{dp}$ and a scalar parameter $\tau_{p}$ that controls the scale of the error term.
-The scale parameter $\tau_{p}$ then is given a separate prior.
+where $u_{dp}\tau_{p}$ behaves as a group-level error. 
+The group-level error term is decomposed into a standard Normal variate $u_{dp}$ and a scalar parameter $\tau_{p}$ that controls the variance of the error term.
+The scale parameter $\tau_{p}$ is then given its own prior.
 
-The non-centered model is algebraically equivalent to centered model as it pertains to the likelihood of the data, but the non-centered parameterization "unnests" the mean and the scale from the hierarchical distribution.
+The non-centered model is algebraically equivalent to centered model in the likelihood, but the non-centered parameterization "unnests" the mean and the scale from the hierarchical distribution.
 This parameterization improves MCMC sampling by de-correlating random variables in the posterior distribution, leading to more efficient MCMC exploration. 
 The centered parameterization, meanwhile, contains regions of highly correlated parameter space that trap Markov chains in "funnels" that are difficult to escape [@betancourt:2015:hamiltonian; @papaspiliopoulos-et-al:2007:parameterizations].
 These problematic regions in the posterior lead to "divergent transitions" in the Markov chain: transitions where the posterior curvature is so high that the Hamiltonian algorithm cannot accurately estimate the trajectory of its own proposals.
 Markov chains with many divergent transitions have a high risk of being severely biased because they indicate that the chain is failing to navigate the parameter space effectively. 
 The non-centered parameterization smooths out these problematic regions of posterior density, safeguarding against biased MCMC estimates.
 
-Equation \@ref(eq:theta-g-noncenter) is an incomplete implementation of the non-centered form; to complete the parameterization, I apply it to all hierarchical components in the regression, including the state and region effects,
+Equation \@ref(eq:theta-g-noncenter) is an incomplete implementation of the non-centered form.
+To complete the parameterization, I apply it to all hierarchical components in the regression, including the state and region effects,
 \begin{align}
 \begin{split}
   \bar{\theta}_{g} &=
@@ -759,9 +727,9 @@ Equation \@ref(eq:theta-g-noncenter) is an incomplete implementation of the non-
     + u^{\mathtt{district}}_{dp}\tau^{\mathtt{district}}_{p} 
     + u^{\mathtt{state}}_{sp}\tau^{\mathtt{state}}_{p} 
     + + u^{\mathtt{region}}_{rp}\tau^{\mathtt{region}}_{p} \\
-  u^{\mathtt{district}}, u^{\mathtt{state}}, u^{\mathtt{region}} &\sim 
+  u_{sp}^{\mathtt{district}}, u_{sp}^{\mathtt{state}}, u_{sp}^{\mathtt{region}} &\sim 
     \text{Normal}\left(0, 1\right) \\ 
-  \tau^{\mathtt{district}}, \tau^{\mathtt{state}}, \tau^{\mathtt{region}} &\sim
+  \tau_{p}^{\mathtt{district}}, \tau_{p}^{\mathtt{state}}, \tau_{p}^{\mathtt{region}} &\sim
     \ldots
 \end{split}
 (\#eq:full-noncenter)
@@ -769,7 +737,7 @@ Equation \@ref(eq:theta-g-noncenter) is an incomplete implementation of the non-
 where $u^{\mathtt{district}}$, $u^{\mathtt{state}}$, and $u^{\mathtt{region}}$ are all standard Normal variables, and the scale components $\tau$ for each level have their own prior distributions that I specify below.
 
 
-### Prior Distribution {#sec:priors}
+### Prior Distributions {#sec:priors}
 
 <!------- TO DO ---------
 - Does intro to Bayesian stuff more rightly go in Ch 1/Intro?
@@ -778,33 +746,30 @@ where $u^{\mathtt{district}}$, $u^{\mathtt{state}}$, and $u^{\mathtt{region}}$ a
 Bayesian models require a prior probability distribution over the model parameters, which can be a benefit and a drawback of the approach. 
 The primary benefit is the ability to encode external information into a model, allowing the researcher to downweight unreasonable estimates, regularize against overfitting, stabilize weakly identified quantities, and pool estimates across many groups of data [@gelman-hill:2006:multilevel]. 
 Bayesian estimation is especially valuable for ideal point models because MCMC generates posterior samples of latent variables as if they were any other model parameter. 
-The drawback of Bayesian modeling is that prior specification is additional work for the researcher, which can be complicated.
-The following discussion describes and justifies priors used in the group ideal point model. 
+The drawback of Bayesian modeling is that prior specification is additional, challenging work for the researcher.
+This section describes and justifies the priors I use in the group ideal point model. 
 The discussion here is more detailed than a typical paper describing a Bayesian ideal point model for a few reasons. 
-First, the norms of the typical Bayesian workflow are evolving toward more rigorous checking of prior distributions and their implications [@betancourt:2018:workflow-blog; @gabry-et-al:2019:visualization], allowing researchers to explore and demonstrate the consequences of priors.
+First, the norms surrounding Bayesian analysis are evolving toward more rigorous checking of prior distributions and their implications using prior simulations and other graphical model checks [@betancourt:2018:workflow-blog; @gabry-et-al:2019:visualization].
 Bayesian models in political science tend to lack explicit prior simulations, which can make prior specifications feel opaque or arbitrary to non-Bayesian readers.
-Additionally, and more specifically to this project, the nonlinearities in a probit model present particular challenges for specifying priors.
-In a few instances, I choose priors that depart from the priors used in previous Bayesian ideal point work for theoretical and practical reasons that I detail below.
+In a few instances, I specify priors that depart from the priors used in previous Bayesian ideal point work for theoretical and practical reasons that I detail below.
 
-As a general orientation, this model favors "weakly informative priors" [@gelman-et-al:2017:prior-likelihood]: priors that use structural information about a model to rule out extreme model configurations.
-Weakly informative priors are stronger than flat priors, which can have problematic implications especially for nonlinear models like the probit model.^[
+As a general orientation, this model employs "weakly informative priors" [@gelman-et-al:2017:prior-likelihood]: priors that use structural information about a model to rule out extreme model configurations.
+Weakly informative priors are stronger than flat priors, which can have problematic implications especially for probit and other nonlinear models.^[
   For more on flat priors, see Chapter \@ref(ch:causality).
 ]
-At the same time, weakly informative priors are weaker than fully informative priors that represent substantive beliefs about model parameters [for a political science example, see @western-jackman:1994:comparative-bayes].
-Priors are pragmatic devices that scale parameters to match the order of the variation in the data.
+At the same time, weakly informative priors are weaker than fully informative priors that represent substantive beliefs about model parameters.
+Weakly informative priors are mainly pragmatic devices that scale parameters to match the order of the variation in the data.
 For instance, most predictors are scaled to have a standard deviation of $1$, so effects on the order of one standard deviation would actually be quite large.
 
 
-<!-- PARAGRAPH! -->
-
 ### The model is prior information
 
- One important source of pragmatic prior information is the model itself.
-Probit models translate latent scale quantities into probabilities using the standard Normal cumulative distribution function (CDF)—the latent scale represents $z$-scores (Normal quantile values) for predicted success probabilities.
-This relationship between the probability scale and the Normal quantile scale means that the researcher can reliably anticipate that their model will generate latent-scale estimates that map to reasonable probability values.
-For most social science problems, reasonable probability values map to a very narrow region of the Normal quantile values.
-This is a principle that holds for many nonlinear models with latent scales: latent scales are often described as "uninterpretable," but the researcher usually only needs a few heuristic rules to derive sensible priors.
-
+One important source of pragmatic prior information is the probit model itself.
+Probit models translate latent scale quantities into probabilities using the standard Normal cumulative distribution function.
+The latent scale represents $z$-scores, or Normal quantile values, for predicted success probabilities.
+This relationship between the quantile and probability scales means that researchers can anticipate the neighborhood of quantile-scale values based on approximate prior information on the probability scale.
+For most social science problems, reasonable probability values (between $0.01$ and $0.99$) map to a narrow region of the Normal quantile values.
+This is principle generalizes to other nonlinear models with latent scales; even though latent scales are often described as "uninterpretable," the researcher usually needs only a few heuristic rules to derive sensible priors for latent-scale parameters.
 
 ```{r probit-explore}
 prior_probit <- 
@@ -815,7 +780,7 @@ prior_probit <-
   print()
 ```
 
-```{r plot-valid-probit, include = TRUE, fig.width = 7, fig.height = 5, out.width = "80%", fig.cap = "The region of the probit model's latent index that maps to response probabilities between 1 and 99 percent."}
+```{r plot-valid-probit}
 ggplot(prior_probit) +
   aes(x = x, y = Probability) +
   labs(
@@ -923,9 +888,12 @@ ggplot(treier) +
 
 ```
 
-For a probit model, one helpful heuristic is knowing that 95% of the probability scale falls between approximately `r round(qnorm(.025), 1)` and `r round(qnorm(1 - .025), 1)`.
-This means that if as long as a model is not expected to give predicted probabilities that are extremely high or extremely low, priors that keep model predictions in the neighborhood of `r round(qnorm(.025), 1)` and `r round(qnorm(1 - .025), 1)` provide weak information to constrain the space of possible model configurations.
+For a probit model, one helpful heuristic is the recognition that 95% of the probability scale falls between approximately `r round(qnorm(.025), 1)` and `r round(qnorm(1 - .025), 1)`.
+This means that as long as a model is not expected to give predicted probabilities that are extremely high or extremely low, priors that keep model predictions in the neighborhood of `r round(qnorm(.025), 1)` and `r round(qnorm(1 - .025), 1)` provide weak information to constrain the space of possible model configurations.
 Figure \@ref(fig:plot-valid-probit) provides a graphical depiction of this point, with different highlighted regions to indicate how probabilities map to the latent quantile scale.
+
+```{r plot-valid-probit, include = TRUE, fig.width = 7, fig.height = 5, out.width = "80%", fig.cap = "The region of the probit model's latent index that maps to response probabilities between 1 and 99 percent."}
+```
 
 <!------- TO DO ---------
 - one more thing: you can give any quantity—a parameter, a function of parameters—a flat prior over the probability scale if that quantity has a standard normal prior
@@ -936,22 +904,22 @@ Figure \@ref(fig:plot-valid-probit) provides a graphical depiction of this point
 
 A more general takeaway from the relationship between the probit model and the standard Normal distribution is that prior ignorance on the probability scale is reasonably approximated by priors scales of order $1$ on the quantile scale.
 For instance, if a model quantile value has a $\text{Normal}\left(0, 1\right)$ distribution, this implies a flat distribution over the probability scale.
-Priors of this sort are a simple example of weak information: enough regularization to downweight extreme model configurations that upweight very high or very low probabilities, but weak enough that the data adjudicate between model configurations in relevant regions of the probability scale.
-For this reason, the priors for regression parameters are concentrated around these scale values.
-Constants are given $\text{Normal}\left(0, 1\right)$ priors.
-The hierarchical scale parameters in the group, state, and region random effects ($\tau$) are given $\text{Half-Normal}\left(0, 1\right)$ priors, and regression coefficients are regularized slightly more with $\text{Normal}\left(0, 0.5\right)$ priors.
-Because the covariate data for the regressions are all scaled to be standard deviation $1$, a prior scale of $0.5$ means that approximately 98% of prior mass is concentrated on effect sizes of less than $1$ on the quantile scale.^[
+Priors of this sort are a simple example of weak information: enough regularization to downweight extreme model configurations, but weak enough that the data adjudicate between model configurations in the more plausible regions of parameter space.
+I give constants $\text{Normal}\left(0, 1\right)$ priors.
+The hierarchical scale parameters in the group, state, and region random effects (denoted $\tau_{sp}$) are given $\text{Half-Normal}\left(0, 1\right)$ priors, and regression coefficients are regularized slightly more with $\text{Normal}\left(0, 0.5\right)$ priors.
+Because the covariate data for the regressions are all scaled to be standard deviation $1$, a prior scale of $0.5$ means that approximately 95% of prior mass is concentrated on effect sizes of less than $1$ on the quantile scale.^[
   Normal priors for coefficients are similar to a ridge penalty [@bishop:2006:pattern-rec], a commonplace regularization choice in predictive modeling.
 ]
 
 Allowing the likelihood model to inform prior scales is common among Bayesian statisticians but rarer among political scientists.
-The widespread understanding that flatter priors always represent more principled prior ignorance is not generally true, but instead depends on the parameter space—an important point that I explore further in Chapter \@ref(ch:causality).
-This is especially relevant for modeling problems like this, where nonlinear parameter spaces that concentrate most plausible model configurations on certain orders of magnitude.
+The widespread understanding that flatter priors always represent more principled prior ignorance is not generally true.
+Instead, the correspondence between prior "flatness" and prior "informativeness" is contingent on the scale of the parameter space—an important point that I explore further in Chapter \@ref(ch:causality).
+This is especially relevant for models that include nonlinear transformations that stretch and compress different neighborhoods of parameter space.
 Early ideal point models for the mass public [e.g. @treier-hillygus:2009:ideology] tend to use highly diffuse priors, such as $\text{Normal}\left(0, \sqrt{1000}\right)$, which place the majority of prior probability on model configurations that are virtually impossible to be true.
 More recent Bayesian ideal point models [e.g. @tausanovitch-warshaw:2013:constituent-prefs; @caughey-warshaw:2015:DGIRT] use more reasonable prior scales such as $5$ or $2.5$, which are still broad but at least on an order of magnitude that fits the probit model.
 
 
-### Priors for item parameters
+### Priors for item parameters {#sec:item-priors}
 
 I specify priors on the unscaled cutpoint and discrimination parameters that are Normal and LogNormal, respectively. 
 Whereas @caughey-warshaw:2015:DGIRT specify independent priors for all item cutpoint and discrimination parameters separately, my hierarchical model partially pools the item parameters toward a common multivariate distribution. 
@@ -970,7 +938,7 @@ This joint priors is a multivariate Normal distribution for the cutpoint and log
   \mathrm{Normal}\left(\boldsymbol{\mu}, \boldsymbol{\Sigma}\right)
 \end{align}
 where $\boldsymbol{\mu}$ is a $2$-vector of means and $\boldsymbol{\Sigma}$ is a $2 \times 2$ variance–covariance matrix. 
-The discrimination parameter, which has a product of $1$ when scaled, is logged so that it has a mean of $0$ on the log scale. 
+The discrimination parameter, which has a product of $1$ when scaled, is logged so that it has a sum of $0$ on the log scale. 
 This simplifies the prior specification of the mean vector $\boldsymbol{\mu}$, which is a standard multivariate Normal with no off-diagonal elements.^[
   Although I use a joint prior, the assumptions about the parameters' marginal distributions are similar to @caughey-warshaw:2015:DGIRT. 
   Their choice to restrict discrimination parameter to have a product of $1$ and a LogNormal distribution is identical to my choice to restrict log discrimination parameters to have a sum of $0$ and a Normal prior.
@@ -1135,16 +1103,15 @@ wrap_plots(
 I build a prior for the variance–covariance matrix $\boldsymbol{\Sigma}$ using a "separation strategy" for covariance matrix priors [@barnard-mcculloch-meng:2000:covariance-separation].
 The separation strategy decomposes the covariance matrix into a diagonal matrix of scale terms and a unit-diagonal correlation matrix,
 \begin{align}
+\begin{split}
   \boldsymbol{\Sigma} &= 
   \begin{bmatrix}
     \sigma^{2}_{\tilde{\kappa}} & 
       \rho \sigma_{\tilde{\kappa}} \sigma_{\tilde{\iota}} \\
     \rho \sigma_{\tilde{\kappa}} \sigma_{\tilde{\iota}} & 
       \sigma^{2}_{\tilde{\iota}}
-  \end{bmatrix}
-  \\
-  &= 
-    \begin{bmatrix} 
+  \end{bmatrix} 
+  = \begin{bmatrix}
       \sigma_{\tilde{\kappa}} & 0 \\
       0 & \sigma_{\tilde{\iota}}
     \end{bmatrix}
@@ -1158,22 +1125,24 @@ The separation strategy decomposes the covariance matrix into a diagonal matrix 
       1 & \rho \\
       \rho & 1
     \end{bmatrix}
+\end{split}
+(\#eq:lkj-prior)
 \end{align}
 where $\rho$ captures the correlation between item cutpoints and log discrimination parameters.
 I then specify priors for the scale terms, $\sigma_{\tilde{\kappa}}$ and $\sigma_{\tilde{\iota}}$, and the correlation matrix $\boldsymbol{S}$ separately.
 The scale terms $\sigma_{\tilde{\kappa}}$ and $\sigma_{\tilde{\iota}}$ are given weakly informative $\text{Half-Normal}\left(0, 1\right)$ priors, which provide weak regularization toward zero. 
-The correlation matrix $\boldsymbol{S}$ gets a prior from the LKJ distribution, which is a generalization of the Beta distribution defined over the space of symmetric, positive-definite, unit-diagonal matrices, such as a correlation matrix [@LKJ:2009:correlation-matrices].
-This is an increasingly approach to covariance matrix priors that provides more flexibility that inverse-Wishart distributions.^[
+The correlation matrix $\boldsymbol{S}$ gets a prior from the LKJ distribution, which is a generalization of the Beta distribution defined over the space of symmetric, positive-definite, unit-diagonal matrices [@LKJ:2009:correlation-matrices].
+The LKJ prior is an increasingly popular approach to covariance matrix priors that provides more flexibility that inverse-Wishart distributions.^[
   Inverse-Wishart priors are often chosen for covariance matrices because they ensure conjugacy of the multivariate Normal distribution.
-  Unlike with Gibbs sampling, conjugate priors provide no computational benefit for models estimated with HMC.
-  Furthermore, the separation strategy weakens the dependence between prior scales and prior covariances, which is an advantage over inverse-Wishart priors [@alvarez-niemi-simpson:2014:covariance-prior; @akinc-vandebroek:2018:covariance-prior].
+  Conjugacy provides no computational benefit for Hamiltonian Monte Carlo samplers, which frees the researcher to consider more flexible priors that sever the dependence between prior scales and prior correlations [@alvarez-niemi-simpson:2014:covariance-prior; @akinc-vandebroek:2018:covariance-prior].
 ]
 \begin{align}
   \sigma_{\tilde{\kappa}}, \sigma_{\tilde{\iota}} &\sim \text{Half-Normal}\left(0, 1\right) \\
-  \boldsymbol{S} &\sim \mathrm{LKJcorr}(\eta = 2)
+  \boldsymbol{S} &\sim \mathrm{LKJ}(\eta = 2)
 \end{align}
-The LKJ distribution has one shape parameter $\eta$ that controls the prior distribution of $\rho$ with a similar intuition as a Beta distribution:
-setting $\eta = 1$ produces a flat prior over correlation matrices, and creater values of $\eta > 1$ concentrate the prior for $\rho$ toward a mode of $0$. 
+The LKJ distribution has one shape parameter $\eta$ that controls the regularization of the off-diagonal correlations.
+The value of $\eta$ has a similar intuition to a Beta distribution:
+$\eta = 1$ produces a flat prior over correlation matrices, and greater values of $\eta > 1$ concentrate the prior for $\rho$ toward a mode of $0$. 
 In the limit, the prior for $\boldsymbol{S}$ is an identity matrix.
 The chosen value of $\eta = 2$ provides weak regularization against extreme correlations near $\pm 1$.
 
@@ -1186,7 +1155,7 @@ Each point represents a simulated item as a combination of unrestricted cutpoint
 Brighter points indicate greater density among the random draws.
 As explained above, these parameters are restricted to sum to zero in each MCMC iteration to identify the ideological space.
 
-```{r plot-lkj, include = TRUE, fig.height = 9, fig.width = 7, out.width = "80%", fig.cap = "Components of the joint hierarchical prior for the unscaled item parameters. Left panel shows prior values for unscaled item parameters from the joint prior. Remaining panels show priors for decomposed covariance matrix components: including the standard deviation that form the matrix diagonal (middle) and the off-diagonal correlation from the LKJ prior (right)."}
+```{r plot-lkj, include = TRUE, fig.height = 9, fig.width = 7, out.width = "70%", fig.scap = "Joint prior for item parameters.", fig.cap = "Joint hierarchical prior for the unscaled item parameters. Top panels show the components of the covariance prior using the separation strategy: scales (left) and LKJ correlation prior (right). Bottom panel shows simulated draws for unscaled item parameters."}
 ```
 
 

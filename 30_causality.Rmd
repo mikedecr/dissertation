@@ -825,7 +825,7 @@ This example is important because it highlights how a researcher's default tende
 A flat prior on the treatment effect creates non-equivalent priors for the group means, but equivalent (flat) priors on the group means create a non-flat prior on the treatment effect.
 When a researcher confronts a modeling scenario, it is not enough to simply assume that a flat prior will return an optimal "data-driven" result, because the actual informativeness of a flat prior depends on the parameterization of the model and the functions being calculated with the model parameters.
 
-```{r plot-diff-means-example, include = TRUE, fig.height = 5, fig.width = 8, out.width = "100%", fig.cap = "Model parameterization affects prior distributions for quantities of interest that are functions of multiple parameters or transformed parameters. The left panel shows that the difference between two means does not have a flat prior if the two means are given flat priors. Note that the $x$-axes are not fixed across panels."}
+```{r plot-diff-means-example, include = TRUE, fig.height = 5, fig.width = 8, out.width = "100%", fig.scap = "Prior distribution for a difference in means.", fig.cap = "Prior distributions a difference in means. If group means have a flat prior (left), the difference in means has a triangular prior with mode at zero (right). Note that $x$-axes are not fixed across panels."}
 ```
 
 
@@ -1103,7 +1103,7 @@ tibble(
     labels = scales::number_format(scale = 100, suffix = " pts")) +
   labs(
     title = "RDD Predictions from OLS Model",
-    # subtitle = "Local treatment effect at threshold",
+    subtitle = "Predicted probability and confidence intervals",
     y = "General election win probability",
     x = "Extremist vote margin in primary election"
   )
@@ -1224,7 +1224,7 @@ At the discontinuity, we estimate that extremism decreases a candidate's win pro
 Visualizing the RD predictions reveal that the confidence set for model predictions at the threshold contain many values that cannot possibly occur.
 For moderate candidates, the confidence interval for the win probability at the discontinuity includes values as high as `r confint(ols_lmfit)["(Intercept)", "97.5 %"] %>% round(2)`, which far exceeds the maximum possible value of $1.0$.
 
-```{r plot-rd, include = TRUE, fig.width = 7, fig.height = 6, fig.cap = "OLS estimates of the predicted probability that a candidate wins the general election. Local average treatment effect is estimated at the threshold. Treatment effect is defined by parameter estimates whose confidence sets contain values with no possibility of being true."}
+```{r plot-rd, include = TRUE, fig.width = 7, fig.height = 6, fig.scap = "Candidate extremism on general election win probability: OLS regression discontinuity.", fig.cap = "Candidate extremism on general election win probability: OLS regression discontinuity. LATE estimated at the threshold. Confidence set includes impossible parameters."}
 ```
 
 This pathology is possible in any LPM with finite data, but there are a few pragmatic reasons why we might not worry about it.
@@ -1251,7 +1251,7 @@ A small number of MCMC samples for the extremist intercepts take impossible valu
 As a result, just `r effect_draws %$% mean(invalid == FALSE) %>% scales::percent(accuracy = 1)` of MCMC samples for the treatment effect is composed of parameters that are mathematically possible.
 Even invoking the practical benefits of the LPM, such a high level of corruption in the most important quantity of this analysis is cause to rethink the approach.
 
-```{r plot-flat-effect, include = TRUE, fig.width = 7, fig.height = 5, fig.cap = 'Histogram of posterior samples for the treatment effect. Using flat priors for each win probability intercept, a substantial share of the treatment distribution consists of parameters that cannot possibly occur.'}
+```{r plot-flat-effect, include = TRUE, fig.width = 7, fig.height = 5, fig.scap = "LATE posterior distribution with flat priors.", fig.cap = 'Histogram of posterior samples for the treatment effect with flat priors. A substantial share of the posterior distribution consists of parameters that cannot possibly occur.'}
 ```
 
 The Bayesian approach incorporates structural prior information about the intercepts estimated at the discontinuity.
@@ -1574,7 +1574,7 @@ This shrinkage comes from the fact that some of the largest treatment effects in
 The standard deviation of the posterior samples is reduced for the models with structural prior constraints, so these prior interventions are also improving the precision of our estimates.
 This is because a fair amount of posterior uncertainty in the unconstrained model was owed to impossible parameter values as well.
 
-```{r plot-rdd-results, include = TRUE, fig.width = 9, fig.height = 5, out.width = "100%", fig.cap = "Comparison of posterior samples from Bayesian models with improper flat priors and weakly informative priors. Weakly informative models have flat priors over valid win probabilities at the discontinuity. Priors reduce effect magnitudes and variances by ruling out impossible win probabilities."}
+```{r plot-rdd-results, include = TRUE, fig.width = 9, fig.height = 5, out.width = "100%", fig.scap = "Comparison of LATE posterior distributions with flat and weakly informative priors.", fig.cap = "Comparison of posterior samples from Bayesian RDD models with improper flat priors and weakly informative priors. Weakly informative models have flat priors over valid win probabilities at the discontinuity. Priors reduce effect magnitudes and variances by ruling out impossible win probabilities."}
 ```
 
 It bears emphasizing that the prior interventions in this case study were no more controversial than declaring what is already known: probabilities lie between $0$ and $1$.

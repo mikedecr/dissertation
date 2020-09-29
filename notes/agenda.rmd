@@ -4,10 +4,22 @@ title: Overall thesis notes
 
 # Near-Term Agenda
 
+- Document
+    - [ ] Title page
+    - [ ] Abstract
+    - Appendix 
+        - [ ] section numbering (and in-text references)
+        - [ ] table/fig numbering
+    - Colophon
+        - should it be just "notes from author?"
+        - data: provided as a link?
+    - All ref check
 - ch 1
     - preview findings
     - fix ML stuff
 - ch 2: 
+    - fake data IRF figure
+    - fake data thetas; how is the standardization being done...?
     - is income logged?
     - item long table
     - revisions:

@@ -953,7 +953,7 @@ We subtract the demediation function from the original outcome to obtain the dem
 \end{align}
 
 
-```{r plot-g-dag, include = TRUE, fig.width = 9, fig.height = 10, out.width = "100%", fig.cap = "Causal graphs describing the modeling problem and sequential $g$ estimation. The stage 1 graph identifies the effect of the past district voting ($V_{d}$) on candidate positioning ($\\text{CF}_{i}$). The stage 2 treatment-outcome model subtracts the district vote effect from candidate positions and identifies the effect of district-party ideology $\\bar{\\theta}_{g}$ on the demediated CF score $b(\\text{CF})_{i}$, which is equivalent to the controlled direct effect on the raw CF score. The final graph shows where unadjusted confounders violate the nonparametric causal identification assumptions in stage 1 ($U1$) and in stage 2 ($U2$)."}
+```{r plot-g-dag, include = TRUE, fig.width = 9, fig.height = 10, out.width = "100%", fig.scap = "Sequential $g$-estimation using causal diagrams.", fig.cap = "Causal graphs describing the modeling problem and sequential $g$ estimation. The stage 1 graph identifies the effect of the past district voting ($V_{d}$) on candidate positioning ($\\text{CF}_{i}$). The stage 2 treatment-outcome model subtracts the district vote effect from candidate positions and identifies the effect of district-party ideology $\\bar{\\theta}_{g}$ on the demediated CF score $b(\\text{CF})_{i}$, which is equivalent to the controlled direct effect on the raw CF score. The final graph shows where unadjusted confounders violate the nonparametric causal identification assumptions in stage 1 ($U1$) and in stage 2 ($U2$)."}
 ```
 
 Finally, the researcher estimates the effect of the treatment on the demediated outcome, which is equivalent to the controlled direct effect on the original outcome.
@@ -1336,7 +1336,8 @@ vb_kable <- bind_cols(
 ```{r n-kable, include = TRUE}
 kable(
   vb_kable,
-  caption = "Sample sizes in all estimated models.",
+  short.caption = "Sample sizes in all sequential $g$ models.",
+  caption = "Sample sizes in all sequential $g$ models.",
   booktabs = TRUE
 )
 ```

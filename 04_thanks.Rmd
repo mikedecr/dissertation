@@ -1,11 +1,13 @@
 # Acknowledgments {-}
 
-This project is better thanks to the advice and suggestions of my committee, Scott Straus and the students in the 2017 prospectus workshop, other Burden advisees (Levi Bankston, Jordan Hsu, Matt Shor, and Rochelle Snyder), David Canon, Devin Judge-Lord, Evan Morier, Blake Reynolds, and Marcy Shieh. 
-Researchers at other institutions provided suggestions and moral support about the ideas in this project as well: Devin Caughey, David Doherty, Andrew Heiss, Seth Hill, Shiro Kuriwaku, TJ Mahr, Steve Miller, Jacob Montgomery, Arman Oganisian, John Poe, Rachel Porter, Jonathan Robinson, Sarah Treul, and Chris Warshaw.
-Extra special thanks to researchers whose freely-provided data made the project possible: Robert Boatright, Adam Bonica, Ella Foster-Molina, Seth Masket, Nolan McCarty, Eric McGhee, Vincent Moscardelli, Steven Rogers, Boris Shor, Clifford Vickrey, and the teams who make the ANES and CCES surveys possible.
-I received financial support from the Elections Research Center at the University of Wisconsin–Madison, and technical support from UW's Social Science Computing Cooperative, Garrick Aden-Buie, and Matthew Kay.
-Thanks also to Deb McFarlane for her help stewarding other students and myself through the bureaucracy of dissertating.
+This project is better thanks to the advice and suggestions of my committee: Barry Burden, Ken Mayer, Ellie Powell, Alex Tahk, and Michael Wagner. 
+Other professors and colleagues at UW–Madison provided feedback at important stages of the project, including Scott Straus, students in the 2017 prospectus workshop, and seminar participants at the American Politics Workshop: Levi Bankston, David Canon, Jordan Hsu, Devin Judge-Lord, Evan Morier, Blake Reynolds, Marcy Shieh, Matt Shor, and Rochelle Snyder. 
+Other researchers outside UW–Madison who offered suggestions and moral support for the ideas in this project include Devin Caughey, David Doherty, Andrew Heiss, Shiro Kuriwaku, TJ Mahr, Steven V. Miller, Arman Oganisian, John Poe, Rachel Porter, Jonathan Robinson, Sarah Treul, and Chris Warshaw.
+Extra special thanks to researchers whose freely-provided data made the project possible: Robert Boatright, Adam Bonica, Ella Foster-Molina, Seth Masket, Nolan McCarty, Eric McGhee, Vincent Moscardelli, Steven Rogers, Boris Shor, Clifford Vickrey, and the teams behind the ANES and CCES surveys.
+
+I received financial support from the Elections Research Center at the University of Wisconsin–Madison and software support from UW's Social Science Computing Cooperative and Matthew Kay (creator of `tidybayes`).
+Thanks also to Deb McFarlane for her help steering other students and me through the bureaucracy of dissertating.
 
 Thanks also to my parents, who kept so many pieces of my life together during this process.
-Thanks to Ricky O'Connor, who connected me to my first job after graduate school that gave me the push to finish the project and move on to the next thing.
-Thanks finally to some close friends who made my time in Madison better: Shaan Amin, Josh Cruz, Micah Dillard, José Luis Enríquez Chiñas, Caileigh Glenn, Ryan Hinchey, Jordan Hsu (again), Devin Judge-Lord (again), Amy Kawleski, Richard Loeza, Anna Meier, Evan Morier (again), Erin Nelson, Anna Oltman, Madeline Vogt, and Erin Zwick.
+Thanks to Ricky O'Connor, who connected me to my first job after graduate school that gave me the push to finish the project.
+Thanks finally to my close friends—I have (unfairly) not included everybody—who made my time in Madison better: Shaan Amin, Josh Cruz, Micah Dillard, José Luis Enríquez Chiñas, Caileigh Glenn, Ryan Hinchey, Jordan Hsu (again), Devin Judge-Lord (again), Amy Kawleski, Richard Loeza, Anna Meier, Evan Morier (again), Erin Nelson, Anna Oltman, Madeline Vogt, and Erin Zwick.

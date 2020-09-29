@@ -106,13 +106,16 @@ I draw posterior samples using `r smart_number(n_chains)` Markov chains that wer
   To generate more chains, however, I use an external computing cluster affiliated with the Social Science Computing Cooperative at the University of Wisconsin–Madison. 
 ]
 I initialize the algorithm with an `adapt_delta` parameter of `r adapt_delta` and a maximum proposal tree-depth of `r max_treedepth`.
-Following the advice of @link-eaton:2011:thinning-mcmc, I stored every post-warmup sample with no thinning of chains, resulting in a total of `r comma(total_samples)` samples per parameter across all chains.^[
+Following the advice of @link-eaton:2011:thinning-mcmc, I store every post-warmup sample with no thinning of chains, resulting in a total of `r comma(total_samples)` samples per parameter across all chains.^[
   The chains mix well and exhibit little autocorrelation, which is a credit to the model parameterization and the fact that the No-U-Turn algorithm is efficient at proposing transitions that explore the parameter space.
 ]
 Just `r sum(rstan::get_divergent_iterations(mcmc))` out of `r comma(total_samples)` iterations (`r mean(rstan::get_divergent_iterations(mcmc)) %>% percent(accuracy = .01)`) encountered a divergent transition, which indicates no systematic issues with model parameterization,
-and `r rstan::get_num_max_treedepth(mcmc)` iterations exceeded the maximum tree-depth.
-`r stopifnot(rstan::get_low_bfmi_chains(mcmc) %>% length() == 0)`
+and `r rstan::get_num_max_treedepth(mcmc)` iterations exceeded the maximum proposal tree-depth. 
 The energy metrics that monitor the model's Hamiltonian mechanics also detect no problematic model behavior.
+
+```{r}
+stopifnot(rstan::get_low_bfmi_chains(mcmc) %>% length() == 0)
+``` 
 
 
 ```{r neat-thetas}
@@ -184,13 +187,14 @@ The vertical axis ranks the ideal points in ascending order, so the lowest value
 ```
 
 Unlike ideal point estimates for individual citizens, which may feature a great deal of overlap between the distribution of Republican and Democratic partisans, district-party ideal point estimates have no overlap whatsoever.
-This is because district-party ideal points are estimates of the _mean_ ideology for Republican and Democratic groups, so they mask the ideological idiosyncrasies of individual citizens.
+This is because district-party ideal points are estimates of the _mean_ ideology for Republican and Democratic groups, so they average the ideological heterogeneity among individuals in each party.
 
 It is also important to note that the ideological space appears "asymmetrical"—the clusters of Republican and Democratic ideal points are not equidistant from zero.
-Instead, the Republican cluster is located much closer to an ideal point value of zero, with some Republican groups estimates to have negative ideal points.
+Instead, the Republican cluster is located much closer to an ideal point value of zero, with some Republican groups estimates having negative ideal points.
 The appearance of asymmetry results from the way I restrict the item parameters to identify the latent ideal point space.
-In particular, the item midpoint parameters are restricted to sum to be mean zero, which means that the typical item presents policy alternatives that are equidistant from zero.
-The fact that Republican ideal points are clustered closer to zero suggests that Republicans are more likely to offer progressive item responses than Democrats are to offer conservative item responses, consistent with earlier research suggesting a general tendency of US citizens to hold progressive views on policy even if their symbolic worldview is more conservative [@ellis-stimson:2012:symbolic-ideology].
+The item midpoint parameters are restricted to sum to be mean zero, which means that the average item presents policy alternatives that are equidistant from zero.
+The fact that Republican ideal points are clustered closer to zero suggests that Republicans are more likely to offer progressive item responses than Democrats are to offer conservative item responses, conditional on the items included for scaling.
+Supposing that these items are representative of policy conflict in the 2010s, this finding is consistent with earlier research showing that US citizens tend to hold progressive views on policy even if their symbolic worldview is more conservative [@ellis-stimson:2012:symbolic-ideology].
 
 
 ```{r cces-data}
@@ -297,10 +301,10 @@ ggplot(joined_ideal) +
 ```
 
 We can feel confident that these ideal point estimates capture real ideological variation by comparing them to other survey-based measures of ideology.
-Figure \@ref(fig:plot-vs-cces) compares the IRT model's district-party ideology estimates (posterior means) to a measure of ideological self-placement.
+Figure \@ref(fig:plot-vs-cces) compares the IRT model's district-party ideology estimates (posterior means) to a survey-based measure of ideological self-placement.
 Self-placement data are drawn from the Cooperative Congressional Election Study (CCES) for years 2012 through 2018, coding the 5-category item numerically and averaging partisan responses within each district-party. 
 The figure shows a high degree of correlation between the IRT scores and the self-placement scores. 
-The overall correlation between the ideal points is `r joined_ideal %$% cor(estimate, ideo_mean) %>% round(2)`, and the within-party correlations are `r joined_ideal %>% filter(party == 1) %>%  sample_n(1) %>% pull(r) %>% round(2)` among Democrats and `r joined_ideal %>% filter(party == 2) %>%  sample_n(1) %>% pull(r) %>% round(2)` among Republicans.
+The overall correlation between the ideal points and self-placement scores is `r joined_ideal %$% cor(estimate, ideo_mean) %>% round(2)`, and the within-party correlations are `r joined_ideal %>% filter(party == 1) %>%  sample_n(1) %>% pull(r) %>% round(2)` among Democrats and `r joined_ideal %>% filter(party == 2) %>%  sample_n(1) %>% pull(r) %>% round(2)` among Republicans.
 These within-party correlations are as strong as the within-party correlations between CF scores and DW-NOMINATE scores for incumbent House members [@bonica:2013:ideology-interests;@bonica:2014:mapping-ideology].
 
 
@@ -364,8 +368,7 @@ plot_hist_means
 plot_hist_means
 ```
 
-Recent scholarship on party coalitions has highlighted the ideological cohesion of the Republican Party compared to the Democratic Party.
-Scholars have proposed that Republicans are more ideologically cohesive than Democrats, owing to the fact that the Democratic Party is a big-tent assemblage of social groups with policy priorities that may conflict [@grossman-hopkins:2016:asymmetric-politics; @feldman-zaller:1992:political-ambivalence; @lelkes-sniderman:2016:ideological-asymmetry]. 
+Recent scholarship on party coalitions has highlighted the ideological cohesion of the Republican Party compared to the Democratic Party, owing to the fact that the Democratic Party is a big-tent assemblage of social groups with policy priorities that may conflict [@grossman-hopkins:2016:asymmetric-politics; @feldman-zaller:1992:political-ambivalence; @lelkes-sniderman:2016:ideological-asymmetry]. 
 Party differences in ideological cohesion may appear across districts as well, especially if the demographic composition of Democratic constituents is more heterogeneous from one district to the next than the demographic composition of Republican constituents.
 Figure \@ref(fig:plot-hist-means) provides some aggregate evidence that Republican constituencies are more ideologically similar to one another than Democratic constituencies are.
 The histograms in the figure show that the distribution of Democratic district-party ideal points is approximately symmetric around their mean, while Republican district-party groups are more tightly distributed around a modal ideology that is on the conservative edge of the ideal point scores.
@@ -482,7 +485,7 @@ plot_sds
 ```
 
 Figure \@ref(fig:plot-sds) verifies this intuition by comparing the standard deviation of district-party ideal points in each party.
-The first panel shows standard deviation estimates for Democratic and Republican groups.
+The first panel shows the standard deviation of ideal points Democratic and Republican groups.
 The histogram represents the distribution of estimates across all MCMC sample iterations.
 Democratic groups tend to be more variable across districts, with a distribution of standard deviation estimates centered on a mean of `r sd_draws %>% filter(party ==1) %$% mean(sd_value) %>% round(2)`.
 Republican groups are less variable across districts, with a distribution of standard deviations centered on a mean of `r sd_draws %>% filter(party ==2) %$% mean(sd_value) %>% round(2)`.
@@ -574,16 +577,16 @@ Figure \@ref(fig:plot-cors) explores this possibility.
 The left panel plots the Republican group ideal point in a district (vertical axis) against the Democratic group ideal point in the same district, with points representing posterior means. 
 The posterior means do not exhibit much correlation to one another.
 The right panel plots a histogram of correlation estimates (Pearson's $r$) from all MCMC draws. 
-The distribution of correlations suggests that there is a slight correlation between Republican and Democratic ideal points ($r > 0$ in `r cor_draws %$% mean(r > 0) %>% percent(acc = 1)` of MCMC draws), the correlation is quite small, with a posterior mean of `r cor_draws %$% mean(r) %>% round(2)` and a standard deviation of `r cor_draws %$% sd(r) %>% round(2)`.
+The distribution of correlations suggests that although there is a slight correlation between Republican and Democratic ideal points ($r > 0$ in `r cor_draws %$% mean(r > 0) %>% percent(acc = 1)` of MCMC draws), the correlation is quite small, with a posterior mean of `r cor_draws %$% mean(r) %>% round(2)` and a standard deviation of `r cor_draws %$% sd(r) %>% round(2)`.
 The predominant takeaway is that most of the variation in Republican ideal points is unrelated to Democrat ideal points.
 Although this project does not explore the correlates or possible causes of local ideological convergence or divergence with much detail, this project enables this research agenda by measuring local partisan ideology.
 
-```{r plot-cors, include = TRUE, fig.height = 6, fig.width = 11, out.width = '100%', fig.scap = "Correlation between Republican and Democratic ideal points in the same district.", fig.cap = "Correlation between Republican and Democratic ideal points in the same district. Left: scatterplot of Republican versus  Democratic ideal points. Left: posterior distribution of the correlation (Pearson's $r$) between Democratic and Republican ideal points."}
+```{r plot-cors, include = TRUE, fig.height = 6, fig.width = 11, out.width = '100%', fig.scap = "Correlation between Republican and Democratic ideal points in the same district.", fig.cap = "Correlation between Republican and Democratic ideal points in the same district. Left: scatterplot of Republican versus  Democratic ideal points (posterior means). Left: posterior distribution of the correlation (Pearson's $r$) between Democratic and Republican ideal points."}
 ```
 
 
 
-### Aggregate correlates of district-party ideology
+### Aggregate correlates of district-party ideology {#sec:ideal-covariates}
 
 
 ```{r}
@@ -776,7 +779,7 @@ Figure \@ref(fig:plot-party-covs) visualizes the relationship between ideal poin
 The left side of the figure displays coefficient estimates from the IRT model for district- and state-level covariates included in the hierarchical regression.
 These coefficients capture the linear relationship between the covariates and ideal points, holding other covariates fixed.
 The right side of the figure plots the _bivariate_ relationship between ideal points (posterior means) and a selection of district-level covariates, with no additional statistical adjustments.
-The bivariate relationships convey information about the "types" of districts that contain more conservative or progressive partisans, and the coefficients convey whether these relationships may be statistical artifacts of other confounding relationships.
+The bivariate relationships convey information about the "types" of districts that contain more conservative or progressive partisans, even if these relationships may be statistical artifacts of other confounding relationships.
 
 ```{r plot-party-covs, include = TRUE, out.width = "100%", fig.height = 7, fig.width = 12, fig.scap = "How ideal points relate to hierarchical covariates.", fig.cap = "How ideal points relate to hierarchical covariates. Left: coefficients from hierarchical regression on district covariates (top left) and state covariates (bottom left), with 90 percent compatibility intervals. Right: Bivariate relationships between ideal points and a selection of district-level covariates with no statistical controls."}
 ```
@@ -789,13 +792,13 @@ Higher unemployment rates are related to decreased conservatism among Republican
 Districts with greater numbers of foreign born residents contain more progressive Republicans, which could be related to the cosmopolitanism of the district culture, and districts with greater income inequality (measured by the Gini coefficient) contain more conservative Republicans. 
 The uncertainty of the coefficients at the state level indicate weaker relationships to state-level covariates, but it is worth noting that Republicans and Democrats in wealthier _states_ are more progressive than in less wealthy states, which is a pattern that differs from the district-level relationship of increasing conservatism greater wealth and is similar to the findings of @gelman-et-al:2007:red-state-qjps regarding state-level wealth.
 Counter-intuitively, I also find that larger evangelical populations appear to be related to greater progressivism among both Republicans and Democrats, and larger White populations are weakly related to greater progressivism among Democrats.
-Because these aggregate demographic features are likely to be causally related, it is important not to give these coefficients a causal interpretation.
-Furthermore, the correlations themselves may not be most straightforward if collider bias is introduced by conditioning on mediating variables.
+Because these aggregate demographic features are likely to be confounded, it is important not to give these coefficients a causal interpretation.
+Furthermore, the correlations themselves may not be most straightforward if the regression specification introduces collider bias among the aggregate predictors.
 
 The bivariate relationships between ideal points and district covariates convey what types of districts are more progressive or conservative, setting aside statistical adjustments.
 These relationships sometimes contrast with the model coefficients in interesting ways.
 For instance, although the coefficient for median income is positive in both parties, the scatterplot shows that higher-income districts contain more progressive Democrats.
-This suggests that other factors dominate the effect of income when determining the progressivism of Democrats.
+This suggests that other factors dominate the effect of income when determining the progressivism of Democratic groups in wealthy districts.
 This factor could be college education, which is strongly related to progressivism among Democrats.
 The scatterplot also captures relationships that appear in the coefficients: the strongest relationships to Republican ideology are the White share of the population (positively related to conservatism) and the foreign-born share of the population (negatively related to conservatism).
 Among Democrats, greater unemployment is related to conservatism, and ideology is weakly related to racial composition, income inequality, and the foreign-born share of the population.
@@ -808,12 +811,12 @@ The results from this ideal point model are promising and informative, but there
 The model's predictive ability could be improved by creating more flexible hierarchical regressions.
 Because the hierarchical regression is included to smooth the ideal point estimates and not for causal interpretation, the linear specifications have no particular benefit over more flexible modeling approaches.
 The use of nonlinear models and "machine learning" approaches is new to hierarchical measurement modeling in political science.
-Examples include the use of regression tree methods for multilevel regression and poststratification [@bisbee:2019:barp] and Gaussian process priors for IRT methods [@duckmayr-et-al:2020:gpirt].
-Work outside of political science has also explored the use of spline regression for IRT models [@woods-thissen:2006:spline-irt], which may not be as flexible as Gaussian processes but are computationally less intensive.
+Examples include the use of regression trees multilevel regression and poststratification [@bisbee:2019:barp] and Gaussian process priors for IRT models [@duckmayr-et-al:2020:gpirt].
+Work outside of political science has also explored the use of spline regression for IRT models [@woods-thissen:2006:spline-irt], which are not as flexible as Gaussian processes but are computationally less intensive.
 
 The substance of the model could also be extended in several ways aside from its predictive capacity.
 As mentioned above, @caughey-warshaw:2015:DGIRT lay out a dynamic linear model approach to bridge the ideal point space across multiple time periods.
-The parameterization of the model exposes a parameter for the variance of individual ideal points within a district, which could itself be modeled as a function of covariates [@lauderdale:2010:heteroskedastic-irt].
+The parameterization of the model also exposes a parameter for the variance of individual ideal points within a district, which could itself be modeled as a function of covariates [@lauderdale:2010:heteroskedastic-irt].
 Lastly, because survey items vary in their response design, researchers have explored the use of ordinal response models to scale survey items that ask respondents to choose from more than two policy alternatives [e.g. @hill-tasanovitch:2015:polarization-disconnect].
 
 
