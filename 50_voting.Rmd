@@ -523,6 +523,7 @@ bind_rows(noinc_raw, fits_data) %>%
   ) %>%
   arrange(Subset) %>%
   knitr::kable(
+    caption.short = "Number of primary races and primary candidates",
     caption = "Number of primary races and primary candidates",
     booktabs = TRUE
   )
@@ -698,7 +699,7 @@ For the remaining coefficients $\gamma$, I specify a weakly informative prior,
 \end{align}
 which rules out explosive coefficient values while still allowing candidate attributes like incumbency to exhibit large correlations with candidate utility.
 For causal inference, it is important not to regularize confounding effects too much to avoid re-introducing bias into treatment effect estimates [@hahn-et-al:2018:regularization-confounding; @hahn-et-al:2020:bayesian-causal-forests].^[
-  For high dimensional problems where regularization cannot be avoided, recent work recommends separate treatment and response models [@hahn-et-al:2018:regularization-confounding; @hahn-et-al:2020:bayesian-causal-forest] with a split-sample approach [@ratkovic:2019:rehabilitating-regression].
+  For high dimensional problems where regularization cannot be avoided, recent work recommends separate treatment and response models [@hahn-et-al:2018:regularization-confounding; @hahn-et-al:2020:bayesian-causal-forests] with a split-sample approach [@ratkovic:2019:rehabilitating-regression].
 ]
 
 

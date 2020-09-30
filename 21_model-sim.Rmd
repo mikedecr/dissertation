@@ -216,7 +216,7 @@ icc_draws %>%
     labeller = as_labeller(function(x) str_glue("Item {x}")),
     ncol = 5
   ) +
-  scale_x_continuous(limits = c(-4, 4)) +
+  scale_x_continuous(limits = c(-3, 3)) +
   scale_y_continuous(breaks = seq(0, 1, .5)) +
   labs(
     x = "Ideal Point", 

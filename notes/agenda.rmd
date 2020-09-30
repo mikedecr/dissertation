@@ -41,6 +41,8 @@ title: Overall thesis notes
     - Discuss why doesn't theta matter more?
         - might be different in presidential primary, but so does Cox equilibrium
         - maybe we just don't capture the real idiosyncratic things that affect primaries (identity, style)
+    - Strategic voting?
+        - the SPD is a theory about sincere voting, so this project isn't ready to confront that just yet
     - what about the way presidential voting affects candidate positioning?
         - conditioning on the district
     - revisions:

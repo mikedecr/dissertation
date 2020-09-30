@@ -1336,7 +1336,7 @@ vb_kable <- bind_cols(
 ```{r n-kable, include = TRUE}
 kable(
   vb_kable,
-  short.caption = "Sample sizes in all sequential $g$ models.",
+  caption.short = "Sample sizes in all sequential $g$ models.",
   caption = "Sample sizes in all sequential $g$ models.",
   booktabs = TRUE
 )
