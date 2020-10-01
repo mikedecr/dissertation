@@ -47,20 +47,20 @@ theme_dag <- theme_dag(base_family = font_fam)
 
 
 Do primary elections effectively transmit citizens' policy preferences into government? 
-For this to be true, we should expect that the policy ideology with a partisan constituency to affect the ideological positioning of candidates who run for that party's nomination. 
+For this to be true, we should expect that the policy ideology within a partisan constituency affects the ideological positioning of candidates who run for that party's nomination. 
 This chapter explores the effect of district-party public ideology on the positioning of primary candidates running in that district.
 
 It is important to distinguish the influence of the district-party public from the influence of the district overall.
-Does a candidate like Senator Susan Collins have a reputation as a moderate Republican because of a close balance between the number of Republican and Democratic voters in Maine? 
-Or is the Republican constituency in Maine relatively moderate compared to Republican constituencies in states that elect more conservative Republicans? Although past research has been interested in the threat of primary challenges as a cause of ideological divergence between partisan legislators [for example @boatright:2013:getting-primaried; @hill:2015:nominating-institution; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems], many of these studies lacked the capability to observe the preferences within local partisan groups as a concept distinct from aggregate partisanship or aggregate voting in the entire district.
+Does a candidate for Congress stake out a moderate stance because of a close balance between the number of Republicans and Democrats in their district, or because the voters in their own party are relatively moderate compared to partisans in other districts?
+Although past research has been interested in the threat of primary challenges as a cause of ideological divergence between partisan legislators [for example @boatright:2013:getting-primaried; @hill:2015:nominating-institution; @hirano-et-al:2010:primary-polarization; @mcghee-et-al:2014:nomination-systems], many of these studies lacked the capability to observe the preferences within local partisan groups as a concept distinct from aggregate partisanship or aggregate voting in the entire district.
 This chapter uses my new measures of district-party ideology to investigate this question in ways that previous research projects could not.
 
 The effect of district-party ideology on candidate positioning is a challenging causal inference problem.
-We cannot directly compare the "explanatory power" of district-party ideology and district-level voting by measuring whether one is more strongly correlated with candidate ideal points than the other, nor can we simply control for aggregate voting to recover the "partial effect" of district-party ideology.
-This is because aggregate policy ideology and aggregate voting are causally related: if a district contains a voter base with more conservative policy preferences, these policy preferences should influence aggregate voting behavior in the district as well as the positioning of candidates who try to respond to those policy preferences.
+We cannot directly compare the "explanatory power" of district-party ideology to the explanatory power of district-level partisanship by observing that one is more strongly correlated with candidate ideal points than the other, nor can we simply control for aggregate voting to recover the "partial effect" of district-party ideology.
+This is because policy ideology and aggregate voting should themselves be causally related: if a district contains a voter base with more conservative policy preferences, those voters probably also vote more heavily Republican, and candidates position themselves to anticipate those preferences.
 Simply controlling for district voting in a regression will likely introduce collider bias by conditioning on a post-treatment variable [@greenland-et-al:1999:dags-epidemiology; @montgomery-et-al:2018:colliders].
 
-This chapter advances this literature's use of moder causal inference methods by estimating the effect of district-party ideology on primary candidate positions using sequential $g$-estimation, a structural modeling approach that measures the direct effect of district-party ideology while fixing the mediating effect of district-level voting.
+This chapter advances this literature's use of modern causal inference methods by estimating the effect of district-party ideology on primary candidate positions using sequential $g$-estimation, a structural modeling approach that measures the direct effect of district-party ideology while fixing the mediating effect of district-level voting.
 Substantively, I translate the primary candidate's strategic positioning dilemma into the language of causal graphs, highlighting how aggregate districting voting mediates a relationship between district-party ideology and candidate positioning.
 Methodologically, I take the sequential $g$ method as it appears in political science [@acharya-blackwell-sen:2016:direct-effects] and embed it in a Bayesian framework.
 The Bayesian framework estimates all components of the structural model simultaneously, quantifying uncertainty in all model parameters in a single posterior distribution.
@@ -83,7 +83,7 @@ This project explores the implications of what @brady-han-pope:2007:out-of-step 
 Existing research contains plenty of studies that support the general theoretical intuition of the SPD theory, although I review some conflicts and ambiguities in detail in Chapter \@ref(ch:arg).
 To briefly review, general election candidates are rewarded at the ballot box for taking more moderate campaign stances [@canes-wrone-et-al:2002:out-of-step; @hall:2015:extremists] and aligning themselves with local public opinion on specific issues [@fenno:1978:home-style; @canes-wrone-et-al:2011:issue-accountability; though see @fowler-hall:2016:convergence].
 Nevertheless, no candidate makes it to the general election without first winning a primary nomination, where many scholars theorize that candidates benefit by taking more ideological positions that represent conventional views within the party.
-This could be a within-party Downsian incentive: the median primary voter is a ideological partisan with off-median policy preferences, so candidates take more extreme positions to appeal to partisan constituency preferences
+This could be a within-party Downsian incentive: the median primary voter is an ideological partisan with off-median policy preferences, so candidates take more extreme positions to appeal to the median partisan
 [@aldrich:1983:downsian-parties; @burden:2001:polarizing-primaries].
 This is consistent with evidence from safe congressional districts, where candidates experience less general election threat and can more freely position their campaigns to target the primary electorate [@ansolabehere-et-al:2001:candidate-positioning; @burden:2004:candidate-positioning].
 Pressures for primary candidates to take non-median stances may come through mechanisms unrelated to bottom-up voter pressures, instead reflecting candidates' need to organize committed staff and volunteers for their campaigns [@mcclosky-et-al:1960:conventions; @layman-et-al:2010:activists-conflict-extension; @aldrich:2011:why-parties], seek campaign funds from policy-seeking contributors [@laraja-schaffner:2015:campaign-finance-polarization; @barber:2016:contributions-polarization; @barber-et-al:2016:ideological-donors], or garner support from policy-demanding groups that control access to connections and resources to support candidates [@cohen-et-al:2009:party-decides; @koger-et-al:2009-partisan-webs; @masket:2009:no-middle-ground].
@@ -95,9 +95,11 @@ Without data that more closely resembles the theoretical story in question, stud
 @brady-han-pope:2007:out-of-step show that among incumbent members of Congress, more liberal Democrats and more conservative Republicans attract fewer primary challenges and perform better in primary elections, but neither of these findings say anything specific lessons about how candidates are positioned relative to primary constituencies.
 @hirano-et-al:2010:primary-polarization get closer to this project's contribution by creating a statewide measure of primary electorate ideology from exit poll questions on ideological self-placement.
 They find that incumbent NOMINATE scores are more strongly related to general electorate ideological self-placement than primary electorate self-placement, a similar pattern as shown in Chapter \@ref(ch:arg), Figure \@ref(fig:plot-compare-measures). 
-They further find no evidence that incumbent members of Congress do not have more extreme NOMINATE scores under greater threats of primary competition or higher primary turnout.
+They further find no evidence that incumbent members of Congress have more extreme NOMINATE scores under greater threats of primary competition or higher primary turnout.
 This finding conflicts partially with @clinton:2006:constituent-representation, who uses a large opinion survey of partisan voters in every congressional district to show that Republican members of Congress have NOMINATE scores that are more strongly related to the median Republican in their district, while Democrats' NOMINATE scores are more strongly related to the overall district median constituent.
-The IRT measures of district-party ideology that I create in Chapter \@ref(ch:model) is a more direct measure of policy preferences than ideological self-placement scores or additive issue scores, which respectively tap a large amount of "symbolic" or identity-focused conceptions of political ideology or do not accord for differential measurement error across policy issues [@ellis-stimson:2012:symbolic-ideology; @treier-hillygus:2009:ideology].
+The IRT measures of district-party ideology that I create in Chapter \@ref(ch:model) are superior measures of policy preferences to ideological self-placement scores and additive issue scores, which respectively tap "symbolic" ideology or suppress all item-level opinion variation [@ellis-stimson:2012:symbolic-ideology; @treier-hillygus:2009:ideology].^[
+  @erikson-et-al:1993:statehouse-democracy also use surveys to summarize partisan opinion within states without modeling item effects.
+]
 My IRT ideal point scores, to my knowledge, are the first ideology scores for district-party groups to be applied to the study of congressional primaries.^[
   For IRT estimates of partisan constituencies and "ideological nationalization" at the U.S. state level, see @caughey-et-al:2018:ideological-nationalization.
 ]
@@ -109,11 +111,11 @@ Few notable studies have yet used these contribution-based scores to study prima
 
 Even with better measures of district-party ideology and candidate positions, there are some reasons to suspect that district-party ideology does not have a straightforward effect on candidate extremism. 
 @thomsen:2014:moderate-candidates finds that politicians are less likely to run for Congress (versus a state office) if their moderate stances make them a weaker "fit" for their party, measured as a greater distance between a candidate's CF score and the average CF score in their state-party.
-This process could weaken the relationship between district-party ideology and candidate positioning because moderate candidates select themselves out of the campaign, even if they might appeal to district partisan voters.
+This process could weaken the relationship between district-party ideology and candidate positioning because moderate candidates select themselves out of the campaign altogether.
 @porter-treul:2020:primary-experience find that the number of primary candidates who lack prior elected experience is increasing over time.
 Interestingly, they find no pattern between candidate experience and candidate extremism.
-This non-relationship may indicate that the positioning of inexperienced candidates may be less related to district-party ideology, either because the candidates are not adept at perceiving local ideology, they do not have the resources to conduct or acquire surveys of their constituencies, or emphasize non-ideological appeals in their campaigns. 
-Incumbents, in turn, may be more responsive to local ideology as a result of their political skills and survivorship bias—ill-fitting candidates don't become incumbents in the first place—although incumbents systematically misperceive public opinion as well [@broockman-skovron:2018:bias].
+This non-relationship may indicate that the positioning of inexperienced candidates may be less related to district-party ideology, either because the candidates are not adept at perceiving local ideology, they do not have the resources to conduct or acquire surveys of their constituencies, or they make non-ideological appeals in their campaigns. 
+Incumbents, in turn, may be more responsive to local ideology as a result of their political skills and survivorship bias—ill-fitting candidates do not become incumbents in the first place—although incumbents systematically misperceive public opinion as well [@broockman-skovron:2018:bias].
 
 
 ### Primary rules
@@ -123,16 +125,16 @@ Instead, there is an enduring interest in the way primary rules affect candidate
 Primary "rules" refer to regulations in state election law that control which voters can participate in primary elections and which inclusion criteria parties can define within those legal confines.
 A state primary is "closed" if only registered members of a political party are allowed to vote in the party's primary election.
 On the other side of the spectrum, an "open" primary allows any registered voter to cast a vote in any party's primary.
-There are many more states whose primary rules fall between these two extremes, such as "semi-closed" systems that allow party-unaffiliated voters to choose which party primary they want to vote for, even if registered partisans must vote in the primary of their party registration [@mcghee-et-al:2014:nomination-systems].
-Political scientists and political observers speculate that these rules shape candidates' positioning incentives by changing the composition of primary voters.
+There are many more states whose primary rules fall between these two extremes, such as "semi-closed" systems that allow party-unaffiliated voters to choose the party in whose primary they wish to participate [@mcghee-et-al:2014:nomination-systems].
+Political scientists and political observers speculate that these rules shape candidates' positioning incentives by changing the composition of the primary electorate.
 Closed primary elections, so the argument goes, are limited to registered party identifiers in a district, so candidates running in closed primaries must appeal to a more ideologically homogeneous primary electorate in order to win the nomination.
-More open systems, especially "blanket" systems where candidates from all parties run on the same primary ballot to advance to the general election, encourage primary candidates to take more moderate stances to attract a more ideologically diverse primary coalition.
-The general hypothesis, therefore, is that more restrictive primary rules exacerbate ideological polarization in congress and in state legislatures, and furthermore that polarization might be combated by moving primary elections to more open rules.
+More open systems, especially "blanket" systems where candidates from all parties run on the same primary ballot to advance to the general election, encourage primary candidates to take more moderate stances to attract an ideologically diverse primary coalition.
+The general hypothesis, therefore, is that more restrictive primary rules exacerbate ideological polarization in Congress and in state legislatures, and furthermore that polarization might be combated by moving primary elections to more open rules.
 
 This "primary rules hypothesis" receives essentially zero support across several studies of U.S. elections.
 @hill:2015:nominating-institution studies the relationship between primary rules and the ideological makeup of the primary electorate, asking if primary voters in states with more open primary rules are in fact more moderate on average than primary voters under closed primary rules.
-Estimating an IRT ideal point model on individual CCES respondents in each congressional district and validated voter turnout data, Hill finds that primary voters are more ideologically consistent than general election voters in the same party, but primary voters are no more extreme in closed primary states than in open primary states.
-Even if primary electorates are not affected by state primary rules, candidates may still suspect that primary rules matter and position themselves accordingly.
+Estimating an IRT ideal point model on individual CCES respondents in each congressional district with validated primary turnout data, Hill finds that primary voters are more ideologically consistent than general election voters in the same party, but primary voters are no more extreme in closed primary states than in open primary states.
+Even if primary electorates are not affected by state primary rules, candidates may still believe that primary rules matter and position themselves accordingly.
 @rogowski-langella:2015:primary-systems study the relationship between primary rules and candidate positioning as measured with CF scores.
 They find no systematic evidence that either congressional candidates or state legislative candidates are more extreme in closed primary states or more moderate in open primary states. 
 @mcghee-et-al:2014:nomination-systems also study state legislators but using ideology scores that bridge the NOMINATE ideal point space to state legislative voting [@shor-mccarty:2011:mapping-state-legs], again finding no convincing evidence that primary systems matter for polarization in state legislatures.
@@ -140,16 +142,17 @@ Within-state studies of changes to primary rules over time find mixed and highly
   In a top-two system, candidates from all parties compete in a single primary for two spots on the general election ballot, which are awarded to the top two plurality winners in the primary.
 ]
 @bullock-clinton:2011:CA-blanket-primary find that the shift to the top-two primary promoted the election of more moderate candidates in California in competitive districts, measured using the two-party presidential vote, but no effects in more lopsided districts.
-Looking at the mechanisms underlying this, however, @hill:2015:nominating-institution, who finds no effect on the ideological composition of primary voters after California's reforms, and survey experiments by @ahler-citrin-lenz:2016:CA-open-primaries broadly show that voters are unable to identify which candidates are more ideological and which are more moderate.
+Looking at the mechanisms underlying this, however, @hill:2015:nominating-institution, who finds no effect on the ideological composition of primary voters after California's reforms, and survey experiments by @ahler-citrin-lenz:2016:CA-open-primaries broadly show that voters are unable to identify which candidates are more ideological and which are more moderate in a top-two primary context.
 
-I leverage my new data on district-party ideology to revisit the primary rules hypothesis in Section \@ref(sec:g-modification) below.
-Unlike most studies, I find that more candidates are less responsive to district-party ideology in states with more open primary rules, consistent with the primary rules hypothesis.
+I leverage my new data on district-party ideology to test a variation on the primary rules hypothesis in Section \@ref(sec:g-modification) below.
+Rather than study whether primary rules lead candidates to be more or less extreme, I study whether stricter primary rules increase candidates' responsiveness to district-party ideology by making the district-party "more important" to primary success.
+Unlike the pattern of results from other studies, I find that candidates are more responsive to district-party ideology in states with stricter primary rules.
 
 
 ### Ideology within the two major parties
 
 The SPD claims that candidates should be differentially responsive to primary and general electorates, but other theories on the ideological nature of U.S. parties may be relevant as well.
-An increasingly prominent theoretical perspective in U.S. political research holds that the parties are not asymmetrical but instead exhibit many "asymmetries" that help explain recent political conflict.
+An increasingly prominent theoretical perspective in U.S. political research holds that the parties are not mirror images of one another but instead exhibit many "asymmetries" that explain the contours of recent political conflict.
 In particular, the Republican Party is understood as an "ideological" party committed to a smaller welfare state, less regulation of business, and conservative cultural values, while the Democratic Party is a "group-based" party whose priorities reflect the mixture of social groups that compose the party's core constituency [@grossman-hopkins:2016:asymmetric-politics]. 
 The mixture of group interests within the Democratic Party leads to internal conflicts about which policies to prioritize, while the Republican Party is more concerned with who is a "real Republican" or a "real conservative" [@freeman:1986:party-cultures]. 
 The ideological consensus in Republican political thought provides constituents with many different values-based rationales for supporting conservative policies, while Democrats remain more conflicted about how to rationalize their desires for activist government policies against an individualistic American value system that downplays the significance of group identities [@free-cantril:1967:american-beliefs; @feldman-zaller:1992:political-ambivalence; @lelkes-sniderman:2016:ideological-asymmetry]. 
@@ -246,7 +249,7 @@ Figure \@ref(fig:plot-by-party) shows the topline relationship between primary c
 Each point represents a primary candidate for Congress in either the Democratic or Republican Party primary in years 2012, 2014, and 2016 as they appear in the DIME congressional database.
 This totals `r party_sum %>% filter(party == "Democrats") %>% pull(N) %>% comma()` Democratic candidates and `r party_sum %>% filter(party == "Republicans") %>% pull(N) %>% comma()` Republican candidates over three election cycles.
 In addition to each candidate, I plot least-squares regression lines calculated separately for each party.
-Confidence intervals reflect standard errors that are clustered at the district-party level to capture correlated error among candidates who run in the same primary race.
+Confidence intervals reflect standard errors that are clustered at the district-party level to capture correlated error among candidates who to represent the same constituency. 
 
 ```{r plot-by-party, include = TRUE, fig.width = 6, fig.height = 5, fig.cap = "Topline relationship between district-party ideology and candidate positions. The horizontal axis plots the posterior mean for a group ideology, and the vertical axis is the dynamic CF score for primary candidates included in the DIME congressional candidate database.", fig.scap = "Topline relationship between district-party ideology and candidate positions."}
 ```
@@ -256,7 +259,7 @@ The figure shows a weak but decisively positive relationship between ideal point
 The relationship is stronger for Democrats than for Republicans in slope (`r filter(party_sum, party_num == 1) %>% pull(b_estimate) %>% round(2)` versus `r filter(party_sum, party_num == 2) %>% pull(b_estimate) %>% round(2)`) and in correlation (`r filter(party_sum, party_num == 1) %>% pull(r) %>% round(2)` versus `r filter(party_sum, party_num == 2) %>% pull(r) %>% round(2)`).
 Because one-unit increases are large on the ideal-point scale, it is helpful to standardize these coefficients in terms of standard deviations in the raw data.
 Conveniently for a bivariate regression, the standardized coefficient is equivalent to the correlation coefficient.
-Increasing district-party ideology by one within-party standard deviation is associated with a CF score increase of `r filter(party_sum, party_num == 1) %>% pull(r) %>% round(2)` standard deviations among Democrats (`r dem_p <- filter(party_sum, party_num == 1) %>% pull(b_p.value) %>% round(2); stopifnot(dem_p < .01)` $p < .01$) and `r filter(party_sum, party_num == 2) %>% pull(r) %>% round(2)` standard deviations among Republicans ($p = `r filter(party_sum, party_num == 2) %>% pull(b_p.value) %>% round(2)`$).
+Increasing district-party ideology by one within-party standard deviation is associated with a CF score increase of `r filter(party_sum, party_num == 1) %>% pull(r) %>% round(2)` standard deviations among Democrats (`r dem_p <- filter(party_sum, party_num == 1) %>% pull(b_p.value) %>% round(2); stopifnot(dem_p < .01)`$p < .01$) and `r filter(party_sum, party_num == 2) %>% pull(r) %>% round(2)` standard deviations among Republicans ($p = `r filter(party_sum, party_num == 2) %>% pull(b_p.value) %>% round(2)`$).
 A small number of outlier CF scores exist for each party, but these outliers are few compared to the approximately 2,000 observations in each party.
 The regression lines track the center of each party's ideal point distribution, so these outliers do not appear to be large influences on the topline relationship.
 
@@ -329,13 +332,13 @@ ggplot(full_data) +
 Figure \@ref(fig:plot-by-incumbency) plots the same relationship with candidates divided into incumbents, challengers of incumbents, and candidates running for a district with no incumbent running for reelection.
 It is immediately noticeable that CF scores have lower variance among incumbent candidates than among non-incumbent incumbents, and the correlations between CF scores and ideal point means are markedly higher: `r filter(incum_sum, party_num == 1, incumbency == "Incumbent") %>% pull(r) %>% round(2)` among Democrats and `r filter(incum_sum, party_num == 2, incumbency == "Incumbent") %>% pull(r) %>% round(2)`.
 The overall higher correlation suggests incumbents could be more capable at positioning themselves for their primary electorates or that prior elections are effective at screening out ill-fitting candidates to represent the district.
-The higher correlation among Democrats also disappears among incumbent candidates, suggesting that no party is obviously more responsive to primary constituencies than the other, contrary to @clinton:2006:constituent-representation's finding that Republican incumbents were uniquely sensitive to ideological variation within their partisan bases.
+The higher correlation among Democrats also disappears among incumbent candidates, suggesting that no party is obviously more responsive to primary constituencies than the other, contrary to Clinton's -@clinton:2006:constituent-representation finding that Republican incumbents were uniquely sensitive to ideological variation within their partisan bases.
 CF scores are higher variance among challengers and open-seat candidates, and their relationship to district-party ideology is weaker but still positive. 
 This may be because challengers and open seat candidates must seek other ways to appeal to candidates aside from ideological fit.
-This would be consistent with @boatright:2013:getting-primaried's key finding that primary challenges focused purely on ideological fit to the district are relatively rare.
+This would be consistent with the key finding from @boatright:2013:getting-primaried that primary challenges focused purely on ideological fit to the district are relatively rare.
 A more mechanical explanation could be that CF scores are higher variance for challengers and open seat candidates because they struggle to raise from the same concentrated network of donors as incumbents do, attenuating the relationship between CF scores and district-party ideologies.
 Even still, the data generally suggest that candidates of all statuses have some awareness, on average, of how to position themselves as more conservative or progressive to corner their local partisan constituencies.
-Almost all relationships are statistical significant at a $1$% level except among open seat candidates, whose sample sizes are also smaller.
+Almost all relationships are statistically significant at a $1$% level except among open seat candidates, whose sample sizes are also smaller.
 
 Another notable finding among incumbents is the appearance of a much smaller "intercept shift" between the two parties.
 While other studies typically find a large gap between Republicans and Democrats who represent otherwise equivalent districts [@mccarty-poole-rosenthal:2009:gerrymandering; among others], the predicted CF scores for Democratic and Republican incumbents appear to diverge less dramatically if each regression line were extrapolated to meet at moderate values of district-party ideology.
@@ -412,14 +415,9 @@ ggplot(full_data) +
 ```
 
 Figure \@ref(fig:plot-by-cycle) shows how the relationship between district-party ideology and CF scores varies by election year, splitting the 2012, 2014, and 2016 campaign cycles into three panels.
-There is no definitive trend toward increasing polarization or increasing responsiveness to partisan ideology in more recent years, which which is inconsistent with theoretical speculation that candidates have become more sensitive to primary electorates over the past few elections.
-Instead, the same weak but positive relationship appears in nearly all subsets of data with no overwhelming explanation for differences over time or between parties.
+There is no definitive trend toward increasing polarization or increasing responsiveness to partisan ideology in more recent years, although a longer time series spanning multiple decades might reveal slower-moving trends.
 The flattest relationship actually appears most recently for Republicans in 2016, among whom the relationship is nearly flat.
 We should hesitate to interpret too much from one estimate, but future researchers could investigate whether financial contributions by Republican donors had a different ideological character in 2016, if perhaps Donald Trump's unusual campaign platform altered which donors wanted to support which candidates, or if moderate donors directed their money away from Republican candidates in anticipation of a Democratic national victory.
-
-<!------- TO DO ---------
-- why is this
-------------------------->
 
 ```{r plot-by-cycle, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 4.5, fig.cap = "District-party ideology and candidate positioning across election cycles within the 2010s districting cycle.", fig.scap = "District-party ideology and candidate positioning in 2012, 2014, and 2016."}
 ```
@@ -545,7 +543,7 @@ ggplot(rule_means) +
 ```
 
 Finally, Figures \@ref(fig:plot-rules-means) and \@ref(fig:plot-by-rules) plot the topline relationship between district-party ideology and CF scores for candidates running in states with different levels of primary openness.
-Data on primary systems come from @boatright-et-al:2017:primary-timing-data for 2012 and 2014, and I coded 2016 by consulting the National Conference of State Legislators, Ballotpedia, and OpenPrimaries.org.^[
+Data on primary systems come from @boatright-et-al:2020:primary-timing-data for 2012 and 2014, and I coded 2016 by consulting the National Conference of State Legislators, Ballotpedia, and OpenPrimaries.org.^[
   Accessed May 27, 2020.
 ]
 I code primary rules using a three-category scheme.
@@ -559,6 +557,10 @@ The three-part scheme is also more specific than the two-part open/closed scheme
 ```{r plot-rules-means, include = TRUE, out.width = "100%", fig.width = 8, fig.height = 3.5, fig.cap = "Average CF scores candidate positioning in states with closed, semi-closed, and open primary rules.", fig.scap = "Average CF scores in states with closed-semi-closed, and open primary rules."}
 ```
 
+```{r plot-by-rules, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 4.5, fig.cap = "District-party ideology and candidate positioning in states with closed, semi-closed, and open primary rules.", fig.scap = "District-party ideology and candidate positioning in states with different primary rules."}
+```
+
+
 Conventional wisdom about primary openness implies that closed primaries should produce more extreme candidates, and open primaries should produce more moderate candidates.
 Figure \@ref(fig:plot-by-rules), which plots the average CF score for Republicans and Democrats under each primary system, contradicts this hypothesis.^[
   Estimates are calculated from a linear regression on indicator variables for each primary system type with group-clustered standard errors.
@@ -566,17 +568,15 @@ Figure \@ref(fig:plot-by-rules), which plots the average CF score for Republican
 Democrats are in fact more progressive and Republicans more conservative in states with increasingly open primary participation rules, which is the opposite direction of the commonly hypothesized pattern.
 Figure \@ref(fig:plot-by-rules) goes on to plot the linear relationship between CF scores and district-party ideology in each state to see if candidates in closed primaries are more responsive to district-party ideology. 
 The relationships do not support the primary rules hypoethesis either.
-While Republican candidates are indeed least sensitive to local partisan ideology in states with the model open rules—indeed the point estimate of the relationship is negative—they are _most_ sensitive in semi-closed rather than closed states.
+While Republican candidates are indeed least sensitive to local partisan ideology in states with the most open rules—indeed the point estimate of the relationship is negative—they are more sensitive in _semi_-closed rather than closed states.
 The evidence from Democrats is even less consistent with the primary rules hypothesis.
 Democrats in semi-closed systems are also most responsive to district-party ideology, and they are less sensitive to district-party ideology in closed primary systems than they are in open systems.
 
-```{r plot-by-rules, include = TRUE, out.width = "100%", fig.width = 9, fig.height = 4.5, fig.cap = "District-party ideology and candidate positioning in states with closed, semi-closed, and open primary rules.", fig.scap = "District-party ideology and candidate positioning in states with different primary rules."}
-```
 
 The descriptive results from Figures \@ref(fig:plot-by-party) through \@ref(fig:plot-by-rules) inform a few modeling choices for the causal analysis to follow. 
 Because incumbency status appears to modify the relationship between citizen and candidate ideology, some of the analysis below estimates the effect of district-party ideology using subsets of data on incumbents, challengers, and open seat candidates. 
 By comparison, estimates exhibit no clear time variation, so I choose to pool election cycles into one model, using fixed effects where appropriate to the design, rather than estimating entirely separate models for different cycles.
-And although the descriptive relationships were broadly similar for both parties—contradicting an "asymmetric parties" prediction that Republicans would be less responsive to district party ideology as well as the @clinton:2006:constituent-representation finding that Republicans are _more_ responsive— the variables that could confound the relationship between district-party ideology and candidate ideology are likely to differ dramatically across parties.
+And although the descriptive relationships were broadly similar for both parties—contradicting an "asymmetric parties" prediction that Republicans would be less responsive to district-party ideology as well as the @clinton:2006:constituent-representation finding that Republicans are _more_ responsive— the variables that could confound the relationship between district-party ideology and candidate ideology are likely to differ dramatically across parties.
 In order to increase the credibility of the selection-on-observables regression design, I therefore estimate models for Democrats and Republicans separately.
 
 
@@ -589,7 +589,7 @@ rm(list = c("full_data", "cycle_fit", "cycle_sum", "eda_fits", "incum_fit", "inc
 
 The descriptive picture in Figures \@ref(fig:plot-by-party) through \@ref(fig:plot-by-rules) are suggestive about the relationship between district-party ideology and candidate ideology, but the correlational analysis is insufficient to identify the causal effect of the partisan constituency.
 As with many regression-based analyses using observational data, we are concerned about variables that confound the relationship between district-party ideology and candidate positioning—district characteristics that affect the degree of conservatism among both voters and candidates simultaneously.
-Even more troublesome than confounding is the causal structure linking theoretical components of the strategic positioning dilemma: how the ideological locations of the partisan constituency _and_ the total district constituency affect one another, and how they jointly influence a candidate's positioning calculus.
+Even more troublesome than confounding is the causal structure linking theoretical components of the strategic positioning dilemma: how the ideological locations of the partisan constituency and the district constituency affect one another, and how they jointly influence a candidate's positioning calculus.
 
 ```{r plot-barry}
 tribble(
@@ -614,10 +614,8 @@ tribble(
 ```
 
 The strategic positioning dilemma (SPD) describes the campaign incentives that arise when a candidate chooses their campaign's ideological location for a multi-stage campaign season. 
-Let $\text{CF}_{i}$ represent the campaign position for candidate $i$ in left-right ideological space. 
-The theory states that candidates optimize their chances of winning by taking a position between the ideological location of their partisan constituency, denoted $\bar{\theta}_{g}$ for the district-party group $g$ in which the candidate runs, and the ideological median among the district constituency, denoted $V_{d}$ for the district $d$ where group $g$ resides.^[
-  We distinguish individual candidates $i$ from district-party groups $g$ and districts $d$, because every district contains two major party groups, and every group can contain multiple primary candidates in a given election cycle.
-]
+Let $\text{CF}_{i}$ represent the campaign position for candidate $i$ in left–right ideological space. 
+The theory states that candidates optimize their chances of winning by taking a position between the ideological location of their partisan constituency, denoted $\bar{\theta}_{g}$ for the district-party group $g$ in which the candidate runs, and the ideological median among the district constituency, denoted $V_{d}$ for the district $d$ where group $g$ resides.
 Figure \@ref(fig:plot-barry) plots a hypothetical candidate's location between the partisan and district constituencies.
 Whether the candidate positions themselves closer to the partisan constituency or to the district constituency is a function of the candidate's perceived degree of electoral threat from each constituency.
 In an electorally safe district, the candidate of the advantaged party is reasonably assured to win the general election, so they may take a campaign position closer to the partisan constituency in order to neutralize the threat from other partisan candidates in the primary election.
@@ -739,7 +737,7 @@ A causal structure where the party location affects the district location, but n
 The party location and the district location are aggregations of many individual constituents who each have ideological ideal points. 
 The district constituency contains all of the party constituency as well as any other constituent who has a different party affiliation or no party affiliation.
 This means that if we could causally intervene on the party constituency location by, for example, shifting it to the left, this is entails a leftward shift among the individual partisans in that constituency.
-Because these partisan individuals are also members of the district constituency, this _ceteris paribus_ intervention on the party location also directly affects the district location, justifying the causal path $\bar{\theta}_{g} \rightarrow V_{d}$.
+Because these partisan individuals are also members of the district constituency, intervening on the party location also affects the district location, justifying the causal path $\bar{\theta}_{g} \rightarrow V_{d}$.
 From a spatial theory point of view, the only way to intervene on a party location with no downstream effect on the district location would be to introduce an offsetting shift in the ideal points of constituents outside that party or an offsetting change in the partisan composition of constituents in district overall, neither of which is entailed by a causal intervention on the party location.
 Furthermore, intervening on the location of the _district_ has no necessary effect on the party location.
 This is because the district location is affected by factors other than the partisan constituency, namely the ideal points of constituents outside that partisan constituency or the relative sizes of partisan constituencies within the district.^[
@@ -753,18 +751,17 @@ This is because the district location is affected by factors other than the part
 
 If our primary interest is the treatment effect of district-party ideology on candidate positioning, but the district location also affects candidate positioning, it is a natural impulse to want to condition on some measure of district preferences.
 For instance, the previous two-party presidential vote share is an available signal of district-level preferences that candidates can consult when they position themselves, so researchers may control for presidential voting in a district in order to isolate the effect of district-party ideology on candidate positioning.
-This is similar to the motivation of @clinton:2006:constituent-representation, who compared incumbent responsiveness to district median preferences vs party median preferences by including measures of each variable in a regression.
+This is similar to the motivation of @clinton:2006:constituent-representation, who compared incumbent responsiveness to district median preferences versus party median preferences by regressing NOMINATE scores on both preference measures.
 Because the district location is a post-treatment variable, or a "collider" [@pearl:2009:causality] on the causal path from the party location to candidate location ($\bar{\theta}_{g} \rightarrow V_{d} \rightarrow \text{CF}_{i}$), identifying the effect of district-party ideology separately from the overall district effect is more complicated than controlling for the presidential vote in a regression.
 This is because conditioning on a collider variable can bias causal effects by opening unblocked causal paths from treatment to outcome through unobserved confounders.
-This problem is diagrammed in the left half of Figure \@ref(fig:combo-dag), which shows how conditioning on the presidential vote, a measure of $V_{d}$, opens a new pathway $\bar{\theta}_{g} \rightarrow V_{d} \rightarrow U \rightarrow \text{CF}_{i}$, biasing the estimated causal effect of $\bar{\theta}_{g}$.
-At the same time, doing nothing to adjust for aggregate district preferences may identify the total effect of the district-party constituency under certain assumptions, but it would not detect whether presidential voting absorbs all of the effect of the partisan constituency.
-There would be no way to contrast the unique impact of the partisan constituency from its downstream effect on overall district voting.
+This problem is diagrammed in the right half of Figure \@ref(fig:combo-dag), which shows how conditioning on the presidential vote, a measure of $V_{d}$, opens a new pathway $\bar{\theta}_{g} \rightarrow V_{d} \rightarrow U \rightarrow \text{CF}_{i}$, biasing the estimated causal effect of $\bar{\theta}_{g}$.
+At the same time, doing nothing to adjust for aggregate district preferences may identify the _total_ effect of the district-party constituency under certain assumptions, but it would not capture how much of the effect is mediated through the presidential vote, so there would be no way to isolate the unique impact of the partisan constituency.
 
 This analysis resolves this problem by using sequential $g$-estimation to identify a quantity called the average controlled direct effect (ACDE) of district-party ideology on candidate positioning [@vansteelandt:2009:direct-effects; @acharya-blackwell-sen:2016:direct-effects].
 In terms of potential outcomes, let $\text{CF}_{i}\left( \bar{\theta}_{g}, V_{d}(\bar{\theta}_{g}) \right)$ be candidate $i$'s CF score as a function of district-party ideology and the past presidential vote, which represents district-level preferences $V_{d}$ and is itself a function of district-party ideology.
 The controlled direct effect (CDE) for a unit $i$ is the difference in CF scores for different district-party ideology treatments, holding the presidential vote fixed at some value $v$.
 \begin{align}
-  \text{CDE}_{i}\left(\theta, \theta', m \right) &= 
+  \text{CDE}_{i}\left(\theta, \theta', v \right) &= 
     \text{CF}_{i}\left(\bar{\theta}_{g} = \theta, V_{d} = v \right) - \text{CF}_{i}\left(\bar{\theta}_{g} = \theta', V_{d} = v \right)
 (\#eq:cde-unit)
 \end{align}
@@ -912,7 +909,7 @@ wrap_plots(
 
 Sequential $g$-estimation is a structural modeling routine that estimates ACDEs by subtracting intermediary causal effects without creating collider bias [@acharya-blackwell-sen:2016:direct-effects; @vansteelandt:2009:direct-effects].
 The routine requires adjusting for two sets of confounders: pre-treatment confounders $X_{d}$ that affect both district-party ideology and CF scores, and intermediate confounders $Z_{d}$ that affect both the presidential vote and CF scores.
-Intermediate confounders are allowed to be affected by both pre-treatment confounders and district-party ideology.
+Intermediate confounders are allowed to be affected by both the treatment and pre-treatment confounders.
 The first graph in Figure \@ref(fig:plot-g-dag) diagrams the stipulated causal structure among the district-party ideology treatment, the presidential vote mediator, and both sets of confounders.
 In the first stage of the model, the researcher estimates the effect of the mediator on the outcome variable, conditional on all confounders.
 \begin{align}
@@ -926,8 +923,8 @@ In the first stage of the model, the researcher estimates the effect of the medi
 \end{split}
 (\#eq:po-stage-1)
 \end{align}
-The left side of Equation \@ref(eq:po-stage-1) represents the conditional effect of the mediator in terms of potential outcomes, and the right side is the quantity that can be estimated from observed data assuming that the mediator is conditionally ignorable given all confounders and has positive assignment probability [@acharya-blackwell-sen:2016:direct-effects;].
-This specification blocks all back-door paths from $V_{d}$ to $\text{CF}_{i}$, which can be seen in the first panel of Figure \@ref(fig:plot-g-dag). 
+The left side of Equation \@ref(eq:po-stage-1) represents the conditional effect of the mediator in terms of potential outcomes, and the right side is the quantity that can be estimated from observed data assuming that the mediator is conditionally ignorable given all confounders and has positive assignment probability [@acharya-blackwell-sen:2016:direct-effects].
+This specification blocks all "back-door paths" from $V_{d}$ to $\text{CF}_{i}$, which can be seen in the first panel of Figure \@ref(fig:plot-g-dag). 
 
 The next step of sequential $g$-estimation is to subtract the effect of the mediator from the outcome, also known as "demediation" or "blip-down."
 Demediation removes all variation in the outcome variable that is attributable to the causal effect of mediator.
@@ -939,7 +936,7 @@ The mediation function in terms of potential outcomes is as follows:
   (\#eq:po-demediation-fn)
 \end{align}
 which represents the expected effect on CF scores by setting the presidential vote to its observed value versus some fixed reference value $\bar{v}$ for all units, conditional on $X_{d}$ [@acharya-blackwell-sen:2016:direct-effects].^[
-  The model specification below functionally assumes to interactions between the presidential vote and intermediate confounders $Z_{d}$, so the specification of the demediation function in Equation \@ref(eq:po-demediation) does not depend on $Z_{d}$, although this assumption is not strictly necessary for nonparametric identification of the ACDE [@robins:1997:complex-longitudinal-data].
+  The model specification below functionally assumes no interactions between the presidential vote and intermediate confounders $Z_{d}$, so the specification of the demediation function in Equation \@ref(eq:po-demediation) does not depend on $Z_{d}$, although this assumption is not strictly necessary for nonparametric identification of the ACDE [@robins:1997:complex-longitudinal-data].
 ]
 In this analysis, I fix the two-party presidential vote to $0.5$, an even split between Republicans and Democrats in the district. 
 We subtract the demediation function from the original outcome to obtain the demediated CF score, $b\left(\text{CF}\right)_{i}$, which is equivalent to the potential CF score if all units had a presidential vote of $0.5$.
@@ -953,7 +950,7 @@ We subtract the demediation function from the original outcome to obtain the dem
 \end{align}
 
 
-```{r plot-g-dag, include = TRUE, fig.width = 9, fig.height = 10, out.width = "100%", fig.scap = "Sequential $g$-estimation using causal diagrams.", fig.cap = "Causal graphs describing the modeling problem and sequential $g$ estimation. The stage 1 graph identifies the effect of the past district voting ($V_{d}$) on candidate positioning ($\\text{CF}_{i}$). The stage 2 treatment-outcome model subtracts the district vote effect from candidate positions and identifies the effect of district-party ideology $\\bar{\\theta}_{g}$ on the demediated CF score $b(\\text{CF})_{i}$, which is equivalent to the controlled direct effect on the raw CF score. The final graph shows where unadjusted confounders violate the nonparametric causal identification assumptions in stage 1 ($U1$) and in stage 2 ($U2$)."}
+```{r plot-g-dag, include = TRUE, fig.width = 9, fig.height = 10, out.width = "100%", fig.scap = "Sequential $g$-estimation using causal diagrams.", fig.cap = "Causal graphs describing the modeling problem and sequential $g$-estimation. Stage 1 identifies the effect of the past district voting ($V_{d}$) on candidate positioning ($\\text{CF}_{i}$). Stage 2 subtracts the district vote effect from candidate positions and identifies the effect of district-party ideology $\\bar{\\theta}_{g}$ on the demediated CF score $b(\\text{CF})_{i}$, which is equivalent to the controlled direct effect on the raw CF score. The final graph shows where unobserved confounders violate the causal identification assumptions in stage 1 ($U1$) and in stage 2 ($U2$)."}
 ```
 
 Finally, the researcher estimates the effect of the treatment on the demediated outcome, which is equivalent to the controlled direct effect on the original outcome.
@@ -973,17 +970,18 @@ The second statement defines how the ACDE can be estimated with observable data 
 The top-right graph in Figure \@ref(fig:plot-g-dag) shows how the demediation step recovers the controlled direct effect of district-party ideology.
 Demediating the outcome removes all variation in CF scores caused by the presidential vote, so it deletes the path $V_{d} \rightarrow \text{CF}_{i}$ in the diagram.
 In turn, there is no need to condition on the presidential vote $V_{d}$ in Equation \@ref(eq:po-stage-2) to identify the ACDE, even though the diagram shows that district-party ideology has an effect on the presidential vote.
-Furthermore, the graph contains remains a causal path from the intermediate confounders $Z_{d}$ to the CF score, the stage-two model does not condition on these confounders because these pathways are a part of the district-party ideology's ACDE on CF scores.
+Furthermore, there remains a causal path from the intermediate confounders $Z_{d}$ to the CF score, but the stage-two model does not condition on these confounders because these pathways are contained in the ACDE of district-party ideology on CF scores.
 It is worth noting here that if we estimate the stage-two model using the original CF score rather than the demediated CF score, this would estimate the total effect of district-party ideology.
-This quantity can be valuable because valuable because the difference between the total effect and the controlled direct effect shows how much of the total effect flows is carried by a mediating mechanism.
+This quantity can be valuable because the difference between the total effect and the controlled direct effect shows how much of the total effect is carried by a mediating mechanism.
 
 The bottom graph in Figure \@ref(fig:plot-g-dag) shows where unmeasured confounding can violate the two ignorability assumptions required to estimate the ACDE. 
 The stage-one model identifies the causal effect of the past presidential vote, so if an unmeasured variable (represented in the figure by $U1$) affects both district voting and CF scores, the mediator's effect is not identified. 
-Similarly, the stage-two model does not identify the effect of district party ideology on the demediated CF score if they share an unmeasured cause $U2$.
+Similarly, the stage-two model does not identify the effect of district-party ideology on the demediated CF score if they share an unmeasured cause $U2$.
 Unmeasured variables in other locations of the graph certainly exist, but they do not violate the sequential ignorability assumptions unless they can be represented by an unblocked back-door path through $U1$ or $U2$.
 
-With few exceptions, it is not typical for research on primary politics to incorporate explicit causal inference methodologies [@hall:2015:extremists; @fowler-hall:2016:convergence; @hall-thompson:2018:who-punishes; @doherty-et-al:2019:party-chairs].
-Although many other studies use a selection-on-observables research design to study candidate positioning in primary elections, a major contribution of this study's research design is the use of structural causal modeling to define, identify, and estimate a specific causal quantity.
+With few exceptions, it is not typical for research on primary politics to incorporate explicit causal inference methodologies.
+The studies that do incorporate causal methods tend to use difference-in-differences, regression discontinuity, or survey experiments [@hall:2015:extremists; @fowler-hall:2016:convergence; @hall-thompson:2018:who-punishes; @doherty-et-al:2019:party-chairs] rather than structural modeling.
+Structural modeling is important, however, to ensure that selection-on-observables designs identify the correct causal quantity and perform the appropriate statistical adjustments to estimate it. 
 
 <!------- TO DO ---------
 - Discuss potential violations of assumptions
@@ -995,26 +993,25 @@ Although many other studies use a selection-on-observables research design to st
 The average controlled direct effect of district-party ideology on primary candidate CF scores is _nonparametrically_ identifying under SUTVA, sequential ignorability, and positivity.
 I estimate the sequential $g$ model using a linear model specification laid out by @acharya-blackwell-sen:2016:direct-effects.
 As with any linear model, this specification imposes additional functional form and distributional assumptions on the data, which are helpful for confounder adjustment in the absence of other design-based variation from instruments or discontinuities, but could lead to incorrect inferences if assumptions are false.
-One goal for future work in this literature would be to combine the sequential $g$ structural model with semi- and non-parameteric estimation methods, an nascent area of work that exists largely outside of political science [@hill:2011:bart; @athey-at-al:2016:residual-balancing; @samii-et-al:2016:retrospective-causal-inference-ML; @chernozhukov-et-al:2017:double-ML; @wager-athey:2018:honest-causal-forests; @ratkovic:2019:rehabilitating-regression; @hahn-et-al:2020:bayesian-causal-forests]
+One goal for future work in this literature would be to combine the sequential $g$ structural model with machine learning methods to relax these functional form assumptions, a nascent area of work that exists largely outside of political science [@hill:2011:bart; @athey-at-al:2016:residual-balancing; @samii-et-al:2016:retrospective-causal-inference-ML; @chernozhukov-et-al:2017:double-ML; @wager-athey:2018:honest-causal-forests; @ratkovic:2019:rehabilitating-regression; @hahn-et-al:2020:bayesian-causal-forests]
 
 This section lays out the linear specification for sequential $g$-estimation.
 I define the model using notation that is general enough to apply to any subset of data where the model is estimated.
 As mentioned above, I investigate subsets of data by incumbency and primary rules, and I estimate each model separately for Republicans and Democrats. 
-The data contain measures of candidates $i$ in district-party groups $g$ in districts $g$.
+The data contain observations of candidates $i$ in district-party groups $g$ in districts $g$.
 Because all models are estimated separately for each party, groups and districts perfectly overlap.
 Nonetheless, I use $g$ for variables that can vary across party within a district and $d$ for variables that are fixed for both parties in a district.
-Because the estimation contains in two stages of regression modeling, I sometimes subscript some parameters with $1$ or $2$ to indicate which equation they belong to.
+Because the estimation proceeds in two stages of regression modeling, I sometimes subscript parameters with $1$ or $2$ to indicate which equation they belong to.
 
-The first stage is a mediator–outcome model that estimates how the Republican two-party presidential vote in the past election $V_{d}$ affects the CF score of candidate $i$ within group $g$.
-We set up the sequential $g$ method to control for the previous Republican presidential vote share in district $d$, denoted $\mathit{pvote}_{g}$.
+The first stage is a mediator–outcome model that estimates how the Republican two-party presidential vote in the past election $V_{d}$ affects the CF score of candidate $i$ within group $g$, controlling for pre-treatment confounders $\mathbf{x}_{d}$ and intermediate confounders $\mathbf{z}_{d}$.
 This is done with the following multilevel regression model.
 \begin{align}
 \begin{split}
   \mathrm{CF}_{i} &= 
-    a_0 + 
+    \zeta_1 + 
     \mu \mathrm{V}_{d[i]} + 
     \eta \bar{\theta}_{g[i]} + 
-    \mathbf{x}_{d[i]}^{\intercal}\beta +
+    \mathbf{x}_{d[i]}^{\intercal}\beta_{1} +
     \mathbf{z}_{d[i]}^{\intercal}\gamma +
     \alpha_{d[i]} + \epsilon_{i} \\
   \alpha_{d} &\sim \text{Normal}\left(0, \sigma_{\alpha}\right) \\
@@ -1025,8 +1022,8 @@ This is done with the following multilevel regression model.
 <!------- TO DO ---------
 - check on these assumptions
 ------------------------->
-The group ideal point $\bar{\theta}_{g}$ is included in the regression as a control, so its coefficient $\eta$ is estimated as a nuisance parameter, as are the coefficients $\beta$ for district-level pre-treatment confounders $\mathbf{x}_{d}$, the coefficients $\gamma$ for district-level intermediate confounders $\mathbf{z}_{d}$, and the constant $a_{0}$.
-Because the mediator is measured at the district level, I include a district error term $\alpha_{d}$ in addition to the candidate-level error term $\epsilon_{i}$.
+The group ideal point $\bar{\theta}_{g}$ is included in the regression as a control, so its coefficient $\eta$ is estimated as a nuisance parameter, as are the coefficients $\beta_{1}$ for pre-treatment confounders, the coefficients $\gamma$ for intermediate confounders, and the constant $\zeta_{1}$.
+Because the mediator is measured at the district level, I include a district error term $\alpha_{d}$ in addition to the observation-level error term $\epsilon_{i}$.
 This multilevel model accounts correlated error among candidates in the same district-party group, similar to clustering standard errors when a treatment is dosed at the cluster level.
 
 We then use the estimates from the stage-1 model to demediate the CF score variable.
@@ -1039,7 +1036,7 @@ where $\bar{v}$ is the reference value for the mediator where all units are fixe
   The demediation function can be more complex if the mediator's effect on the outcome is modeled with a more complex model containing interactions or nonlinearities.
 ]
 The demediation function is subscripted $d$ because it varies across districts according to the observed value of the previous Republican vote share, which also entails that the demediation function is equivalent for all candidates in the same district-party group, regardless of their original CF score.
-We calculate the demediated outcome $b(\text{CF})_{i}$ by subtracting each district's demediation function from its observed outcome value,
+We calculate the demediated outcome $b(\text{CF})_{i}$ by subtracting each district's demediation function from the candidate outcome value.
 \begin{align}
   b\left(\mathrm{CF}\right)_{i} &= \mathrm{CF}_{i} - \delta_{d}
   (\#eq:blipdown-outcome)
@@ -1053,20 +1050,20 @@ This new equation is,
 \begin{align}
 \begin{split}
   b\left(\mathrm{CF}\right)_{i} &= 
-    a_{1} +
+    \zeta_{2} +
     \tau \bar{\theta}_{g} + 
-    \mathbf{x}^{\intercal}_{g[i]}\omega + 
-    \nu_{d[i]} + u_{i} \\
-  \nu_{d} &\sim \text{Normal}\left(0, \sigma_{\nu}\right) \\
+    \mathbf{x}^{\intercal}_{g[i]}\beta_{2} + 
+    \omega_{d[i]} + u_{i} \\
+  \omega_{d} &\sim \text{Normal}\left(0, \sigma_{\omega}\right) \\
   u_{i} &\sim \text{Normal}\left(0, \sigma_{u}\right)    
 \end{split}
 (\#eq:trt-model)
 \end{align}
-where $a_{1}$ is a constant, $\tau$ is the coefficient for district-party ideology, $\omega$ are coefficients for district-level pre-treatment confounders $\mathbf{x}_{d}$, $\nu_{d}$ is a district error term, and $u_{i}$ is a candidate error term.
+where $\zeta_{2}$ is a constant, $\tau$ is the coefficient for district-party ideology, $\beta_{2}$ are coefficients for pre-treatment confounders, $\omega_{d}$ is a district error term, and $u_{i}$ is an observation-level error term.
 In a linear model specification, $\tau$ measures the average total effect of a one-unit increase in district-party ideology on demediated CF scores, which is equivalent to the ACDE on the original CF scores.
 More generally, the ACDE of setting district-party ideology from $\bar{\theta}'$ to $\bar{\theta}$ is as follows.^[
   Again, the exact formula for the ACDE depends on the model specification. 
-  The linear model with no treatment interactions produces a simple linear ACDE definition, but a more complex model would entail a more complex formula.
+  The linear model with no treatment interactions produces a simple linear ACDE definition, but a more complex model would entail a different formula.
 ]
 \begin{align}
   ACDE(\tau, \theta, \theta') &= \tau \left(\theta - \theta'\right)
@@ -1078,11 +1075,11 @@ More generally, the ACDE of setting district-party ideology from $\bar{\theta}'$
 ### Bayesian modeling and interpretation
 
 Another key methodological innovation in this chapter is embedding sequential $g$-estimation in a Bayesian framework.
-Chapter \@ref(ch:causality) describes a number of special advantages for Bayesian causal modeling, stemming from the fact that Bayesian inference allows the researcher to conduct posterior inference about causal effects using probabilities: the treatment effect is _probably_ greater than $x$, where "probably" is defined in relation to an empirical cumulative probability distribution function of posterior samples.
+Chapter \@ref(ch:causality) describes a number of special advantages for Bayesian causal modeling, stemming from the fact that Bayesian inference allows the researcher to conduct posterior inference about causal effects using probabilities: the treatment effect is _probably_ greater than $x$, with "probably" defined in relation to an empirical cumulative probability distribution function of the posterior distribution.
 
 The most important feature of Bayesian causal inference for this chapter is the fact that one posterior distribution quantifies uncertainty in all parameters from the multi-stage sequential $g$ method.
-This is valuable because uncertainty in stages 1 and 2 are directly related to one another by way of the demediation function. 
-Whereas non-Bayesian analysis requires either ad-hoc variance corrections for the multistage model or a bootstrapping approach [@acharya-blackwell-sen:2016:direct-effects], the posterior distribution from the Bayesian model captures all variances and covariances among model parameters by its very nature.
+This is valuable because uncertainty in stages 1 and 2 are directly related to one another by way of the demediation function: stage 1 uncertainty affects the demediation function, and uncertainty in the demediation function affects stage 2. 
+While non-Bayesian estimation requires either ad-hoc variance corrections for the multistage model or a bootstrapping approach [@acharya-blackwell-sen:2016:direct-effects], the posterior distribution from the Bayesian model captures all variances and covariances among model parameters inherently.
 Inferences about the ACDE can then be expressed by marginalizing the posterior distribution with respect to these auxiliary model parameters, isolating the remaining dimension of the posterior corresponding to the ACDE.
 Letting $\boldsymbol{\pi}$ represent all auxiliary model parameters, and using the definition of the ACDE in Equation \@ref(eq:general-ACDE), the posterior distribution for the ACDE is given by
 \begin{align}
@@ -1095,10 +1092,8 @@ which is a the distribution of ACDE values that condition on the observed data a
 In practice, we use posterior samples to approximate this posterior distribution by picking any two values $\theta$ and $\theta'$, extracting posterior samples for $\tau$, and calculating the ACDE for each sample iteration. 
 Posterior expectations for the ACDE can be calculated, up to Monte Carlo error, by averaging the ACDE values from a draw of posterior samples.
 Uncertainty intervals for the ACDE can be estimated by noting which posterior samples bound the inner 90 or 95% of posterior samples.
+I choose 90% intervals because they are numerically more stable when estimated from sample draws.
 
-<!------- TO DO ---------
-- should this go in Ch 3?
-------------------------->
 The joint posterior distribution is also essential for incorporating uncertainty in district-party ideal points themselves.
 The IRT model in Chapter \@ref(ch:model) does not estimate district-party ideal points exactly. 
 Instead, ideal points are estimated only up to a posterior distribution, with uncertainty that reflects both prior ignorance and a finite sample of polling data.
@@ -1113,33 +1108,28 @@ This prior is constructed by defining the group ideal point $\bar{\theta}_{g}$ a
 \end{align}
 The hyperparameters in the prior are estimated from MCMC samples for the ideal points.
 The mean vector $\hat{\Theta}$ contains MCMC means for each ideal point, and the matrix $\hat{\Sigma}_{\Theta}$ contains variances for each ideal point on the diagonal and covariances between any two ideal points on the off-diagonals.
-Because the IRT model partially pools ideal points using a hierarchical Normal regression, the multivariate Normal prior is a reasonable stand-in for representing prior ideal point uncertainty in causal analyses.
+Because the IRT model partially pools ideal points using a hierarchical Normal regression, the multivariate Normal prior is a reasonable approximation to the posterior distribution from the ideal point model.
 
-Including ideal point uncertainty as a prior distribution effectively adds a measurement error model overtop to the sequential $g$ analysis. 
-Although @acharya-blackwell-sen:2016:direct-effects describe a variance estimator and a bootstrap method for dealing with multi-stage modeling uncertainty, neither of these methods is naturally suited to a measurement error context where an additional layer of ideal point uncertainty is represented in posterior samples.
-Past research has explored the use of inverse-variance weighting to downweight observations with greater measurement uncertainty [e.g. @adolph-at-al:2003:wls-ei],
-which accomplishes a similar goal as the prior distribution but throws out all prior information about the covariance between ideal points.
+Including ideal point uncertainty as a prior distribution effectively adds a measurement error model overtop to the sequential $g$ analysis.
+Past research has explored the use of inverse-variance weighting to downweight observations with greater measurement uncertainty [e.g. @adolph-at-al:2003:wls-ei], which accomplishes a similar goal as the prior distribution but throws out all prior information about the covariance between ideal points.
 More recently, researchers have employed numerical methods for "uncertainty propagation," where the researcher estimates an uncertain quantity, simulates values from the quantity's posterior distribution, and pushes those simulated values through a downstream analysis. 
 Quantities of interest are then averaged across the posterior simulations [see @kastellec-et-al:2015:scotus-electoral-connection p. 791; @caughey-warshaw:2018:dynamic-responsiveness p. 6; @caughey-warshaw:2019:subnational-opinion-review p. 360].
-This is similar in spirit to "multiple overimputation" [@blackwell-et-al:2017:measurement-error], which extends multiple imputation to a measurement error setting by iteratively replacing mismeasured observations with draws from their posterior distribution.
+This is similar in spirit to "multiple overimputation" [@blackwell-et-al:2017:measurement-error], which extends multiple imputation to a measurement error context setting by iteratively replacing mismeasured observations with draws from their posterior distribution.
 This project regards these propagation methods as insufficiently Bayesian because they "cut" the flow of information between models. 
 Posterior cutting allows model 1 to inform model 2, but model 2 can never inform model 1 [@plummer:2015:bayesian-cuts].
 This can be an undesirable modeling property if the causal model can inform the measurement model [@treier-jackman:2008:latent-democracy].
-For instance, if ideal points are related to candidate positioning, and ideal points are measured with error, then observing candidate positions can update our information about ideal points.
-By specifying the prior directly and updating the parameters, there is no need for any additional imputation steps or post-estimation model averaging [@gelman-hill:2006:multilevel p. 542].
+Stated differently, if ideal points are related to candidate positioning, and ideal points are measured with error, then observing candidate positions can update our information about ideal points.
+By specifying the prior directly and updating the parameters, the posterior distribution represents all sources of uncertainty without any need for additional imputation steps or model averaging [@gelman-hill:2006:multilevel p. 542].
 
 The Bayesian sequential $g$ approach, of course, requires priors for other model parameters as well.
 As I describe below in Section \@ref(sec:g-data), most variables in the model are binary indicators or are standardized to be mean $0$ and variance $1$.
-Furthermore, most of the outcome data in each model fall mostly in the $[-2, 2]$, so we can place standard Normal priors on the covariates without being overly informative about the covariate effects and introducing regularization bias [@hahn-et-al:2018:regularization-confounding].
-Constants are given wider priors to account for the fact that not all predictors are exactly centered at means.
-<!------- TO DO ---------
-- do I change the prior scale for ideal points or anything?
-------------------------->
+Furthermore, most of the outcome data in each model fall mostly in the interval $[-2, 2]$, so we can place standard Normal priors on the covariates without being overly informative about the covariate effects and introducing regularization bias [@hahn-et-al:2018:regularization-confounding].
+Constants are given wider priors to account for the fact that indicator variables are not exactly centered at their means.
 \begin{align}
 \begin{split}
-  a_0, a_1 &\sim \text{Normal}\left(0, 5\right) \\
-  \eta, \mu, \beta, \gamma &\sim \text{Normal}\left(0, 1 \right) \\
-  \tau, \omega &\sim \text{Normal}\left(0, 1 \right)
+  \zeta_1, \zeta_2 &\sim \text{Normal}\left(0, 5\right) \\
+  \eta, \mu, \beta_{1}, \gamma &\sim \text{Normal}\left(0, 1 \right) \\
+  \tau, \beta_{2} &\sim \text{Normal}\left(0, 1 \right)
 \end{split}
 (\#eq:g-coef-priors)
 \end{align}
@@ -1148,7 +1138,7 @@ These variances are themselves given half-Cauchy priors with weakly informative 
 \begin{align}
 \begin{split}
   \alpha_{d} &\sim \text{Normal}\left(0, \sigma_{\alpha} \right) \\    \sigma_{\alpha} &\sim \text{Half-Cauchy}\left(0, 1 \right) \\
-  \nu_{d}  &\sim \text{Normal}\left(0, \sigma_{\nu} \right) \\    \sigma_{\nu} &\sim \text{Half-Cauchy}\left(0, 1 \right)
+  \omega_{d}  &\sim \text{Normal}\left(0, \sigma_{\omega} \right) \\    \sigma_{\omega} &\sim \text{Half-Cauchy}\left(0, 1 \right)
 \end{split}
 (\#eq:g-ranef-priors)
 \end{align}
@@ -1170,22 +1160,21 @@ The research question in this chapter presents us with multilevel data: how is t
 In this scenario, the outcome is a variable specific to an individual candidate $i$, but the treatment is fixed for an entire district-partisan group $g$. 
 This introduces a few issues for statistical assumptions and causal assumptions.
 
-On the statistical front, multilevel models bias coefficient estimates when the aggregate errors are not exchangeable.
+On the statistical front, multilevel models may bias coefficient estimates if the aggregate errors are not exchangeable.
 Mechanically, this is similar to "omitted variable bias" in a single-level regression.
 Although this concern is well founded for many multilevel models, for these models we can be less concerned.
 Because all predictors in these regressions are measured at the district level, the district error term is analogous to an error term that we would obtain by averaging every candidate's CF score within a district-party group and running a single-level regression on those averages.
-Both of these model specifications require an exchangeable errors assumption at the district level.
+Both of these model specifications require an exchangeable errors assumption at the group level.
 The only difference for the models in this analysis is the additional candidate-level errors, but this too is a non-issue. 
 Averaging candidate data within each district would invoke a similar assumption about the exchangeability of candidates given the district, otherwise it would be inappropriate to average data within a district.
 
-Even though the multilevel model has similar assumptions as a regression on averages, it has certain benefits that are convenient for these data.
-Because the number of candidates in a district isn't fixed across all districts, we would expect heteroskedasticity in a regression-on-averages model, since some districts would have higher variances due to fewer candidates.
+Even though the multilevel model has similar assumptions as a regression on group averages, it has certain benefits that are convenient for these data.
+Because the number of candidates in a district is not fixed across all districts, we would expect heteroskedasticity in a regression-on-averages model because some districts would have higher variances due to fewer candidates.
 In the extreme case, if a district contained only one unopposed primary candidate, a naïve estimator would be unable to distinguish district-level variance from candidate-level variance.
 The multilevel model addresses this by estimating the distributions of district errors and candidate errors simultaneously, enhancing the model's ability to recognize when larger district errors are caused by signal versus noise.
 Errors from smaller districts borrow more information from the overall distribution of districts, downweighting the contributions of smaller districts by shrinking their error terms toward a mean of zero.
-This has a similar intuition as a weighted least squares regression on the district-averaged data, where groups with more observations are more informative about global parameters and receive greater weight.
+This has a similar intuition as a weighted least squares regression on group-averaged data, where groups with more observations are more informative about global parameters and receive greater weight.
 This is yet another example where priors stabilize pathological model behavior, underscoring the flexibility afforded by Bayesian model-building for confronting the idiosyncrasies of a dataset with tactics that are both intuitive and feasible.
-<!-- At a technical level, the model is able to avoid estimating individual random effects at all through a clever model parameterization that marginalizes over the distribution of district effects, which I explain in Section \@ref(sec:stan-g). -->
 
 The multilevel data structure also raises causal inference issues that are worth clarifying.
 As with many causal models where treatments are assigned to clusters of observations, it makes sense to consider SUTVA as violated within a cluster: there is no way for one candidate in a district to be treated by a different district-party ideology than other candidates.^[
@@ -1205,10 +1194,10 @@ Instead, the average effect for candidates must be a size-weighted average of gr
 I do not pursue this possibility in this project because these dynamics are not identifiable with data on primary candidates only, since incumbents may take ideological positions to deter challengers even if no challengers actually emerge.
 As such, the observed number of candidates in a district may not capture the true degree of primary threat [@hirano-et-al:2010:primary-polarization; @maisel-stone:1997:candidate-emergence; @stone-mailsel:2003:potential-candidate-calculus].
 
-One additional consideration for group-level effects is the possibility that group size affects treatment assignment.
+<!-- Group size may also affect treatment assignment.
 This may be true if the long-run dynamics of primary competition within a district-party have feedback effects on local ideology, for instance if partisan constituents become more ideologically aware by experiencing stronger intra-party competition in their district, or less ideological after a long period of representation by a single incumbent with little primary competition.
 There is evidence that primaries contain more ideological campaign content in certain periods of heightened partisan mobilization [@boatright:2013:getting-primaried], which could increase voters' ideological awareness as well.
-Whether voters are responding to primary competition in the district _per se_ or to a national state of partisan agitation is an interesting but thoroughly challenging question for future researchers to explore, were they to extend the data and methods in this project to a greater number of election cycles and dynamic causal modeling approaches [e.g. @blackwell-glynn:2018:causal-TSCS; @imai-kim:2019:fixed-effects-causal-inference].
+Whether voters are responding to primary competition in the district _per se_ or to a national state of partisan agitation is an interesting but thoroughly challenging question for future researchers to explore, were they to extend the data and methods in this project to a greater number of election cycles and dynamic causal modeling approaches [e.g. @blackwell-glynn:2018:causal-TSCS; @imai-kim:2019:fixed-effects-causal-inference]. -->
 
 
 ### Data {#sec:g-data}
@@ -1218,19 +1207,19 @@ The measure of district-level partisanship, the mediator in the sequential $g$-e
 District-party ideology $\bar{\theta}_{g}$, the treatment variable, is measured from the ideal point model in Chapter \@ref(ch:model).
 
 Pre-treatment confounders $\mathbf{x}_d$ are included to identify the effect of the presidential vote in stage 1 and the effect of district-party ideology in stage 2. 
-These covariates were organized and matched to primary candidacies by the Primary Timing Project by @boatright-et-al:2017:primary-timing-data
+These covariates were organized and matched to primary candidacies by the Primary Timing Project by @boatright-et-al:2020:primary-timing-data.
 District demographic variables (sourced originally from the American Community Survey) include district median income, population density, and land area, as well the percent of a district population that is White, Latino, college educated, below the federal poverty line, unemployed, employed in the service industry, employed in blue-collar jobs, aged 28–24, and aged 65+.
-The @boatright-et-al:2017:primary-timing-data data also provide @mayhew:1986:placing-parties's five-level "traditional party organization" and binary "persistent factionalism" classifications for state level [@mayhew:1986:placing-parties].
+The @boatright-et-al:2020:primary-timing-data data also provide Mayhew's -@mayhew:1986:placing-parties five-level "traditional party organization" and binary "persistent factionalism" classifications for state level [@mayhew:1986:placing-parties].
 The stage-1 model also contains intermediate controls $\mathbf{z}_{d}$ for identifying the effect of the past presidential vote on CF scores.
 These variables include the district-party ideal point for the _other_ party group in the same district, because both parties should partially affect aggregate district voting, and year fixed effects to capture average shifts in CF scores that are correlated with average shifts in presidential voting.^[
   Fixed effects are not included in pre-treatment controls because district-party ideology is fixed across the redistricting cycle, so they do not improve causal identification in stage 2.
 ]
 
 All controls except for the fixed effects and binary indicators from @mayhew:1986:placing-parties are centered at their means and scaled by their standard deviations.
-This makes it easier to specify priors for coefficients, since standardized coefficients are unlikely to exceed a $1$ except when predictors are highly correlated.
+This makes it easier to specify priors for coefficients, since standardized coefficients are unlikely to exceed $1$ except when predictors are highly correlated.
 District-party ideology $\bar{\theta}_{g}$, the treatment variable, is measured on its original scale anchored by the item parameters in the Chapter \@ref(ch:model) model.
 The presidential vote variable is centered at its reference value for demediation, $0.5$, and then divided by 10 so that a one-unit change in the model represents a 10 point change in vote share.
-CF scores are measured on their original scale, which spans roughly as wide as $-5$ to $5$ across both parties, both the vast majority of Democrats occupy values in $[-2, 0]$ and Republicans in $[0, 2]$.
+CF scores are measured on their original scale, which spans roughly as wide as $-5$ to $5$ across both parties, but the vast majority of Democrats occupy values in $[-2, 0]$ and Republicans in $[0, 2]$.
 <!------- TO DO ---------
 - do we normalize in the data analysis?
 ------------------------->
@@ -1353,9 +1342,8 @@ Table \@ref(tab:n-kable) shows the sample sizes in each model subset.
 
 For the sake of computation time, I estimate these models by approximating the posterior distribution using the mean-field variational Bayes routine available in Stan [@kucukelbir:2015:ADVI].
 Variational Bayesian inference (VB) finds and optimizes a simpler distribution that is similar to the true posterior distribution in terms of Kullback–Leibler divergence [@grimmer:2011:VB-intro]. 
-Variational estimators are asymptotically consistent and can be used to estimate any Stan model. 
-But because they require approximations, samples from the approximate distribution tend to underestimate the variance in the true posterior distribution [@wang-titterington:2012:VB-asymptotics].
-The benefit, however, is that models that would take hours to estimate using MCMC can be estimated using VB in roughly one minute, which is extremely valuable for building and estimating the 14 models included in this chapter.
+Variational estimators are asymptotically consistent and can be used to estimate any model written in Stan, but because they require approximations, samples from the approximate distribution tend to underestimate the variance in the true posterior distribution [@wang-titterington:2012:VB-asymptotics].
+The benefit, however, is that models that would take several hours to estimate using MCMC can be estimated using VB in roughly one minute, which is extremely valuable for building and estimating the 14 models included in this chapter.
 
 ```{r theta-prepost}
 # match each theta to its group
@@ -1674,7 +1662,7 @@ The top-left panel contains the key parameters most relevant to causal inference
 The bottom-left panel plots the standard deviations of the district errors and residual errors.
 The right-side panel contains regression coefficients for all control variables.
 
-```{r plot-d-coefs, include = TRUE, fig.height = 7.5, fig.width = 10, out.width = "100%", fig.scap = "Sequential $g$ results for Democratic candidates.", fig.cap = "Sequential $g$ results for Democratic candidates. Points and intervals are variational point estimates and 90 percent intervals from the approximate posterior distribution."}
+```{r plot-d-coefs, include = TRUE, fig.height = 7.5, fig.width = 10, out.width = "100%", fig.scap = "Sequential $g$ results for Democratic candidates.", fig.cap = "Sequential $g$ results for Democratic candidates. Points and intervals are variational point estimates and 90 percent intervals from the variational posterior distribution."}
 ```
 
 Under sequential ignorabilitiy and no intermediate interactions assumptions, stage 1 estimates the effect of the past presidential vote share on CF scores. 
@@ -1688,16 +1676,22 @@ One other possibility is that the introduction of my new measure, district-party
 If candidates are indeed sensitive to _partisan_ preferences in their district, and partisan preferences are positively correlated with district voting on average, then the strong relationship between candidate positions and the district vote was at least partially confounded in all past studies. 
 The results in Figure \@ref(fig:plot-d-coefs) are consistent with that possibility, since the coefficient on district-party ideology is large and positive even in stage 1, when it does not have a causal interpretation but is instead included as a control to identify the presidential vote effect.
 
-The controlled direct effect of district-party ideology is positive, with a posterior mean indicating that one-unit increase in district-party ideology causing a 
+The controlled direct effect of district-party ideology is positive, with a posterior mean indicating that one-unit increase in district-party ideology causes a 
 `r std_coefs %>% filter(party_num == 1, incumbency == "All", prim_rules == "All") %>% pull(b) %>% round(2)`-unit increase in CFscores. 
 Using standardized coefficients, the posterior mean suggests that an increase of one standard deviation in district-party ideology causes `r std_coefs %>% filter(party_num == 1, incumbency == "All", prim_rules == "All") %>% pull(beta) %>% round(2)`-standard deviation increase in CF scores, which is a substantively small effect.
 
 The control coefficients do not have causal interpretation, and even interpreting them as partial correlations is problematic because of collider bias. 
 Nonetheless readers might find some of the coefficient estimates intriguing or intuitive given the makeup of the Democratic Party coalition and the polarized environment of the 2010s. 
 The opposing party ideal point mean has a clear negative coefficient, indicating that more conservative Republicans coincide on average with more progressive Democrats.
-Progressivism among Democrats is greater in districts with greater density, less land area, and greater numbers of service sector employees.
+Progressivism among Democrats is greater in districts with greater density, less land area, and greater numbers of service sector employees, which are likely to be more urban districts, and in districts with more college graduates.
 The year fixed effects suggest candidates are more liberal in more recent years, which fits a pattern of polarization over time.
-Some interesting or counter-intuitive findings are that Democrats are more progressive in districts with more college graduates and more blue-collar workers, and they are more conservative in districts with higher poverty.
+Some interesting or counter-intuitive findings are that Democrats are more progressive in districts with more more blue-collar workers, and they are more conservative in districts with higher poverty.
+TPO levels 1 to 5 indicate increasing levels of party organization in a state, indexing a state-party's autonomy from the national party, organizational duration, internal hierarchical structure, coordination to nominate particular candidates across a wide variety of offices, and provision of material incentives to organizers [@mayhew:1986:placing-parties].
+Coefficients on the TPO indicators do not suggest that states with stronger historical party organizations always result in more progressive Democrats; the large point estimate for TPO-3 states (mid-level party organization) is driven largely by the small number of candidates from TPO-3 states.
+
+```{r, eval = FALSE}
+full_data %>% count(party, tpo)
+```
 
 
 ```{r plot-r-coefs}
@@ -1737,8 +1731,8 @@ I first examine effects by stratifying across candidate status, estimating separ
 ------------------------->
 Prevailing literature that examines incumbency and candidate positioning have diverging predictions for these results.
 @ansolabehere-et-al:2001:candidate-positioning find that incumbents take more moderate campaign positions than non-incumbent candidates, with challengers taking more extreme than both incumbents and open seat candidates.
-This reflects a perspective that incumbency selects for candidates that take median positions that ensure their reelection, while challengers must take more innovative and extreme stances to garner attention.
-@burden:2004:candidate-positioning finds instead that incumbents take more partisan positions, perhaps because incumbency provides other advantages that give incumbents more security to take positions that don't match district preferences as closely.
+This reflects a perspective that incumbency selects for candidates that take median positions that ensure their reelection, while challengers must take more innovative and extreme stances to garner attention [@groseclose:2001:candidate-location].
+@burden:2004:candidate-positioning finds instead that incumbents take more partisan positions, perhaps because incumbency provides other advantages that give incumbents more security to take positions that do not match district preferences as closely.
 
 ```{r plot-coef-incumbency}
 incumbency_coef_tab <- pretty_coefs %>%
@@ -1795,13 +1789,13 @@ ggplot(incumbency_coef_tab) +
   )
 ```
 
-The findings in this study contain a mixture of evidence for against each of these views.
+The findings in this study contain a mixture of evidence for and against each of these views.
 Figure \@ref(fig:plot-coef-incumbency) plots the mediator effect and controlled direct effect for incumbents, challengers, and open seat candidates.
 Among Democrats, incumbents appear to follow patterns of positioning dictated by the SPD.
 Coefficients for the presidential vote and district-party ideology are both positive, indicating that Democrats run as more progressive candidates in districts with higher Democratic presidential voting and with more progressive partisan constituents.
 Challenger positioning is inversely related to the presidential vote but positively related to district-party ideology, indicating that challengers target the partisan constituency at the expense of the general election constituency.
 This is consistent with an account of incumbent–challenger dynamics where challengers take extreme positions to garner attention to themselves against a more moderate, or that the responsiveness of incumbents results from the selection of well-fitting candidates by district voting [@ansolabehere-et-al:2001:candidate-positioning].
-Open seat candidates behave more similarly to incumbents than to challengers, which contradicts the finding by @ansolabehere-et-al:2001:candidate-positioning that open seat candidates may be most "out of step" with district preferences, and may be more consistent with the @burden:2004:candidate-positioning argument that non-incumbents position themselves most aggressively to match voter preferences because they have fewer build-in advantages to overcome any ideological mis-fits.
+Open seat candidates behave more similarly to incumbents than to challengers, which contradicts the finding by @ansolabehere-et-al:2001:candidate-positioning that open seat candidates may be most "out of step" with district preferences, and may be more consistent with the @burden:2004:candidate-positioning argument that non-incumbents position themselves most aggressively to match voter preferences because they have fewer built-in valence advantages.
 
 ```{r plot-coef-incumbency, include = TRUE, fig.width = 9, fig.height = 5, out.width = "100%", fig.scap = "Sequential $g$ results for incumbents, challengers, and open seat candidates.", fig.cap = "Sequential $g$ results for incumbents, challengers, and open seat candidates. Points and intervals are variational point estimates and 90 percent intervals from the approximate posterior distribution."}
 ```
@@ -1809,8 +1803,8 @@ Open seat candidates behave more similarly to incumbents than to challengers, wh
 Among Republicans, the results suggest that incumbent candidates are responsive to within-party preferences, but essentially unrelated to aggregate district voting.
 This is consistent with a @clinton:2006:constituent-representation view that Republicans position themselves to fit their partisan constituencies, and correlation with district voting is incidental. 
 This also fits with the Burden argument that incumbency provides insurance that lets incumbents deviate from district-optimal preferences, which is also consistent with the finding that Republican challengers are more responsive to district voting than Republican incumbents.
-Results among Republican incumbents are difficult to interpret, since the results show a negative effect of Republican voting and no clear relationship between district-party conservatism and candidate conservatism.
-Overall, these results suggest that nearly candidates of all incumbency status are responsive on average to district-party ideology, which supports an SPD view of primary competition.
+Results among Republican open-seat candidates are difficult to interpret, showing a negative effect of Republican district voting and no clear effect of district-party conservatism.
+Overall, these results suggest that nearly all candidates of all incumbency status are responsive on average to district-party ideology, which supports an SPD view of primary competition.
 Among incumbents, the greater degree of general-election responsiveness by Democrats than Republicans tracks @clinton:2006:constituent-representation, but the non-uniform findings among challengers and incumbents lack a clear interpretation.
 
 
@@ -1847,8 +1841,8 @@ pretty_coefs %>%
 We now turn to an examination of primary rules.
 Past studies of primary rules typically find no clear effects of different rules either on candidate positioning or vote choice.
 These studies never measure district-party ideology, however, so has never been clear whether candidates are in fact more responsive to district-party ideology in less-open primary systems.
-My results in Figure \@ref(fig:plot-coef-rules) suggest that the inclusion of district-party preferences is consequential for understanding primary openness.
-Among Democrats, the controlled direct effect of district party ideology is strongest in closed systems and weakest in open systems, with semi-closed systems in the middle.
+My results in Figure \@ref(fig:plot-coef-rules) suggest that the inclusion of district-party preferences is consequential for understanding primary openness, measuring the _responsiveness_ of candidates to district-party ideology across primary rules instead of the _extremism_ of candidates on average.
+Among Democrats, the controlled direct effect of district-party ideology is strongest in closed systems and weakest in open systems, with semi-closed systems in the middle.
 This monotonic relationship is exactly consistent with the conventional wisdom on primary openness and candidate positioning.
 The results among Republicans are not monotonic—the strongest relationship is among semi-closed rather than closed systems—but generally support a conclusion that candidates in open systems are less responsive to district-party ideology, where the relationship between district-parties and candidates is actually negative.
 
@@ -1856,7 +1850,7 @@ The results among Republicans are not monotonic—the strongest relationship is 
 ```
 <!------- TO DO ---------
 - you might say "this could be bullshit" 
-  but that isn't exactly constructive
+  but that is not exactly constructive
   and also it's obvious because of the selection design
 ------------------------->
 It is worth reiterating that these patterns across primary rules should not be interpreted as causal, although it notable that they diverge from the majority of recent research on the effects of primary rules.
@@ -1868,16 +1862,16 @@ This is a question I revisit in Chapter \@ref(ch:voting).
 ## Discussion
 
 This study contained three notable contributions for the study of the strategic positioning dilemma and primary candidate positioning.
-First, I employ novel measures of district-party ideology, a concept that is essential to the SPD theory but never operationalized in existing studies to date.
-Second, I advance the causal credibility of these studies by positing a causal estimand and implementing a statistical approach that estimates it under explicitly stated assumptions.
-And third, I demonstrate how to bring this method into a Bayesian causal framework, incorporating measurement error in the key independent variable as a prior distribution and deriving a posterior distribution that summarizes uncertainty in all model parameters.
-I find that primary candidates do position themselves to fit district-party policy preferences, even when controlling for aggregate district voting as an intermediary causal mechanisms.
-Furthermore, I find that candidate responsiveness is generally greater in states with stricter primary participation rules, a hypothesis that is common among political punditry but doubted among primary elections research.
+First, I employ novel measures of district-party ideology, a concept that is essential to the SPD theory but rarely operationalized in existing studies to date.
+Second, I advance the causal credibility of these studies by proposing a specific causal estimand and implementing a statistical approach that estimates it under explicitly stated assumptions.
+And third, I demonstrate how to bring this method into a Bayesian causal framework, incorporating measurement error in the key independent variable as a prior distribution and obtaining a posterior distribution that quantifies uncertainty in all model parameters.
+I find that primary candidates do position themselves to fit district-party policy preferences, even when controlling for aggregate district voting as an intermediary causal mechanism.
+Furthermore, I find that candidate responsiveness is generally greater in states with stricter primary participation rules, a hypothesis that is common among political punditry but otherwise unsubstantiated by quantitative research on primary elections.
 
 The contributions of this study provide a structure for improving the research further.
 Causal diagrams are valuable for understanding how theories of primaries other than the SPD could manifest in the data.
 Consider, for instance, the notion that candidates position themselves to earn the good favor and resources of policy-demanding groups in the party network.
-Whether this theoretical perspective jeopardize the causal interpretation of the preceding analysis depends on where policy-demanding are located in a causal diagram.
+Whether this theoretical perspective jeopardizes the causal interpretation of the preceding analysis depends on where policy-demanding groups are located in a causal diagram.
 If intermediary groups are an outgrowth of the social, economic, and other demographic bases of the district—so they are descendants of variables $x_{d}$—and partisan voters take opinion cues from these groups' activities in the district, then failing to control for intermediary group influence may lead to bias in the estimated effects of district-party ideology.
 
 This study could also be improved by collecting more years of data and setting up a different research design based on within-unit variation, such as a difference-in-differences panel design.
@@ -1886,6 +1880,6 @@ Panel data approaches to causal inference in political science either generalize
 Modernizing the primary representation literature for a new generation of causal approaches will not be a simple, one-off endeavor.
 
 Even if researchers stick to the single-stage demediation approach, they could relax modeling assumptions by moving away from the linear modeling laid out by @acharya-blackwell-sen:2016:direct-effects and implemented in this chapter. 
-Because the identification assumptions, demediation function, and ACDE are nonparametrically defined in terms of expectations about data, the method could be implemented using more flexible estimators of conditional expectations such as matching or machine learning methods.
+Because the identification assumptions, demediation function, and ACDE are nonparametrically defined in terms of expectations about data, the method could be implemented using more flexible estimators of conditional expectations such as matching estimators or machine learning models.
 
 
