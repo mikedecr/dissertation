@@ -1,4 +1,4 @@
-# How District-Party Ideology Affects Primary Candidate Positioning: A Bayesian De-Mediation Model {#ch:positioning}
+# How District-Party Ideology Affects Primary Candidate Positioning {#ch:positioning}
 
 $\renewcommand{\ind}[0]{\perp \!\!\! \perp}$
 $\renewcommand{\doop}[1]{\mathit{do}\left(#1\right)}$

@@ -6,7 +6,6 @@ title: Overall thesis notes
 
 - Document
     - [ ] Title page
-    - [ ] Abstract
     - Appendix 
         - [ ] section numbering (and in-text references)
         - [ ] table/fig numbering
@@ -20,7 +19,6 @@ title: Overall thesis notes
     - preview findings
     - fix ML stuff
 - ch 2: 
-    - fake data IRF figure
     - fake data thetas; how is the standardization being done...?
     - is income logged?
     - revisions:
@@ -32,21 +30,7 @@ title: Overall thesis notes
         - run MCMC on fixed theta
         - send alex data and code
 - ch 5:
-    - Discuss why doesn't theta matter more?
-        - might be different in presidential primary, but so does Cox equilibrium
-        - maybe we just don't capture the real idiosyncratic things that affect primaries (identity, style)
-    - Strategic voting?
-        - the SPD is a theory about sincere voting, so this project isn't ready to confront that just yet
-        - whether they anticipate in some way how that candidate is likely to fare in the general election
-        - The ideal point of the general election median voter could be a consideration if primary voters are even slightly strategic in their choices.
-        - this is around the Simas area
-        - Solution:
-            - meld strategic and district median into the same discussion
-            - we're conditioning on the district
-            - if there's strategic voting, this really is a different mechanism than the SPD, which is the focus of the project.
-    - More conditional logit cites:
-        - https://www.jstor.org/stable/2991747
-        - https://ejpr.onlinelibrary.wiley.com/doi/full/10.1111/j.1475-6765.2005.00252
+    - Fix DAG figure
     - revisions:
         - ideal point prior
         - add a constant to spline (fix MCMC?)
