@@ -28,6 +28,7 @@ title: Overall thesis notes
 - write ch 3
     - permit Bayes: flat doesn't imply non-info, non-info doesn't imply flat, priors are relevant for modeling
     - justify Bayes: multi-stage models, p -> n or p > n, one-off data, prior information
+    - Rubin: prior for $y$ integrates over treatment assignment, which is random.
 - ch 4:
     - revisions:
         - run MCMC on fixed theta
