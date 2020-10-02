@@ -2,7 +2,7 @@
 
 This project is better thanks to the advice and suggestions of my committee: Barry Burden, Ken Mayer, Ellie Powell, Alex Tahk, and Michael Wagner. 
 Other professors and colleagues at UW–Madison provided feedback at important stages of the project, including Scott Straus, students in the 2017 prospectus workshop, and seminar participants at the American Politics Workshop: Levi Bankston, David Canon, Jordan Hsu, Devin Judge-Lord, Evan Morier, Blake Reynolds, Marcy Shieh, Matt Shor, and Rochelle Snyder. 
-Other researchers outside UW–Madison who offered suggestions and moral support for the ideas in this project include Devin Caughey, David Doherty, Andrew Heiss, Shiro Kuriwaku, TJ Mahr, Steven V. Miller, Arman Oganisian, John Poe, Rachel Porter, Jonathan Robinson, Sarah Treul, and Chris Warshaw.
+Other researchers outside UW–Madison who offered suggestions and moral support for the ideas in this project include Devin Caughey, David Doherty, JB Duck-Mayr, Andrew Heiss, Shiro Kuriwaku, TJ Mahr, Steven V. Miller, Arman Oganisian, John Poe, Rachel Porter, Jonathan Robinson, Sarah Treul, and Chris Warshaw.
 Extra special thanks to researchers whose freely-provided data made the project possible: Robert Boatright, Adam Bonica, Ella Foster-Molina, Seth Masket, Nolan McCarty, Eric McGhee, Vincent Moscardelli, Steven Rogers, Boris Shor, Clifford Vickrey, and the teams behind the ANES and CCES surveys.
 
 I received financial support from the Elections Research Center at the University of Wisconsin–Madison and software support from UW's Social Science Computing Cooperative and Matthew Kay (creator of `tidybayes`).
