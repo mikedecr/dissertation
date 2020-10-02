@@ -7,11 +7,11 @@ title: Overall thesis notes
 - Document
     - [ ] Title page
     - Appendix 
-        - [ ] section numbering (and in-text references)
+        - [ ] chapter numbering (and in-text references)
         - [ ] table/fig numbering
     - Colophon
-        - should it be just "notes from author?"
-        - data: provided as a link?
+        - fix url style
+        - sessionInfo
     - All ref check
     - cut "in order"
     - contractions

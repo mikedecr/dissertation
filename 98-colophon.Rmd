@@ -1,13 +1,14 @@
-# Colophon
+# Data and Code
 
-This project is open source and managed with Git.
-A remote copy of the repository is available at <https://github.com/mikedecr/dissertation>.
-Currently, the repository is at the following commit:
+This project is entirely open source and managed with Git.
+Source code for all analysis (`R` and `Stan`) and writing (`Rmarkdown`) is available on Github at <https://github.com/mikedecr/dissertation>.
+Data are available on Box at <https://uwmadison.box.com/s/paivoulvu3jw9ze3nqq4c6vbrcexqseh>.
+This document was produced at `r Sys.time()` with the source code at the following commit: 
 
-```{r echo = FALSE, include = TRUE}
+```{r echo = FALSE, include = TRUE, cache = FALSE}
 # I've set eval=FALSE to ensure Travis-CI can run
 # if you're not using Travis-CI, then eval=TRUE will be fine
-library(git2r)
+library("git2r")
 if (in_repository()) {
   summary(commits()[[1]]) 
 } else { 
@@ -15,18 +16,20 @@ if (in_repository()) {
 }
 ```
 
-This version of the document was generated on `r Sys.time()`. 
 
-All Bayesian models were estimated using the probabilistic programming language Stan.
-Front-end interface to Stan and other data management was performed with R.
-The document was managed with the `bookdown` package for R, built to PDF using \LaTeX.
-<!-- A hard copy of the thesis can be found in the University of Wisconsin library system. -->
+The computational environment that was used to generate this version is as
+follows:
 
-<!-- The computational environment that was used to generate this version is as
-follows: -->
+```{r session-info, eval = TRUE, echo = TRUE, include = TRUE, message = FALSE, warning = FALSE, cache = FALSE}
+library("tidyverse")
 
-```{r session-info, eval = FALSE, echo = FALSE, include = FALSE}
-devtools::session_info()
+installed.packages() %>%
+  as_tibble() %>%
+  pull(Package) %>%
+  devtools::package_info() %>%
+  as_tibble() %>%
+  select(pkg = package, version = ondiskversion, src = source) %>%
+  print(n = nrow(.))
 ```
 
 

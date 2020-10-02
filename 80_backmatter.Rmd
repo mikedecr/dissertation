@@ -1,1 +1,7 @@
+```{block, include = knitr:::pandoc_to() == "latex"}
 \backmatter
+
+\renewcommand{\thetable}{A.\arabic{table}}  
+\renewcommand{\thefigure}{A.\arabic{figure}}
+```
+
