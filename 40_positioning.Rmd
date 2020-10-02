@@ -114,7 +114,7 @@ Even with better measures of district-party ideology and candidate positions, th
 This process could weaken the relationship between district-party ideology and candidate positioning because moderate candidates select themselves out of the campaign altogether.
 @porter-treul:2020:primary-experience find that the number of primary candidates who lack prior elected experience is increasing over time.
 Interestingly, they find no pattern between candidate experience and candidate extremism.
-This non-relationship may indicate that the positioning of inexperienced candidates may be less related to district-party ideology, either because the candidates are not adept at perceiving local ideology, they do not have the resources to conduct or acquire surveys of their constituencies, or they make non-ideological appeals in their campaigns. 
+This non-relationship may indicate that the positioning of inexperienced candidates may be less related to district-party ideology, either because the candidates are not adept at perceiving local ideology [@ensley-et-al:2009:complexity], they do not have the resources to conduct or acquire surveys of their constituencies, or they make non-ideological appeals in their campaigns. 
 Incumbents, in turn, may be more responsive to local ideology as a result of their political skills and survivorship bias—ill-fitting candidates do not become incumbents in the first place—although incumbents systematically misperceive public opinion as well [@broockman-skovron:2018:bias].
 
 

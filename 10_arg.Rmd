@@ -281,7 +281,7 @@ It benefits both major parties for these reputations to be distinct from one ano
 Party leaders maintain these reputations by setting brand-consistent legislative agendas and pressuring legislators to support reputation-boosting legislation [@cox-mccubbins:2005:agenda-cartel; @butler-powell:2014:valence-brand; @lebo-et-al:2007:strategic-party-government].
 In turn, non-median party platforms are more appealing to constituents with ideologically consistent issue beliefs.
 Candidates benefit by rewarding these constituents in particular because they are more likely to influence election outcomes in favor of the candidate [@hirano-ting:2015:direct-indirect-representation].
-These voters are more likely to turn out in general elections than moderate voters are, so it is more efficient for candidates to cater to these constituents. 
+These voters are more likely to turn out in general elections than moderate voters are, so it is more efficient for candidates to cater to these constituents especially in districts with greater ideological heterogeneity [@ensley:2012:heterogeneity]. 
 Partisan constituents are also more likely to engage in pro-party activism, such as staffing campaigns, contributing financially to campaigns, and attending party conventions [@aldrich:1983:downsian-parties; @barber:2016:contributions-polarization; @laraja-schaffner:2015:campaign-finance-polarization; @mcclosky-et-al:1960:conventions; @layman-et-al:2010:activists-conflict-extension].
 
 These incentives for candidates to diverge from median positions are possible without considering primary elections whatsoever.

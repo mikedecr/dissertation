@@ -231,7 +231,7 @@ Figure \@ref(fig:plot-sim-ICCs) plots IRFs from `r n_items_sampled` randomly cho
 These results also testify to the model's ability to recover key parameters even under weak data settings.
 In the few cases where the estimated IRF departs slightly from the true IRF, this appears to be due to partial pooling: regularization of item parameters toward their estimated distribution.
 
-```{r plot-sim-ICCs, include = TRUE, fig.height = 6, fig.width = 9, out.width = "100%", fig.scap = "Item response functions from fake data simulation.", fig.cap = "Item response functions from fake data simulation. Comparison between estimated (yellow) and true (black) item parameters for a random sample of items."}
+```{r plot-sim-ICCs, include = TRUE, fig.height = 6, fig.width = 9, out.width = "100%", fig.scap = "Item response functions from fake data simulation.", fig.cap = "Item response functions from fake data simulation. Comparison between estimated (orange) and true (black) item parameters for a random sample of items."}
 ```
 
 It is important to remember that the bias introduced by partial pooling is intentional.
