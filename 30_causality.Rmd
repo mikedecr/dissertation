@@ -1840,7 +1840,7 @@ It is also important to note that the Exponential priors on the cross-study hete
 A naïve approach to random-effects meta-analysis would have been to use a _flat_ prior on the study variance, equivalent to an $\text{Exponential}(\lambda = 0)$ prior, which would have resulted in much greater posterior uncertainty in the population treatment effect.
 
 This exercise is useful for demonstrating how priors are consequential for the inferences drawn from causal studies.
-Sensitivity to priors is often regarded as a downside of the Bayesian approach, but this example is instructive because it highlights how priors don't disappear just because we wish to avoid the work of specifying them.
+Sensitivity to priors is often regarded as a downside of the Bayesian approach, but this example is instructive because it highlights that priors do not disappear just because we wish to avoid the work of specifying them.
 The fixed-effects approach, which was employed as the "default" choice, did not avoid the issue of priors whatsoever.
 Instead, the fixed-effects model secretly posits a highly specific prior by assuming no cross-study heterogeneity.
 The Bayesian model exposes this prior, allowing the researcher to scrutinize and improve their model.

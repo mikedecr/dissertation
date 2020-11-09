@@ -210,7 +210,7 @@ This effect is also an average over the interactive effects with district-party 
 
 Because this project is focused on the added value of my district-party ideology measure, I go one step further to model effect heterogeneity over district-party ideology instead of holding it constant.
 Because identifying ignorable variation in $\bar{\theta}_{g}$ is a challenge in conditional logit, I approach this heterogeneity from an effect modification perspective.
-This means that effect heterogeneity over district-party ideology not reflect the causal effect of district-party ideology.
+This means that any heterogeneity in causal effects over district-party ideology is not causally attributed to district-party ideology.
 Instead, it reflects only the causal effects of CF scores conditional on a given district-party ideology value [see @kam-trussler:2017:HTEs].
 To clarify this point, I rewrite the potential outcome as $\omega_{ir}(\text{CF}_{ir})$, removing the causal effect of $\bar{\theta}_{g}$ from the notation.
 Formally, we say that district-party ideology is an "indirect modifier" if the CF score effect ($\text{CF}$ versus $\text{CF}'$) varies across levels of district-party ideology ($\theta$ versus $\theta'$), conditional on stratum $c$ and race $r$ [@vanderweele-robins:2007:effect-modification].

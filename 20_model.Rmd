@@ -648,10 +648,13 @@ To obtain the weighted number of successes in cell $gj$, I multiply the cell's w
 \end{align}
 The weighted number of successes in each cell, in turn, is 
 \begin{align}
-  s^{*}_{gj} &= \mathrm{min}\left(n^{*}_{gj}\bar{y}^{*}_{gj}, n^{*}_{gj}\right). %*
+  s^{*}_{gj} &= n^{*}_{gj}\bar{y}^{*}_{gj}
   (\#eq:wted-s)
 \end{align}
-where I take the minimum to ensure that the number of successes does not exceed the adjusted sample size. 
+which should not exceed the adjusted sample size.^[
+  Statistical analysis code implements the weighted number of successes as the minimum between $n^{*}_{gj}\bar{y}^{*}_{gj}$ and $n^{*}_{gj}$, to ensure that the weighted successes do not exceed the adjusted sample size.
+  By the construction of $n^{*}_{gj}$ and $y^{*}_{gj}$, however, in practice there should be no instances where the weighted successes can exceed the adjusted sample size.
+]
 
 It is likely that many values of $n^{*}_{gj}$ and $s^{*}_{gj}$ will be non-integers. 
 This presents a problem for modeling a Binomial random variable with statistical programs, which expect integer-valued numbers of successes and trials.

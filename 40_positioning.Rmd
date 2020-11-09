@@ -114,7 +114,7 @@ Even with better measures of district-party ideology and candidate positions, th
 This process could weaken the relationship between district-party ideology and candidate positioning because moderate candidates select themselves out of the campaign altogether.
 @porter-treul:2020:primary-experience find that the number of primary candidates who lack prior elected experience is increasing over time.
 Interestingly, they find no pattern between candidate experience and candidate extremism.
-This non-relationship may indicate that the positioning of inexperienced candidates may be less related to district-party ideology, either because the candidates are not adept at perceiving local ideology [@ensley-et-al:2009:complexity], they do not have the resources to conduct or acquire surveys of their constituencies, or they make non-ideological appeals in their campaigns. 
+This non-relationship may indicate that the positioning of inexperienced candidates may be less related to district-party ideology, perhaps because inexperienced candidates are not adept at perceiving local ideology [@ensley-et-al:2009:complexity], they do not have the resources to conduct or acquire surveys of their constituencies, or they make non-ideological appeals in their campaigns. 
 Incumbents, in turn, may be more responsive to local ideology as a result of their political skills and survivorship bias—ill-fitting candidates do not become incumbents in the first place—although incumbents systematically misperceive public opinion as well [@broockman-skovron:2018:bias].
 
 
@@ -562,12 +562,12 @@ The three-part scheme is also more specific than the two-part open/closed scheme
 
 
 Conventional wisdom about primary openness implies that closed primaries should produce more extreme candidates, and open primaries should produce more moderate candidates.
-Figure \@ref(fig:plot-by-rules), which plots the average CF score for Republicans and Democrats under each primary system, contradicts this hypothesis.^[
+Figure \@ref(fig:plot-rules-means), which plots the average CF score for Republicans and Democrats under each primary system, provides contradictory evidence against this hypothesis.^[
   Estimates are calculated from a linear regression on indicator variables for each primary system type with group-clustered standard errors.
 ]
 Democrats are in fact more progressive and Republicans more conservative in states with increasingly open primary participation rules, which is the opposite direction of the commonly hypothesized pattern.
 Figure \@ref(fig:plot-by-rules) goes on to plot the linear relationship between CF scores and district-party ideology in each state to see if candidates in closed primaries are more responsive to district-party ideology. 
-The relationships do not support the primary rules hypoethesis either.
+The relationships do not support the primary rules hypothesis either.
 While Republican candidates are indeed least sensitive to local partisan ideology in states with the most open rules—indeed the point estimate of the relationship is negative—they are more sensitive in _semi_-closed rather than closed states.
 The evidence from Democrats is even less consistent with the primary rules hypothesis.
 Democrats in semi-closed systems are also most responsive to district-party ideology, and they are less sensitive to district-party ideology in closed primary systems than they are in open systems.
@@ -990,7 +990,7 @@ Structural modeling is important, however, to ensure that selection-on-observabl
 
 ### Sequential $g$ implementation
 
-The average controlled direct effect of district-party ideology on primary candidate CF scores is _nonparametrically_ identifying under SUTVA, sequential ignorability, and positivity.
+The average controlled direct effect of district-party ideology on primary candidate CF scores is identified nonparametrically under SUTVA, sequential ignorability, and positivity.
 I estimate the sequential $g$ model using a linear model specification laid out by @acharya-blackwell-sen:2016:direct-effects.
 As with any linear model, this specification imposes additional functional form and distributional assumptions on the data, which are helpful for confounder adjustment in the absence of other design-based variation from instruments or discontinuities, but could lead to incorrect inferences if assumptions are false.
 One goal for future work in this literature would be to combine the sequential $g$ structural model with machine learning methods to relax these functional form assumptions, a nascent area of work that exists largely outside of political science [@hill:2011:bart; @athey-at-al:2016:residual-balancing; @samii-et-al:2016:retrospective-causal-inference-ML; @chernozhukov-et-al:2017:double-ML; @wager-athey:2018:honest-causal-forests; @ratkovic:2019:rehabilitating-regression; @hahn-et-al:2020:bayesian-causal-forests]
@@ -1208,7 +1208,7 @@ District-party ideology $\bar{\theta}_{g}$, the treatment variable, is measured 
 
 Pre-treatment confounders $\mathbf{x}_d$ are included to identify the effect of the presidential vote in stage 1 and the effect of district-party ideology in stage 2. 
 These covariates were organized and matched to primary candidacies by the Primary Timing Project by @boatright-et-al:2020:primary-timing-data.
-District demographic variables (sourced originally from the American Community Survey) include district median income, population density, and land area, as well the percent of a district population that is White, Latino, college educated, below the federal poverty line, unemployed, employed in the service industry, employed in blue-collar jobs, aged 28–24, and aged 65+.
+District demographic variables (sourced originally from the American Community Survey) include district median income, population density, and land area, as well the percent of a district population that is White, Latino, college educated, below the federal poverty line, unemployed, employed in the service industry, employed in blue-collar jobs, aged 18–24, and aged 65+.
 The @boatright-et-al:2020:primary-timing-data data also provide Mayhew's -@mayhew:1986:placing-parties five-level "traditional party organization" and binary "persistent factionalism" classifications for state level [@mayhew:1986:placing-parties].
 The stage-1 model also contains intermediate controls $\mathbf{z}_{d}$ for identifying the effect of the past presidential vote on CF scores.
 These variables include the district-party ideal point for the _other_ party group in the same district, because both parties should partially affect aggregate district voting, and year fixed effects to capture average shifts in CF scores that are correlated with average shifts in presidential voting.^[
