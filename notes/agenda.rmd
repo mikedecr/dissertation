@@ -4,30 +4,28 @@ title: Overall thesis notes
 
 # Near-Term Agenda
 
+Defense notes/things to think about:
 
-- opening remarks
-    - Thanks all.
-    - Project evolved from substantive w/ methods chapter, to more of a methods-focused project as my interests evolved and my career ambitions shifted.
-    - Tried to package the methods approaches in ways that make it obvious how they enable important substantive contributions that we couldn't quite obtain without those innovations.
-    - Key substantive contributions: 
-        - Overall:
-            - Theory-testing rather than theory development, which is still science.
-            - we have this story that we tell that comes from the research on polarization about ideological primary electorates, candidate positioning, and primary election outcomes—the SPD—but tests of the theory have these important measurement shortcomings, and therefore theoretical shortcomings, but we can improve on our understanding using certain measurement and modeling approaches that have only recently been popularized in political science.
-        - Ideal point measures
-            - create district-party ideology estimates around which the project is substantively based. 
-            - past theoretical development in this area says that the preferences of the partisan base impose a different positioning incentives from the incentives imposed by the district vote, yet past research really only ever uses the presidential vote to measure voter preferences, which papers over the whole argument underlying this theoretical story in the first place!
-            - chapter 1 makes a theoretical argument that presidential vote data cannot proxy district-party base preferences like, which justifies the ideal point model that I create in chapter 2.
-        - Empirical applications
-            - ch 4: Now that we have a measure of district-party ideology that is distinct from the presidential vote, how do we think it behaves in a causal structure alongside district voting, and what can we do about it from a research design standpoint for estimating the causal effects. There are definitely methodological contributions here with the nitty gritty details of sequential g, but I don't want to brush too quickly past the fact that the theorizing about the causal structure and what that means for causal effects is, I think, an important theoretical and substantive flag that I'm putting in the ground about the way we study primaries, which other studies have been less careful to implement in their empirics. This chapter finds that district-party ideology appears to be actually a much more coherent influence on candidate positioning than the district presidential vote. incumbents, challengers, and open candidates all respond to the party base, but they don't all respond to the presidential vote. That's pretty important, I think it presents a new puzzle for future work to look into. I also find some new evidence on primary rules that runs against some of the prevailing wisdom in this literature. Most studies find no relationship at all between candidate positioning and primary rules, but I do find that candidates under more closed systems are more elastic to district-party preferences than candidates in more open systems. So it's not about extremism per se but responsiveness
-            - Ch 5: Candidates behave in line with the SPD, but what about voters? The underlying spatial model of voting matters for studying primary voting, since the SPD is a spatial theory of sincere voting. So the real substantive push in this chapter is looking for evidence of that utility optimum, which is important for identifying whether primary voting appears to be ideological–is there some preferred point for a district-party group–and building a research design that identifies heterogeneity in that utility optimum in different districts with different partisan base preferences. I find evidence that's weakly consistent with the idea that candidate ideology matters for primary voters, but the data don't support the notion that those ideological preferences are highly specific in the way that the SPD would predict. Primary voters appear to favor candidates who represent the ideological core of the party, but from one district to the next, we don't really see primary electorates engaging in fine-grained ideological discrimination between candidates.
-    - Methods contributions, 3 big ones in order from least to most important.
-        - 1. Ideal point model. This is important to the project, but it's probably the least _unique_ methods contribution here. The group IRT modeling technology that I use is adapted from other recent work, so I can't take credit for inventing it, but I do some things to the model to adapt it to measure district-party ideology. Most methodologically distinct elements of the ideal point model are pretty in the weeds of applied Bayesian modeling, but I think they're important because they represent advances in Bayesian modeling that aren't really articulated in any single place in political science. Recent innovations in prior distributions, talking about how the model itself is prior information, the hierarchical model parameterization and how it relates to computation, are all really important lessons for doing applied Bayesian stats in political science, but this is all stuff you can't learn about in PS work. There isn't really any resource for a PS audience that explains these things in the same level of thoroughness as I do, so that's an important contribution to highlight on the methods front.
-        - 2. Bayesian approach to causal inference. This chapter probably feels like a bit of a detour to the main road of the project, but I felt like it was important to articulate and explain because, if I were to just proceed with Bayesian causal modeling in chapters 4 and 5 without really explaining what was going on, it would have felt pretty out-of-nowhere for the reader, I think. But playing around with Bayesian causal inference is something I spent a lot of time in the program doing, I thought it offered important benefits for this project, so I thought it deserved an explanation to really lay out what's the big idea here. It is a detailed chapter that discusses some pretty hairy aspects of Bayesian modeling, such as implied priors and so on, but I think that those discussions are really important for explaining what the deal with BCI really is. The purpose is to show how the Bayesian "version" of some model that you might use off the shelf for causal inference will inevitably have some pretty unexpected prior behavior that the researcher would likely find disagreeable, so I thought it was pretty impossible to talk about Bayesian causal inference without clearing up how important and frame-shifting some of those lessons are for understanding what my approach is really doing. 
-    - 3: The most important, and I think most broadly applicable methodological push in the project, is the use of graphical causal models to theorize about these research questions. This literature on primaries, and a ton of observational work more broadly in political science, uses selection-on-observables research designs with regression-based estimation approaches. But it isn't especially common to see run-of-the-mill regression studies like chapters 4 and 5, and take their causal claims seriously. Formally define the causal quantities, the assumptions, which adjustments are req'd, which things should we NOT control for, and so on? The more I learn about modern causal inference, the more opportunities I see in other folks' research to be more explicit about the causal structure, linking that structure to our statistical methods, making sure we aren't giving regression controls a causal interpretation. These are things that I think the whole field could be doing better at, and it's something that this particular literature doesn't have a lot of, So I really wanted to lead by example and have that style of observational work be an important contribution for this project.
-
-
-Could I read more things?
-
+- Ch 2:
+    - we could do `target +=` to fix the non-integer data problems in Ch 2
+- General causal questions:
+    - dynamic effects, ideological "contagion" over time
+        - does conservatism spill across parties in a way that is a problem for SUTVA?
+        - this could go either direction
+        - however weak correlation between parties across districts
+    - heterogeneous treatment effects and heterogeneous treatment variance? if I could do it all again I'd do BART probably
+        - specify whatever model you want for treatment
+        - do two stage neyman stuff for estimation stage
+    - could recreate w/ aggregate self-placement measures and see how far they get you
+- Offshoots
+    - The role of news coverage? Is there variation in the salience of ideology across races
+        - quick way to investigate this might be to use Senate primaries, which are less frequent but higher profile
+    - Redistricting
+        - tighter institutions -> less tailoring by parties -> composition of the electorate?
+    - Campaign evolution of ideology 
+        - e.g. running to center after primary
+        - could group CF data by primary date and estimate "primary only" CF scores
+        - the fact that patterns are similar for incumbents suggests this is not a huge problem though
 
 
 
